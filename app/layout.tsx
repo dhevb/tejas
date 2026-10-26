@@ -23,7 +23,7 @@ const notoDevanagari = Noto_Sans_Devanagari({
 export const metadata: Metadata = createMetadata({});
 
 export const viewport: Viewport = {
-  themeColor: "#1E3A5F",
+  themeColor: "#172B67",
   width: "device-width",
   initialScale: 1,
 };
@@ -49,7 +49,7 @@ export default function RootLayout({
             {children}
           </main>
           <TejasFooter />
-          <FloatingCTA label="Register for TEJAS" href="/#register" />
+          <FloatingCTA label="Register for TEJAS" href="/schools/register" />
         </I18nProvider>
       </body>
     </html>

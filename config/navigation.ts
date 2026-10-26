@@ -33,9 +33,9 @@ export const mainNav: NavItem[] = [
         title: "Active Streams",
         titleHi: "सक्रिय streams",
         items: [
-          { label: "English", labelHi: "अंग्रेज़ी", href: "/olympiads/english", description: "Kalam Edition 2026", badge: "Active" },
-          { label: "Mathematics", labelHi: "गणित", href: "/olympiads/mathematics", description: "Kalam Edition 2026", badge: "Active" },
-          { label: "Technology", labelHi: "प्रौद्योगिकी", href: "/olympiads/technology", description: "Kalam Edition 2026", badge: "Active" },
+          { label: "TEJAS English", labelHi: "अंग्रेज़ी", href: "/olympiads/english", description: "10 December 2026", badge: "Active" },
+          { label: "TEJAS Mathematics", labelHi: "गणित", href: "/olympiads/mathematics", description: "9 December 2026", badge: "Active" },
+          { label: "TEJAS Future Tech", labelHi: "फ्यूचर टेक", href: "/olympiads/technology", description: "11 December 2026", badge: "Active" },
         ],
       },
       {
@@ -117,7 +117,8 @@ export const footerNav = {
   olympiads: [
     { label: "English", href: "/olympiads/english" },
     { label: "Mathematics", href: "/olympiads/mathematics" },
-    { label: "Technology", href: "/olympiads/technology" },
+    { label: "Future Tech", href: "/olympiads/technology" },
+    { label: "School registration", href: "/schools/register" },
     { label: "All Olympiads", href: "/olympiads" },
   ],
   learning: [
@@ -130,6 +131,7 @@ export const footerNav = {
     { label: "FAQ", href: "/faq" },
     { label: "Contact", href: "/contact" },
     { label: "For Schools", href: "/schools" },
+    { label: "School registration", href: "/schools/register" },
   ],
   dhe: [
     { label: "DHE Website", href: "https://www.dhe.org.in", external: true },

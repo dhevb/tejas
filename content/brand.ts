@@ -2,8 +2,8 @@ import { brand } from "@/design-system/tokens";
 
 export const brandContent = {
   fullName: {
-    en: "Talent Evaluation & Joint Assessment Series",
-    hi: "प्रतिभा मूल्यांकन एवं संयुक्त आकलन श्रृंखला",
+    en: "Talent Exploration for Junior Aspiring Scholars",
+    hi: "जूनियर आकांक्षी विद्यार्थियों के लिए प्रतिभा अन्वेषण",
   },
   movement: {
     en: brand.movement,

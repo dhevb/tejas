@@ -103,33 +103,33 @@ export const dheEnglish2025Edition: EditionFullContent = {
 };
 
 export const apjAbdulKalam2026Edition: EditionFullContent = {
-  slug: "apj-abdul-kalam",
+  slug: "tejas-2026-27",
   year: 2026,
   name: {
-    en: "Dr APJ Abdul Kalam Edition",
-    hi: "डॉ APJ अब्दुल कलाम संस्करण",
+    en: "TEJAS Olympiad 2026–27",
+    hi: "TEJAS ओलंपियाड 2026–27",
   },
   subtitle: {
-    en: "Igniting Young Minds — Independent TEJAS Olympiad Cycle",
-    hi: "युवा मन को प्रज्वलित करना — स्वतंत्र TEJAS ओलंपियाड चक्र",
+    en: "6th Edition of Shiksha Mahakumbh · Find your spark...",
+    hi: "शिक्षा महाकुंभ का 6वाँ संस्करण",
   },
   bio: {
-    en: "Honouring Bharat's Missile Man — a visionary scientist, teacher, and President who inspired generations to dream big and serve the nation through science and innovation. The 2026 TEJAS edition is an independent DHE Olympiad initiative by Olympiad Cell — conducted after Shiksha Mahakumbh, not under its aegis — featuring English, Maths, and Technology Olympiads for Classes III–X.",
-    hi: "भारत के मिसाइल मैन का सम्मान — शिक्षा महाकुंभ के बाद स्वतंत्र TEJAS ओलंपियाड चक्र।",
+    en: "Talent Exploration for Junior Aspiring Scholars. English, Mathematics, and Future Tech for Classes III–X. Administered by the Department of Holistic Education, a unit of Vidya Bharti Institute of Training & Research Trust, under the guidance and support of Vidya Bharti – North Zone.",
+    hi: "कक्षा III–X के लिए अंग्रेज़ी, गणित और फ्यूचर टेक। संचालन समग्र शिक्षा विभाग।",
   },
   theme: {
-    en: "Dream. Discover. Deliver.",
-    hi: "सपना देखो। खोजो। साधो।",
+    en: "Find your spark...",
+    hi: "Find your spark...",
   },
   status: "current",
-  imageAccent: "#E85D04",
+  imageAccent: "#172B67",
   vision: {
-    en: "To ignite scientific temper, innovation, and national service among Bharat's young learners — following Dr Kalam's belief that dreams transform into thoughts, and thoughts result in action.",
-    hi: "Dr Kalam की शिक्षा — सपने विचारों में, विचार कर्म में बदलते हैं।",
+    en: "A long-term national platform to identify, nurture, and empower young learners, beyond a single examination.",
+    hi: "एक परीक्षा से आगे, युवा विद्यार्थियों को पहचानने और सशक्त करने का राष्ट्रीय मंच।",
   },
   whyThisEdition: {
-    en: "Dr APJ Abdul Kalam embodied the spirit of learning, teaching, and serving the nation. His journey from Rameswaram to Rashtrapati Bhavan inspires every student to pursue excellence with humility and purpose.",
-    hi: "Dr Kalam सीखने, सिखाने और राष्ट्र सेवा की भावना के प्रतीक थे।",
+    en: "The approved brochure places this Olympiad in the 6th Edition of Shiksha Mahakumbh in 2026. Registration runs from 1 November 2026 to 20 November 2026. Mathematics is on 9 December 2026, English on 10 December 2026, and Future Tech on 11 December 2026.",
+    hi: "पंजीकरण 1–20 नवंबर 2026। परीक्षाएँ 9, 10 और 11 दिसंबर 2026।",
   },
   learningValues: [
     { en: "Scientific temper and curiosity", hi: "वैज्ञानिक दृष्टिकोण और जिज्ञासा" },
@@ -138,84 +138,62 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     { en: "Dream big, work hard, stay rooted", hi: "बड़े सपने, कड़ी मेहनत, जड़ें भारतीय" },
   ],
   timeline: [
-    { year: 1931, title: { en: "Born in Rameswaram", hi: "रामेश्वरम में जन्म" }, description: { en: "Tamil Nadu — humble beginnings", hi: "तमिलनाडु" } },
-    { year: 1960, title: { en: "Joined DRDO", hi: "DRDO में शामिल" }, description: { en: "Defence research career begins", hi: "रक्षा अनुसंधान" } },
-    { year: 1980, title: { en: "SLV-III Launch", hi: "SLV-III लॉन्च" }, description: { en: "Rohini satellite — Bharat's space milestone", hi: "रोहिणी उपग्रह" } },
-    { year: 1998, title: { en: "Pokhran-II", hi: "पोखरण-II" }, description: { en: "Nuclear tests — Missile Man of Bharat", hi: "मिसाइल मैन" } },
-    { year: 2002, title: { en: "11th President of Bharat", hi: "भारत के 11वें राष्ट्रपति" }, description: { en: "People's President", hi: "जनता के राष्ट्रपति" } },
-    { year: 2015, title: { en: "Passed away at Shillong", hi: "शillong में महाप्रयाण" }, description: { en: "While delivering a lecture to students", hi: "छात्रों को व्याख्यान देते हुए" } },
+    { year: 2026, title: { en: "Registration opens", hi: "पंजीकरण शुरू" }, description: { en: "1 November 2026", hi: "1 नवंबर 2026" } },
+    { year: 2026, title: { en: "Last date to register", hi: "अंतिम तिथि" }, description: { en: "20 November 2026", hi: "20 नवंबर 2026" } },
+    { year: 2026, title: { en: "TEJAS Mathematics", hi: "TEJAS गणित" }, description: { en: "9 December 2026", hi: "9 दिसंबर 2026" } },
+    { year: 2026, title: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" }, description: { en: "10 December 2026", hi: "10 दिसंबर 2026" } },
+    { year: 2026, title: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" }, description: { en: "11 December 2026", hi: "11 दिसंबर 2026" } },
+    { year: 2027, title: { en: "Results window", hi: "परिणाम" }, description: { en: "February 2027. A declaration date has not been fixed.", hi: "फरवरी 2027" } },
   ],
-  quotes: [
-    {
-      text: {
-        en: "Dream, dream, dream. Dreams transform into thoughts and thoughts result in action.",
-        hi: "सपने देखो, सपने देखो, सपने देखो। सपने विचारों में बदलते हैं और विचार कर्म में।",
-      },
-      attribution: { en: "Dr APJ Abdul Kalam", hi: "डॉ APJ अब्दुल कलाम" },
-    },
-    {
-      text: {
-        en: "You have to dream before your dreams can come true.",
-        hi: "सपने सच होने से पहले आपको सपने देखने होंगे।",
-      },
-      attribution: { en: "Dr APJ Abdul Kalam", hi: "डॉ APJ अब्दुल कलाम" },
-    },
-    {
-      text: {
-        en: "Learning gives creativity, creativity leads to thinking, thinking provides knowledge, knowledge makes you great.",
-        hi: "सीखना रचनात्मकता देता है, रचनात्मकता सोच को, सोच ज्ञान को, ज्ञान महान बनाता है।",
-      },
-      attribution: { en: "Dr APJ Abdul Kalam", hi: "डॉ APJ अब्दुल कलाम" },
-    },
-  ],
+  quotes: [],
   majorContributions: [
-    { en: "Led Bharat's civilian space programme and missile development (AGNI, PRITHVI)", hi: "AGNI, PRITHVI मिसाइल विकास" },
-    { en: "Pokhran-II nuclear tests — strengthened national security", hi: "पोखरण-II परमाणु परीक्षण" },
-    { en: "Authored 'Wings of Fire' and inspired millions of students", hi: "'Wings of Fire' — लाखों छात्रों को प्रेरणा" },
-    { en: "Championed PURA (Providing Urban Amenities in Rural Areas) vision", hi: "PURA दृष्टि" },
+    { en: "Examinations are held at participating schools.", hi: "परीक्षाएँ विद्यालयों में होती हैं।" },
+    { en: "Question papers and OMR sheets are dispatched in advance.", hi: "प्रश्नपत्र और OMR पहले भेजी जाती हैं।" },
+    { en: "Completed OMR sheets are couriered the same day to the designated evaluation centre. The centre address is shared with the detailed instructions.", hi: "भरी हुई OMR उसी दिन कूरियर से जाती हैं।" },
+    { en: "Preparation books are optional. The expected cost is about ₹150 per book. Ordering and dispatch are not open.", hi: "तैयारी पुस्तकें अनिवार्य नहीं हैं। अनुमानित कीमत लगभग ₹150।" },
   ],
   olympiadStreams: [
-    { en: "DHE English Olympiad 2.0", hi: "DHE अंग्रेज़ी ओलंपियाड 2.0" },
-    { en: "DHE Maths Olympiad", hi: "DHE गणित ओलंपियाड" },
-    { en: "DHE Tech Olympiad", hi: "DHE टेक ओलंपियाड" },
+    { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" },
+    { en: "TEJAS Mathematics", hi: "TEJAS गणित" },
+    { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" },
   ],
   stats: [
     { label: { en: "Olympiad Streams", hi: "ओलंपियाड streams" }, value: "3" },
     { label: { en: "Classes", hi: "कक्षाएँ" }, value: "III–X" },
-    { label: { en: "Format", hi: "प्रारूप" }, value: "Independent" },
+    { label: { en: "Fee", hi: "शुल्क" }, value: "₹100" },
     { label: { en: "Platform", hi: "मंच" }, value: "TEJAS" },
   ],
   felicitation: {
-    en: "Top achievers honoured at the TEJAS National Felicitation Ceremony — an independent event (details to be announced)",
-    hi: "TEJAS राष्ट्रीय सम्मान समारोह — स्वतंत्र कार्यक्रम",
+    en: "Overall toppers in each class, in every stream: ₹3,100, ₹2,100, ₹1,500, and five consolation prizes of ₹500. Every participant receives an e-certificate. Gold, silver, and bronze medals go to outstanding students. School-level winners receive certificates, medals, and books.",
+    hi: "प्रथम ₹3,100, द्वितीय ₹2,100, तृतीय ₹1,500, और पाँच सांत्वना पुरस्कार ₹500।",
   },
   faqs: [
     {
       question: { en: "Which Olympiads are part of this edition?", hi: "इस संस्करण में कौन से ओलंपियाड?" },
       answer: {
-        en: "Three streams: DHE English Olympiad 2.0, DHE Maths Olympiad, and DHE Tech Olympiad for Classes III–X. This is an independent TEJAS edition by Olympiad Cell, DHE — not conducted under Shiksha Mahakumbh.",
-        hi: "तीन streams: English, Maths, Technology — कक्षा III–X। स्वतंत्र TEJAS संस्करण।",
+        en: "Three streams: TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X.",
+        hi: "तीन स्ट्रीम: अंग्रेज़ी, गणित और फ्यूचर टेक — कक्षा III–X।",
       },
     },
     {
       question: { en: "How is this different from Shiksha Mahakumbh Olympiads?", hi: "यह शिक्षा महाकुंभ ओलंपियाड से कैसे अलग है?" },
       answer: {
-        en: "The 1st DHE English Olympiad (2025) was under Shiksha Mahakumbh 5th Edition. The current Dr APJ Abdul Kalam Edition is an independent TEJAS Olympiad cycle held after Shiksha Mahakumbh, administered directly by Olympiad Cell, DHE.",
-        hi: "2025 का English Olympiad SMK 5th Edition के तहत था। वर्तमान संस्करण स्वतंत्र TEJAS चक्र है।",
+        en: "The 1st DHE English Olympiad (2025) was under Shiksha Mahakumbh 5th Edition. TEJAS Olympiad 2026–27 is placed in the 6th Edition of Shiksha Mahakumbh and is administered by the Department of Holistic Education.",
+        hi: "2025 का English Olympiad SMK 5th Edition के तहत था। वर्तमान ओलंपियाड शिक्षा महाकुंभ के 6वें संस्करण में है।",
       },
     },
     {
       question: { en: "When is registration opening?", hi: "पंजीकरण कब?" },
       answer: {
-        en: "Registration and exam dates to be announced. Schools may register through Olympiad Cell, DHE official channels.",
-        hi: "पंजीकरण और परीक्षा तिथियाँ घोषित की जाएँगी।",
+        en: "Registration opens on 1 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹100 per student per stream.",
+        hi: "पंजीकरण 1 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹100 प्रति विद्यार्थी प्रति स्ट्रीम।",
       },
     },
   ],
   downloads: [
     {
-      title: { en: "Kalam Edition 2026 Brochure", hi: "Kalam Edition 2026 ब्रोशर" },
-      description: { en: "Official TEJAS Dr APJ Abdul Kalam Edition programme brochure", hi: "आधिकारिक TEJAS ब्रोशर" },
+      title: { en: "TEJAS Olympiad 2026–27 brochure", hi: "TEJAS ओलंपियाड 2026–27 ब्रोशर" },
+      description: { en: "Official TEJAS Olympiad 2026–27 programme brochure", hi: "आधिकारिक TEJAS ब्रोशर" },
       type: "PDF",
     },
     {
@@ -224,10 +202,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
       type: "PDF",
     },
   ],
-  galleryCaptions: [
-    { en: "Dr APJ Abdul Kalam with students — the spirit of TEJAS", hi: "Dr Kalam छात्रों के साथ" },
-    { en: "TEJAS National Felicitation — independent ceremony", hi: "TEJAS राष्ट्रीय सम्मान समारोह" },
-  ],
+  galleryCaptions: [],
 };
 
 export const futureEditions: EditionFullContent[] = [
@@ -331,12 +306,12 @@ export const futureEditions: EditionFullContent[] = [
 
 export const editionRegistry: EditionFullContent[] = [
   apjAbdulKalam2026Edition,
-  ...futureEditions,
   dheEnglish2025Edition,
 ];
 
 export function getEditionContent(slug: string): EditionFullContent | undefined {
-  return editionRegistry.find((e) => e.slug === slug);
+  const key = slug === "apj-abdul-kalam" ? "tejas-2026-27" : slug;
+  return editionRegistry.find((e) => e.slug === key);
 }
 
 export function getAllEditionSlugs(): string[] {

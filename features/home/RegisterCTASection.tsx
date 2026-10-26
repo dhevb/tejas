@@ -19,13 +19,13 @@ export function RegisterCTASection() {
           Join the {currentCycle.editionName.en}
         </h2>
         <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
-          Schools register through Olympiad Cell, DHE. Three active streams — English, Maths, and
-          Technology for Classes III–X. {currentCycle.registrationStatus.en}
+          Schools register on this website. TEJAS English, TEJAS Mathematics, and TEJAS Future Tech
+          for Classes III–X. {currentCycle.registrationStatus.en} {currentCycle.fee.en}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <Button size="lg" disabled title="Registration portal opening in Phase 4" onClick={() => AnalyticsEvents.registerClick("homepage_cta")}>
-            Register Now
-          </Button>
+          <Link href="/schools/register" onClick={() => AnalyticsEvents.registerClick("homepage_cta")}>
+            <Button size="lg">Register Now</Button>
+          </Link>
           <Link href="/schools">
             <Button variant="outline" size="lg">
               For Schools

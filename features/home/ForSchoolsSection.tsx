@@ -20,7 +20,7 @@ export function ForSchoolsSection() {
             <SectionHeader
               eyebrow="For Schools"
               title="Partner with TEJAS"
-              subtitle="Join 12,000+ schools nationwide in Bharat's most prestigious talent assessment network."
+              subtitle="Register the school for TEJAS Olympiad 2026–27. A participating-school count for this cycle has not been published."
               align="left"
               className="mb-0"
             />

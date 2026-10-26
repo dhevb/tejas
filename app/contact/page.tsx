@@ -3,6 +3,7 @@ import { PageHero } from "@/components/shared/PageHero";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { brand } from "@/design-system/tokens";
+import { currentCycle } from "@/content/current-cycle";
 
 export const metadata = createMetadata({
   title: "Contact",
@@ -27,21 +28,23 @@ export default function ContactPage() {
                   <Mail className="h-6 w-6 text-tejas-saffron shrink-0" aria-hidden />
                   <div>
                     <h3 className="font-bold text-tejas-ink">Email</h3>
-                    <p className="text-tejas-muted">tejas@dhe.org.in</p>
+                    <p className="text-tejas-muted">{currentCycle.olympiadEmail}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <Phone className="h-6 w-6 text-tejas-saffron shrink-0" aria-hidden />
                   <div>
                     <h3 className="font-bold text-tejas-ink">Phone</h3>
-                    <p className="text-tejas-muted">+91 11 0000 0000</p>
+                    <p className="text-tejas-muted">{currentCycle.convener.phoneDisplay}</p>
+                    <p className="text-sm text-tejas-muted">{currentCycle.convener.name}, {currentCycle.convener.titles.join("; ")}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <MapPin className="h-6 w-6 text-tejas-saffron shrink-0" aria-hidden />
                   <div>
                     <h3 className="font-bold text-tejas-ink">Organisation</h3>
-                    <p className="text-tejas-muted">{brand.parentOrg}, {brand.country}</p>
+                    <p className="text-tejas-muted">{brand.parentOrg}</p>
+                    <p className="text-sm text-tejas-muted">{currentCycle.address}</p>
                   </div>
                 </div>
               </div>

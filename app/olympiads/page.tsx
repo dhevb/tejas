@@ -7,7 +7,7 @@ import { olympiads, getActiveOlympiads } from "@/data/olympiads";
 
 export const metadata = createMetadata({
   title: "Olympiads",
-  description: "Independent TEJAS Olympiads — English, Maths, Technology for Classes III–X in the Dr APJ Abdul Kalam Edition, plus future TEJAS streams.",
+  description: "TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X in TEJAS Olympiad 2026–27.",
   path: "/olympiads",
 });
 
@@ -20,7 +20,7 @@ export default function OlympiadsPage() {
       <PageHero
         eyebrow="Olympiads"
         title="National Olympiad Series"
-        subtitle="Three active streams in the independent Dr APJ Abdul Kalam Edition — held after Shiksha Mahakumbh. Ten-subject TEJAS ecosystem expanding nationwide."
+        subtitle="TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X. Registration 1–20 November 2026."
         primaryCta={{ label: "Free Mock Test", href: "/prepare/mock-tests" }}
         secondaryCta={{ label: "Prepare Hub", href: "/prepare" }}
       />
@@ -28,9 +28,9 @@ export default function OlympiadsPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <SectionHeader
-              eyebrow="Kalam Edition 2026"
+              eyebrow="TEJAS Olympiad 2026–27"
               title="Active Olympiad Streams"
-              subtitle="Classes III–X · Independent TEJAS cycle · Registration dates to be announced"
+              subtitle="Classes III–X · Mathematics 9 December, English 10 December, Future Tech 11 December 2026"
             />
           </FadeIn>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

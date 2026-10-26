@@ -7,3 +7,6 @@ next-env.d.ts
 
 .vercel
 .env*
+/data/registrations
+/data/idempotency.json
+/data/payment-config.json

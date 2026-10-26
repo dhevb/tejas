@@ -16,7 +16,7 @@ import Link from "next/link";
 
 export const metadata = createMetadata({
   title: "About TEJAS",
-  description: "TEJAS — Talent Evaluation & Joint Assessment Series. Bharat's National Talent Development Ecosystem by Olympiad Cell, DHE.",
+  description: "TEJAS — Talent Exploration for Junior Aspiring Scholars. TEJAS Olympiad 2026–27 by the Department of Holistic Education.",
   path: "/about",
 });
 

@@ -58,14 +58,14 @@ export default function InnovationPage() {
           </div>
           <FadeIn delay={0.2}>
             <div className="mt-16 rounded-2xl bg-gradient-to-br from-tejas-saffron to-tejas-saffron-dark p-8 text-white">
-              <h2 className="text-xl font-bold">DHE Tech & Innovation Olympiads</h2>
+              <h2 className="text-xl font-bold">TEJAS Future Tech</h2>
               <p className="mt-3 text-white/90 leading-relaxed">
-                Technology Olympiad is active in the Kalam Edition 2026. Innovation Olympiad launches in a future TEJAS
-                edition — same portal architecture, new subject data.
+                TEJAS Future Tech is one of the three streams in TEJAS Olympiad 2026–27, examined on 11 December 2026.
+                An Innovation Olympiad has not been announced.
               </p>
               <div className="mt-6 flex flex-wrap gap-4">
                 <Link href="/olympiads/technology" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-tejas-saffron">
-                  Technology Olympiad
+                  TEJAS Future Tech
                 </Link>
                 <Link href="/olympiads/innovation" className="rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
                   Innovation (Coming Soon)

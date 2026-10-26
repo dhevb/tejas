@@ -14,9 +14,9 @@ export function CurrentOlympiadsSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn>
           <SectionHeader
-            eyebrow="Dr APJ Abdul Kalam Edition 2026"
+            eyebrow="TEJAS Olympiad 2026–27"
             title="Active Olympiad Streams"
-            subtitle="Independent TEJAS Olympiad cycle — English, Maths & Technology for Classes III–X. Held after Shiksha Mahakumbh, not under its aegis."
+            subtitle="TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X. Registration 1–20 November 2026."
           />
         </FadeIn>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -36,10 +36,10 @@ export function CurrentOlympiadsSection() {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
             <Link
-              href="/editions/apj-abdul-kalam"
+              href="/editions/tejas-2026-27"
               className="inline-flex items-center gap-2 text-sm font-medium text-tejas-muted hover:text-tejas-saffron"
             >
-              Dr APJ Abdul Kalam Edition 2026
+              TEJAS Olympiad 2026–27
               <ArrowRight className="h-3 w-3" aria-hidden />
             </Link>
           </div>

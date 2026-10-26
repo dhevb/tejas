@@ -3,13 +3,13 @@ import { currentCycle, CURRENT_EDITION_LABEL } from "@/content/current-cycle";
 
 export const mathematicsOlympiad: OlympiadPortalContent = {
   slug: "mathematics",
-  name: { en: "Mathematics", hi: "गणित" },
+  name: { en: "TEJAS Mathematics", hi: "TEJAS गणित" },
   tagline: {
     en: "DHE Maths Olympiad — logical reasoning, problem-solving, and mathematical excellence",
     hi: "DHE गणित ओलंपियाड — तार्किक तर्क, समस्या समाधान और गणितीय उत्कृष्टता",
   },
   description: {
-    en: "The DHE Maths Olympiad strengthens conceptual clarity, analytical thinking, and problem-solving skills. Part of the three-stream independent TEJAS Dr APJ Abdul Kalam Edition for Classes III–X — held after Shiksha Mahakumbh.",
+    en: "TEJAS Mathematics is examined on 9 December 2026 for Classes III–X. It strengthens conceptual clarity, analytical thinking, and problem-solving.",
     hi: "DHE गणित ओलंपियाड अवधारणात्मक स्पष्टता, विश्लेषणात्मक सोच और समस्या समाधान कौशल को मजबूत करता है।",
   },
   whySubject: {
@@ -18,11 +18,11 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
   },
   status: "active",
   icon: "calculator",
-  color: "#1E3A5F",
+  color: "#172B67",
   grades: currentCycle.grades,
   duration: { en: "60 minutes", hi: "60 मिनट" },
   questions: 50,
-  registrationOpen: false,
+  registrationOpen: true,
   eligibility: [
     {
       en: "Students in Classes III–X enrolled in recognised schools",
@@ -180,7 +180,7 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       level: { en: "National Top Achievers", hi: "राष्ट्रीय शीर्ष achievers" },
       description: {
-        en: "Medals, certificates, and felicitation at the TEJAS National Felicitation Ceremony",
+        en: "₹3,100, ₹2,100, ₹1,500, and five consolation prizes of ₹500 for overall toppers in each class. Gold, silver, and bronze medals for outstanding students.",
         hi: "पदक, प्रमाणपत्र और TEJAS राष्ट्रीय सम्मान",
       },
     },
@@ -203,14 +203,14 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       question: { en: "When is the DHE Maths Olympiad?", hi: "DHE गणित ओलंपियाड कब है?" },
       answer: {
-        en: "The DHE Maths Olympiad is part of the independent TEJAS Dr APJ Abdul Kalam Edition. Registration and exam dates will be announced.",
-        hi: "स्वतंत्र TEJAS Kalam Edition का हिस्सा। तिथियाँ घोषित की जाएँगी।",
+        en: "TEJAS Mathematics is on 9 December 2026. Schools register from 1 November 2026 to 20 November 2026.",
+        hi: "TEJAS गणित 9 दिसंबर 2026 को है। पंजीकरण 1–20 नवंबर 2026।",
       },
     },
     {
       question: { en: "Which classes can participate?", hi: "कौन सी कक्षाएँ भाग ले सकती हैं?" },
       answer: {
-        en: "Classes III–X in the current independent TEJAS Olympiad cycle.",
+        en: "Classes III–X, as printed for TEJAS Olympiad 2026–27.",
         hi: "वर्तमान स्वतंत्र TEJAS चक्र में कक्षा III–X।",
       },
     },

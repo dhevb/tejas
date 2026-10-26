@@ -1,6 +1,6 @@
 # TEJAS Platform
 
-**Talent Evaluation & Joint Assessment Series**
+**Talent Exploration for Junior Aspiring Scholars**
 
 Independent frontend for [tejas.dhe.org.in](https://tejas.dhe.org.in) — Bharat's National Talent Development Ecosystem by the Department of Holistic Education (DHE).
 

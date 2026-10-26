@@ -8,7 +8,7 @@ import { getCurrentEdition } from "@/data/editions";
 
 export const metadata = createMetadata({
   title: "Current Editions",
-  description: "Explore current and upcoming TEJAS editions honouring Bharat's greatest minds — independent national talent assessment by DHE.",
+  description: "TEJAS Olympiad 2026–27 and the record of the 1st DHE English Olympiad.",
   path: "/editions",
 });
 
@@ -25,16 +25,16 @@ export default function EditionsPage() {
         bio={current.bio}
         accent={current.imageAccent}
         status={current.status}
-        quote="Dream. Discover. Deliver."
+        quote="Find your spark..."
       />
       <section className="tejas-section">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="mb-8 rounded-2xl border border-tejas-saffron/30 bg-tejas-saffron/5 p-6">
-              <p className="text-sm font-semibold text-tejas-saffron">Dr APJ Abdul Kalam Edition 2026 · Independent TEJAS Cycle</p>
+              <p className="text-sm font-semibold text-tejas-saffron">TEJAS Olympiad 2026–27 · 6th Edition of Shiksha Mahakumbh</p>
               <p className="mt-2 text-tejas-muted">
-                DHE English Olympiad 2.0, DHE Maths Olympiad, and DHE Tech Olympiad for Classes III–X.
-                Conducted after Shiksha Mahakumbh — not under its aegis. Administered by Olympiad Cell, DHE.
+                TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X.
+                Registration 1–20 November 2026. Fee ₹100 per student per stream.
               </p>
               <Link href={`/editions/${current.slug}`} className="mt-4 inline-block text-sm font-semibold text-tejas-saffron hover:underline">
                 Explore {current.name} →
@@ -43,8 +43,8 @@ export default function EditionsPage() {
           </FadeIn>
           <FadeIn>
             <SectionHeader
-              title="Collectible Editions"
-              subtitle="Each TEJAS edition honours a luminary of Bharatiya knowledge, science, and culture."
+              title="On record"
+              subtitle="The current Olympiad and the 2025 English Olympiad. Later named editions have not been announced."
             />
           </FadeIn>
           <div className="grid gap-8 md:grid-cols-2">

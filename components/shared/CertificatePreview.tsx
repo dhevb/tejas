@@ -14,7 +14,7 @@ export function CertificatePreview({
   studentName = "Student Name",
   olympiad = "Mathematics Olympiad",
   rank = "National Top 100",
-  edition = "2027 Dr APJ Abdul Kalam Edition",
+  edition = "TEJAS Olympiad 2026–27",
   className,
 }: CertificatePreviewProps) {
   return (

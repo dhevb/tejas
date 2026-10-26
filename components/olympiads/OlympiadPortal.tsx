@@ -100,7 +100,7 @@ export function OlympiadPortal({ olympiad }: Props) {
         {isComingSoon && (
           <ComingSoonCard
             title={`${t(olympiad.name)} Olympiad`}
-            description="This stream is part of the TEJAS expansion roadmap. Active streams in the current Kalam Edition: English, Maths, Technology."
+            description="This stream is not part of TEJAS Olympiad 2026–27. The active streams are TEJAS English, TEJAS Mathematics, and TEJAS Future Tech."
           />
         )}
 

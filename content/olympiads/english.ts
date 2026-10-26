@@ -3,7 +3,7 @@ import { currentCycle, pastEnglishOlympiad2025, CURRENT_EDITION_LABEL } from "@/
 
 export const englishOlympiad: OlympiadPortalContent = {
   slug: "english",
-  name: { en: "English", hi: "अंग्रेज़ी" },
+  name: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" },
   tagline: {
     en: "DHE English Olympiad — strengthening language fundamentals from an early age",
     hi: "DHE अंग्रेज़ी ओलंपियाड — प्रारंभिक आयु से भाषा की मजबूत नींव",
@@ -13,8 +13,8 @@ export const englishOlympiad: OlympiadPortalContent = {
     hi: "भाषा केवल संचार का माध्यम नहीं; यह अभिव्यक्ति, रचनात्मकता और आत्मविश्वास की नींव है। DHE अंग्रेज़ी ओलंपियाड शब्दावली, व्याकरण, पठन बोध और रचनात्मक भाषा उपयोग को मजबूत करता है।",
   },
   whySubject: {
-    en: "Proficiency in English enables students to articulate ideas globally while remaining rooted in Bharatiya values. From the success of the 1st DHE English Olympiad (10,040+ students, 25 schools), Olympiad Cell is expanding nationwide through the independent TEJAS Dr APJ Abdul Kalam Edition — held after Shiksha Mahakumbh.",
-    hi: "अंग्रेज़ी में दक्षता छात्रों को भारतीय मूल्यों में निहित रहते हुए वैश्विक स्तर पर विचार व्यक्त करने में सक्षम बनाती है। प्रथम DHE अंग्रेज़ी ओलंपियाड की सफलता के बाद, ओलंपियाड सेल स्वतंत्र TEJAS Kalam Edition के माध्यम से राष्ट्रव्यापी विस्तार कर रहा है।",
+    en: "TEJAS English is examined on 10 December 2026 for Classes III–X. It follows the 1st DHE English Olympiad (10,040+ students, 25 schools) held on 13–16 October 2025.",
+    hi: "TEJAS अंग्रेज़ी की परीक्षा 10 दिसंबर 2026 को है। कक्षा III–X।",
   },
   status: "active",
   icon: "book-open",
@@ -22,7 +22,7 @@ export const englishOlympiad: OlympiadPortalContent = {
   grades: currentCycle.grades,
   duration: { en: "60 minutes", hi: "60 मिनट" },
   questions: 50,
-  registrationOpen: false,
+  registrationOpen: true,
   partner: pastEnglishOlympiad2025.partner,
   eligibility: [
     {
@@ -225,8 +225,8 @@ export const englishOlympiad: OlympiadPortalContent = {
     {
       level: { en: "Overall Top 3 (Each Level)", hi: "समग्र शीर्ष 3 (प्रत्येक स्तर)" },
       description: {
-        en: "Gold, Silver & Bronze medals with certificates and book sets — felicitated at Shiksha Mahakumbh",
-        hi: "स्वर्ण, रजत एवं कांस्य पदक, प्रमाणपत्र और पुस्तक सेट — शिक्षा महाकुंभ में सम्मान",
+        en: "₹3,100, ₹2,100, and ₹1,500, plus five consolation prizes of ₹500, for overall toppers in each class across participating schools. Outstanding students also receive gold, silver, and bronze medals.",
+        hi: "₹3,100, ₹2,100, ₹1,500 और पाँच सांत्वना पुरस्कार ₹500।",
       },
     },
     {
@@ -268,8 +268,8 @@ export const englishOlympiad: OlympiadPortalContent = {
         hi: "अगला DHE अंग्रेज़ी ओलंपियाड कब है?",
       },
       answer: {
-        en: "DHE English Olympiad 2.0 is part of the independent TEJAS Dr APJ Abdul Kalam Edition (2026), held after Shiksha Mahakumbh. Registration and exam dates will be announced.",
-        hi: "DHE English Olympiad 2.0 स्वतंत्र TEJAS Kalam Edition (2026) का हिस्सा है। पंजीकरण और परीक्षा तिथियाँ घोषित की जाएँगी।",
+        en: "TEJAS English is on 10 December 2026. Schools register from 1 November 2026 to 20 November 2026. The fee is ₹100 per student per stream.",
+        hi: "TEJAS अंग्रेज़ी 10 दिसंबर 2026 को है। पंजीकरण 1–20 नवंबर 2026।",
       },
     },
     {
@@ -282,8 +282,8 @@ export const englishOlympiad: OlympiadPortalContent = {
     {
       question: { en: "How do schools participate?", hi: "विद्यालय कैसे भाग लें?" },
       answer: {
-        en: "Schools register through official Olympiad Cell, DHE communication channels. Contact olympiad@shikshamahakumbh.com for collaboration.",
-        hi: "DHE ओलंपियाड सेल के आधिकारिक चैनलों से पंजीकरण। olympiad@shikshamahakumbh.com पर संपर्क करें।",
+        en: "Schools register at /schools/register. Write to tejasolympiad@shikshamahakumbh.com or call +91-99886 90588.",
+        hi: "विद्यालय /schools/register पर पंजीकरण करें।",
       },
     },
   ],

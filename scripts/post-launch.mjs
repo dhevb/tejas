@@ -108,7 +108,7 @@ async function submitIndexNow(urls) {
 async function sendBetaInviteEmail() {
   const inviteBody = `Dear Partner School Coordinator,
 
-TEJAS (Talent Evaluation & Joint Assessment Series) — Bharat's National Talent Development Ecosystem — is now live at https://tejas.dhe.org.in
+TEJAS (Talent Exploration for Junior Aspiring Scholars) — TEJAS Olympiad 2026–27 — is now live at https://tejas.dhe.org.in
 
 We invite your school to participate in a closed beta test before public announcement.
 
@@ -120,7 +120,7 @@ ${PARTNER_SCHOOLS.map((s) => `• ${s}`).join("\n")}
 Focus areas for feedback:
 1. Is TEJAS clear as a platform (not just an exam)?
 2. Can users find their olympiad subject quickly?
-3. Is the Dr APJ Abdul Kalam Edition 2026 framing clear?
+3. Are the TEJAS Olympiad 2026–27 dates and fee clear?
 4. Any confusing sections or premature "Coming Soon" labels?
 
 Thank you for helping shape TEJAS.

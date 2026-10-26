@@ -3,13 +3,13 @@ import { currentCycle, CURRENT_EDITION_LABEL } from "@/content/current-cycle";
 
 export const technologyOlympiad: OlympiadPortalContent = {
   slug: "technology",
-  name: { en: "Technology", hi: "प्रौद्योगिकी" },
+  name: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" },
   tagline: {
     en: "DHE Tech Olympiad — digital literacy, innovation, and emerging technologies",
     hi: "DHE टेक ओलंपियाड — डिजिटल साक्षरता, नवाचार और उभरती प्रौद्योगिकियाँ",
   },
   description: {
-    en: "The DHE Tech Olympiad assesses digital literacy, computational thinking, and awareness of emerging technologies. One of three nationwide Olympiad streams in the independent TEJAS Dr APJ Abdul Kalam Edition for Classes III–X.",
+    en: "TEJAS Future Tech is examined on 11 December 2026 for Classes III–X. It assesses digital literacy, computational thinking, and awareness of emerging technologies.",
     hi: "DHE टेक ओलंपियाड डिजिटल साक्षरता, computational thinking और उभरती प्रौद्योगिकियों की जागरूकता का मूल्यांकन करता है।",
   },
   whySubject: {
@@ -22,7 +22,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
   grades: currentCycle.grades,
   duration: { en: "45 minutes", hi: "45 मिनट" },
   questions: 40,
-  registrationOpen: false,
+  registrationOpen: true,
   eligibility: [
     {
       en: "Students in Classes III–X in recognised schools",
@@ -170,7 +170,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
     {
       level: { en: "National Top Achievers", hi: "राष्ट्रीय शीर्ष achievers" },
       description: {
-        en: "Felicitation at the TEJAS National Felicitation Ceremony with medals and certificates",
+        en: "₹3,100, ₹2,100, ₹1,500, and five consolation prizes of ₹500 for overall toppers in each class. Gold, silver, and bronze medals for outstanding students.",
         hi: "TEJAS राष्ट्रीय सम्मान में पदक और प्रमाणपत्र",
       },
     },
@@ -200,8 +200,8 @@ export const technologyOlympiad: OlympiadPortalContent = {
     {
       question: { en: "When is the DHE Tech Olympiad?", hi: "DHE टेक ओलंपियाड कब है?" },
       answer: {
-        en: "Part of the independent TEJAS Dr APJ Abdul Kalam Edition. Dates to be announced.",
-        hi: "स्वतंत्र TEJAS Kalam Edition का हिस्सा। तिथियाँ घोषित की जाएँगी।",
+        en: "TEJAS Future Tech is on 11 December 2026. Schools register from 1 November 2026 to 20 November 2026.",
+        hi: "TEJAS फ्यूचर टेक 11 दिसंबर 2026 को है। पंजीकरण 1–20 नवंबर 2026।",
       },
     },
   ],

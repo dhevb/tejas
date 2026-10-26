@@ -23,11 +23,11 @@ export const resourceRegistry: ResourceItem[] = [
   { id: "blog-eng-tips", title: ls("10 Tips for Reading Comprehension Success", "पठन बोध 10 सुझाव"), description: ls("Expert tips from English Connection", "English Connection सुझाव"), category: "blogs", subject: "English", type: "article", href: "#" },
   // Parent Guide
   { id: "parent-guide", title: ls("Parent's Guide to TEJAS Olympiads", "TEJAS ओलंपियाड — अभिभावक गाइड"), description: ls("How to support your child — registration, preparation, exam day, and results", "पंजीकरण, तैयारी, परीक्षा दिवस और परिणाम"), category: "parent", type: "pdf", href: "#" },
-  { id: "parent-faq", title: ls("Parent FAQ — Kalam Edition 2026", "अभिभावक FAQ"), description: ls("Common questions on eligibility, fees, and school coordination", "पात्रता, शुल्क और विद्यालय समन्वय"), category: "parent", type: "article", href: "/faq" },
+  { id: "parent-faq", title: ls("Parent FAQ — TEJAS Olympiad 2026–27", "अभिभावक FAQ"), description: ls("Common questions on eligibility, fees, and school coordination", "पात्रता, शुल्क और विद्यालय समन्वय"), category: "parent", type: "article", href: "/faq" },
   { id: "tr-guide", title: ls("Teacher's Guide — DHE Olympiads", "शिक्षक गाइड"), description: ls("Complete guide for Olympiad coordinators", "ओलंपियाड समन्वयक गाइड"), category: "teacher", type: "pdf", href: "#" },
   { id: "tr-lesson-plans", title: ls("Weekly Lesson Plans — English Olympiad Prep", "साप्ताहिक lesson plans"), description: ls("6-week classroom preparation plan", "6-सप्ताह कक्षा योजना"), category: "teacher", subject: "English", type: "pdf", href: "#" },
   // School Resources
-  { id: "sch-reg-guide", title: ls("School Registration Guide — Kalam Edition 2026", "विद्यालय पंजीकरण गाइड"), description: ls("Step-by-step registration for schools", "पंजीकरण प्रक्रिया"), category: "school", type: "pdf", href: "#" },
+  { id: "sch-reg-guide", title: ls("School registration — TEJAS Olympiad 2026–27", "विद्यालय पंजीकरण"), description: ls("Register the school and upload the student sheet", "पंजीकरण और छात्र सूची"), category: "school", type: "article", href: "/schools/register" },
   { id: "sch-invigilation", title: ls("Exam Invigilation Standards", "परीक्षा निरीक्षण मानक"), description: ls("OMR exam day protocols for schools", "OMR exam day protocols"), category: "school", type: "pdf", href: "#" },
   // Downloads
   { id: "dl-eng-2025", title: ls("1st DHE English Olympiad — Brief Report", "प्रथम DHE English Olympiad रिपोर्ट"), description: ls("Official report with statistics and results", "आधिकारिक रिपोर्ट"), category: "downloads", subject: "English", type: "pdf", href: "#" },

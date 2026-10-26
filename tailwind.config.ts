@@ -12,18 +12,18 @@ const config: Config = {
       colors: {
         tejas: {
           saffron: {
-            DEFAULT: "#E85D04",
-            soft: "#FFF4ED",
-            dark: "#C2410C",
+            DEFAULT: "#B65A28",
+            soft: "#FAF8F2",
+            dark: "#8C4318",
           },
           blue: {
-            DEFAULT: "#1E3A5F",
-            dark: "#0F172A",
+            DEFAULT: "#172B67",
+            dark: "#101D49",
           },
-          ivory: "#FAF9F6",
+          ivory: "#FAF8F2",
           emerald: "#059669",
-          gold: "#D4A017",
-          copper: "#B87333",
+          gold: "#C99A2E",
+          copper: "#B65A28",
           ink: "#1C1917",
           muted: "#57534E",
         },
@@ -38,7 +38,7 @@ const config: Config = {
       },
       backgroundImage: {
         "mandala-accent":
-          "radial-gradient(circle at 20% 20%, rgba(232, 93, 4, 0.06) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(30, 58, 95, 0.06) 0%, transparent 50%)",
+          "radial-gradient(circle at 20% 20%, rgba(182, 90, 40, 0.06) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(23, 43, 103, 0.06) 0%, transparent 50%)",
       },
     },
   },

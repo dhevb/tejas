@@ -1,0 +1,41 @@
+import { noStore } from "@/lib/registration/http";
+import { referenceIsValid } from "@/lib/registration/reference";
+import { streamById } from "@/lib/registration/schema";
+import { staffAuthorised } from "@/lib/registration/staff";
+import { readRegistration, updatePayment, type PaymentStatus } from "@/lib/registration/store";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const STATUSES: PaymentStatus[] = ["pending_instructions", "awaiting_payment", "reported", "confirmed", "rejected"];
+
+export async function GET(_request: Request, context: { params: Promise<{ reference: string }> }) {
+  if (!(await staffAuthorised())) return noStore({ ok: false }, 401);
+  const { reference } = await context.params;
+  if (!referenceIsValid(reference)) return noStore({ ok: false }, 404);
+  const record = await readRegistration(reference);
+  if (!record) return noStore({ ok: false }, 404);
+  return noStore({
+    ok: true,
+    registration: {
+      ...record,
+      students: record.students.map((student) => ({
+        ...student,
+        streams: student.streams.map((id) => streamById(id).name),
+      })),
+    },
+  });
+}
+
+export async function PATCH(request: Request, context: { params: Promise<{ reference: string }> }) {
+  if (!(await staffAuthorised())) return noStore({ ok: false }, 401);
+  const { reference } = await context.params;
+  if (!referenceIsValid(reference)) return noStore({ ok: false }, 404);
+  const body = (await request.json().catch(() => null)) as { status?: PaymentStatus; note?: string } | null;
+  if (!body?.status || !STATUSES.includes(body.status)) return noStore({ ok: false, error: "Choose a payment status." }, 400);
+  const note = String(body.note ?? "").trim().slice(0, 300);
+  const updated = await updatePayment(reference, body.status, note || null);
+  if (!updated) return noStore({ ok: false }, 404);
+  console.info(`staff payment update ${reference} ${body.status}`);
+  return noStore({ ok: true, status: updated.payment.status });
+}

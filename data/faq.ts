@@ -5,13 +5,13 @@ export const faqItems: FAQItem[] = [
     category: "General",
     question: "What is TEJAS?",
     answer:
-      "TEJAS (Talent Evaluation & Joint Assessment Series) is Bharat's National Talent Development Ecosystem by the Olympiad Cell, Department of Holistic Education (DHE). Olympiads are one vertical — alongside research, innovation, learning, scholarships, and Hall of Fame.",
+      "TEJAS (Talent Exploration for Junior Aspiring Scholars) is the Olympiad conducted by the Department of Holistic Education. The word “for” is part of the full name and is not a letter of the acronym. The current cycle is TEJAS Olympiad 2026–27.",
   },
   {
     category: "General",
     question: "What is the relationship between TEJAS and Shiksha Mahakumbh?",
     answer:
-      "The 1st DHE English Olympiad (2025) was conducted under Shiksha Mahakumbh 5th Edition. The current Dr APJ Abdul Kalam Edition is an independent TEJAS Olympiad cycle by Olympiad Cell, DHE — held after Shiksha Mahakumbh, not under its aegis.",
+      "The 1st DHE English Olympiad (2025) was conducted under Shiksha Mahakumbh 5th Edition. TEJAS Olympiad 2026–27 is placed in the 6th Edition of Shiksha Mahakumbh and is administered by the Department of Holistic Education, a unit of Vidya Bharti Institute of Training & Research Trust.",
   },
   {
     category: "General",
@@ -23,13 +23,13 @@ export const faqItems: FAQItem[] = [
     category: "Olympiads",
     question: "Which Olympiads are active in the current TEJAS edition?",
     answer:
-      "Three streams: DHE English Olympiad 2.0, DHE Maths Olympiad, and DHE Tech Olympiad for Classes III–X. This is the independent Dr APJ Abdul Kalam Edition — not part of Shiksha Mahakumbh.",
+      "TEJAS English on 10 December 2026, TEJAS Mathematics on 9 December 2026, and TEJAS Future Tech on 11 December 2026. Classes III–X.",
   },
   {
     category: "Registration",
     question: "How do schools participate?",
     answer:
-      "Schools register through Olympiad Cell, DHE official communication channels. Contact olympiad@shikshamahakumbh.com or academics@shikshamahakumbh.com for collaboration.",
+      "Schools register at /schools/register from 1 November 2026 to 20 November 2026 and upload a student sheet. The fee is ₹100 per student per stream: ₹80 to TEJAS Olympiad and ₹20 retained by the school. Write to tejasolympiad@shikshamahakumbh.com or call +91-99886 90588.",
   },
   {
     category: "Exams",
@@ -47,7 +47,7 @@ export const faqItems: FAQItem[] = [
     category: "Awards",
     question: "What awards do winners receive?",
     answer:
-      "Overall and school-wise top 3 at each level receive medals, certificates, and book sets. All participants receive digital certificates with QR verification. Top achievers are felicitated at the TEJAS National Felicitation Ceremony.",
+      "Every participant receives an e-certificate. Outstanding students receive gold, silver, and bronze medals. Overall toppers in each class, in every stream, across participating schools receive ₹3,100, ₹2,100, ₹1,500, and five consolation prizes of ₹500. School-level winners receive certificates, medals, and books. The school with the highest participation may receive special recognition.",
   },
   {
     category: "Preparation",

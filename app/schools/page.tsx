@@ -1,10 +1,7 @@
+import Link from "next/link";
 import { createMetadata } from "@/config/seo";
 import { PageHero } from "@/components/shared/PageHero";
-import { SchoolCard } from "@/components/shared/SchoolCard";
 import { FadeIn } from "@/components/shared/FadeIn";
-import { SectionHeader } from "@/components/shared/SectionHeader";
-import { featuredSchools } from "@/data/schools";
-import { Button } from "@/components/ui/button";
 
 export const metadata = createMetadata({
   title: "For Schools",
@@ -18,8 +15,8 @@ export default function SchoolsPage() {
       <PageHero
         eyebrow="Schools"
         title="School Partnership Program"
-        subtitle="Join 12,000+ schools in Bharat's most prestigious talent assessment network."
-        primaryCta={{ label: "Contact Us", href: "/contact" }}
+        subtitle="Register the school for TEJAS Olympiad 2026–27 and upload the student sheet."
+        primaryCta={{ label: "School registration", href: "/schools/register" }}
       />
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -27,27 +24,18 @@ export default function SchoolsPage() {
             <div className="rounded-2xl bg-tejas-blue p-10 text-white text-center">
               <h2 className="text-2xl font-bold">Register Your School</h2>
               <p className="mt-3 text-white/70 max-w-xl mx-auto">
-                School portal and bulk registration coming soon. Contact us to express interest.
+                Registration is open from 1 November 2026 to 20 November 2026. The fee is ₹100 per student per stream.
               </p>
-              <Button className="mt-6" disabled title="School portal coming soon">
-                School Portal — Coming Soon
-              </Button>
+              <Link href="/schools/register" className="mt-6 inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-tejas-blue">
+                Open the registration form
+              </Link>
             </div>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <SectionHeader
-              className="mt-20"
-              title="Featured Partner Schools"
-              subtitle="Schools leading the way in talent development."
-            />
+            <p className="mx-auto mt-16 max-w-3xl text-center text-tejas-muted leading-relaxed">
+              A participating-school list for 2026–27 has not been published. Medal counts from earlier drafts are not shown here.
+            </p>
           </FadeIn>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredSchools.map((school, i) => (
-              <FadeIn key={school.id} delay={i * 0.05}>
-                <SchoolCard school={school} />
-              </FadeIn>
-            ))}
-          </div>
         </div>
       </section>
     </>

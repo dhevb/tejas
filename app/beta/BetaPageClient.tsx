@@ -12,7 +12,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 const FEEDBACK_QUESTIONS = [
   "Is TEJAS clear as a platform (not just an exam)?",
   "Could you find your olympiad subject in under 30 seconds?",
-  "Is the Dr APJ Abdul Kalam Edition 2026 framing clear?",
+  "Are the TEJAS Olympiad 2026–27 dates and fee clear?",
   "What felt confusing or showed 'Coming Soon' too early?",
   "Would you register your school or recommend TEJAS to students?",
 ];

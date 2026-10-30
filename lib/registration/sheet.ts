@@ -7,6 +7,8 @@ import {
   isExampleStudent,
   normaliseSchoolName,
   parseClassValue,
+  parseEmail,
+  parseIndianMobile,
   validateDob,
   validatePersonName,
 } from "@/lib/registration/fields";
@@ -14,7 +16,10 @@ import {
   columnKeyForHeader,
   EXAMPLE_CLASS,
   EXAMPLE_DOB,
+  EXAMPLE_PARENT_EMAIL,
+  EXAMPLE_PARENT_MOBILE,
   EXAMPLE_PARENT_NAME,
+  EXAMPLE_ROLL,
   EXAMPLE_SCHOOL,
   EXAMPLE_SECTION,
   EXAMPLE_STREAMS,
@@ -34,6 +39,8 @@ export type StudentRecord = {
   row: number;
   fullName: string;
   parentName: string;
+  parentMobile: string;
+  parentEmail: string;
   dateOfBirth: string;
   classNumber: number;
   classLabel: string;
@@ -204,8 +211,12 @@ export function parseStudentSheet(buf: Buffer, filename: string, schoolName: str
 
     const name = validatePersonName(rawName, "Full name");
     const parent = validatePersonName(texts.get("parentName") ?? "", "Father's or mother's name");
+    const parentMobile = parseIndianMobile(texts.get("parentMobile") ?? "");
+    const parentEmail = parseEmail(texts.get("parentEmail") ?? "");
     if (!name.ok) pushError(errors, rowNumber, name.message);
     if (!parent.ok) pushError(errors, rowNumber, parent.message);
+    if (!parentMobile) pushError(errors, rowNumber, "Parent or guardian mobile must be a 10-digit Indian mobile number.");
+    if (!parentEmail) pushError(errors, rowNumber, "Parent or guardian email is missing or not a valid email address.");
 
     const dobCell = cells.get("dob");
     const dob = readDob(dobCell);
@@ -225,7 +236,8 @@ export function parseStudentSheet(buf: Buffer, filename: string, schoolName: str
     else if (section.length > 20 || /[\r\n=]/.test(section)) pushError(errors, rowNumber, "Section cannot be accepted.");
 
     const rollNumber = (texts.get("rollNumber") ?? "").trim();
-    if (rollNumber.length > 20 || /[\r\n=+]/.test(rollNumber)) pushError(errors, rowNumber, "Roll number cannot be accepted. Leave it blank if none has been assigned.");
+    if (!rollNumber) pushError(errors, rowNumber, "Roll number or admission number is missing.");
+    else if (rollNumber.length > 20 || /[\r\n=+]/.test(rollNumber)) pushError(errors, rowNumber, "Roll number cannot be accepted.");
 
     const rowSchool = texts.get("schoolName") ?? "";
     if (!rowSchool.trim()) pushError(errors, rowNumber, "School name is blank in the sheet.");
@@ -283,13 +295,15 @@ export function parseStudentSheet(buf: Buffer, filename: string, schoolName: str
       } else seenRolls.set(rollKey, rowNumber);
     }
 
-    if (errors.has(rowNumber) || !name.ok || !parent.ok || !dateOfBirth || classNumber === null) continue;
+    if (errors.has(rowNumber) || !name.ok || !parent.ok || !parentMobile || !parentEmail || !dateOfBirth || classNumber === null || !rollNumber) continue;
     const blocked = streams.some((id) => !classIsEligible(classNumber, streamById(id).classes));
     if (blocked || !streams.length || !section || !rowSchool.trim() || normaliseSchoolName(rowSchool) !== expectedSchool) continue;
     students.push({
       row: rowNumber,
       fullName: name.value,
       parentName: parent.value,
+      parentMobile,
+      parentEmail,
       dateOfBirth,
       classNumber,
       classLabel: classLabel.trim(),
@@ -317,7 +331,7 @@ export function parseStudentSheet(buf: Buffer, filename: string, schoolName: str
 
 export function buildTemplateBuffer(): Buffer {
   const headers = STUDENT_COLUMNS.map((column) => column.header);
-  const example = [EXAMPLE_STUDENT_NAME, EXAMPLE_PARENT_NAME, EXAMPLE_DOB, EXAMPLE_CLASS, EXAMPLE_SECTION, "", EXAMPLE_SCHOOL, EXAMPLE_STREAMS];
+  const example = [EXAMPLE_STUDENT_NAME, EXAMPLE_PARENT_NAME, EXAMPLE_PARENT_MOBILE, EXAMPLE_PARENT_EMAIL, EXAMPLE_DOB, EXAMPLE_CLASS, EXAMPLE_SECTION, EXAMPLE_ROLL, EXAMPLE_SCHOOL, EXAMPLE_STREAMS];
   const students = XLSX.utils.aoa_to_sheet([headers, example]);
   students["!cols"] = headers.map((header) => ({ wch: Math.max(header.length + 2, 22) }));
   const instructions = XLSX.utils.aoa_to_sheet([
@@ -326,7 +340,7 @@ export function buildTemplateBuffer(): Buffer {
     ["Date of birth must be DD-MM-YYYY."],
     ["Class is III–X for TEJAS English, TEJAS Mathematics, and TEJAS Future Tech. The brochure does not print a separate range for each stream."],
     ["Streams: TEJAS English, TEJAS Mathematics, TEJAS Future Tech. Separate more than one with a comma."],
-    ["Roll number may be left blank."],
+    ["Every column is compulsory, including roll number, parent mobile, and parent email."],
     ["School name in every row must match the school name on the registration form."],
     ["Do not include macros, passwords, or hidden sheets."],
     [`Approved stream names: ${STREAMS.map((stream) => stream.name).join(", ")}.`],
@@ -344,6 +358,8 @@ export function studentsToWorkbook(students: StudentRecord[]): Buffer {
     ...students.map((student) => [
       safeExport(student.fullName),
       safeExport(student.parentName),
+      safeExport(student.parentMobile),
+      safeExport(student.parentEmail),
       safeExport(student.dateOfBirth),
       safeExport(student.classLabel),
       safeExport(student.section),
@@ -367,6 +383,8 @@ export function previewStudents(students: StudentRecord[]) {
     row: student.row,
     fullName: student.fullName,
     parentName: student.parentName,
+    parentMobile: student.parentMobile,
+    className: student.classLabel,
     dateOfBirth: student.dateOfBirth,
     classLabel: student.classLabel,
     section: student.section,

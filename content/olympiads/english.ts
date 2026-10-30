@@ -268,7 +268,7 @@ export const englishOlympiad: OlympiadPortalContent = {
         hi: "अगला DHE अंग्रेज़ी ओलंपियाड कब है?",
       },
       answer: {
-        en: "TEJAS English is on 10 December 2026. Schools register from 1 November 2026 to 20 November 2026. The fee is ₹100 per student per stream.",
+        en: "TEJAS English is on 10 December 2026. Schools register from 1 November 2026 to 20 November 2026. The fee is ₹150 per student per stream.",
         hi: "TEJAS अंग्रेज़ी 10 दिसंबर 2026 को है। पंजीकरण 1–20 नवंबर 2026।",
       },
     },

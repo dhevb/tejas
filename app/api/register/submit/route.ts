@@ -3,10 +3,10 @@ import { clientKey, noStore, rateLimit, sameOrigin } from "@/lib/registration/ht
 import { readPaymentConfig } from "@/lib/registration/payment";
 import { detectReceipt } from "@/lib/registration/receipt";
 import { newReference } from "@/lib/registration/reference";
-import { readSchoolForm, validateTransactionReference } from "@/lib/registration/school";
+import { readPaymentSubmission, readSchoolForm } from "@/lib/registration/school";
 import { MAX_RECEIPT_BYTES, MAX_UPLOAD_BYTES } from "@/lib/registration/schema";
 import { detectSheetKind, parseStudentSheet } from "@/lib/registration/sheet";
-import { findIdempotent, payloadHash, readRegistration, saveRegistration, storeIdempotency, toPublicSummary, type PaymentStatus } from "@/lib/registration/store";
+import { findIdempotent, panSeenBefore, payloadHash, readRegistration, saveRegistration, storeIdempotency, toPublicSummary, transactionSeenBefore, type PaymentStatus } from "@/lib/registration/store";
 
 export const runtime = "nodejs";
 
@@ -36,7 +36,11 @@ export async function POST(request: Request) {
   if (parsed.formErrors.length || parsed.rowErrors.length || parsed.students.length === 0) {
     return noStore({ ok: false, formErrors: parsed.formErrors, rowErrors: parsed.rowErrors, fieldErrors: {} }, 400);
   }
-  const fee = calculateFee(parsed.students.reduce((sum, student) => sum + student.streams.length, 0));
+  const streamCount = parsed.students.reduce((sum, student) => sum + student.streams.length, 0);
+  const fee = calculateFee(streamCount, {
+    printedBooks: schoolResult.value.printedBooks === "yes" ? schoolResult.value.bookQuantity : 0,
+    ebookAccess: schoolResult.value.ebookAccess === "yes" ? parsed.students.length : 0,
+  });
   const hash = payloadHash([bytes, Buffer.from(JSON.stringify(schoolResult.value))]);
   const prior = await findIdempotent(idempotencyKey, hash);
   if (prior === "conflict") return noStore({ ok: false, formErrors: ["This submission was already used for a different sheet."] }, 409);
@@ -44,6 +48,7 @@ export async function POST(request: Request) {
     const existing = await readRegistration(prior);
     if (existing) return noStore({ ok: true, registration: toPublicSummary(existing) });
   }
+  schoolResult.value.panDuplicate = await panSeenBefore(schoolResult.value.pan);
 
   const payment = await readPaymentConfig();
   const transactionRaw = String(form.get("transactionReference") ?? "").trim();
@@ -53,25 +58,34 @@ export async function POST(request: Request) {
     return noStore({ ok: false, formErrors: ["Payment receipts are not accepted until official payment instructions are published."], fieldErrors: {} }, 400);
   }
 
-  let status: PaymentStatus = payment.activated ? "awaiting_payment" : "pending_instructions";
+  let status: PaymentStatus = "pending_instructions";
   let transactionReference: string | null = null;
   let receipt: Buffer | null = null;
   let receiptExt: "pdf" | "jpg" | "png" | "webp" | null = null;
-  if (payment.activated && (transactionRaw || hasReceipt)) {
-    if (!transactionRaw || !hasReceipt || !(receiptFile instanceof File)) {
-      return noStore({ ok: false, fieldErrors: { transactionReference: "Enter the transaction reference and upload the receipt together." }, formErrors: [] }, 400);
+  let paymentMode: string | null = null;
+  let paidOn: string | null = null;
+  let payerName: string | null = null;
+  if (payment.activated) {
+    const paid = readPaymentSubmission(form, fee.amountDue);
+    if (!paid.value) return noStore({ ok: false, fieldErrors: paid.errors, formErrors: ["Payment proof is required. Registration is not confirmed until TEJAS Olympiad verifies the payment."] }, 400);
+    if (!(receiptFile instanceof File) || receiptFile.size === 0) {
+      return noStore({ ok: false, formErrors: ["Upload the payment proof as a JPG, PNG, or PDF."], fieldErrors: {} }, 400);
     }
-    const reference = validateTransactionReference(transactionRaw);
-    if (!reference) {
-      return noStore({ ok: false, fieldErrors: { transactionReference: "Enter the reference from the bank or UPI app. This is not accepted as proof until TEJAS Olympiad verifies it." }, formErrors: [] }, 400);
-    }
-    if (receiptFile.size > MAX_RECEIPT_BYTES) return noStore({ ok: false, formErrors: ["The receipt is larger than 5 MB."], fieldErrors: {} }, 413);
+    if (receiptFile.size > MAX_RECEIPT_BYTES) return noStore({ ok: false, formErrors: ["The payment proof is larger than 5 MB."], fieldErrors: {} }, 413);
     const receiptBytes = Buffer.from(await receiptFile.arrayBuffer());
     receiptExt = detectReceipt(receiptBytes, receiptFile.name);
-    if (!receiptExt) return noStore({ ok: false, formErrors: ["Upload the receipt as a PDF, JPG, PNG, or WEBP file."], fieldErrors: {} }, 400);
-    transactionReference = reference;
+    if (!receiptExt) return noStore({ ok: false, formErrors: ["Upload the payment proof as a PDF, JPG, PNG, or WEBP file."], fieldErrors: {} }, 400);
+    if (await transactionSeenBefore(paid.value.transactionReference)) {
+      return noStore({ ok: false, formErrors: ["This transaction reference is already recorded. A second registration cannot use the same payment."] }, 409);
+    }
+    transactionReference = paid.value.transactionReference;
+    paymentMode = paid.value.mode;
+    paidOn = paid.value.paidOn;
+    payerName = paid.value.payerName;
     receipt = receiptBytes;
     status = "reported";
+  } else if (transactionRaw || hasReceipt) {
+    return noStore({ ok: false, formErrors: ["Payment proof is not accepted until the official account details are published. Do not transfer money to an unverified account."], fieldErrors: {} }, 400);
   }
 
   const reference = newReference();
@@ -82,6 +96,9 @@ export async function POST(request: Request) {
     fee,
     status,
     transactionReference,
+    paymentMode,
+    paidOn,
+    payerName,
     upload: bytes,
     uploadExt: kind,
     receipt,

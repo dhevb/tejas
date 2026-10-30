@@ -133,6 +133,26 @@ export function formatIndianMobile(digits: string): string {
   return `+91-${digits.slice(0, 5)} ${digits.slice(5)}`;
 }
 
+const DUMMY_PANS = new Set(["ABCDE1234F", "AAAAA0000A", "ABCDE1234A", "AAAAA1111A"]);
+
+export function parsePan(input: string): string | null {
+  const pan = input.replace(/\s+/g, "").toUpperCase();
+  if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) return null;
+  if (DUMMY_PANS.has(pan) || /^(.)\1{4}0{4}.$/.test(pan)) return null;
+  return pan;
+}
+
+export function maskPan(pan: string): string {
+  if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) return "**********";
+  return `${pan.slice(0, 5)}****${pan.slice(-1)}`;
+}
+
+export function parsePin(input: string): string | null {
+  const pin = input.replace(/\s+/g, "");
+  if (!/^[1-9][0-9]{5}$/.test(pin)) return null;
+  return pin;
+}
+
 export function parseEmail(input: string): string | null {
   const email = input.trim().toLowerCase();
   if (email.length < 6 || email.length > 254) return null;

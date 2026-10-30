@@ -26,8 +26,8 @@ export const currentCycle = {
     hi: "गणित 9 दिसंबर 2026, अंग्रेज़ी 10 दिसंबर 2026, फ्यूचर टेक 11 दिसंबर 2026।",
   } satisfies LocalizedString,
   fee: {
-    en: "₹100 per student per stream: ₹80 payable to TEJAS Olympiad and ₹20 retained by the school. The ₹20 is part of the ₹100, not an extra charge.",
-    hi: "₹100 प्रति विद्यार्थी प्रति स्ट्रीम: ₹80 TEJAS को और ₹20 विद्यालय के पास। ₹20 अतिरिक्त शुल्क नहीं है।",
+    en: "₹150 per student per stream, payable to TEJAS Olympiad. A school share has not been approved and is not part of this fee.",
+    hi: "₹150 प्रति विद्यार्थी प्रति स्ट्रीम, TEJAS को देय। विद्यालय हिस्सा अभी स्वीकृत नहीं है।",
   } satisfies LocalizedString,
   felicitation: {
     en: "Results are placed in February 2027. A declaration date has not been fixed.",

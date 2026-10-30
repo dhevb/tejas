@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createMetadata } from "@/config/seo";
 import { PageHero } from "@/components/shared/PageHero";
 import { currentCycle } from "@/content/current-cycle";
@@ -23,6 +24,9 @@ export default function SchoolRegisterPage() {
             {currentCycle.convener.name}, {currentCycle.convener.titles.join(" and ")}. {currentCycle.convener.phoneDisplay}. {currentCycle.olympiadEmail}.
           </p>
           <SchoolRegistrationForm />
+          <p className="mt-8 text-sm text-tejas-muted">
+            <Link href="/schools/register/review" className="font-semibold text-tejas-blue underline">Staff review</Link>
+          </p>
         </div>
       </section>
     </>

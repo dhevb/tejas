@@ -47,7 +47,7 @@ export function publicPaymentView(config: PaymentConfig): PublicPayment {
   return {
     activated: true,
     heading: "Official payment instructions",
-    message: config.extraInstructions || "Transfer only the amount payable to TEJAS Olympiad. The school retains its share and does not send that share.",
+    message: config.extraInstructions || "Transfer only the registration amount shown on the form. A school share has not been approved and is not deducted here. Uploading proof does not confirm the payment.",
     bankName: config.bankName,
     accountHolder: config.accountHolder,
     accountNumber: config.accountNumber,
@@ -69,6 +69,7 @@ export async function readPaymentConfig(): Promise<PaymentConfig> {
       upiId: String(parsed.upiId ?? "").trim(),
       extraInstructions: String(parsed.extraInstructions ?? "").trim().slice(0, 500),
     };
+    if (process.env.TEJAS_PUBLISH_BANK_DETAILS !== "true") return { ...config, activated: false };
     if (config.activated && !paymentConfigErrors(config)) return config;
     return { ...config, activated: false };
   } catch {

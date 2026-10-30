@@ -160,7 +160,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
   stats: [
     { label: { en: "Olympiad Streams", hi: "ओलंपियाड streams" }, value: "3" },
     { label: { en: "Classes", hi: "कक्षाएँ" }, value: "III–X" },
-    { label: { en: "Fee", hi: "शुल्क" }, value: "₹100" },
+    { label: { en: "Fee", hi: "शुल्क" }, value: "₹150" },
     { label: { en: "Platform", hi: "मंच" }, value: "TEJAS" },
   ],
   felicitation: {
@@ -185,8 +185,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     {
       question: { en: "When is registration opening?", hi: "पंजीकरण कब?" },
       answer: {
-        en: "Registration opens on 1 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹100 per student per stream.",
-        hi: "पंजीकरण 1 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹100 प्रति विद्यार्थी प्रति स्ट्रीम।",
+        en: "Registration opens on 1 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹150 per student per stream.",
+        hi: "पंजीकरण 1 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम।",
       },
     },
   ],

@@ -7,7 +7,7 @@ import { readRegistration, updatePayment, type PaymentStatus } from "@/lib/regis
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const STATUSES: PaymentStatus[] = ["pending_instructions", "awaiting_payment", "reported", "confirmed", "rejected"];
+const STATUSES: PaymentStatus[] = ["pending_instructions", "awaiting_payment", "reported", "confirmed", "rejected", "refund_pending"];
 
 export async function GET(_request: Request, context: { params: Promise<{ reference: string }> }) {
   if (!(await staffAuthorised())) return noStore({ ok: false }, 401);
@@ -34,6 +34,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ refer
   const body = (await request.json().catch(() => null)) as { status?: PaymentStatus; note?: string } | null;
   if (!body?.status || !STATUSES.includes(body.status)) return noStore({ ok: false, error: "Choose a payment status." }, 400);
   const note = String(body.note ?? "").trim().slice(0, 300);
+  if ((body.status === "rejected" || body.status === "refund_pending") && note.length < 5) {
+    return noStore({ ok: false, error: "Enter the reason for this decision." }, 400);
+  }
   const updated = await updatePayment(reference, body.status, note || null);
   if (!updated) return noStore({ ok: false }, 404);
   console.info(`staff payment update ${reference} ${body.status}`);

@@ -2,9 +2,9 @@ import { clientKey, noStore, rateLimit, sameOrigin } from "@/lib/registration/ht
 import { readPaymentConfig } from "@/lib/registration/payment";
 import { detectReceipt } from "@/lib/registration/receipt";
 import { referenceIsValid } from "@/lib/registration/reference";
-import { validateTransactionReference } from "@/lib/registration/school";
+import { readPaymentSubmission } from "@/lib/registration/school";
 import { MAX_RECEIPT_BYTES } from "@/lib/registration/schema";
-import { attachReceipt, readRegistration, toPublicSummary } from "@/lib/registration/store";
+import { attachReceipt, readRegistration, toPublicSummary, transactionSeenBefore } from "@/lib/registration/store";
 
 export const runtime = "nodejs";
 
@@ -19,20 +19,28 @@ export async function POST(request: Request, context: { params: Promise<{ refere
   }
   const record = await readRegistration(reference);
   if (!record) return noStore({ ok: false, formErrors: ["Registration not found."] }, 404);
-  if (record.payment.status === "confirmed" || record.payment.status === "reported") {
+  if (record.payment.status === "confirmed" || record.payment.status === "reported" || record.payment.status === "refund_pending") {
     return noStore({ ok: false, formErrors: ["A payment update is already on file for this reference."] }, 409);
   }
   const form = await request.formData();
-  const transaction = validateTransactionReference(String(form.get("transactionReference") ?? ""));
+  const amountDue = record.fee.amountDue ?? record.fee.payableToTejas;
+  const paid = readPaymentSubmission(form, amountDue);
   const receiptFile = form.get("receipt");
-  if (!transaction || !(receiptFile instanceof File)) {
-    return noStore({ ok: false, formErrors: ["Enter the transaction reference and upload the receipt. This does not by itself confirm payment."] }, 400);
+  if (!paid.value || !(receiptFile instanceof File)) {
+    return noStore({ ok: false, fieldErrors: paid.errors, formErrors: ["Enter the payment details and upload the proof. This does not by itself confirm payment."] }, 400);
+  }
+  if (await transactionSeenBefore(paid.value.transactionReference)) {
+    return noStore({ ok: false, formErrors: ["This transaction reference is already recorded."] }, 409);
   }
   if (receiptFile.size > MAX_RECEIPT_BYTES) return noStore({ ok: false, formErrors: ["The receipt is larger than 5 MB."] }, 413);
   const bytes = Buffer.from(await receiptFile.arrayBuffer());
   const ext = detectReceipt(bytes, receiptFile.name);
   if (!ext) return noStore({ ok: false, formErrors: ["Upload the receipt as a PDF, JPG, PNG, or WEBP file."] }, 400);
-  const updated = await attachReceipt(reference, transaction, bytes, ext);
+  const updated = await attachReceipt(reference, paid.value.transactionReference, bytes, ext, {
+    mode: paid.value.mode,
+    paidOn: paid.value.paidOn,
+    payerName: paid.value.payerName,
+  });
   if (!updated) return noStore({ ok: false, formErrors: ["The receipt could not be saved."] }, 409);
   return noStore({ ok: true, registration: toPublicSummary(updated) });
 }

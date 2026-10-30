@@ -2,13 +2,21 @@ import { createHash } from "node:crypto";
 import { chmod, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { FeeBreakdown } from "@/lib/registration/fee";
+import { maskPan } from "@/lib/registration/fields";
 import type { SchoolForm } from "@/lib/registration/school";
+import { streamById } from "@/lib/registration/schema";
 import type { StudentRecord } from "@/lib/registration/sheet";
 import { dataDir } from "@/lib/registration/paths";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { openBytes, sealBytes } from "@/lib/registration/seal";
 
-export type PaymentStatus = "pending_instructions" | "awaiting_payment" | "reported" | "confirmed" | "rejected";
+export type PaymentStatus = "pending_instructions" | "awaiting_payment" | "reported" | "confirmed" | "rejected" | "refund_pending";
+
+export type PaymentEvent = {
+  at: string;
+  status: PaymentStatus;
+  note: string | null;
+};
 
 export type RegistrationRecord = {
   reference: string;
@@ -20,6 +28,10 @@ export type RegistrationRecord = {
     status: PaymentStatus;
     transactionReference: string | null;
     reviewNote: string | null;
+    mode?: string | null;
+    paidOn?: string | null;
+    payerName?: string | null;
+    history?: PaymentEvent[];
   };
   uploadExt: "xlsx" | "xls" | "csv";
   receiptExt: "pdf" | "jpg" | "png" | "webp" | null;
@@ -33,6 +45,9 @@ export type PublicSummary = {
   totalStudentFees: number;
   payableToTejas: number;
   schoolShare: number;
+  printedBookAmount: number;
+  ebookAmount: number;
+  amountDue: number;
   paymentStatus: PaymentStatus;
   paymentLabel: string;
   nextStep: string;
@@ -40,11 +55,12 @@ export type PublicSummary = {
 };
 
 const STATUS_LABEL: Record<PaymentStatus, string> = {
-  pending_instructions: "Pending Payment Instructions",
-  awaiting_payment: "Awaiting payment",
-  reported: "Payment reported — not yet verified",
-  confirmed: "Payment confirmed by TEJAS Olympiad",
-  rejected: "Payment not accepted",
+  pending_instructions: "Payment Not Submitted",
+  awaiting_payment: "Payment Not Submitted",
+  reported: "Verification Pending",
+  confirmed: "Verified",
+  rejected: "Rejected",
+  refund_pending: "Refund/Adjustment Pending",
 };
 
 const NEXT_STEP: Record<PaymentStatus, string> = {
@@ -53,9 +69,10 @@ const NEXT_STEP: Record<PaymentStatus, string> = {
   awaiting_payment:
     "This registration is saved. It is not a payment receipt. When you pay the amount payable to TEJAS Olympiad through the official instructions, you can add the transaction reference on this page. No confirmation email has been sent.",
   reported:
-    "The transaction reference is on file and is waiting for TEJAS Olympiad to verify it. Submitting a reference does not by itself confirm payment. No confirmation email has been sent.",
+    "Payment proof received. Payment verification is pending. Registration will be confirmed after verification. Uploading proof does not by itself confirm payment. No confirmation email has been sent.",
   confirmed: "TEJAS Olympiad has confirmed the payment against this reference. No confirmation email has been sent.",
   rejected: "The reported payment was not accepted. Use the contact on this website before transferring any further amount. No confirmation email has been sent.",
+  refund_pending: "A refund or adjustment is pending. This is not a new payment confirmation. No confirmation email has been sent.",
 };
 
 export function toPublicSummary(record: RegistrationRecord): PublicSummary {
@@ -67,6 +84,9 @@ export function toPublicSummary(record: RegistrationRecord): PublicSummary {
     totalStudentFees: record.fee.totalStudentFees,
     payableToTejas: record.fee.payableToTejas,
     schoolShare: record.fee.schoolShare,
+    printedBookAmount: record.fee.printedBookAmount ?? 0,
+    ebookAmount: record.fee.ebookAmount ?? 0,
+    amountDue: record.fee.amountDue ?? record.fee.payableToTejas,
     paymentStatus: record.payment.status,
     paymentLabel: STATUS_LABEL[record.payment.status],
     nextStep: NEXT_STEP[record.payment.status],
@@ -91,6 +111,9 @@ export async function saveRegistration(input: {
   fee: FeeBreakdown;
   status: PaymentStatus;
   transactionReference: string | null;
+  paymentMode?: string | null;
+  paidOn?: string | null;
+  payerName?: string | null;
   upload: Buffer;
   uploadExt: RegistrationRecord["uploadExt"];
   receipt: Buffer | null;
@@ -105,7 +128,15 @@ export async function saveRegistration(input: {
     school: input.school,
     students: input.students,
     fee: input.fee,
-    payment: { status: input.status, transactionReference: input.transactionReference, reviewNote: null },
+    payment: {
+      status: input.status,
+      transactionReference: input.transactionReference,
+      reviewNote: null,
+      mode: input.paymentMode ?? null,
+      paidOn: input.paidOn ?? null,
+      payerName: input.payerName ?? null,
+      history: [{ at: new Date().toISOString(), status: input.status, note: null }],
+    },
     uploadExt: input.uploadExt,
     receiptExt: input.receipt ? input.receiptExt : null,
   };
@@ -158,17 +189,28 @@ export async function updatePayment(reference: string, status: PaymentStatus, re
   if (!record) return null;
   record.payment.status = status;
   record.payment.reviewNote = reviewNote;
+  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status, note: reviewNote }];
   await writePrivate(path.join(regDir(reference), "record.json"), sealBytes(Buffer.from(JSON.stringify(record))));
   console.info(`payment status ${reference} ${status}`);
   return record;
 }
 
-export async function attachReceipt(reference: string, transactionReference: string, receipt: Buffer, receiptExt: NonNullable<RegistrationRecord["receiptExt"]>): Promise<RegistrationRecord | null> {
+export async function attachReceipt(
+  reference: string,
+  transactionReference: string,
+  receipt: Buffer,
+  receiptExt: NonNullable<RegistrationRecord["receiptExt"]>,
+  meta: { mode: string; paidOn: string; payerName: string },
+): Promise<RegistrationRecord | null> {
   const record = await readRegistration(reference);
   if (!record) return null;
-  if (record.payment.status === "confirmed" || record.payment.status === "reported") return null;
+  if (record.payment.status === "confirmed" || record.payment.status === "reported" || record.payment.status === "refund_pending") return null;
   record.payment.status = "reported";
   record.payment.transactionReference = transactionReference;
+  record.payment.mode = meta.mode;
+  record.payment.paidOn = meta.paidOn;
+  record.payment.payerName = meta.payerName;
+  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: "reported", note: null }];
   record.receiptExt = receiptExt;
   await writePrivate(path.join(regDir(reference), "record.json"), sealBytes(Buffer.from(JSON.stringify(record))));
   await writePrivate(path.join(regDir(reference), `receipt.${receiptExt}`), sealBytes(receipt));
@@ -176,7 +218,7 @@ export async function attachReceipt(reference: string, transactionReference: str
   return record;
 }
 
-export async function listRegistrationsForStaff(): Promise<Array<PublicSummary & { coordinatorName: string; coordinatorEmail: string; createdAt: string }>> {
+async function loadRegistrations(): Promise<RegistrationRecord[]> {
   const root = path.join(dataDir(), "registrations");
   let names: string[] = [];
   try {
@@ -184,20 +226,106 @@ export async function listRegistrationsForStaff(): Promise<Array<PublicSummary &
   } catch {
     return [];
   }
-  const rows = [];
+  const records: RegistrationRecord[] = [];
   for (const name of names) {
     if (!referenceIsValid(name)) continue;
     const record = await readRegistration(name);
-    if (!record) continue;
-    rows.push({
+    if (record) records.push(record);
+  }
+  return records;
+}
+
+export async function panSeenBefore(pan: string): Promise<boolean> {
+  const records = await loadRegistrations();
+  return records.some((record) => record.school.pan === pan);
+}
+
+export async function transactionSeenBefore(reference: string): Promise<boolean> {
+  const needle = reference.trim().toUpperCase();
+  if (!needle) return false;
+  const records = await loadRegistrations();
+  return records.some((record) => (record.payment.transactionReference ?? "").trim().toUpperCase() === needle);
+}
+
+export type StaffRow = PublicSummary & {
+  coordinatorName: string;
+  coordinatorEmail: string;
+  principalName: string;
+  maskedPan: string;
+  panDuplicate: boolean;
+  createdAt: string;
+  printedBooks: number;
+  ebookAccess: number;
+  transactionReference: string | null;
+  paymentMode: string | null;
+};
+
+export type StaffOverview = {
+  schools: number;
+  students: number;
+  studentStreams: number;
+  amountDue: number;
+  classCounts: Record<string, number>;
+  streamCounts: Record<string, number>;
+  printedBooks: number;
+  ebookAccess: number;
+  payments: Record<PaymentStatus, number>;
+};
+
+export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; overview: StaffOverview }> {
+  const records = await loadRegistrations();
+  const payments: Record<PaymentStatus, number> = {
+    pending_instructions: 0,
+    awaiting_payment: 0,
+    reported: 0,
+    confirmed: 0,
+    rejected: 0,
+    refund_pending: 0,
+  };
+  const classCounts: Record<string, number> = {};
+  const streamCounts: Record<string, number> = {};
+  let students = 0;
+  let studentStreams = 0;
+  let amountDue = 0;
+  let printedBooks = 0;
+  let ebookAccess = 0;
+  const registrations: StaffRow[] = [];
+  for (const record of records) {
+    payments[record.payment.status] += 1;
+    students += record.students.length;
+    studentStreams += record.fee.studentStreamRegistrations;
+    amountDue += record.fee.amountDue ?? record.fee.payableToTejas;
+    const books = record.school.printedBooks === "yes" ? record.school.bookQuantity ?? 0 : 0;
+    const ebooks = record.school.ebookAccess === "yes" ? record.students.length : 0;
+    printedBooks += books;
+    ebookAccess += ebooks;
+    for (const student of record.students) {
+      const classLabel = student.classLabel || String(student.classNumber);
+      classCounts[classLabel] = (classCounts[classLabel] ?? 0) + 1;
+      for (const stream of student.streams) {
+        const name = streamById(stream).name;
+        streamCounts[name] = (streamCounts[name] ?? 0) + 1;
+      }
+    }
+    registrations.push({
       ...toPublicSummary(record),
       coordinatorName: record.school.coordinatorName,
       coordinatorEmail: record.school.coordinatorEmail,
+      principalName: record.school.principalName,
+      maskedPan: record.school.pan ? maskPan(record.school.pan) : "",
+      panDuplicate: record.school.panDuplicate === true,
       createdAt: record.createdAt,
+      printedBooks: books,
+      ebookAccess: ebooks,
+      transactionReference: record.payment.transactionReference,
+      paymentMode: record.payment.mode ?? null,
     });
   }
-  rows.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-  return rows;
+  registrations.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  return {
+    registrations,
+    overview: { schools: records.length, students, studentStreams, amountDue, classCounts, streamCounts, printedBooks, ebookAccess, payments },
+  };
 }
 
 type IdemRow = { key: string; reference: string; hash: string; at: number };

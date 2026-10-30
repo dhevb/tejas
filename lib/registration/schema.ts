@@ -17,6 +17,8 @@ export type StreamId = (typeof STREAMS)[number]["id"];
 export const STUDENT_COLUMNS = [
   { key: "fullName", header: "Full Name of Student" },
   { key: "parentName", header: "Father's/Mother's Name" },
+  { key: "parentMobile", header: "Parent/Guardian Mobile" },
+  { key: "parentEmail", header: "Parent/Guardian Email" },
   { key: "dob", header: "Date of Birth (DD-MM-YYYY)" },
   { key: "className", header: "Class" },
   { key: "section", header: "Section" },
@@ -29,7 +31,10 @@ export type ColumnKey = (typeof STUDENT_COLUMNS)[number]["key"];
 
 export const EXAMPLE_STUDENT_NAME = "EXAMPLE STUDENT (DELETE THIS ROW)";
 export const EXAMPLE_PARENT_NAME = "Example Parent";
+export const EXAMPLE_PARENT_MOBILE = "9876543210";
+export const EXAMPLE_PARENT_EMAIL = "parent@example.test";
 export const EXAMPLE_DOB = "15-08-2015";
+export const EXAMPLE_ROLL = "1";
 export const EXAMPLE_CLASS = "V";
 export const EXAMPLE_SECTION = "A";
 export const EXAMPLE_SCHOOL = "EXAMPLE SCHOOL (REPLACE WITH YOUR SCHOOL)";
@@ -50,6 +55,10 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   "full name of student": "fullName",
   "fathers mothers name": "parentName",
   "father mothers name": "parentName",
+  "parent guardian mobile": "parentMobile",
+  "parent mobile": "parentMobile",
+  "parent guardian email": "parentEmail",
+  "parent email": "parentEmail",
   "date of birth": "dob",
   class: "className",
   section: "section",

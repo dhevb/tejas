@@ -24,7 +24,7 @@ export default function SchoolsPage() {
             <div className="rounded-2xl bg-tejas-blue p-10 text-white text-center">
               <h2 className="text-2xl font-bold">Register Your School</h2>
               <p className="mt-3 text-white/70 max-w-xl mx-auto">
-                Registration is open from 1 November 2026 to 20 November 2026. The fee is ₹100 per student per stream.
+                Registration is open from 1 November 2026 to 20 November 2026. The fee is ₹150 per student per stream.
               </p>
               <Link href="/schools/register" className="mt-6 inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-tejas-blue">
                 Open the registration form

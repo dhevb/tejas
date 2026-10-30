@@ -7,7 +7,7 @@ import { olympiads } from "@/data/olympiads";
 
 export const metadata = createMetadata({
   title: "Mock Tests",
-  description: "Free TEJAS mock tests across all olympiad subjects. Practice with confidence.",
+  description: "Practice information for TEJAS streams. The online examination is not confirmed and this page does not start a test.",
   path: "/prepare/mock-tests",
 });
 
@@ -17,7 +17,7 @@ export default function MockTestsPage() {
       <PageHero
         eyebrow="Mock Tests"
         title="Free Mock Tests"
-        subtitle="Full-length simulated exams with instant scoring. No registration required in Phase 0."
+        subtitle="Practice pages only. The online examination is not confirmed, and this page does not start a live test or show scores."
         primaryCta={{ label: "Prepare Hub", href: "/prepare" }}
       />
       <section className="py-16 md:py-24">
@@ -25,7 +25,7 @@ export default function MockTestsPage() {
           <FadeIn>
             <SectionHeader
               title="Choose Your Subject"
-              subtitle="Select an olympiad to start a free mock test. Live exam engine coming in a future release."
+              subtitle="Subject pages describe the streams. A question bank, timer, and result calculation are not published, and the online examination stays off until it is approved."
             />
           </FadeIn>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

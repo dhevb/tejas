@@ -29,10 +29,10 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
       <section className="py-12">
         <div className="mx-auto max-w-3xl space-y-4 px-4 text-sm text-tejas-ink sm:px-6">
           <p>{summary.studentCount} students. {summary.studentStreamRegistrations} student-stream registrations.</p>
-          <p>Total collected from students: {inr.format(summary.totalStudentFees)}. Payable to TEJAS Olympiad: {inr.format(summary.payableToTejas)}. Retained by the school: {inr.format(summary.schoolShare)}.</p>
+          <p>Registration amount: {inr.format(summary.totalStudentFees)}. Printed books: {inr.format(summary.printedBookAmount)}. E-book access: {inr.format(summary.ebookAmount)}. Amount due: {inr.format(summary.amountDue)}.</p>
+          <p>A school share has not been approved and is not deducted.</p>
           <p className="font-semibold">{summary.paymentLabel}</p>
           <p>{summary.nextStep}</p>
-          <p className="font-semibold">Payment Instructions: Awaiting Official Account Details</p>
           <Link href="/schools/register" className="inline-flex font-semibold text-tejas-blue underline">Back to the form</Link>
         </div>
       </section>

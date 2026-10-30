@@ -27,6 +27,10 @@ const dataDir = mkdtempSync(path.join(tmpdir(), "tejas-reg-"));
 process.env.TEJAS_DATA_DIR = dataDir;
 delete process.env.TEJAS_DATA_KEY;
 delete process.env.TEJAS_ADMIN_TOKEN;
+delete process.env.TEJAS_ACCEPT_PAYMENT_PROOF;
+for (const name of ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY", "SUPABASE_ANON_KEY", "SUPABASE_DB_URL", "DATABASE_URL"]) {
+  delete process.env[name];
+}
 
 const headers = STUDENT_COLUMNS.map((column) => column.header);
 const SCHOOL = "River School";

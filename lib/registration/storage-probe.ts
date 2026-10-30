@@ -30,6 +30,8 @@ export type StorageProbeReport = {
     oversizeStatus: number | null;
     deleteStatus: number | null;
     afterDeleteStatus: number | null;
+    afterDeleteLeaked: boolean;
+    remainingPaths: string[];
   };
   sheets: {
     uploadStatus: number | null;
@@ -37,6 +39,7 @@ export type StorageProbeReport = {
     clientReadStatus: number | null;
     wrongMimeStatus: number | null;
     deleteStatus: number | null;
+    remainingPaths: string[];
   };
   clientBuckets: { name: string; status: number | null; ids: string[]; anyPublic: boolean | null }[];
 };
@@ -87,8 +90,8 @@ export async function runStorageProbe(): Promise<StorageProbeReport> {
     ok: false,
     reason: "missing",
     school: { insertStatus: null, serviceCount: null, clientReads: [], deleteStatus: null, remaining: null },
-    proofs: { uploadStatus: null, serviceReadStatus: null, publicUrlStatus: null, unauthenticatedReadStatus: null, clientReads: [], wrongMimeStatus: null, webpStatus: null, clientUploadStatus: null, oversizeStatus: null, deleteStatus: null, afterDeleteStatus: null },
-    sheets: { uploadStatus: null, unauthenticatedReadStatus: null, clientReadStatus: null, wrongMimeStatus: null, deleteStatus: null },
+    proofs: { uploadStatus: null, serviceReadStatus: null, publicUrlStatus: null, unauthenticatedReadStatus: null, clientReads: [], wrongMimeStatus: null, webpStatus: null, clientUploadStatus: null, oversizeStatus: null, deleteStatus: null, afterDeleteStatus: null, afterDeleteLeaked: false, remainingPaths: [] },
+    sheets: { uploadStatus: null, unauthenticatedReadStatus: null, clientReadStatus: null, wrongMimeStatus: null, deleteStatus: null, remainingPaths: [] },
     clientBuckets: [],
   };
   if (!origin || !key) return empty;
@@ -182,10 +185,13 @@ async function probeProofs(origin: string, key: string, clients: { name: string;
     headers: (() => { const h = authHeaders(key, "application/pdf"); h.set("x-upsert", "true"); return h; })(),
     body: new Uint8Array(5_242_881),
   }, 20000);
-  const deleted = await call(objectUrl, { method: "DELETE", headers: authHeaders(key) });
-  await call(`${origin}/storage/v1/object/tejas-payment-proofs/probes/wrong.txt`, { method: "DELETE", headers: authHeaders(key) });
-  await call(`${origin}/storage/v1/object/tejas-payment-proofs/probes/wrong.webp`, { method: "DELETE", headers: authHeaders(key) });
-  await call(`${origin}/storage/v1/object/tejas-payment-proofs/probes/client.pdf`, { method: "DELETE", headers: authHeaders(key) });
+  const deleted = await removeObjects(origin, key, "tejas-payment-proofs", [
+    PROOF_PATH,
+    "probes/wrong.txt",
+    "probes/wrong.webp",
+    "probes/client.pdf",
+  ]);
+  const remainingPaths = await listProbePaths(origin, key, "tejas-payment-proofs");
   const after = await call(objectUrl, { method: "GET", headers: authHeaders(key) });
   return {
     uploadStatus: upload.status,
@@ -197,15 +203,18 @@ async function probeProofs(origin: string, key: string, clients: { name: string;
     webpStatus: webp.status,
     clientUploadStatus: clientUpload.status,
     oversizeStatus: oversize.status,
-    deleteStatus: deleted.status,
+    deleteStatus: deleted,
     afterDeleteStatus: after.status,
+    afterDeleteLeaked: leakedPdf(after.status, after.bytes),
+    remainingPaths,
   };
 }
 
 async function probeSheets(origin: string, key: string, clients: { name: string; value: string }[]): Promise<StorageProbeReport["sheets"]> {
   const objectUrl = `${origin}/storage/v1/object/tejas-registration-files/${SHEET_PATH}`;
-  await call(objectUrl, { method: "DELETE", headers: authHeaders(key) });
-  const upload = await call(objectUrl, { method: "POST", headers: authHeaders(key, "text/csv"), body: "name\nProbe Student\n" });
+  const sheetHeaders = authHeaders(key, "text/csv");
+  sheetHeaders.set("x-upsert", "true");
+  const upload = await call(objectUrl, { method: "POST", headers: sheetHeaders, body: "name\nProbe Student\n" });
   const unauthenticated = await call(objectUrl, { method: "GET" });
   const client = clients[0];
   const clientRead = client ? await call(objectUrl, { method: "GET", headers: authHeaders(client.value) }) : { status: null };
@@ -214,15 +223,41 @@ async function probeSheets(origin: string, key: string, clients: { name: string;
     headers: authHeaders(key, "application/pdf"),
     body: new Uint8Array(PDF),
   });
-  await call(`${origin}/storage/v1/object/tejas-registration-files/probes/wrong.pdf`, { method: "DELETE", headers: authHeaders(key) });
-  const deleted = await call(objectUrl, { method: "DELETE", headers: authHeaders(key) });
+  const deleted = await removeObjects(origin, key, "tejas-registration-files", [SHEET_PATH, "probes/wrong.pdf"]);
   return {
     uploadStatus: upload.status,
     unauthenticatedReadStatus: unauthenticated.status,
     clientReadStatus: clientRead.status,
     wrongMimeStatus: wrongMime.status,
-    deleteStatus: deleted.status,
+    deleteStatus: deleted,
+    remainingPaths: await listProbePaths(origin, key, "tejas-registration-files"),
   };
+}
+
+async function listProbePaths(origin: string, key: string, bucket: string): Promise<string[]> {
+  const result = await call(`${origin}/storage/v1/object/list/${bucket}`, {
+    method: "POST",
+    headers: authHeaders(key, "application/json"),
+    body: JSON.stringify({ prefix: "probes", limit: 100 }),
+  });
+  try {
+    const parsed = JSON.parse(result.bytes.toString("utf8")) as { name?: string }[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item) => item.name ?? "").filter(Boolean).slice(0, 20);
+  } catch {
+    return [];
+  }
+}
+
+async function removeObjects(origin: string, key: string, bucket: string, paths: string[]): Promise<number | null> {
+  const listed = await listProbePaths(origin, key, bucket);
+  const prefixes = [...new Set([...paths, ...listed.map((name) => name.startsWith("probes/") ? name : `probes/${name}`)])];
+  const result = await call(`${origin}/storage/v1/object/${bucket}`, {
+    method: "DELETE",
+    headers: authHeaders(key, "application/json"),
+    body: JSON.stringify({ prefixes }),
+  });
+  return result.status;
 }
 
 async function probeBucketLists(origin: string, clients: { name: string; value: string }[]): Promise<StorageProbeReport["clientBuckets"]> {

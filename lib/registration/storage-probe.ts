@@ -29,7 +29,7 @@ export type StorageProbeReport = {
     clientUploadStatus: number | null;
     oversizeStatus: number | null;
     deleteStatus: number | null;
-    deleteDetail: string;
+    removed: string[];
     afterDeleteStatus: number | null;
     afterDeleteLeaked: boolean;
     remainingPaths: string[];
@@ -77,12 +77,6 @@ function leakedPdf(status: number | null, bytes: Buffer): boolean {
   return status === 200 && bytes.subarray(0, 5).toString("utf8") === "%PDF-";
 }
 
-function safeDetail(bytes: Buffer): string {
-  if (bytes.subarray(0, 5).toString("utf8") === "%PDF-") return "[pdf]";
-  const text = bytes.toString("utf8").replace(/sb_secret_[A-Za-z0-9_-]+/g, "[redacted]").replace(/eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, "[redacted]");
-  return text.slice(0, 180);
-}
-
 function presentClientKeys(): { name: string; value: string }[] {
   return CLIENT_KEY_NAMES.flatMap((name) => {
     const value = (process.env[name] ?? "").trim();
@@ -97,7 +91,7 @@ export async function runStorageProbe(): Promise<StorageProbeReport> {
     ok: false,
     reason: "missing",
     school: { insertStatus: null, serviceCount: null, clientReads: [], deleteStatus: null, remaining: null },
-    proofs: { uploadStatus: null, serviceReadStatus: null, publicUrlStatus: null, unauthenticatedReadStatus: null, clientReads: [], wrongMimeStatus: null, webpStatus: null, clientUploadStatus: null, oversizeStatus: null, deleteStatus: null, deleteDetail: "", afterDeleteStatus: null, afterDeleteLeaked: false, remainingPaths: [] },
+    proofs: { uploadStatus: null, serviceReadStatus: null, publicUrlStatus: null, unauthenticatedReadStatus: null, clientReads: [], wrongMimeStatus: null, webpStatus: null, clientUploadStatus: null, oversizeStatus: null, deleteStatus: null, removed: [], afterDeleteStatus: null, afterDeleteLeaked: false, remainingPaths: [] },
     sheets: { uploadStatus: null, unauthenticatedReadStatus: null, clientReadStatus: null, wrongMimeStatus: null, deleteStatus: null, remainingPaths: [] },
     clientBuckets: [],
   };
@@ -198,16 +192,10 @@ async function probeProofs(origin: string, key: string, clients: { name: string;
     "probes/wrong.webp",
     "probes/client.pdf",
   ]);
-  let after = await call(objectUrl, { method: "GET", headers: authHeaders(key) });
-  if (leakedPdf(after.status, after.bytes)) {
-    const second = await call(`${origin}/storage/v1/object/tejas-payment-proofs`, {
-      method: "DELETE",
-      headers: authHeaders(key, "application/json"),
-      body: JSON.stringify([PROOF_PATH, "probes/wrong.txt", "probes/wrong.webp", "probes/client.pdf"]),
-    });
-    deleted.detail = `${deleted.detail} | array ${second.status} ${safeDetail(second.bytes)}`;
-    after = await call(objectUrl, { method: "GET", headers: authHeaders(key) });
-  }
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  const freshHeaders = authHeaders(key);
+  freshHeaders.set("cache-control", "no-cache");
+  const after = await call(`${objectUrl}?cb=${Date.now()}`, { method: "GET", headers: freshHeaders });
   const remainingPaths = await listProbePaths(origin, key, "tejas-payment-proofs");
   return {
     uploadStatus: upload.status,
@@ -220,7 +208,7 @@ async function probeProofs(origin: string, key: string, clients: { name: string;
     clientUploadStatus: clientUpload.status,
     oversizeStatus: oversize.status,
     deleteStatus: deleted.status,
-    deleteDetail: deleted.detail,
+    removed: deleted.removed,
     afterDeleteStatus: after.status,
     afterDeleteLeaked: leakedPdf(after.status, after.bytes),
     remainingPaths,
@@ -255,7 +243,7 @@ async function listProbePaths(origin: string, key: string, bucket: string): Prom
   const result = await call(`${origin}/storage/v1/object/list/${bucket}`, {
     method: "POST",
     headers: authHeaders(key, "application/json"),
-    body: JSON.stringify({ prefix: "probes", limit: 100 }),
+    body: JSON.stringify({ prefix: "", limit: 100 }),
   });
   try {
     const parsed = JSON.parse(result.bytes.toString("utf8")) as { name?: string }[];
@@ -266,7 +254,7 @@ async function listProbePaths(origin: string, key: string, bucket: string): Prom
   }
 }
 
-async function removeObjects(origin: string, key: string, bucket: string, paths: string[]): Promise<{ status: number | null; detail: string }> {
+async function removeObjects(origin: string, key: string, bucket: string, paths: string[]): Promise<{ status: number | null; removed: string[] }> {
   const listed = await listProbePaths(origin, key, bucket);
   const prefixes = [...new Set([...paths, ...listed.map((name) => name.startsWith("probes/") ? name : `probes/${name}`)])];
   const result = await call(`${origin}/storage/v1/object/${bucket}`, {
@@ -274,7 +262,14 @@ async function removeObjects(origin: string, key: string, bucket: string, paths:
     headers: authHeaders(key, "application/json"),
     body: JSON.stringify({ prefixes }),
   });
-  return { status: result.status, detail: safeDetail(result.bytes) };
+  let removed: string[] = [];
+  try {
+    const parsed = JSON.parse(result.bytes.toString("utf8")) as { name?: string }[];
+    if (Array.isArray(parsed)) removed = parsed.map((item) => item.name ?? "").filter((name) => name.startsWith("probes/")).slice(0, 10);
+  } catch {
+    removed = [];
+  }
+  return { status: result.status, removed };
 }
 
 async function probeBucketLists(origin: string, clients: { name: string; value: string }[]): Promise<StorageProbeReport["clientBuckets"]> {

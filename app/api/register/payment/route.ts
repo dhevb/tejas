@@ -1,10 +1,10 @@
+import { paymentProofsAccepted } from "@/lib/registration/durable";
 import { noStore } from "@/lib/registration/http";
-import { publicPaymentView, readPaymentConfig } from "@/lib/registration/payment";
+import { officialPublicPayment } from "@/lib/registration/official-bank";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const config = await readPaymentConfig();
-  return noStore(publicPaymentView(config));
+  return noStore(officialPublicPayment(paymentProofsAccepted()));
 }

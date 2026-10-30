@@ -8,7 +8,9 @@ import * as XLSX from "xlsx";
 import { adminConfigured, createSessionValue, sessionIsValid, tokenMatches } from "@/lib/registration/auth";
 import { BOOK_PRICE, calculateFee, EBOOK_FEE, FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, ONLINE_EXAM_APPROVED, SCHOOL_SHARE_APPROVED } from "@/lib/registration/fee";
 import { maskPan, parseIndianMobile, parsePan, validateDob } from "@/lib/registration/fields";
-import { publicPaymentView, writePaymentConfig } from "@/lib/registration/payment";
+import { OFFICIAL_BANK, officialPublicPayment } from "@/lib/registration/official-bank";
+import { paymentProofsAccepted } from "@/lib/registration/durable";
+import { writePaymentConfig } from "@/lib/registration/payment";
 import { registrationsToCsv } from "@/lib/registration/reports";
 import { buildTemplateBuffer, parseStudentSheet } from "@/lib/registration/sheet";
 import { STUDENT_COLUMNS } from "@/lib/registration/schema";
@@ -180,19 +182,18 @@ test("unsupported, oversized, and macro files are refused", () => {
   assert.match(registrations(macro, "students.xlsx").formErrors[0] ?? "", /macros/);
 });
 
-test("payment details stay hidden until authorised", async () => {
-  const hidden = publicPaymentView({
-    activated: false,
-    bankName: "State Bank",
-    accountHolder: "TEJAS",
-    accountNumber: "123456789012",
-    ifsc: "SBIN0001234",
-    upiId: "tejas@sbi",
-    extraInstructions: "",
-  });
-  assert.equal(hidden.activated, false);
-  assert.equal("accountNumber" in hidden, false);
-  assert.match(hidden.message, /do not transfer money/i);
+test("the authorised SBI account is published and proof upload stays closed", async () => {
+  const shown = officialPublicPayment(paymentProofsAccepted());
+  assert.equal(shown.detailsPublished, true);
+  assert.equal(shown.proofsAccepted, false);
+  assert.equal(shown.accountHolder, "Department of Holistic Education");
+  assert.equal(shown.accountNumber, OFFICIAL_BANK.accountNumber);
+  assert.equal(shown.accountNumber, "42529022841");
+  assert.equal(shown.bankName, "State Bank of India");
+  assert.equal(shown.branch, "Chandigarh Main Branch");
+  assert.equal(shown.ifsc, "SBIN0000628");
+  assert.equal(shown.upiId, "holisticeducation@sbi");
+  assert.match(shown.message, /Payment-proof submission will open/);
   const error = await writePaymentConfig({
     activated: true,
     bankName: "Example Bank",
@@ -379,11 +380,31 @@ test("a second school with the same PAN is flagged, and listings mask it", async
   assert.equal(updated?.payment.history?.some((event) => event.status === "rejected"), true);
 });
 
-test("payment proof is refused until account details are published, then checked on the server", async () => {
-  const hidden = await paymentGet();
-  const hiddenBody = await hidden.json() as { activated: boolean };
-  assert.equal(hiddenBody.activated, false);
-  assert.equal(JSON.stringify(hiddenBody).includes("998877665544"), false);
+test("payment proof stays closed while the official account is public", async () => {
+  const shown = await paymentGet();
+  const shownBody = await shown.json() as { proofsAccepted: boolean; accountNumber: string; ifsc: string; upiId: string; branch: string };
+  assert.equal(shownBody.proofsAccepted, false);
+  assert.equal(shownBody.accountNumber, "42529022841");
+  assert.equal(shownBody.ifsc, "SBIN0000628");
+  assert.equal(shownBody.upiId, "holisticeducation@sbi");
+  assert.equal(shownBody.branch, "Chandigarh Main Branch");
+  assert.equal(JSON.stringify(shownBody).includes("998877665544"), false);
+
+  const upi = new FormData();
+  upi.set("paymentMode", "UPI");
+  upi.set("paymentDate", "2026-11-02");
+  upi.set("payerName", "Anita Verma");
+  upi.set("amountPaid", "150");
+  upi.set("transactionReference", "UPI654321");
+  assert.equal(readPaymentSubmission(upi, 150).value?.mode, "UPI");
+  upi.set("paymentMode", "Cheque");
+  assert.equal(readPaymentSubmission(upi, 150).value, null);
+  upi.set("transactionReference", "123456");
+  assert.equal(readPaymentSubmission(upi, 150).value?.transactionReference, "123456");
+
+  process.env.TEJAS_ACCEPT_PAYMENT_PROOF = "true";
+  assert.equal(paymentProofsAccepted(), false);
+  delete process.env.TEJAS_ACCEPT_PAYMENT_PROOF;
 
   const early = new FormData();
   schoolFields(early, "BBCCD1357K");
@@ -396,68 +417,16 @@ test("payment proof is refused until account details are published, then checked
   }));
   assert.equal(blocked.status, 400);
 
-  process.env.TEJAS_PUBLISH_BANK_DETAILS = "true";
-  const configError = await writePaymentConfig({
-    activated: true,
-    bankName: "State Bank of India",
-    accountHolder: "Olympiad Collections",
-    accountNumber: "998877665544",
-    ifsc: "SBIN0001234",
-    upiId: "pay@sbi",
-    extraInstructions: "",
-  });
-  assert.equal(configError, null);
-
-  function paidForm(amount: string, reference: string, fileName: string, bytes: Buffer) {
-    const body = new FormData();
-    schoolFields(body, "BBCCD1357K");
-    body.set("paymentMode", "UPI");
-    body.set("paymentDate", "2026-11-02");
-    body.set("payerName", "Anita Verma");
-    body.set("amountPaid", amount);
-    body.set("transactionReference", reference);
-    body.set("file", new File([new Uint8Array(sheet([student({ rollNumber: "8" })]))], "students.xlsx"));
-    body.set("receipt", new File([new Uint8Array(bytes)], fileName));
-    return body;
-  }
-  const jpeg = Buffer.alloc(32, 0);
-  jpeg[0] = 0xff;
-  jpeg[1] = 0xd8;
-  jpeg[2] = 0xff;
-  const mismatch = await submitPost(new Request("http://localhost/api/register/submit", {
+  const clean = new FormData();
+  schoolFields(clean, "BBCCD1357K");
+  clean.set("file", new File([new Uint8Array(sheet([student({ rollNumber: "8" })]))], "students.xlsx"));
+  const savedResponse = await submitPost(new Request("http://localhost/api/register/submit", {
     method: "POST",
-    body: paidForm("149", "UPI654321", "proof.jpg", jpeg),
+    body: clean,
     headers: { "x-idempotency-key": "submission-key-0004" },
   }));
-  assert.equal(mismatch.status, 400);
-  const wrongType = await submitPost(new Request("http://localhost/api/register/submit", {
-    method: "POST",
-    body: paidForm("150", "UPI654321", "proof.txt", jpeg),
-    headers: { "x-idempotency-key": "submission-key-0005" },
-  }));
-  assert.equal(wrongType.status, 400);
-  const accepted = await submitPost(new Request("http://localhost/api/register/submit", {
-    method: "POST",
-    body: paidForm("150", "UPI654321", "proof.jpg", jpeg),
-    headers: { "x-idempotency-key": "submission-key-0006" },
-  }));
-  const acceptedBody = await accepted.json() as { registration: { reference: string; paymentLabel: string; nextStep: string } };
-  assert.equal(accepted.status, 201, JSON.stringify(acceptedBody));
-  assert.equal(acceptedBody.registration.paymentLabel, "Verification Pending");
-  assert.match(acceptedBody.registration.nextStep, /Payment proof received/);
-  const duplicate = await submitPost(new Request("http://localhost/api/register/submit", {
-    method: "POST",
-    body: paidForm("150", "upi654321", "proof.jpg", jpeg),
-    headers: { "x-idempotency-key": "submission-key-0007" },
-  }));
-  assert.equal(duplicate.status, 409);
-  const shown = await paymentGet();
-  const shownBody = await shown.json() as { activated: boolean; accountNumber?: string };
-  assert.equal(shownBody.activated, true);
-  assert.equal(shownBody.accountNumber, "998877665544");
-  delete process.env.TEJAS_PUBLISH_BANK_DETAILS;
-  const unpublished = await paymentGet();
-  const unpublishedBody = await unpublished.json() as { activated: boolean };
-  assert.equal(unpublishedBody.activated, false);
-  assert.equal(JSON.stringify(unpublishedBody).includes("998877665544"), false);
+  const saved = await savedResponse.json() as { registration: { paymentLabel: string; nextStep: string } };
+  assert.equal(savedResponse.status, 201, JSON.stringify(saved));
+  assert.equal(saved.registration.paymentLabel, "Payment Not Submitted");
+  assert.match(saved.registration.nextStep, /Payment-proof submission is not open yet/);
 });

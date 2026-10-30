@@ -47,10 +47,6 @@ export const MAX_STUDENT_ROWS = 2000;
 export const PREVIOUS_OLYMPIAD_NAME = "1st DHE English Olympiad";
 export const PREVIOUS_OLYMPIAD_DATES = "13–16 October 2025";
 
-export const PAYMENT_PLACEHOLDER_HEADING = "Payment Instructions: Awaiting Official Account Details";
-export const PAYMENT_PLACEHOLDER_MESSAGE =
-  "Official payment instructions will be provided after the authorised account details are confirmed. Please do not transfer money to any unverified account.";
-
 const HEADER_ALIASES: Record<string, ColumnKey> = {
   "full name of student": "fullName",
   "fathers mothers name": "parentName",

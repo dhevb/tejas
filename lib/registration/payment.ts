@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { PAYMENT_PLACEHOLDER_HEADING, PAYMENT_PLACEHOLDER_MESSAGE } from "@/lib/registration/schema";
+import { paymentProofsAccepted } from "@/lib/registration/durable";
 import { dataDir } from "@/lib/registration/paths";
 
 export type PaymentConfig = {
@@ -12,19 +12,6 @@ export type PaymentConfig = {
   upiId: string;
   extraInstructions: string;
 };
-
-export type PublicPayment =
-  | { activated: false; heading: string; message: string }
-  | {
-      activated: true;
-      heading: string;
-      message: string;
-      bankName: string;
-      accountHolder: string;
-      accountNumber: string;
-      ifsc: string;
-      upiId: string;
-    };
 
 const EMPTY: PaymentConfig = {
   activated: false,
@@ -40,22 +27,6 @@ function configPath() {
   return path.join(dataDir(), "payment-config.json");
 }
 
-export function publicPaymentView(config: PaymentConfig): PublicPayment {
-  if (!config.activated) {
-    return { activated: false, heading: PAYMENT_PLACEHOLDER_HEADING, message: PAYMENT_PLACEHOLDER_MESSAGE };
-  }
-  return {
-    activated: true,
-    heading: "Official payment instructions",
-    message: config.extraInstructions || "Transfer only the registration amount shown on the form. A school share has not been approved and is not deducted here. Uploading proof does not confirm the payment.",
-    bankName: config.bankName,
-    accountHolder: config.accountHolder,
-    accountNumber: config.accountNumber,
-    ifsc: config.ifsc,
-    upiId: config.upiId,
-  };
-}
-
 export async function readPaymentConfig(): Promise<PaymentConfig> {
   try {
     const raw = await readFile(configPath(), "utf8");
@@ -69,11 +40,9 @@ export async function readPaymentConfig(): Promise<PaymentConfig> {
       upiId: String(parsed.upiId ?? "").trim(),
       extraInstructions: String(parsed.extraInstructions ?? "").trim().slice(0, 500),
     };
-    if (process.env.TEJAS_PUBLISH_BANK_DETAILS !== "true") return { ...config, activated: false };
-    if (config.activated && !paymentConfigErrors(config)) return config;
-    return { ...config, activated: false };
+    return { ...config, activated: paymentProofsAccepted() };
   } catch {
-    return { ...EMPTY };
+    return { ...EMPTY, activated: paymentProofsAccepted() };
   }
 }
 

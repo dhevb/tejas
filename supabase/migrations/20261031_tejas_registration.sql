@@ -1,6 +1,8 @@
--- Prepared only. This project has no Supabase connection, and this file has not been applied.
--- Do not run it against a database until the organisation approves the project and a backup exists.
--- The statements are reversible. They do not delete existing rows because these tables are new.
+-- NOT APPLIED. No Supabase credentials are available in this environment, so the live schema
+-- has not been compared and no backup has been taken. Do not run this file until both exist.
+-- These statements create new tables only. They do not drop, truncate, or update existing rows.
+-- If a table of the same name already exists, CREATE TABLE IF NOT EXISTS will leave it unchanged
+-- and the later constraints in this file will not repair a different shape. Compare information_schema first.
 
 begin;
 

@@ -15,7 +15,7 @@ export async function POST(request: Request, context: { params: Promise<{ refere
   if (!referenceIsValid(reference)) return noStore({ ok: false, formErrors: ["Registration not found."] }, 404);
   const payment = await readPaymentConfig();
   if (!payment.activated) {
-    return noStore({ ok: false, formErrors: ["Payment receipts are not accepted until official payment instructions are published."] }, 400);
+    return noStore({ ok: false, formErrors: ["Payment-proof submission is not open yet. Keep the registration reference and the transaction details until the secure payment system is operational."] }, 400);
   }
   const record = await readRegistration(reference);
   if (!record) return noStore({ ok: false, formErrors: ["Registration not found."] }, 404);

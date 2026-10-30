@@ -65,7 +65,7 @@ const STATUS_LABEL: Record<PaymentStatus, string> = {
 
 const NEXT_STEP: Record<PaymentStatus, string> = {
   pending_instructions:
-    "Official payment instructions have not been issued. Do not transfer money to any unverified account. Keep this reference. No confirmation email has been sent.",
+    "The official account details are on the registration page. Payment-proof submission is not open yet. Keep this reference. This submission does not confirm payment. No confirmation email has been sent.",
   awaiting_payment:
     "This registration is saved. It is not a payment receipt. When you pay the amount payable to TEJAS Olympiad through the official instructions, you can add the transaction reference on this page. No confirmation email has been sent.",
   reported:

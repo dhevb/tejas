@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   const receiptFile = form.get("receipt");
   const hasReceipt = receiptFile instanceof File && receiptFile.size > 0;
   if (!payment.activated && (transactionRaw || hasReceipt)) {
-    return noStore({ ok: false, formErrors: ["Payment receipts are not accepted until official payment instructions are published."], fieldErrors: {} }, 400);
+    return noStore({ ok: false, formErrors: ["Payment-proof submission is not open yet. Submit the registration without a receipt. The official account details are on the form."], fieldErrors: {} }, 400);
   }
 
   let status: PaymentStatus = "pending_instructions";
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     receipt = receiptBytes;
     status = "reported";
   } else if (transactionRaw || hasReceipt) {
-    return noStore({ ok: false, formErrors: ["Payment proof is not accepted until the official account details are published. Do not transfer money to an unverified account."], fieldErrors: {} }, 400);
+    return noStore({ ok: false, formErrors: ["Payment-proof submission is not open yet. Submit the registration without a receipt. The official account details are on the form."], fieldErrors: {} }, 400);
   }
 
   const reference = newReference();

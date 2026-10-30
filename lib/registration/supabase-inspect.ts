@@ -34,6 +34,20 @@ export type BucketReport = { id: string; public: boolean; fileSizeLimit: number 
 
 export type SqlAttempt = { method: string; status: number | null; parsed: boolean };
 
+export const CLIENT_KEY_NAMES = ["ANON", "SUPABASE_ANON_KEY", "SUPABASE_PUBLISHER_KEY", "Publishable_key"] as const;
+
+export const DATABASE_ACCESS_NAMES = ["DATABASE_URL", "SUPABASE_DB_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL", "POSTGRES_URL_NON_POOLING", "SUPABASE_ACCESS_TOKEN", "SUPABASE_DB_PASSWORD"] as const;
+
+export type ClientProbe = {
+  name: string;
+  present: boolean;
+  restStatus: number | null;
+  rowCount: number | null;
+  storageStatus: number | null;
+  openApiStatus: number | null;
+  seesTejasSchools: boolean | null;
+};
+
 export type InspectReport = {
   ok: boolean;
   reason: "ok" | "missing" | "unreachable";
@@ -46,7 +60,13 @@ export type InspectReport = {
   buckets: BucketReport[];
   rowCounts: { table: string; count: number | null; httpStatus: number | null }[];
   comparison: ReturnType<typeof compareExpected>;
+  clientProbes: ClientProbe[];
+  databaseAccess: Record<string, boolean>;
 };
+
+export function presenceMap(names: readonly string[], env: Record<string, string | undefined>, minimum: number): Record<string, boolean> {
+  return Object.fromEntries(names.map((name) => [name, (env[name] ?? "").trim().length >= minimum]));
+}
 
 function scrub(value: string): string {
   return SECRETISH.test(value) ? "[redacted]" : value;
@@ -214,12 +234,59 @@ export function compareExpected(input: { openApiTables: string[]; columns: { tab
   };
 }
 
+function clientHeaders(key: string, accept = "application/json"): Headers {
+  const h = new Headers();
+  h.set("apikey", key);
+  h.set("accept", accept);
+  if (key.split(".").length === 3) h.set("authorization", `Bearer ${key}`);
+  return h;
+}
+
+function absentProbe(name: string, present: boolean): ClientProbe {
+  return { name, present, restStatus: null, rowCount: null, storageStatus: null, openApiStatus: null, seesTejasSchools: null };
+}
+
+async function probeClientKey(origin: string, name: string): Promise<ClientProbe> {
+  const key = (process.env[name] ?? "").trim();
+  if (key.length < 20) return absentProbe(name, false);
+  const [rest, storage, spec] = await Promise.all([
+    statusAndText(`${origin}/rest/v1/tejas_schools?select=id`, { method: "HEAD", headers: (() => { const h = clientHeaders(key); h.set("prefer", "count=exact"); h.set("range", "0-0"); return h; })() }, 0),
+    statusAndText(`${origin}/storage/v1/bucket`, { method: "GET", headers: clientHeaders(key) }, 0),
+    statusAndText(`${origin}/rest/v1/`, { method: "GET", headers: clientHeaders(key, "application/openapi+json") }, 3_000_000),
+  ]);
+  const seesTejasSchools = spec.status === 200 ? parseOpenApiDocument(spec.text).tables.includes("tejas_schools") : null;
+  return {
+    name,
+    present: true,
+    restStatus: rest.status,
+    rowCount: countFromContentRange(rest.contentRange),
+    storageStatus: storage.status,
+    openApiStatus: spec.status,
+    seesTejasSchools,
+  };
+}
+
 export async function inspectSupabase(): Promise<InspectReport> {
+  const databaseAccess = presenceMap(DATABASE_ACCESS_NAMES, process.env, 8);
   const origin = supabaseOrigin();
   const key = serverKeyValue();
   if (!origin || !key) {
     const comparison = compareExpected({ openApiTables: [], columns: [], sqlTables: null, buckets: [] });
-    return { ok: false, reason: "missing", commit: commitLabel(), openApiTables: [], columns: [], truncated: false, sqlAttempts: [], sqlTables: null, buckets: [], rowCounts: [], comparison };
+    return {
+      ok: false,
+      reason: "missing",
+      commit: commitLabel(),
+      openApiTables: [],
+      columns: [],
+      truncated: false,
+      sqlAttempts: [],
+      sqlTables: null,
+      buckets: [],
+      rowCounts: [],
+      comparison,
+      clientProbes: CLIENT_KEY_NAMES.map((name) => absentProbe(name, (process.env[name] ?? "").trim().length >= 20)),
+      databaseAccess,
+    };
   }
   const ref = projectRef(origin);
   const sqlTargets: { method: string; url: string }[] = [];
@@ -243,13 +310,16 @@ export async function inspectSupabase(): Promise<InspectReport> {
   const sqlTables = sqlHit?.tables ?? null;
   const buckets = bucketRes.status === 200 ? parseBuckets(bucketRes.text) : [];
   const tejasTables = parsedSpec.tables.filter((name) => name.startsWith("tejas_")).slice(0, 30);
-  const rowCounts = await Promise.all(tejasTables.map(async (table) => {
-    const h = headers(key);
-    h.set("prefer", "count=exact");
-    h.set("range", "0-0");
-    const result = await statusAndText(`${origin}/rest/v1/${table}?select=*`, { method: "HEAD", headers: h }, 0);
-    return { table, count: countFromContentRange(result.contentRange), httpStatus: result.status };
-  }));
+  const [rowCounts, clientProbes] = await Promise.all([
+    Promise.all(tejasTables.map(async (table) => {
+      const h = headers(key);
+      h.set("prefer", "count=exact");
+      h.set("range", "0-0");
+      const result = await statusAndText(`${origin}/rest/v1/${table}?select=*`, { method: "HEAD", headers: h }, 0);
+      return { table, count: countFromContentRange(result.contentRange), httpStatus: result.status };
+    })),
+    Promise.all(CLIENT_KEY_NAMES.map((name) => probeClientKey(origin, name))),
+  ]);
   return {
     ok: spec.status === 200,
     reason: spec.status === 200 ? "ok" : "unreachable",
@@ -262,5 +332,7 @@ export async function inspectSupabase(): Promise<InspectReport> {
     buckets,
     rowCounts,
     comparison: compareExpected({ openApiTables: parsedSpec.tables, columns: parsedSpec.columns, sqlTables, buckets }),
+    clientProbes,
+    databaseAccess,
   };
 }

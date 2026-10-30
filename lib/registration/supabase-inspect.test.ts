@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EXPECTED_BUCKET, EXPECTED_TABLES, compareExpected, namesFromSql, parseBuckets, parseOpenApiDocument } from "@/lib/registration/supabase-inspect";
+import { DATABASE_ACCESS_NAMES, EXPECTED_BUCKET, EXPECTED_TABLES, compareExpected, namesFromSql, parseBuckets, parseOpenApiDocument, presenceMap } from "@/lib/registration/supabase-inspect";
 
 const SECRET = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.signature";
 
@@ -75,4 +75,12 @@ test("comparison flags missing columns and accepts the private proof bucket", ()
   assert.equal(comparison.bucket.mimeOk, true);
   assert.equal(comparison.schemaSource, "sql");
   assert.equal(comparison.backupVerified, false);
+});
+
+test("credential presence returns booleans and never the secret text", () => {
+  const report = presenceMap(DATABASE_ACCESS_NAMES, { DATABASE_URL: "postgres://school-secret", SUPABASE_ACCESS_TOKEN: "short" }, 8);
+  assert.equal(report.DATABASE_URL, true);
+  assert.equal(report.SUPABASE_ACCESS_TOKEN, false);
+  assert.equal(JSON.stringify(report).includes("school-secret"), false);
+  assert.equal(JSON.stringify(report).includes("postgres"), false);
 });

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { OFFICIAL_BANK } from "@/lib/registration/official-bank";
 
 type Fee = {
   studentStreamRegistrations: number;
@@ -16,18 +17,12 @@ type Fee = {
   amountDue?: number;
 };
 
-type PublicPayment =
-  | { activated: false; heading: string; message: string }
-  | {
-      activated: true;
-      heading: string;
-      message: string;
-      bankName: string;
-      accountHolder: string;
-      accountNumber: string;
-      ifsc: string;
-      upiId: string;
-    };
+type PublicPayment = {
+  detailsPublished: true;
+  proofsAccepted: boolean;
+  heading: string;
+  message: string;
+};
 
 type Preview = {
   ok: boolean;
@@ -299,29 +294,32 @@ export function SchoolRegistrationForm() {
         )}
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50 p-6">
+      <section className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-6">
         <h2 className="text-xl font-bold text-tejas-ink">Payment</h2>
-        {payment?.activated ? (
+        <p className="font-semibold">{payment?.heading ?? "Official payment account"}</p>
+        <p className="text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>
+        <dl className="grid gap-3 text-sm">
+          {([
+            ["Account name", OFFICIAL_BANK.accountHolder, false],
+            ["Account number", OFFICIAL_BANK.accountNumber, true],
+            ["Bank", OFFICIAL_BANK.bankName, false],
+            ["Branch", OFFICIAL_BANK.branch, false],
+            ["IFSC", OFFICIAL_BANK.ifsc, true],
+            ["UPI ID", OFFICIAL_BANK.upiId, true],
+          ] as const).map(([label, value, canCopy]) => (
+            <div key={label} className="rounded-lg bg-white p-3">
+              <dt className="text-tejas-muted">{label}</dt>
+              <dd className="mt-1 break-all text-base font-semibold">{value}</dd>
+              {canCopy ? (
+                <button type="button" className="mt-2 min-h-[44px] text-sm font-semibold text-tejas-blue underline" onClick={() => copyValue(label, value)}>
+                  {copied === label ? "Copied" : "Copy"}
+                </button>
+              ) : null}
+            </div>
+          ))}
+        </dl>
+        {payment?.proofsAccepted ? (
           <>
-            <p className="font-semibold">{payment.heading}</p>
-            <p className="text-sm text-tejas-muted">{payment.message}</p>
-            <dl className="grid gap-3 text-sm sm:grid-cols-2">
-              {[
-                ["Account name", payment.accountHolder],
-                ["Account number", payment.accountNumber],
-                ["Bank", payment.bankName],
-                ["IFSC", payment.ifsc],
-                ["UPI", payment.upiId],
-              ].filter(([, value]) => value).map(([label, value]) => (
-                <div key={label} className="rounded-lg bg-white p-3">
-                  <dt className="text-tejas-muted">{label}</dt>
-                  <dd className="mt-1 break-all font-semibold">{value}</dd>
-                  <button type="button" className="mt-2 text-sm font-semibold text-tejas-blue underline" onClick={() => copyValue(label, value)}>
-                    {copied === label ? "Copied" : "Copy"}
-                  </button>
-                </div>
-              ))}
-            </dl>
             <label className="block text-sm">
               <span className="font-medium">Payment mode *</span>
               <select name="paymentMode" required value={paymentMode} onChange={(event) => setPaymentMode(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2">
@@ -345,12 +343,7 @@ export function SchoolRegistrationForm() {
             <p className="text-sm text-tejas-muted">Uploading proof does not confirm the payment. Registration stays pending until TEJAS Olympiad verifies it.</p>
           </>
         ) : (
-          <>
-            <p className="font-semibold">Payment Instructions: Awaiting Official Account Details</p>
-            <p className="text-sm text-tejas-muted">
-              Official payment instructions will be provided after the authorised account details are confirmed. Please do not transfer money to any unverified account. Sending this form does not mean a payment has been made.
-            </p>
-          </>
+          <p className="text-sm text-tejas-muted">Do not attach a receipt on this form yet. There is no payment link and no QR code.</p>
         )}
       </section>
 

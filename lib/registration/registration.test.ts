@@ -9,7 +9,8 @@ import { adminConfigured, createSessionValue, sessionIsValid, tokenMatches } fro
 import { BOOK_PRICE, calculateFee, EBOOK_FEE, FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, ONLINE_EXAM_APPROVED, SCHOOL_SHARE_APPROVED } from "@/lib/registration/fee";
 import { maskPan, parseIndianMobile, parsePan, validateDob } from "@/lib/registration/fields";
 import { OFFICIAL_BANK, officialPublicPayment } from "@/lib/registration/official-bank";
-import { paymentProofsAccepted } from "@/lib/registration/durable";
+import { durableStorageConfigured, paymentProofsAccepted, serverKeyName } from "@/lib/registration/durable";
+import { testSupabaseConnection } from "@/lib/registration/supabase-status";
 import { writePaymentConfig } from "@/lib/registration/payment";
 import { registrationsToCsv } from "@/lib/registration/reports";
 import { buildTemplateBuffer, parseStudentSheet } from "@/lib/registration/sheet";
@@ -429,4 +430,55 @@ test("payment proof stays closed while the official account is public", async ()
   assert.equal(savedResponse.status, 201, JSON.stringify(saved));
   assert.equal(saved.registration.paymentLabel, "Payment Not Submitted");
   assert.match(saved.registration.nextStep, /Payment-proof submission is not open yet/);
+});
+
+test("the server key uses SUPABASE_SECRET_KEY only as a fallback and does not open proof upload", async () => {
+  const previous = {
+    url: process.env.SUPABASE_URL,
+    role: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    secret: process.env.SUPABASE_SECRET_KEY,
+    anon: process.env.ANON,
+    proof: process.env.TEJAS_ACCEPT_PAYMENT_PROOF,
+  };
+  const restore = () => {
+    for (const [name, value] of Object.entries({
+      SUPABASE_URL: previous.url,
+      SUPABASE_SERVICE_ROLE_KEY: previous.role,
+      SUPABASE_SECRET_KEY: previous.secret,
+      ANON: previous.anon,
+      TEJAS_ACCEPT_PAYMENT_PROOF: previous.proof,
+    })) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  };
+  try {
+    process.env.SUPABASE_URL = "https://exampleproject.supabase.co";
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.SUPABASE_SECRET_KEY = "s".repeat(24);
+    process.env.ANON = "a".repeat(40);
+    delete process.env.TEJAS_ACCEPT_PAYMENT_PROOF;
+    assert.equal(serverKeyName(), "SUPABASE_SECRET_KEY");
+    assert.equal(durableStorageConfigured(), true);
+    assert.equal(paymentProofsAccepted(), false);
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "r".repeat(24);
+    assert.equal(serverKeyName(), "SUPABASE_SERVICE_ROLE_KEY");
+    const calls: string[] = [];
+    const original = globalThis.fetch;
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      const url = String(input);
+      calls.push(url);
+      const status = url.includes("/admin/users") ? 200 : 200;
+      return new Response(null, { status });
+    }) as typeof fetch;
+    const status = await testSupabaseConnection();
+    globalThis.fetch = original;
+    assert.equal(status.connected, true);
+    assert.equal(status.reason, "ok");
+    assert.equal(status.keyName, "SUPABASE_SERVICE_ROLE_KEY");
+    assert.equal(JSON.stringify(status).includes("r".repeat(24)), false);
+    assert.equal(calls.length, 3);
+  } finally {
+    restore();
+  }
 });

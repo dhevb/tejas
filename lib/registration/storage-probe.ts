@@ -29,6 +29,7 @@ export type StorageProbeReport = {
     clientUploadStatus: number | null;
     oversizeStatus: number | null;
     deleteStatus: number | null;
+    deleteDetail: string;
     afterDeleteStatus: number | null;
     afterDeleteLeaked: boolean;
     remainingPaths: string[];
@@ -76,6 +77,12 @@ function leakedPdf(status: number | null, bytes: Buffer): boolean {
   return status === 200 && bytes.subarray(0, 5).toString("utf8") === "%PDF-";
 }
 
+function safeDetail(bytes: Buffer): string {
+  if (bytes.subarray(0, 5).toString("utf8") === "%PDF-") return "[pdf]";
+  const text = bytes.toString("utf8").replace(/sb_secret_[A-Za-z0-9_-]+/g, "[redacted]").replace(/eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, "[redacted]");
+  return text.slice(0, 180);
+}
+
 function presentClientKeys(): { name: string; value: string }[] {
   return CLIENT_KEY_NAMES.flatMap((name) => {
     const value = (process.env[name] ?? "").trim();
@@ -90,7 +97,7 @@ export async function runStorageProbe(): Promise<StorageProbeReport> {
     ok: false,
     reason: "missing",
     school: { insertStatus: null, serviceCount: null, clientReads: [], deleteStatus: null, remaining: null },
-    proofs: { uploadStatus: null, serviceReadStatus: null, publicUrlStatus: null, unauthenticatedReadStatus: null, clientReads: [], wrongMimeStatus: null, webpStatus: null, clientUploadStatus: null, oversizeStatus: null, deleteStatus: null, afterDeleteStatus: null, afterDeleteLeaked: false, remainingPaths: [] },
+    proofs: { uploadStatus: null, serviceReadStatus: null, publicUrlStatus: null, unauthenticatedReadStatus: null, clientReads: [], wrongMimeStatus: null, webpStatus: null, clientUploadStatus: null, oversizeStatus: null, deleteStatus: null, deleteDetail: "", afterDeleteStatus: null, afterDeleteLeaked: false, remainingPaths: [] },
     sheets: { uploadStatus: null, unauthenticatedReadStatus: null, clientReadStatus: null, wrongMimeStatus: null, deleteStatus: null, remainingPaths: [] },
     clientBuckets: [],
   };
@@ -191,8 +198,17 @@ async function probeProofs(origin: string, key: string, clients: { name: string;
     "probes/wrong.webp",
     "probes/client.pdf",
   ]);
+  let after = await call(objectUrl, { method: "GET", headers: authHeaders(key) });
+  if (leakedPdf(after.status, after.bytes)) {
+    const second = await call(`${origin}/storage/v1/object/tejas-payment-proofs`, {
+      method: "DELETE",
+      headers: authHeaders(key, "application/json"),
+      body: JSON.stringify([PROOF_PATH, "probes/wrong.txt", "probes/wrong.webp", "probes/client.pdf"]),
+    });
+    deleted.detail = `${deleted.detail} | array ${second.status} ${safeDetail(second.bytes)}`;
+    after = await call(objectUrl, { method: "GET", headers: authHeaders(key) });
+  }
   const remainingPaths = await listProbePaths(origin, key, "tejas-payment-proofs");
-  const after = await call(objectUrl, { method: "GET", headers: authHeaders(key) });
   return {
     uploadStatus: upload.status,
     serviceReadStatus: serviceRead.status,
@@ -203,7 +219,8 @@ async function probeProofs(origin: string, key: string, clients: { name: string;
     webpStatus: webp.status,
     clientUploadStatus: clientUpload.status,
     oversizeStatus: oversize.status,
-    deleteStatus: deleted,
+    deleteStatus: deleted.status,
+    deleteDetail: deleted.detail,
     afterDeleteStatus: after.status,
     afterDeleteLeaked: leakedPdf(after.status, after.bytes),
     remainingPaths,
@@ -229,7 +246,7 @@ async function probeSheets(origin: string, key: string, clients: { name: string;
     unauthenticatedReadStatus: unauthenticated.status,
     clientReadStatus: clientRead.status,
     wrongMimeStatus: wrongMime.status,
-    deleteStatus: deleted,
+    deleteStatus: deleted.status,
     remainingPaths: await listProbePaths(origin, key, "tejas-registration-files"),
   };
 }
@@ -249,7 +266,7 @@ async function listProbePaths(origin: string, key: string, bucket: string): Prom
   }
 }
 
-async function removeObjects(origin: string, key: string, bucket: string, paths: string[]): Promise<number | null> {
+async function removeObjects(origin: string, key: string, bucket: string, paths: string[]): Promise<{ status: number | null; detail: string }> {
   const listed = await listProbePaths(origin, key, bucket);
   const prefixes = [...new Set([...paths, ...listed.map((name) => name.startsWith("probes/") ? name : `probes/${name}`)])];
   const result = await call(`${origin}/storage/v1/object/${bucket}`, {
@@ -257,7 +274,7 @@ async function removeObjects(origin: string, key: string, bucket: string, paths:
     headers: authHeaders(key, "application/json"),
     body: JSON.stringify({ prefixes }),
   });
-  return result.status;
+  return { status: result.status, detail: safeDetail(result.bytes) };
 }
 
 async function probeBucketLists(origin: string, clients: { name: string; value: string }[]): Promise<StorageProbeReport["clientBuckets"]> {

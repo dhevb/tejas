@@ -70,14 +70,12 @@ export function SchoolRegistrationForm() {
   }, []);
   const [previous, setPrevious] = useState("no");
   const [books, setBooks] = useState("no");
-  const [ebooks, setEbooks] = useState("no");
   const [affiliation, setAffiliation] = useState("yes");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState<"preview" | "submit" | null>(null);
   const [payment, setPayment] = useState<PublicPayment | null>(null);
-  const [paymentMode, setPaymentMode] = useState("UPI");
   const [copied, setCopied] = useState("");
 
   useEffect(() => {
@@ -264,7 +262,7 @@ export function SchoolRegistrationForm() {
 
       <section className="space-y-2 rounded-2xl border border-stone-200 bg-white p-6">
         <h2 className="text-xl font-bold text-tejas-ink">Automatic fee summary</h2>
-        <p className="text-sm text-tejas-muted">The server calculates ₹150 for each student-stream. Printed books are ₹170 each and e-book access is ₹49 for each student, only when selected. A school share is not approved and is not deducted.</p>
+        <p className="text-sm text-tejas-muted">The server calculates ₹150 for each student-stream. Printed books are ₹170 each. The registration fee and the book amount are listed separately and paid together to the official account. E-book access is not for sale, so ₹49 is not added. A school share is not approved and is not deducted.</p>
         <label className="block text-sm">
           <span className="font-medium">Printed preparation books *</span>
           <select name="printedBooks" value={books} onChange={(event) => setBooks(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2">
@@ -273,20 +271,15 @@ export function SchoolRegistrationForm() {
           </select>
         </label>
         {books === "yes" ? <Field label="Number of printed books *" name="bookQuantity" type="number" error={fieldErrors.bookQuantity} /> : <input type="hidden" name="bookQuantity" value="0" />}
-        <label className="block text-sm">
-          <span className="font-medium">E-book access *</span>
-          <select name="ebookAccess" value={ebooks} onChange={(event) => setEbooks(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2">
-            <option value="no">No, I do not want e-book access</option>
-            <option value="yes">Yes, I want e-book access</option>
-          </select>
-        </label>
-        {ebooks === "yes" ? <p className="text-sm text-tejas-muted">Access is ₹49 per registered student and stays off until TEJAS Olympiad verifies payment. No login is created by this form.</p> : null}
+        <p className="text-sm text-tejas-muted">There is no separate book list by class. The school chooses how many copies it needs. This page does not record dispatch or delivery.</p>
+        <input type="hidden" name="ebookAccess" value="no" />
+        <p className="text-sm text-tejas-muted">E-book files and student logins are not available. The form does not charge ₹49.</p>
         {fee ? (
           <dl className="mt-4 grid gap-2 text-sm">
             <div className="flex justify-between gap-4"><dt>Student-stream registrations</dt><dd>{fee.studentStreamRegistrations}</dd></div>
             <div className="flex justify-between gap-4"><dt>Registration amount</dt><dd>{inr.format(fee.totalStudentFees)}</dd></div>
             <div className="flex justify-between gap-4"><dt>Printed books</dt><dd>{inr.format(fee.printedBookAmount ?? 0)}</dd></div>
-            <div className="flex justify-between gap-4"><dt>E-book access</dt><dd>{inr.format(fee.ebookAmount ?? 0)}</dd></div>
+            <div className="flex justify-between gap-4"><dt>E-book access (not for sale)</dt><dd>{inr.format(fee.ebookAmount ?? 0)}</dd></div>
             <div className="flex justify-between gap-4 font-semibold"><dt>Amount due</dt><dd>{inr.format(fee.amountDue ?? fee.payableToTejas)}</dd></div>
           </dl>
         ) : (
@@ -318,33 +311,11 @@ export function SchoolRegistrationForm() {
             </div>
           ))}
         </dl>
-        {payment?.proofsAccepted ? (
-          <>
-            <label className="block text-sm">
-              <span className="font-medium">Payment mode *</span>
-              <select name="paymentMode" required value={paymentMode} onChange={(event) => setPaymentMode(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2">
-                {["UPI", "NEFT", "IMPS", "RTGS", "Bank Transfer", "Cheque", "Other"].map((mode) => (
-                  <option key={mode}>{mode}</option>
-                ))}
-              </select>
-            </label>
-            <Field label="Payment date *" name="paymentDate" type="date" error={fieldErrors.paymentDate} />
-            <Field label="Amount paid *" name="amountPaid" type="number" error={fieldErrors.transactionReference} />
-            <Field label="Name of payer *" name="payerName" error={fieldErrors.payerName} />
-            <Field
-              label={paymentMode === "Cheque" ? "Cheque number *" : paymentMode === "UPI" ? "UPI transaction reference *" : "UTR or bank reference *"}
-              name="transactionReference"
-              error={fieldErrors.transactionReference}
-            />
-            <label className="block text-sm">
-              <span className="font-medium">Payment proof (JPG, PNG, or PDF) *</span>
-              <input name="receipt" type="file" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" required className="mt-1 block w-full text-sm" />
-            </label>
-            <p className="text-sm text-tejas-muted">Uploading proof does not confirm the payment. Registration stays pending until TEJAS Olympiad verifies it.</p>
-          </>
-        ) : (
-          <p className="text-sm text-tejas-muted">Do not attach a receipt on this form yet. There is no payment link and no QR code.</p>
-        )}
+        <p className="text-sm text-tejas-muted">
+          {payment?.proofsAccepted
+            ? "Submit the registration first. The confirmation page then accepts a JPG, PNG, or PDF proof for this reference. Uploading the proof does not verify the payment. There is no payment link and no QR code."
+            : "Do not attach a receipt on this form yet. There is no payment link and no QR code."}
+        </p>
       </section>
 
       <section className="space-y-3">

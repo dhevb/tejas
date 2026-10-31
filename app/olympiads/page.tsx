@@ -21,7 +21,7 @@ export default function OlympiadsPage() {
         eyebrow="Olympiads"
         title="National Olympiad Series"
         subtitle="TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X. Registration 1–20 November 2026."
-        primaryCta={{ label: "Free Mock Test", href: "/prepare/mock-tests" }}
+        primaryCta={{ label: "School registration", href: "/schools/register" }}
         secondaryCta={{ label: "Prepare Hub", href: "/prepare" }}
       />
       <section className="py-16 md:py-24">

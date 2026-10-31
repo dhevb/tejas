@@ -30,15 +30,15 @@ export function serverKeyValue(): string | null {
   return value.length >= 20 ? value : null;
 }
 
-/** True when a URL and a server key are present. This does not open payment-proof uploads. */
+/** True when a URL and a server key are present. */
 export function durableStorageConfigured(): boolean {
   return supabaseOrigin() !== null && serverKeyName() !== null;
 }
 
 /**
- * Proof upload opens only after an operator sets TEJAS_ACCEPT_PAYMENT_PROOF
- * following a tested migration. A configured Supabase project is not enough.
+ * Proof upload uses the private tejas-payment-proofs bucket through the server.
+ * It opens when that server connection exists. A file upload does not verify payment.
  */
 export function paymentProofsAccepted(): boolean {
-  return process.env.TEJAS_ACCEPT_PAYMENT_PROOF === "true" && durableStorageConfigured();
+  return durableStorageConfigured();
 }

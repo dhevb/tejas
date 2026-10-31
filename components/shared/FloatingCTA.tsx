@@ -11,8 +11,8 @@ interface FloatingCTAProps {
 }
 
 export function FloatingCTA({
-  label = "Free Mock Test",
-  href = "/prepare/mock-tests",
+  label = "School registration",
+  href = "/schools/register",
   className,
 }: FloatingCTAProps) {
   return (

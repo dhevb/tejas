@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createMetadata } from "@/config/seo";
 import { PageHero } from "@/components/shared/PageHero";
+import { paymentProofsAccepted } from "@/lib/registration/durable";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { readRegistration, toPublicSummary } from "@/lib/registration/store";
+import { PaymentProofForm } from "../payment-proof-form";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +31,15 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
       <section className="py-12">
         <div className="mx-auto max-w-3xl space-y-4 px-4 text-sm text-tejas-ink sm:px-6">
           <p>{summary.studentCount} students. {summary.studentStreamRegistrations} student-stream registrations.</p>
-          <p>Registration amount: {inr.format(summary.totalStudentFees)}. Printed books: {inr.format(summary.printedBookAmount)}. E-book access: {inr.format(summary.ebookAmount)}. Amount due: {inr.format(summary.amountDue)}.</p>
+          <p>Registration amount: {inr.format(summary.totalStudentFees)}. Printed books: {inr.format(summary.printedBookAmount)}. Amount due: {inr.format(summary.amountDue)}.</p>
+          <p>The book amount is separate from the registration fee. Both are paid to the official account. This page does not mark books as dispatched or delivered.</p>
+          <p>E-book access is not for sale, so no e-book fee is included.</p>
           <p>A school share has not been approved and is not deducted.</p>
           <p className="font-semibold">{summary.paymentLabel}</p>
           <p>{summary.nextStep}</p>
+          {paymentProofsAccepted() && ["pending_instructions", "awaiting_payment", "rejected"].includes(summary.paymentStatus) ? (
+            <PaymentProofForm reference={summary.reference} amountDue={summary.amountDue} />
+          ) : null}
           <Link href="/schools/register" className="inline-flex font-semibold text-tejas-blue underline">Back to the form</Link>
         </div>
       </section>

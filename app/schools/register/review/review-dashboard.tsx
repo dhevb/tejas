@@ -65,6 +65,14 @@ type Detail = {
 
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
+function bookOrderLabel(status: string): string {
+  if (status === "reported") return "Book payment submitted";
+  if (status === "confirmed") return "Book payment verified";
+  if (status === "rejected") return "Book payment rejected";
+  if (status === "refund_pending") return "Book payment adjustment pending";
+  return "Book order pending";
+}
+
 export function ReviewDashboard() {
   const [token, setToken] = useState("");
   const [message, setMessage] = useState("");
@@ -73,6 +81,8 @@ export function ReviewDashboard() {
   const [rows, setRows] = useState<Row[]>([]);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [note, setNote] = useState("");
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   async function load() {
     const response = await fetch("/api/register/admin/registrations");
@@ -176,6 +186,23 @@ export function ReviewDashboard() {
         <p>Classes: {overview ? Object.entries(overview.classCounts).map(([label, count]) => `${label} ${count}`).join(", ") || "None" : "None"}</p>
         <p>Streams: {overview ? Object.entries(overview.streamCounts).map(([label, count]) => `${label} ${count}`).join(", ") || "None" : "None"}</p>
       </div>
+      <div className="flex flex-wrap gap-3">
+        <label className="text-sm">
+          <span className="font-medium">Search</span>
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="School or reference" className="mt-1 block rounded-lg border border-stone-300 px-3 py-2" />
+        </label>
+        <label className="text-sm">
+          <span className="font-medium">Payment status</span>
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="mt-1 block rounded-lg border border-stone-300 px-3 py-2">
+            <option value="all">All</option>
+            <option value="pending_instructions">Payment not submitted</option>
+            <option value="reported">Verification pending</option>
+            <option value="confirmed">Verified</option>
+            <option value="rejected">Rejected</option>
+            <option value="refund_pending">Refund or adjustment pending</option>
+          </select>
+        </label>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead>
@@ -188,7 +215,12 @@ export function ReviewDashboard() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {rows.filter((row) => {
+              const needle = query.trim().toLowerCase();
+              const matchesQuery = !needle || row.schoolName.toLowerCase().includes(needle) || row.reference.toLowerCase().includes(needle);
+              const matchesStatus = statusFilter === "all" || row.paymentStatus === statusFilter;
+              return matchesQuery && matchesStatus;
+            }).map((row) => (
               <tr key={row.reference} className="border-b border-stone-100">
                 <td className="py-2 pr-3">
                   <button type="button" className="text-left font-semibold text-tejas-blue underline" onClick={() => openRow(row.reference)}>{row.schoolName}</button>
@@ -210,8 +242,9 @@ export function ReviewDashboard() {
           <p>PAN for this staff view: {detail.school.pan}{detail.school.panDuplicate ? " (duplicate, needs review)" : ""}</p>
           <p>Principal: {detail.school.principalName}, {detail.school.principalMobile}, {detail.school.principalEmail}</p>
           <p>Coordinator: {detail.school.coordinatorName}, {detail.school.coordinatorMobile}, {detail.school.coordinatorEmail}</p>
-          <p>Registration {inr.format(detail.fee.totalStudentFees)}. Books {inr.format(detail.fee.printedBookAmount ?? 0)}. E-books {inr.format(detail.fee.ebookAmount ?? 0)}. Due {inr.format(detail.fee.amountDue)}.</p>
-          <p>E-book choice: {detail.school.ebookAccess}. Access is not activated from this screen.</p>
+          <p>Registration {inr.format(detail.fee.totalStudentFees)}. Printed books {detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0} ({inr.format(detail.fee.printedBookAmount ?? 0)}). Due {inr.format(detail.fee.amountDue)}.</p>
+          <p>Book order: {detail.school.printedBooks === "yes" ? bookOrderLabel(detail.payment.status) : "No printed books ordered"}. Dispatch and delivery are not recorded here.</p>
+          <p>E-book access is not for sale and is not activated from this screen.</p>
           <p>Payment: {detail.payment.status}. {detail.payment.mode ?? ""} {detail.payment.paidOn ?? ""} {detail.payment.payerName ?? ""} {detail.payment.transactionReference ?? ""}</p>
           {detail.receiptExt ? <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=receipt`}>Open payment proof</a> : <p>No payment proof is stored.</p>}
           <ul>

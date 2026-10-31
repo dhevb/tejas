@@ -78,17 +78,19 @@ export function OlympiadPortal({ olympiad }: Props) {
                 {isComingSoon ? (
                   <Button disabled>Coming Soon</Button>
                 ) : (
-                  <Button disabled title="Registration opens soon">Register Now</Button>
+                  <Link href="/schools/register">
+                    <Button>Register a school</Button>
+                  </Link>
                 )}
                 <Link href="/prepare/mock-tests">
                   <Button variant="outline" className="border-white/40 text-white hover:bg-white/10">
-                    Free Mock Test
+                    Mock tests (not open)
                   </Button>
                 </Link>
               </div>
             </div>
             {!isComingSoon && (
-              <Countdown targetDate="2026-09-01" label="Registration opens soon" />
+              <Countdown targetDate="2026-11-20" label="Registration closes" />
             )}
           </div>
         </div>
@@ -386,7 +388,9 @@ export function OlympiadPortal({ olympiad }: Props) {
           <h2 className="text-2xl font-bold text-tejas-ink">Ready to Participate?</h2>
           <p className="mt-2 text-tejas-muted">Register through your school via Olympiad Cell, DHE.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <Button disabled={isComingSoon}>Register Now</Button>
+            {isComingSoon ? <Button disabled>Coming Soon</Button> : (
+              <Link href="/schools/register"><Button>Register a school</Button></Link>
+            )}
             <Link href="/schools">
               <Button variant="outline">For Schools</Button>
             </Link>

@@ -6,6 +6,20 @@ import { maskPan } from "@/lib/registration/fields";
 import type { SchoolForm } from "@/lib/registration/school";
 import { streamById } from "@/lib/registration/schema";
 import type { StudentRecord } from "@/lib/registration/sheet";
+import {
+  attachReceipt as attachRemoteReceipt,
+  configured as remoteConfigured,
+  findIdempotent as findRemoteIdempotent,
+  insertRegistration,
+  listRegistrations,
+  panSeen,
+  readReceipt as readRemoteReceipt,
+  readRegistration as readRemoteRegistration,
+  readUpload as readRemoteUpload,
+  storeIdempotency as storeRemoteIdempotency,
+  transactionSeen,
+  updatePayment as updateRemotePayment,
+} from "@/lib/registration/database";
 import { dataDir } from "@/lib/registration/paths";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { openBytes, sealBytes } from "@/lib/registration/seal";
@@ -118,10 +132,9 @@ export async function saveRegistration(input: {
   uploadExt: RegistrationRecord["uploadExt"];
   receipt: Buffer | null;
   receiptExt: RegistrationRecord["receiptExt"];
+  idempotencyKey?: string;
+  payloadHash?: string;
 }): Promise<RegistrationRecord> {
-  const dir = regDir(input.reference);
-  await mkdir(dir, { recursive: true, mode: 0o700 });
-  await chmod(path.dirname(dir), 0o700).catch(() => undefined);
   const record: RegistrationRecord = {
     reference: input.reference,
     createdAt: new Date().toISOString(),
@@ -140,17 +153,34 @@ export async function saveRegistration(input: {
     uploadExt: input.uploadExt,
     receiptExt: input.receipt ? input.receiptExt : null,
   };
+  if (remoteConfigured()) {
+    await insertRegistration(
+      record,
+      { upload: input.upload, receipt: input.receipt },
+      input.idempotencyKey && input.payloadHash ? { key: input.idempotencyKey, hash: input.payloadHash } : undefined,
+    );
+    console.info(`registration stored ${input.reference} students=${input.students.length} streams=${input.fee.studentStreamRegistrations} durable=yes`);
+    return record;
+  }
+  if (process.env.VERCEL === "1") {
+    throw new Error("Registration storage is not configured.");
+  }
+  const dir = regDir(input.reference);
+  await mkdir(dir, { recursive: true, mode: 0o700 });
+  await chmod(path.dirname(dir), 0o700).catch(() => undefined);
   await writePrivate(path.join(dir, "record.json"), sealBytes(Buffer.from(JSON.stringify(record))));
   await writePrivate(path.join(dir, `upload.${input.uploadExt}`), sealBytes(input.upload));
   if (input.receipt && input.receiptExt) {
     await writePrivate(path.join(dir, `receipt.${input.receiptExt}`), sealBytes(input.receipt));
   }
-  console.info(`registration stored ${input.reference} students=${input.students.length} streams=${input.fee.studentStreamRegistrations}`);
+  if (input.idempotencyKey && input.payloadHash) await storeIdempotency(input.idempotencyKey, input.reference, input.payloadHash);
+  console.info(`registration stored ${input.reference} students=${input.students.length} streams=${input.fee.studentStreamRegistrations} durable=no`);
   return record;
 }
 
 export async function readRegistration(reference: string): Promise<RegistrationRecord | null> {
   if (!referenceIsValid(reference)) return null;
+  if (remoteConfigured()) return readRemoteRegistration(reference);
   try {
     const raw = await readFile(path.join(regDir(reference), "record.json"));
     const parsed = JSON.parse(openBytes(raw).toString("utf8")) as RegistrationRecord;
@@ -164,6 +194,10 @@ export async function readRegistration(reference: string): Promise<RegistrationR
 export async function readUpload(reference: string): Promise<{ filename: string; bytes: Buffer } | null> {
   const record = await readRegistration(reference);
   if (!record) return null;
+  if (remoteConfigured()) {
+    const bytes = await readRemoteUpload(reference, record.uploadExt);
+    return bytes ? { filename: `tejas-upload-${reference}.${record.uploadExt}`, bytes } : null;
+  }
   try {
     const bytes = openBytes(await readFile(path.join(regDir(reference), `upload.${record.uploadExt}`)));
     return { filename: `tejas-upload-${reference}.${record.uploadExt}`, bytes };
@@ -176,6 +210,10 @@ export async function readReceipt(reference: string): Promise<{ filename: string
   const record = await readRegistration(reference);
   if (!record?.receiptExt) return null;
   const types = { pdf: "application/pdf", jpg: "image/jpeg", png: "image/png", webp: "image/webp" } as const;
+  if (remoteConfigured()) {
+    const bytes = await readRemoteReceipt(reference, record.receiptExt);
+    return bytes ? { filename: `tejas-receipt-${reference}.${record.receiptExt}`, bytes, contentType: types[record.receiptExt] } : null;
+  }
   try {
     const bytes = openBytes(await readFile(path.join(regDir(reference), `receipt.${record.receiptExt}`)));
     return { filename: `tejas-receipt-${reference}.${record.receiptExt}`, bytes, contentType: types[record.receiptExt] };
@@ -190,8 +228,14 @@ export async function updatePayment(reference: string, status: PaymentStatus, re
   record.payment.status = status;
   record.payment.reviewNote = reviewNote;
   record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status, note: reviewNote }];
+  if (remoteConfigured()) {
+    await updateRemotePayment(reference, record);
+    console.info(`payment status ${reference} ${status} durable=yes`);
+    return record;
+  }
+  if (process.env.VERCEL === "1") throw new Error("Registration storage is not configured.");
   await writePrivate(path.join(regDir(reference), "record.json"), sealBytes(Buffer.from(JSON.stringify(record))));
-  console.info(`payment status ${reference} ${status}`);
+  console.info(`payment status ${reference} ${status} durable=no`);
   return record;
 }
 
@@ -212,13 +256,20 @@ export async function attachReceipt(
   record.payment.payerName = meta.payerName;
   record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: "reported", note: null }];
   record.receiptExt = receiptExt;
+  if (remoteConfigured()) {
+    await attachRemoteReceipt(reference, record, receipt);
+    console.info(`payment reported ${reference} durable=yes`);
+    return record;
+  }
+  if (process.env.VERCEL === "1") throw new Error("Registration storage is not configured.");
   await writePrivate(path.join(regDir(reference), "record.json"), sealBytes(Buffer.from(JSON.stringify(record))));
   await writePrivate(path.join(regDir(reference), `receipt.${receiptExt}`), sealBytes(receipt));
-  console.info(`payment reported ${reference}`);
+  console.info(`payment reported ${reference} durable=no`);
   return record;
 }
 
-async function loadRegistrations(): Promise<RegistrationRecord[]> {
+export async function listStoredRegistrations(): Promise<RegistrationRecord[]> {
+  if (remoteConfigured()) return listRegistrations();
   const root = path.join(dataDir(), "registrations");
   let names: string[] = [];
   try {
@@ -236,14 +287,16 @@ async function loadRegistrations(): Promise<RegistrationRecord[]> {
 }
 
 export async function panSeenBefore(pan: string): Promise<boolean> {
-  const records = await loadRegistrations();
+  if (remoteConfigured()) return panSeen(pan);
+  const records = await listStoredRegistrations();
   return records.some((record) => record.school.pan === pan);
 }
 
 export async function transactionSeenBefore(reference: string): Promise<boolean> {
   const needle = reference.trim().toUpperCase();
   if (!needle) return false;
-  const records = await loadRegistrations();
+  if (remoteConfigured()) return transactionSeen(needle);
+  const records = await listStoredRegistrations();
   return records.some((record) => (record.payment.transactionReference ?? "").trim().toUpperCase() === needle);
 }
 
@@ -273,7 +326,7 @@ export type StaffOverview = {
 };
 
 export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; overview: StaffOverview }> {
-  const records = await loadRegistrations();
+  const records = await listStoredRegistrations();
   const payments: Record<PaymentStatus, number> = {
     pending_instructions: 0,
     awaiting_payment: 0,
@@ -341,6 +394,7 @@ export function payloadHash(parts: Buffer[]): string {
 }
 
 export async function findIdempotent(key: string, hash: string): Promise<string | "conflict" | null> {
+  if (remoteConfigured()) return findRemoteIdempotent(key, hash);
   const rows = await readIdem();
   const found = rows.find((row) => row.key === key);
   if (!found) return null;
@@ -349,6 +403,10 @@ export async function findIdempotent(key: string, hash: string): Promise<string 
 }
 
 export async function storeIdempotency(key: string, reference: string, hash: string) {
+  if (remoteConfigured()) {
+    await storeRemoteIdempotency(key, reference, hash);
+    return;
+  }
   const rows = (await readIdem()).filter((row) => row.at > Date.now() - 24 * 60 * 60 * 1000 && row.key !== key);
   rows.push({ key, reference, hash, at: Date.now() });
   await mkdir(dataDir(), { recursive: true, mode: 0o700 });

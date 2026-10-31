@@ -1,14 +1,9 @@
--- NOT APPLIED.
--- Live inspection on 31 October 2026 found the twelve tables from
--- 20261031_tejas_registration.sql already present, with matching column names
--- and nullability, and with zero rows. The private bucket from
--- 20261031_tejas_storage.sql was not present.
--- Indexes, triggers, and row level security policies could not be read.
--- The Supabase management API rejected the server key (HTTP 401), and no
--- database connection string was available, so this file has no verified backup
--- to restore and must not be run from the application.
--- Statements below only add columns, tables, indexes, and private buckets.
--- They do not drop tables, delete rows, or grant public access.
+-- DO NOT RUN.
+-- Live inspection on 1 November 2026 found every column and table below already
+-- present, both private buckets already present, row level security enabled,
+-- and zero rows. Running this file is unnecessary.
+-- The encrypted backup has not yet been confirmed on the operator's computer.
+-- Do not execute this file, and do not drop or recreate these tables.
 
 begin;
 

@@ -35,12 +35,17 @@ export async function POST(request: Request, context: { params: Promise<{ refere
   if (receiptFile.size > MAX_RECEIPT_BYTES) return noStore({ ok: false, formErrors: ["The receipt is larger than 5 MB."] }, 413);
   const bytes = Buffer.from(await receiptFile.arrayBuffer());
   const ext = detectReceipt(bytes, receiptFile.name);
-  if (!ext) return noStore({ ok: false, formErrors: ["Upload the receipt as a PDF, JPG, PNG, or WEBP file."] }, 400);
-  const updated = await attachReceipt(reference, paid.value.transactionReference, bytes, ext, {
-    mode: paid.value.mode,
-    paidOn: paid.value.paidOn,
-    payerName: paid.value.payerName,
-  });
-  if (!updated) return noStore({ ok: false, formErrors: ["The receipt could not be saved."] }, 409);
-  return noStore({ ok: true, registration: toPublicSummary(updated) });
+  if (!ext) return noStore({ ok: false, formErrors: ["Upload the receipt as a JPG, PNG, or PDF."] }, 400);
+  try {
+    const updated = await attachReceipt(reference, paid.value.transactionReference, bytes, ext, {
+      mode: paid.value.mode,
+      paidOn: paid.value.paidOn,
+      payerName: paid.value.payerName,
+    });
+    if (!updated) return noStore({ ok: false, formErrors: ["The receipt could not be saved."] }, 409);
+    return noStore({ ok: true, registration: toPublicSummary(updated) });
+  } catch {
+    console.error("payment proof save failed");
+    return noStore({ ok: false, formErrors: ["The payment proof could not be saved. The payment was not marked as verified."] }, 503);
+  }
 }

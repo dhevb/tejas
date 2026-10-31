@@ -16,8 +16,8 @@ export default function MockTestsPage() {
     <>
       <PageHero
         eyebrow="Mock Tests"
-        title="Free Mock Tests"
-        subtitle="Practice pages only. The online examination is not confirmed, and this page does not start a live test or show scores."
+        title="Mock tests are not open"
+        subtitle="This page does not start a test, show scores, or run an online examination. The published examination dates stay 9, 10, and 11 December 2026."
         primaryCta={{ label: "Prepare Hub", href: "/prepare" }}
       />
       <section className="py-16 md:py-24">

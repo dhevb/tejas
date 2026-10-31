@@ -1,7 +1,7 @@
 /**
  * Official TEJAS receipt account, authorised for public display on 31 October 2026.
  * This is the only place the account number, IFSC, and UPI ID are defined.
- * Payment-proof upload stays closed until durable storage is connected and tested.
+ * Payment proof is stored privately and does not verify the payment by itself.
  */
 export const OFFICIAL_BANK = {
   accountHolder: "Department of Holistic Education",

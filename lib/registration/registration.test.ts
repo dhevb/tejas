@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import * as XLSX from "xlsx";
 import { adminConfigured, createSessionValue, sessionIsValid, tokenMatches } from "@/lib/registration/auth";
-import { BOOK_PRICE, calculateFee, EBOOK_FEE, FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, ONLINE_EXAM_APPROVED, SCHOOL_SHARE_APPROVED } from "@/lib/registration/fee";
+import { BOOK_PRICE, calculateFee, EBOOK_FEE, EBOOK_SALE_OPEN, FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, ONLINE_EXAM_APPROVED, SCHOOL_SHARE_APPROVED } from "@/lib/registration/fee";
 import { maskPan, parseIndianMobile, parsePan, validateDob } from "@/lib/registration/fields";
 import { OFFICIAL_BANK, officialPublicPayment } from "@/lib/registration/official-bank";
 import { durableStorageConfigured, paymentProofsAccepted, serverKeyName } from "@/lib/registration/durable";
@@ -15,10 +15,12 @@ import { writePaymentConfig } from "@/lib/registration/payment";
 import { registrationsToCsv } from "@/lib/registration/reports";
 import { buildTemplateBuffer, parseStudentSheet } from "@/lib/registration/sheet";
 import { STUDENT_COLUMNS } from "@/lib/registration/schema";
+import { detectReceipt } from "@/lib/registration/receipt";
 import { readPaymentSubmission, readSchoolForm } from "@/lib/registration/school";
 import { GET as publicGet } from "@/app/api/register/[reference]/route";
 import { GET as paymentGet } from "@/app/api/register/payment/route";
 import { POST as submitPost } from "@/app/api/register/submit/route";
+import { GET as staffFileGet } from "@/app/api/register/admin/registrations/[reference]/file/route";
 import { POST as receiptPost } from "@/app/api/register/[reference]/payment/route";
 import { openBytes, sealBytes } from "@/lib/registration/seal";
 import { listStoredRegistrations, readRegistration, staffSnapshot, toPublicSummary, updatePayment } from "@/lib/registration/store";
@@ -69,6 +71,7 @@ test("fee is ₹150 per student-stream and unapproved shares are not deducted", 
   assert.equal(ONLINE_EXAM_APPROVED, false);
   assert.equal(BOOK_PRICE, 170);
   assert.equal(EBOOK_FEE, 49);
+  assert.equal(EBOOK_SALE_OPEN, false);
   const one = calculateFee(1);
   assert.deepEqual([one.totalStudentFees, one.payableToTejas, one.schoolShare, one.amountDue], [150, 150, 0, 150]);
   assert.equal(one.schoolShareApproved, false);
@@ -81,8 +84,9 @@ test("fee is ₹150 per student-stream and unapproved shares are not deducted", 
   const extras = calculateFee(4, { printedBooks: 2, ebookAccess: 3 });
   assert.equal(extras.totalStudentFees, 600);
   assert.equal(extras.printedBookAmount, 340);
-  assert.equal(extras.ebookAmount, 147);
-  assert.equal(extras.amountDue, 1087);
+  assert.equal(extras.ebookAmount, 0);
+  assert.equal(extras.ebookAccess, 0);
+  assert.equal(extras.amountDue, 940);
 });
 
 test("one, two, and three streams are counted separately", () => {
@@ -288,6 +292,10 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   const paid = readPaymentSubmission(withBooks, 150);
   assert.equal(paid.value, null);
   assert.ok(paid.errors.paymentMode);
+  const ebookYes = new FormData();
+  schoolFields(ebookYes);
+  ebookYes.set("ebookAccess", "yes");
+  assert.equal(readSchoolForm(ebookYes).value?.ebookAccess, "no");
 });
 
 test("submission stores a reference, ignores a repeated post, and hides student details", async () => {
@@ -464,7 +472,7 @@ test("a hosted site does not confirm a registration when the database is not con
   }
 });
 
-test("the server key uses SUPABASE_SECRET_KEY only as a fallback and does not open proof upload", async () => {
+test("the server key uses SUPABASE_SECRET_KEY only as a fallback and opens proof upload with durable storage", async () => {
   const previous = {
     url: process.env.SUPABASE_URL,
     role: process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -492,7 +500,7 @@ test("the server key uses SUPABASE_SECRET_KEY only as a fallback and does not op
     delete process.env.TEJAS_ACCEPT_PAYMENT_PROOF;
     assert.equal(serverKeyName(), "SUPABASE_SECRET_KEY");
     assert.equal(durableStorageConfigured(), true);
-    assert.equal(paymentProofsAccepted(), false);
+    assert.equal(paymentProofsAccepted(), true);
     process.env.SUPABASE_SERVICE_ROLE_KEY = "r".repeat(24);
     assert.equal(serverKeyName(), "SUPABASE_SERVICE_ROLE_KEY");
     const calls: string[] = [];
@@ -510,6 +518,113 @@ test("the server key uses SUPABASE_SECRET_KEY only as a fallback and does not op
     assert.equal(status.keyName, "SUPABASE_SERVICE_ROLE_KEY");
     assert.equal(JSON.stringify(status).includes("r".repeat(24)), false);
     assert.equal(calls.length, 3);
+  } finally {
+    restore();
+  }
+});
+
+test("payment proof files are checked and an unauthorised download is refused", async () => {
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1]);
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+  const pdf = Buffer.from("%PDF-1.4\ntrailer");
+  assert.equal(detectReceipt(jpeg, "proof.jpg"), "jpg");
+  assert.equal(detectReceipt(jpeg, "proof.jpeg"), "jpg");
+  assert.equal(detectReceipt(png, "proof.png"), "png");
+  assert.equal(detectReceipt(pdf, "proof.pdf"), "pdf");
+  assert.equal(detectReceipt(Buffer.from("<html>not a receipt!!</html>"), "proof.jpg"), null);
+  assert.equal(detectReceipt(jpeg, "proof.webp"), null);
+  const denied = await staffFileGet(
+    new Request("http://localhost/api/register/admin/registrations/TEJAS-2026-ABCDEFGHJKLMNPQRSTU2/file?kind=receipt"),
+    { params: Promise.resolve({ reference: "TEJAS-2026-ABCDEFGHJKLMNPQRSTU2" }) },
+  );
+  assert.equal(denied.status, 401);
+});
+
+test("a payment proof is stored as verification pending and is not marked verified", async () => {
+  const schoolBody = new FormData();
+  schoolFields(schoolBody);
+  schoolBody.set("printedBooks", "yes");
+  schoolBody.set("bookQuantity", "2");
+  const school = readSchoolForm(schoolBody).value;
+  assert.ok(school);
+  const reference = "TEJAS-2026-ABCDEFGHJKLMNPQRSTU2";
+  const fee = calculateFee(1, { printedBooks: 2, ebookAccess: 5 });
+  const record = {
+    reference,
+    createdAt: "2026-11-01T00:00:00.000Z",
+    school,
+    students: [],
+    fee,
+    payment: { status: "pending_instructions" as const, transactionReference: null, reviewNote: null, history: [] },
+    uploadExt: "xlsx" as const,
+    receiptExt: null,
+  };
+  const previous = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
+  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "s".repeat(24);
+  const calls: string[] = [];
+  const bodies: string[] = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const method = init?.method ?? "GET";
+    calls.push(`${method} ${url}`);
+    if (init?.body) bodies.push(String(init.body));
+    if (method === "GET" && url.includes("select=record_snapshot")) {
+      return new Response(JSON.stringify([{ record_snapshot: record, reference }]), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (method === "GET" && url.includes("transaction_reference=ilike")) {
+      return new Response(JSON.stringify([]), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (method === "GET") {
+      return new Response(JSON.stringify([{ id: "row-1" }]), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (method === "POST" && url.includes("/storage/v1/object/")) {
+      return new Response(JSON.stringify({ Key: "ok" }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (method === "PATCH" || method === "DELETE") return new Response(null, { status: 204 });
+    return new Response(JSON.stringify([]), { status: 201, headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+  const restore = () => {
+    globalThis.fetch = original;
+    if (previous.url === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = previous.url;
+    if (previous.key === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = previous.key;
+  };
+  try {
+    const bad = new FormData();
+    bad.set("paymentMode", "UPI");
+    bad.set("paymentDate", "2026-11-02");
+    bad.set("payerName", "Anita Verma");
+    bad.set("amountPaid", String(fee.amountDue));
+    bad.set("transactionReference", "UPI654321");
+    bad.set("receipt", new File([new TextEncoder().encode("<html>not a receipt!!</html>")], "proof.jpg", { type: "image/jpeg" }));
+    const rejected = await receiptPost(new Request(`http://localhost/api/register/${reference}/payment`, { method: "POST", body: bad }), {
+      params: Promise.resolve({ reference }),
+    });
+    assert.equal(rejected.status, 400);
+    assert.equal(calls.some((call) => call.includes("/storage/v1/object/")), false);
+
+    const good = new FormData();
+    good.set("paymentMode", "UPI");
+    good.set("paymentDate", "2026-11-02");
+    good.set("payerName", "Anita Verma");
+    good.set("amountPaid", String(fee.amountDue));
+    good.set("transactionReference", "UPI654321");
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1]);
+    good.set("receipt", new File([new Uint8Array(jpeg)], "proof.jpg", { type: "image/jpeg" }));
+    const accepted = await receiptPost(new Request(`http://localhost/api/register/${reference}/payment`, { method: "POST", body: good }), {
+      params: Promise.resolve({ reference }),
+    });
+    const payload = await accepted.json() as { registration?: { paymentStatus?: string; paymentLabel?: string } };
+    assert.equal(accepted.status, 200, JSON.stringify(payload));
+    assert.equal(payload.registration?.paymentStatus, "reported");
+    assert.equal(payload.registration?.paymentLabel, "Verification Pending");
+    assert.equal(JSON.stringify(payload).includes("/storage/"), false);
+    assert.equal(calls.some((call) => call.includes("/storage/v1/object/tejas-payment-proofs/")), true);
+    assert.equal(bodies.some((body) => body.includes("\"status\":\"reported\"") && body.includes("Registration fee and printed books")), true);
+    assert.equal(bodies.some((body) => body.includes("\"status\":\"confirmed\"")), false);
   } finally {
     restore();
   }

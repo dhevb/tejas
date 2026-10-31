@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { chmod, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { paymentProofsAccepted } from "@/lib/registration/durable";
 import type { FeeBreakdown } from "@/lib/registration/fee";
 import { maskPan } from "@/lib/registration/fields";
 import type { SchoolForm } from "@/lib/registration/school";
@@ -89,6 +90,13 @@ const NEXT_STEP: Record<PaymentStatus, string> = {
   refund_pending: "A refund or adjustment is pending. This is not a new payment confirmation. No confirmation email has been sent.",
 };
 
+function nextStepFor(record: RegistrationRecord): string {
+  if ((record.payment.status === "pending_instructions" || record.payment.status === "awaiting_payment") && paymentProofsAccepted()) {
+    return "This registration is saved. It is not a payment receipt. Transfer the amount due to the official account, then upload the proof on this page. Uploading the proof does not confirm the payment. No confirmation email has been sent.";
+  }
+  return NEXT_STEP[record.payment.status];
+}
+
 export function toPublicSummary(record: RegistrationRecord): PublicSummary {
   return {
     reference: record.reference,
@@ -103,7 +111,7 @@ export function toPublicSummary(record: RegistrationRecord): PublicSummary {
     amountDue: record.fee.amountDue ?? record.fee.payableToTejas,
     paymentStatus: record.payment.status,
     paymentLabel: STATUS_LABEL[record.payment.status],
-    nextStep: NEXT_STEP[record.payment.status],
+    nextStep: nextStepFor(record),
     emailSent: false,
   };
 }
@@ -254,7 +262,8 @@ export async function attachReceipt(
   record.payment.mode = meta.mode;
   record.payment.paidOn = meta.paidOn;
   record.payment.payerName = meta.payerName;
-  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: "reported", note: null }];
+  const purpose = record.fee.printedBooks > 0 ? "Registration fee and printed books" : "Registration fee";
+  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: "reported", note: purpose }];
   record.receiptExt = receiptExt;
   if (remoteConfigured()) {
     await attachRemoteReceipt(reference, record, receipt);

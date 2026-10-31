@@ -110,7 +110,8 @@ test("a database registration writes the normalised rows and can be read back", 
     assert.ok(calls.some((call) => call.includes("/storage/v1/object/tejas-registration-files/")));
     assert.equal(calls.some((call) => call.includes("tejas-payment-proofs")), false);
     assert.equal(ebookActivated.includes('"activated":false'), true);
-    assert.equal(paymentAmount.includes('"amount_due":689'), true);
+    assert.equal(ebookActivated.includes('"student_count":0'), true);
+    assert.equal(paymentAmount.includes('"amount_due":640'), true);
   } finally {
     globalThis.fetch = original;
     restore();

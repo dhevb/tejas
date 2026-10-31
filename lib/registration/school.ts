@@ -1,3 +1,4 @@
+import { EBOOK_SALE_OPEN } from "@/lib/registration/fee";
 import { parseEmail, parseIndianMobile, parsePan, parsePin, validatePersonName } from "@/lib/registration/fields";
 
 export const SCHOOL_CATEGORIES = ["Government", "Government-aided", "Private", "Other recognised school"] as const;
@@ -167,7 +168,8 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) errors.bookQuantity = "Enter how many printed books are required.";
     else bookQuantity = quantity;
   }
-  if (ebookAccess !== "yes" && ebookAccess !== "no") errors.ebookAccess = "Choose whether the school wants e-book access.";
+  const ebookChoice: "yes" | "no" = EBOOK_SALE_OPEN && ebookAccess === "yes" ? "yes" : "no";
+  if (EBOOK_SALE_OPEN && ebookAccess !== "yes" && ebookAccess !== "no") errors.ebookAccess = "Choose whether the school wants e-book access.";
   if (!representative.ok) errors.representativeName = representative.message;
   if (representativeDesignation.length < 2) errors.representativeDesignation = "Enter the representative's designation.";
   for (const key of ["accurate", "studentsChecked", "streamsCorrect", "feeUnderstood", "paymentGenuine", "authorised", "rules"] as const) {
@@ -217,7 +219,7 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
       previousReference,
       printedBooks: printedBooks as "yes" | "no",
       bookQuantity,
-      ebookAccess: ebookAccess as "yes" | "no",
+      ebookAccess: ebookChoice,
       representativeName: representative.value,
       representativeDesignation,
     },

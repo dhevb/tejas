@@ -9,6 +9,8 @@ export const BOOK_PRICE = 170;
 export const BOOK_SCHOOL_SHARE = 34;
 export const BOOK_SHARE_APPROVED = false;
 export const EBOOK_FEE = 49;
+/** No e-book file is published, so the ₹49 rate is not collected. */
+export const EBOOK_SALE_OPEN = false;
 export const ONLINE_EXAM_FEE = 30;
 export const ONLINE_EXAM_APPROVED = false;
 
@@ -36,10 +38,11 @@ export function calculateFee(studentStreamRegistrations: number, extras: FeeExtr
     throw new Error("Student-stream count must be a whole number.");
   }
   const printedBooks = extras.printedBooks ?? 0;
-  const ebookAccess = extras.ebookAccess ?? 0;
-  if (!Number.isInteger(printedBooks) || printedBooks < 0 || !Number.isInteger(ebookAccess) || ebookAccess < 0) {
+  const requestedEbooks = extras.ebookAccess ?? 0;
+  if (!Number.isInteger(printedBooks) || printedBooks < 0 || !Number.isInteger(requestedEbooks) || requestedEbooks < 0) {
     throw new Error("Book and e-book counts must be whole numbers.");
   }
+  const ebookAccess = EBOOK_SALE_OPEN ? requestedEbooks : 0;
   const totalStudentFees = studentStreamRegistrations * FEE_TOTAL;
   const printedBookAmount = printedBooks * BOOK_PRICE;
   const ebookAmount = ebookAccess * EBOOK_FEE;

@@ -21,7 +21,7 @@ import { GET as paymentGet } from "@/app/api/register/payment/route";
 import { POST as submitPost } from "@/app/api/register/submit/route";
 import { POST as receiptPost } from "@/app/api/register/[reference]/payment/route";
 import { openBytes, sealBytes } from "@/lib/registration/seal";
-import { readRegistration, staffSnapshot, toPublicSummary, updatePayment } from "@/lib/registration/store";
+import { listStoredRegistrations, readRegistration, staffSnapshot, toPublicSummary, updatePayment } from "@/lib/registration/store";
 
 const dataDir = mkdtempSync(path.join(tmpdir(), "tejas-reg-"));
 process.env.TEJAS_DATA_DIR = dataDir;
@@ -434,6 +434,34 @@ test("payment proof stays closed while the official account is public", async ()
   assert.equal(savedResponse.status, 201, JSON.stringify(saved));
   assert.equal(saved.registration.paymentLabel, "Payment Not Submitted");
   assert.match(saved.registration.nextStep, /Payment-proof submission is not open yet/);
+  const stored = await listStoredRegistrations();
+  assert.equal(stored.some((item) => item.payment.status === "pending_instructions"), true);
+});
+
+test("a hosted site does not confirm a registration when the database is not configured", async () => {
+  const root = path.join(dataDir, "registrations");
+  const before = await readdir(root).catch(() => [] as string[]);
+  const previous = process.env.VERCEL;
+  process.env.VERCEL = "1";
+  try {
+    const body = new FormData();
+    schoolFields(body, "CCDEE2468P");
+    body.set("file", new File([new Uint8Array(sheet([student({ fullName: "Nisha Rao", parentName: "Om Rao", rollNumber: "21" })]))], "students.xlsx"));
+    const response = await submitPost(new Request("http://localhost/api/register/submit", {
+      method: "POST",
+      body,
+      headers: { "x-idempotency-key": "submission-key-hosted1" },
+    }));
+    const payload = await response.json() as { ok: boolean; formErrors?: string[] };
+    assert.equal(response.status, 503);
+    assert.equal(payload.ok, false);
+    assert.equal(JSON.stringify(payload).includes("not configured"), false);
+    const after = await readdir(root).catch(() => [] as string[]);
+    assert.deepEqual(after, before);
+  } finally {
+    if (previous === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = previous;
+  }
 });
 
 test("the server key uses SUPABASE_SECRET_KEY only as a fallback and does not open proof upload", async () => {

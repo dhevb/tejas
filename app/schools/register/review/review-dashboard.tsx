@@ -144,7 +144,7 @@ export function ReviewDashboard() {
 
   return (
     <div className="space-y-8">
-      <p className="text-sm text-tejas-muted">Registrations on the hosted website are stored on the server filesystem. That storage is not a durable database. Do not treat a hosted submission as kept until a database is connected. PAN numbers are masked in this list.</p>
+      <p className="text-sm text-tejas-muted">PAN numbers are masked in this list. A saved registration is kept in the TEJAS database. Uploading a file does not verify the payment.</p>
       {overview ? (
         <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
           {[

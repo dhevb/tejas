@@ -6,7 +6,7 @@ import { newReference } from "@/lib/registration/reference";
 import { readPaymentSubmission, readSchoolForm } from "@/lib/registration/school";
 import { MAX_RECEIPT_BYTES, MAX_UPLOAD_BYTES } from "@/lib/registration/schema";
 import { detectSheetKind, parseStudentSheet } from "@/lib/registration/sheet";
-import { findIdempotent, panSeenBefore, payloadHash, readRegistration, saveRegistration, storeIdempotency, toPublicSummary, transactionSeenBefore, type PaymentStatus } from "@/lib/registration/store";
+import { findIdempotent, panSeenBefore, payloadHash, readRegistration, saveRegistration, toPublicSummary, transactionSeenBefore, type PaymentStatus } from "@/lib/registration/store";
 
 export const runtime = "nodejs";
 
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     if (receiptFile.size > MAX_RECEIPT_BYTES) return noStore({ ok: false, formErrors: ["The payment proof is larger than 5 MB."], fieldErrors: {} }, 413);
     const receiptBytes = Buffer.from(await receiptFile.arrayBuffer());
     receiptExt = detectReceipt(receiptBytes, receiptFile.name);
-    if (!receiptExt) return noStore({ ok: false, formErrors: ["Upload the payment proof as a PDF, JPG, PNG, or WEBP file."], fieldErrors: {} }, 400);
+    if (!receiptExt) return noStore({ ok: false, formErrors: ["Upload the payment proof as a JPG, PNG, or PDF."], fieldErrors: {} }, 400);
     if (await transactionSeenBefore(paid.value.transactionReference)) {
       return noStore({ ok: false, formErrors: ["This transaction reference is already recorded. A second registration cannot use the same payment."] }, 409);
     }
@@ -89,21 +89,27 @@ export async function POST(request: Request) {
   }
 
   const reference = newReference();
-  const saved = await saveRegistration({
-    reference,
-    school: schoolResult.value,
-    students: parsed.students,
-    fee,
-    status,
-    transactionReference,
-    paymentMode,
-    paidOn,
-    payerName,
-    upload: bytes,
-    uploadExt: kind,
-    receipt,
-    receiptExt,
-  });
-  await storeIdempotency(idempotencyKey, reference, hash);
-  return noStore({ ok: true, registration: toPublicSummary(saved) }, 201);
+  try {
+    const saved = await saveRegistration({
+      reference,
+      school: schoolResult.value,
+      students: parsed.students,
+      fee,
+      status,
+      transactionReference,
+      paymentMode,
+      paidOn,
+      payerName,
+      upload: bytes,
+      uploadExt: kind,
+      receipt,
+      receiptExt,
+      idempotencyKey,
+      payloadHash: hash,
+    });
+    return noStore({ ok: true, registration: toPublicSummary(saved) }, 201);
+  } catch {
+    console.error("registration save failed");
+    return noStore({ ok: false, formErrors: ["The registration could not be saved. No registration was confirmed. Please try again."] }, 503);
+  }
 }

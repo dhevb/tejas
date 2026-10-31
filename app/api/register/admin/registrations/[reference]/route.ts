@@ -37,8 +37,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ refer
   if ((body.status === "rejected" || body.status === "refund_pending") && note.length < 5) {
     return noStore({ ok: false, error: "Enter the reason for this decision." }, 400);
   }
-  const updated = await updatePayment(reference, body.status, note || null);
-  if (!updated) return noStore({ ok: false }, 404);
-  console.info(`staff payment update ${reference} ${body.status}`);
-  return noStore({ ok: true, status: updated.payment.status });
+  try {
+    const updated = await updatePayment(reference, body.status, note || null);
+    if (!updated) return noStore({ ok: false }, 404);
+    console.info(`staff payment update ${reference} ${body.status}`);
+    return noStore({ ok: true, status: updated.payment.status });
+  } catch {
+    console.error("payment update failed");
+    return noStore({ ok: false, error: "The payment status could not be saved." }, 503);
+  }
 }

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
-    "test": "tsx --test lib/registration/registration.test.ts lib/registration/supabase-inspect.test.ts",
+    "test": "tsx --test --test-concurrency=1 lib/registration/registration.test.ts lib/registration/database.test.ts lib/registration/supabase-inspect.test.ts",
     "post-launch": "node scripts/post-launch.mjs",
     "launch-audit": "node scripts/launch-audit.mjs"
   },

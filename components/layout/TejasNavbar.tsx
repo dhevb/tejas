@@ -111,13 +111,13 @@ export function TejasNavbar() {
             <User className="h-4 w-4" aria-hidden />
           </Button>
           <Link href="/prepare/mock-tests">
-            <Button variant="outline" size="sm" className="whitespace-nowrap">
-              Mock Test
+            <Button variant="outline" size="sm" className="whitespace-nowrap" title="Mock tests are not open. This page does not start a test.">
+              Practice
             </Button>
           </Link>
-          <Link href="/#register" onClick={() => AnalyticsEvents.registerClick("navbar")}>
-            <Button size="sm" className="whitespace-nowrap" title="Registration portal opening in Phase 4">
-              Register
+          <Link href="/schools/register" onClick={() => AnalyticsEvents.registerClick("navbar")}>
+            <Button size="sm" className="whitespace-nowrap">
+              Register Now
             </Button>
           </Link>
         </div>
@@ -157,13 +157,13 @@ export function TejasNavbar() {
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <Link href="/prepare/mock-tests" onClick={() => setOpen(false)}>
-              <Button variant="outline" size="sm" className="w-full">
-                Mock Test
+              <Button variant="outline" size="sm" className="w-full" title="Mock tests are not open. This page does not start a test.">
+                Practice
               </Button>
             </Link>
-            <Link href="/#register" onClick={() => { setOpen(false); AnalyticsEvents.registerClick("navbar"); }}>
-              <Button size="sm" className="w-full" title="Registration portal opening in Phase 4">
-                Register
+            <Link href="/schools/register" onClick={() => { setOpen(false); AnalyticsEvents.registerClick("navbar"); }}>
+              <Button size="sm" className="w-full">
+                Register Now
               </Button>
             </Link>
           </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { footerNav } from "@/config/navigation";
 import { brand } from "@/design-system/tokens";
+import { currentCycle } from "@/content/current-cycle";
 import { TejasEmblem } from "@/components/brand/TejasEmblem";
 
 export function TejasFooter() {
@@ -25,6 +26,16 @@ export function TejasFooter() {
             <p className="mt-2 font-hindi text-sm text-white/60">
               भारत का राष्ट्रीय प्रतिभा विकास पारिस्थितिकी तंत्र
             </p>
+            <address className="mt-5 space-y-1 text-sm not-italic text-white/75">
+              <p>{currentCycle.administeredBy.en}</p>
+              <p>{currentCycle.address}</p>
+              <p>
+                <a className="hover:text-white" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a>
+              </p>
+              <p>
+                <a className="hover:text-white" href={`tel:${currentCycle.convener.phoneTel}`}>{currentCycle.convener.phoneDisplay}</a>
+              </p>
+            </address>
           </div>
 
           <div>

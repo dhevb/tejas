@@ -32,8 +32,8 @@ export type SchoolForm = {
   printedBooks: "yes" | "no";
   bookQuantity: number;
   ebookAccess: "yes" | "no";
-  representativeName: string;
-  representativeDesignation: string;
+  representativeName: string | null;
+  representativeDesignation: string | null;
 };
 
 export type SchoolField =
@@ -110,7 +110,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   const principalRaw = cleanLine(get("principalName"), 120);
   const principalMobile = parseIndianMobile(get("principalMobile"));
   const principalEmail = parseEmail(get("principalEmail"));
-  const principalDesignation = cleanLine(get("principalDesignation"), 80);
   const coordinatorRaw = cleanLine(get("coordinatorName"), 120);
   const coordinatorMobile = parseIndianMobile(get("coordinatorMobile"));
   const coordinatorEmail = parseEmail(get("coordinatorEmail"));
@@ -119,8 +118,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   const previousReferenceRaw = cleanLine(get("previousReference"), 80);
   const printedBooks = get("printedBooks").trim().toLowerCase();
   const ebookAccess = get("ebookAccess").trim().toLowerCase();
-  const representative = validatePersonName(cleanLine(get("representativeName"), 120), "Authorised representative's name");
-  const representativeDesignation = cleanLine(get("representativeDesignation"), 80);
 
   if (schoolName.length < 3 || !/\p{L}/u.test(schoolName)) errors.schoolName = "Enter the full registered school name.";
   if (schoolAddress.length < 10) errors.schoolAddress = "Enter the complete school address.";
@@ -143,7 +140,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   if (!principal.ok) errors.principalName = principal.message;
   if (!principalMobile) errors.principalMobile = "Enter the principal's 10-digit mobile number.";
   if (!principalEmail) errors.principalEmail = "Enter the principal's official email address.";
-  if (principalDesignation.length < 2) errors.principalDesignation = "Enter the principal's designation.";
   const coordinator = validatePersonName(coordinatorRaw, "Coordinator's name");
   if (!coordinator.ok) errors.coordinatorName = coordinator.message;
   if (!coordinatorMobile) errors.coordinatorMobile = "Enter the coordinator's 10-digit mobile number.";
@@ -170,8 +166,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   }
   const ebookChoice: "yes" | "no" = EBOOK_SALE_OPEN && ebookAccess === "yes" ? "yes" : "no";
   if (EBOOK_SALE_OPEN && ebookAccess !== "yes" && ebookAccess !== "no") errors.ebookAccess = "Choose whether the school wants e-book access.";
-  if (!representative.ok) errors.representativeName = representative.message;
-  if (representativeDesignation.length < 2) errors.representativeDesignation = "Enter the representative's designation.";
   for (const key of ["accurate", "studentsChecked", "streamsCorrect", "feeUnderstood", "paymentGenuine", "authorised", "rules"] as const) {
     if (get(key) !== "yes") errors[key] = "This declaration is required.";
   }
@@ -180,7 +174,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
     Object.keys(errors).length ||
     !principal.ok ||
     !coordinator.ok ||
-    !representative.ok ||
     !pin ||
     !pan ||
     !schoolEmail ||
@@ -210,7 +203,7 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
       principalName: principal.value,
       principalMobile,
       principalEmail,
-      principalDesignation,
+      principalDesignation: "Principal",
       coordinatorName: coordinator.value,
       coordinatorMobile,
       coordinatorEmail,
@@ -220,8 +213,8 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
       printedBooks: printedBooks as "yes" | "no",
       bookQuantity,
       ebookAccess: ebookChoice,
-      representativeName: representative.value,
-      representativeDesignation,
+      representativeName: null,
+      representativeDesignation: null,
     },
     errors,
   };

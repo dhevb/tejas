@@ -273,10 +273,28 @@ export async function readReceipt(reference: string, ext: NonNullable<Registrati
   return downloadObject("tejas-payment-proofs", `${reference}/receipt.${ext}`);
 }
 
+function paymentHistoryNote(status: RegistrationRecord["payment"]["status"]): string {
+  if (status === "reported") return "Payment Submitted";
+  if (status === "confirmed") return "Verified";
+  if (status === "rejected") return "Rejected";
+  if (status === "refund_pending") return "Refund/Adjustment Pending";
+  return "Payment Pending";
+}
+
+function prepareStoredRecord(record: RegistrationRecord) {
+  record.school.representativeName = null;
+  record.school.representativeDesignation = null;
+  record.school.principalDesignation = "Principal";
+  if (!record.payment.history?.length) {
+    record.payment.history = [{ at: record.createdAt, status: record.payment.status, note: paymentHistoryNote(record.payment.status) }];
+  }
+}
+
 export async function insertRegistration(record: RegistrationRecord, files: {
   upload: Buffer;
   receipt: Buffer | null;
 }, idempotency?: { key: string; hash: string }): Promise<void> {
+  prepareStoredRecord(record);
   const created: Created = { reference: record.reference, studentIds: [] };
   try {
     const school = record.school;
@@ -296,8 +314,8 @@ export async function insertRegistration(record: RegistrationRecord, files: {
       school_category: school.schoolCategory,
       previous_participation: school.previousParticipation,
       previous_reference: school.previousReference,
-      representative_name: school.representativeName,
-      representative_designation: school.representativeDesignation,
+      representative_name: null,
+      representative_designation: null,
     });
     created.schoolId = requiredId(schoolJson);
     await insert("tejas_principals", {
@@ -305,7 +323,7 @@ export async function insertRegistration(record: RegistrationRecord, files: {
       full_name: school.principalName,
       mobile: school.principalMobile,
       email: school.principalEmail,
-      designation: school.principalDesignation,
+      designation: "Principal", // existing column cannot be empty; the form no longer asks for it
     }, "return=minimal");
     await insert("tejas_coordinators", {
       school_id: created.schoolId,
@@ -406,7 +424,6 @@ export async function attachReceipt(reference: string, record: RegistrationRecor
   const receiptPath = `${reference}/receipt.${record.receiptExt}`;
   await uploadObject("tejas-payment-proofs", receiptPath, receipt, RECEIPT_TYPES[record.receiptExt]);
   try {
-    await updatePayment(reference, record);
     await insert("tejas_payment_proofs", {
       payment_id: paymentId,
       storage_path: receiptPath,
@@ -416,4 +433,5 @@ export async function attachReceipt(reference: string, record: RegistrationRecor
     await deleteObject("tejas-payment-proofs", receiptPath).catch(() => undefined);
     throw error;
   }
+  await updatePayment(reference, record);
 }

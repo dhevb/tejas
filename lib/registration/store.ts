@@ -70,9 +70,9 @@ export type PublicSummary = {
 };
 
 const STATUS_LABEL: Record<PaymentStatus, string> = {
-  pending_instructions: "Payment Not Submitted",
-  awaiting_payment: "Payment Not Submitted",
-  reported: "Verification Pending",
+  pending_instructions: "Payment Pending",
+  awaiting_payment: "Payment Pending",
+  reported: "Payment Submitted / Verification Pending",
   confirmed: "Verified",
   rejected: "Rejected",
   refund_pending: "Refund/Adjustment Pending",
@@ -156,7 +156,7 @@ export async function saveRegistration(input: {
       mode: input.paymentMode ?? null,
       paidOn: input.paidOn ?? null,
       payerName: input.payerName ?? null,
-      history: [{ at: new Date().toISOString(), status: input.status, note: null }],
+      history: [{ at: new Date().toISOString(), status: input.status, note: input.status === "reported" ? "Payment Submitted" : "Payment Pending" }],
     },
     uploadExt: input.uploadExt,
     receiptExt: input.receipt ? input.receiptExt : null,

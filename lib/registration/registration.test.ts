@@ -87,6 +87,11 @@ test("fee is ₹150 per student-stream and unapproved shares are not deducted", 
   assert.equal(extras.ebookAmount, 0);
   assert.equal(extras.ebookAccess, 0);
   assert.equal(extras.amountDue, 940);
+  const example = calculateFee(30, { printedBooks: 5, ebookAccess: 20 });
+  assert.equal(example.totalStudentFees, 4500);
+  assert.equal(example.printedBookAmount, 850);
+  assert.equal(example.ebookAmount, 0);
+  assert.equal(example.amountDue, 5350);
 });
 
 test("one, two, and three streams are counted separately", () => {
@@ -234,7 +239,6 @@ function schoolFields(body: FormData, pan = PAN) {
   body.set("principalName", "Anita Verma");
   body.set("principalMobile", "9811111111");
   body.set("principalEmail", "principal@river.example");
-  body.set("principalDesignation", "Principal");
   body.set("coordinatorName", "Rahul Mehta");
   body.set("coordinatorMobile", "9876543210");
   body.set("coordinatorEmail", "rahul@river.example");
@@ -244,8 +248,6 @@ function schoolFields(body: FormData, pan = PAN) {
   body.set("printedBooks", "no");
   body.set("bookQuantity", "0");
   body.set("ebookAccess", "no");
-  body.set("representativeName", "Anita Verma");
-  body.set("representativeDesignation", "Principal");
   for (const key of ["accurate", "studentsChecked", "streamsCorrect", "feeUnderstood", "paymentGenuine", "authorised", "rules"]) {
     body.set(key, "yes");
   }
@@ -280,7 +282,20 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   assert.ok(missing.errors.coordinatorMobile);
   assert.ok(missing.errors.principalEmail);
   assert.ok(missing.errors.printedBooks);
+  assert.equal(missing.errors.principalDesignation, undefined);
+  assert.equal(missing.errors.representativeName, undefined);
+  assert.equal(missing.errors.representativeDesignation, undefined);
   assert.equal(missing.value, null);
+  const extra = new FormData();
+  schoolFields(extra);
+  extra.set("principalDesignation", "Headmaster");
+  extra.set("representativeName", "Not Collected");
+  extra.set("representativeDesignation", "Not Collected");
+  const cleaned = readSchoolForm(extra).value;
+  assert.equal(cleaned?.principalName, "Anita Verma");
+  assert.equal(cleaned?.principalDesignation, "Principal");
+  assert.equal(cleaned?.representativeName, null);
+  assert.equal(cleaned?.representativeDesignation, null);
   const books = readSchoolForm({ ...Object.fromEntries(new FormData() as never) });
   const withBooks = new FormData();
   schoolFields(withBooks);
@@ -438,9 +453,14 @@ test("payment proof stays closed while the official account is public", async ()
     body: clean,
     headers: { "x-idempotency-key": "submission-key-0004" },
   }));
-  const saved = await savedResponse.json() as { registration: { paymentLabel: string; nextStep: string } };
+  const saved = await savedResponse.json() as { registration: { reference: string; paymentLabel: string; nextStep: string } };
   assert.equal(savedResponse.status, 201, JSON.stringify(saved));
-  assert.equal(saved.registration.paymentLabel, "Payment Not Submitted");
+  assert.equal(saved.registration.paymentLabel, "Payment Pending");
+  const pendingRecord = await readRegistration(saved.registration.reference);
+  assert.equal(pendingRecord?.school.representativeName, null);
+  assert.equal(pendingRecord?.school.representativeDesignation, null);
+  assert.equal(pendingRecord?.payment.history?.[0]?.note, "Payment Pending");
+  assert.equal(JSON.stringify(toPublicSummary(pendingRecord!)).includes("representative"), false);
   assert.match(saved.registration.nextStep, /Payment-proof submission is not open yet/);
   const stored = await listStoredRegistrations();
   assert.equal(stored.some((item) => item.payment.status === "pending_instructions"), true);
@@ -620,11 +640,163 @@ test("a payment proof is stored as verification pending and is not marked verifi
     const payload = await accepted.json() as { registration?: { paymentStatus?: string; paymentLabel?: string } };
     assert.equal(accepted.status, 200, JSON.stringify(payload));
     assert.equal(payload.registration?.paymentStatus, "reported");
-    assert.equal(payload.registration?.paymentLabel, "Verification Pending");
+    assert.equal(payload.registration?.paymentLabel, "Payment Submitted / Verification Pending");
     assert.equal(JSON.stringify(payload).includes("/storage/"), false);
     assert.equal(calls.some((call) => call.includes("/storage/v1/object/tejas-payment-proofs/")), true);
     assert.equal(bodies.some((body) => body.includes("\"status\":\"reported\"") && body.includes("Registration fee and printed books")), true);
     assert.equal(bodies.some((body) => body.includes("\"status\":\"confirmed\"")), false);
+  } finally {
+    restore();
+  }
+});
+
+test("registration with proof upload open still saves a pending payment and ignores the browser total", async () => {
+  const englishNames = ["Aarav", "Kavya", "Neel", "Ishaan", "Meera", "Rohan", "Anaya", "Vihaan", "Diya", "Kabir"];
+  const mixedNames = ["Aditi", "Arjun", "Myra", "Devansh", "Sara", "Kunal", "Ira", "Yash", "Pihu", "Omkar"];
+  const rows = [
+    ...englishNames.map((name, index) => student({
+      fullName: `${name} Sharma`,
+      parentName: `${name} Parent`,
+      dob: "15-08-2015",
+      rollNumber: String(index + 1),
+      streams: "TEJAS English",
+    })),
+    ...mixedNames.map((name, index) => student({
+      fullName: `${name} Iyer`,
+      parentName: `${name} Guardian`,
+      dob: "02-02-2014",
+      rollNumber: String(index + 11),
+      streams: "TEJAS English, TEJAS Mathematics",
+    })),
+  ];
+  const previous = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
+  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "s".repeat(24);
+  type StoredSnapshot = { reference: string; school: { representativeName: string | null }; payment: { status: string } };
+  let idem: { idempotency_key: string; payload_hash: string; reference: string } | null = null;
+  const state: { snapshot: StoredSnapshot | null } = { snapshot: null };
+  let paymentPosts = 0;
+  let failPayments = false;
+  const paymentBodies: string[] = [];
+  const bookBodies: string[] = [];
+  const original = globalThis.fetch;
+  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const method = init?.method ?? "GET";
+    const path = new URL(url).pathname;
+    const body = typeof init?.body === "string" ? init.body : "";
+    if (method === "DELETE") return new Response(null, { status: 204 });
+    if (method === "GET" && path.endsWith("/tejas_idempotency")) {
+      const key = decodeURIComponent(/idempotency_key=eq\.([^&]+)/.exec(url)?.[1] ?? "");
+      return json(idem && idem.idempotency_key === key ? [idem] : []);
+    }
+    if (method === "GET" && path.endsWith("/tejas_schools")) return json([]);
+    if (method === "GET" && path.endsWith("/tejas_registrations")) {
+      const reference = decodeURIComponent(/reference=eq\.([^&]+)/.exec(url)?.[1] ?? "");
+      return json(state.snapshot && state.snapshot.reference === reference ? [{ record_snapshot: state.snapshot, reference }] : []);
+    }
+    if (method === "GET" && path.endsWith("/tejas_payments")) return json([]);
+    if (method === "POST" && path.endsWith("/tejas_schools")) return json([{ id: "school-1" }], 201);
+    if (method === "POST" && path.endsWith("/tejas_registrations")) {
+      const parsed = JSON.parse(body) as { record_snapshot: StoredSnapshot };
+      state.snapshot = parsed.record_snapshot;
+      return json([{ id: "reg-1" }], 201);
+    }
+    if (method === "POST" && path.endsWith("/tejas_students")) return json([{ id: `student-${paymentPosts}-${body.length}` }], 201);
+    if (method === "POST" && path.endsWith("/tejas_payments")) {
+      if (failPayments) return json({ message: "no" }, 400);
+      paymentPosts += 1;
+      paymentBodies.push(body);
+      return json([{ id: "pay-1", registration_id: "reg-1" }], 201);
+    }
+    if (method === "POST" && path.endsWith("/tejas_book_orders")) {
+      bookBodies.push(body);
+      return json([], 201);
+    }
+    if (method === "POST" && path.endsWith("/tejas_idempotency")) {
+      idem = JSON.parse(body);
+      return json([], 201);
+    }
+    if (method === "POST" && url.includes("/storage/v1/object/")) return json({ Key: "ok" });
+    return json([], 201);
+  }) as typeof fetch;
+  const restore = () => {
+    globalThis.fetch = original;
+    if (previous.url === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = previous.url;
+    if (previous.key === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = previous.key;
+  };
+  const formData = () => {
+    const body = new FormData();
+    schoolFields(body, "DDEFF4680K");
+    body.set("printedBooks", "yes");
+    body.set("bookQuantity", "5");
+    body.set("payableToTejas", "1");
+    body.set("amountDue", "1");
+    body.set("principalDesignation", "Headmaster");
+    body.set("representativeName", "Not Collected");
+    body.set("representativeDesignation", "Not Collected");
+    body.set("file", new File([new Uint8Array(sheet(rows))], "students.xlsx"));
+    return body;
+  };
+  try {
+    const key = "submission-key-open-proof";
+    const send = () => submitPost(new Request("http://localhost/api/register/submit", {
+      method: "POST",
+      body: formData(),
+      headers: { "x-idempotency-key": key, "x-forwarded-for": "198.51.100.24" },
+    }));
+    const first = await send();
+    const saved = await first.json() as {
+      ok: boolean;
+      registration: {
+        reference: string;
+        amountDue: number;
+        payableToTejas: number;
+        printedBookAmount: number;
+        studentStreamRegistrations: number;
+        paymentLabel: string;
+        paymentStatus: string;
+      };
+    };
+    assert.equal(first.status, 201, JSON.stringify(saved));
+    assert.equal(saved.ok, true);
+    assert.equal(saved.registration.studentStreamRegistrations, 30);
+    assert.equal(saved.registration.payableToTejas, 4500);
+    assert.equal(saved.registration.printedBookAmount, 850);
+    assert.equal(saved.registration.amountDue, 5350);
+    assert.equal(saved.registration.paymentStatus, "pending_instructions");
+    assert.equal(saved.registration.paymentLabel, "Payment Pending");
+    assert.equal(JSON.stringify(saved).includes("Not Collected"), false);
+    assert.equal(JSON.stringify(saved).includes("Headmaster"), false);
+    const payment = JSON.parse(paymentBodies[0] ?? "{}") as { registration_id: string; status: string; amount_due: number; history: { note: string }[] };
+    assert.equal(paymentPosts, 1);
+    assert.equal(payment.registration_id, "reg-1");
+    assert.equal(payment.status, "pending_instructions");
+    assert.equal(payment.amount_due, 5350);
+    assert.equal(payment.history[0]?.note, "Payment Pending");
+    assert.equal(bookBodies[0]?.includes('"quantity":5'), true);
+    assert.equal(bookBodies[0]?.includes('"amount":850'), true);
+    assert.equal(state.snapshot?.school.representativeName, null);
+    const second = await send();
+    const repeated = await second.json() as { registration: { reference: string } };
+    assert.equal(second.status, 200);
+    assert.equal(repeated.registration.reference, saved.registration.reference);
+    assert.equal(paymentPosts, 1);
+
+    failPayments = true;
+    const failed = await submitPost(new Request("http://localhost/api/register/submit", {
+      method: "POST",
+      body: formData(),
+      headers: { "x-idempotency-key": "submission-key-open-fail", "x-forwarded-for": "198.51.100.25" },
+    }));
+    const failure = await failed.json() as { ok: boolean; registration?: { reference: string } };
+    assert.equal(failed.status, 503);
+    assert.equal(failure.ok, false);
+    assert.equal(failure.registration, undefined);
+    assert.equal(paymentPosts, 1);
   } finally {
     restore();
   }

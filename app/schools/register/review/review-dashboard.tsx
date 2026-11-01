@@ -61,7 +61,21 @@ type Detail = {
     history?: { at: string; status: string; note: string | null }[];
   };
   receiptExt: string | null;
+  paymentLabel?: string;
 };
+
+const PAYMENT_LABEL: Record<string, string> = {
+  pending_instructions: "Payment Pending",
+  awaiting_payment: "Payment Pending",
+  reported: "Payment Submitted / Verification Pending",
+  confirmed: "Verified",
+  rejected: "Rejected",
+  refund_pending: "Refund/Adjustment Pending",
+};
+
+function paymentLabel(status: string): string {
+  return PAYMENT_LABEL[status] ?? status;
+}
 
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
@@ -123,6 +137,10 @@ export function ReviewDashboard() {
 
   async function setStatus(status: string) {
     if (!detail) return;
+    if ((status === "rejected" || status === "refund_pending") && note.trim().length < 5) {
+      setMessage("Enter the reason for this decision.");
+      return;
+    }
     setMessage("");
     const response = await fetch(`/api/register/admin/registrations/${detail.reference}`, {
       method: "PATCH",
@@ -162,9 +180,9 @@ export function ReviewDashboard() {
             ["Students", overview.students],
             ["Student-streams", overview.studentStreams],
             ["Amount expected", inr.format(overview.amountDue)],
-            ["Verification pending", overview.payments.reported ?? 0],
+            ["Payment Submitted / Verification Pending", overview.payments.reported ?? 0],
             ["Verified", overview.payments.confirmed ?? 0],
-            ["Not submitted", (overview.payments.pending_instructions ?? 0) + (overview.payments.awaiting_payment ?? 0)],
+            ["Payment Pending", (overview.payments.pending_instructions ?? 0) + (overview.payments.awaiting_payment ?? 0)],
             ["Rejected", overview.payments.rejected ?? 0],
             ["Printed books", overview.printedBooks],
             ["E-book orders", overview.ebookAccess],
@@ -195,8 +213,8 @@ export function ReviewDashboard() {
           <span className="font-medium">Payment status</span>
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="mt-1 block rounded-lg border border-stone-300 px-3 py-2">
             <option value="all">All</option>
-            <option value="pending_instructions">Payment not submitted</option>
-            <option value="reported">Verification pending</option>
+            <option value="pending_instructions">Payment Pending</option>
+            <option value="reported">Payment Submitted / Verification Pending</option>
             <option value="confirmed">Verified</option>
             <option value="rejected">Rejected</option>
             <option value="refund_pending">Refund or adjustment pending</option>
@@ -245,7 +263,7 @@ export function ReviewDashboard() {
           <p>Registration {inr.format(detail.fee.totalStudentFees)}. Printed books {detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0} ({inr.format(detail.fee.printedBookAmount ?? 0)}). Due {inr.format(detail.fee.amountDue)}.</p>
           <p>Book order: {detail.school.printedBooks === "yes" ? bookOrderLabel(detail.payment.status) : "No printed books ordered"}. Dispatch and delivery are not recorded here.</p>
           <p>E-book access is not for sale and is not activated from this screen.</p>
-          <p>Payment: {detail.payment.status}. {detail.payment.mode ?? ""} {detail.payment.paidOn ?? ""} {detail.payment.payerName ?? ""} {detail.payment.transactionReference ?? ""}</p>
+          <p>Payment: {detail.paymentLabel ?? paymentLabel(detail.payment.status)}. {detail.payment.mode ?? ""} {detail.payment.paidOn ?? ""} {detail.payment.payerName ?? ""} {detail.payment.transactionReference ?? ""}</p>
           {detail.receiptExt ? <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=receipt`}>Open payment proof</a> : <p>No payment proof is stored.</p>}
           <ul>
             {detail.students.map((student) => (
@@ -254,7 +272,7 @@ export function ReviewDashboard() {
           </ul>
           <ul>
             {(detail.payment.history ?? []).map((event) => (
-              <li key={`${event.at}-${event.status}`}>{event.at} · {event.status}{event.note ? ` · ${event.note}` : ""}</li>
+              <li key={`${event.at}-${event.status}`}>{event.at} · {paymentLabel(event.status)}{event.note ? ` · ${event.note}` : ""}</li>
             ))}
           </ul>
           <label className="block">

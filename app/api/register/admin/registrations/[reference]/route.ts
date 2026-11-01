@@ -2,7 +2,7 @@ import { noStore } from "@/lib/registration/http";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { streamById } from "@/lib/registration/schema";
 import { staffAuthorised } from "@/lib/registration/staff";
-import { readRegistration, updatePayment, type PaymentStatus } from "@/lib/registration/store";
+import { readRegistration, statusLabel, updatePayment, type PaymentStatus } from "@/lib/registration/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,10 +19,17 @@ export async function GET(_request: Request, context: { params: Promise<{ refere
     ok: true,
     registration: {
       ...record,
+      school: {
+        ...record.school,
+        principalDesignation: undefined,
+        representativeName: undefined,
+        representativeDesignation: undefined,
+      },
       students: record.students.map((student) => ({
         ...student,
         streams: student.streams.map((id) => streamById(id).name),
       })),
+      paymentLabel: statusLabel(record.payment.status),
     },
   });
 }

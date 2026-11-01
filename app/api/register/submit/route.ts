@@ -54,9 +54,7 @@ export async function POST(request: Request) {
   const transactionRaw = String(form.get("transactionReference") ?? "").trim();
   const receiptFile = form.get("receipt");
   const hasReceipt = receiptFile instanceof File && receiptFile.size > 0;
-  if (!payment.activated && (transactionRaw || hasReceipt)) {
-    return noStore({ ok: false, formErrors: ["Payment-proof submission is not open yet. Submit the registration without a receipt. The official account details are on the form."], fieldErrors: {} }, 400);
-  }
+  const proofAttempt = Boolean(transactionRaw || hasReceipt);
 
   let status: PaymentStatus = "pending_instructions";
   let transactionReference: string | null = null;
@@ -65,9 +63,12 @@ export async function POST(request: Request) {
   let paymentMode: string | null = null;
   let paidOn: string | null = null;
   let payerName: string | null = null;
-  if (payment.activated) {
+  if (proofAttempt && !payment.activated) {
+    return noStore({ ok: false, formErrors: ["Payment-proof submission is not open yet. Submit the registration without a receipt. The official account details are on the form."], fieldErrors: {} }, 400);
+  }
+  if (proofAttempt && payment.activated) {
     const paid = readPaymentSubmission(form, fee.amountDue);
-    if (!paid.value) return noStore({ ok: false, fieldErrors: paid.errors, formErrors: ["Payment proof is required. Registration is not confirmed until TEJAS Olympiad verifies the payment."] }, 400);
+    if (!paid.value) return noStore({ ok: false, fieldErrors: paid.errors, formErrors: ["Check the payment details, or submit the registration without a receipt and upload the proof afterwards."] }, 400);
     if (!(receiptFile instanceof File) || receiptFile.size === 0) {
       return noStore({ ok: false, formErrors: ["Upload the payment proof as a JPG, PNG, or PDF."], fieldErrors: {} }, 400);
     }
@@ -84,8 +85,6 @@ export async function POST(request: Request) {
     payerName = paid.value.payerName;
     receipt = receiptBytes;
     status = "reported";
-  } else if (transactionRaw || hasReceipt) {
-    return noStore({ ok: false, formErrors: ["Payment-proof submission is not open yet. Submit the registration without a receipt. The official account details are on the form."], fieldErrors: {} }, 400);
   }
 
   const reference = newReference();

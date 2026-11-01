@@ -1,6 +1,6 @@
 import { maskPan } from "@/lib/registration/fields";
 import { streamById } from "@/lib/registration/schema";
-import type { RegistrationRecord } from "@/lib/registration/store";
+import { statusLabel, type RegistrationRecord } from "@/lib/registration/store";
 
 export type ReportKind = "schools" | "students" | "payments" | "books" | "ebooks";
 
@@ -33,7 +33,7 @@ export function registrationsToCsv(records: RegistrationRecord[], kind: ReportKi
         record.students.length,
         record.fee.studentStreamRegistrations,
         record.fee.amountDue ?? record.fee.payableToTejas,
-        record.payment.status,
+        statusLabel(record.payment.status),
         record.school.panDuplicate ? "review" : "",
       ]));
     }
@@ -61,7 +61,7 @@ export function registrationsToCsv(records: RegistrationRecord[], kind: ReportKi
       rows.push(line([
         record.reference,
         record.school.schoolName,
-        record.payment.status,
+        statusLabel(record.payment.status),
         record.payment.mode ?? "",
         record.payment.paidOn ?? "",
         record.payment.payerName ?? "",

@@ -190,7 +190,6 @@ export function SchoolRegistrationForm() {
           <Field label="Principal's full name *" name="principalName" error={fieldErrors.principalName} />
           <Field label="Principal's mobile *" name="principalMobile" type="tel" error={fieldErrors.principalMobile} />
           <Field label="Principal's official email *" name="principalEmail" type="email" error={fieldErrors.principalEmail} />
-          <Field label="Principal's designation *" name="principalDesignation" error={fieldErrors.principalDesignation} />
         </div>
       </section>
       <section className="space-y-4">
@@ -320,8 +319,6 @@ export function SchoolRegistrationForm() {
 
       <section className="space-y-3">
         <h2 className="text-xl font-bold text-tejas-ink">Declaration and submission</h2>
-        <Field label="Authorised representative's name *" name="representativeName" error={fieldErrors.representativeName} />
-        <Field label="Representative's designation *" name="representativeDesignation" error={fieldErrors.representativeDesignation} />
         {[
           ["accurate", "The school information is accurate."],
           ["studentsChecked", "The school has checked the student information."],

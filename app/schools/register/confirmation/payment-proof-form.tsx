@@ -23,7 +23,7 @@ export function PaymentProofForm({ reference, amountDue }: { reference: string; 
       return;
     }
     setDone(true);
-    setMessage(`${payload.registration?.paymentLabel ?? "Verification Pending"}. The file is private. It does not verify the payment.`);
+    setMessage(`${payload.registration?.paymentLabel ?? "Payment Submitted / Verification Pending"}. The file is private. It does not verify the payment.`);
   }
 
   if (done) return <p className="text-sm text-tejas-ink">{message}</p>;

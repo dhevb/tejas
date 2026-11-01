@@ -27,7 +27,7 @@ function record(): RegistrationRecord {
       principalName: "Anita Verma",
       principalMobile: "9811111111",
       principalEmail: "anita@river.example",
-      principalDesignation: "Principal",
+      principalDesignation: "Headmaster",
       coordinatorName: "Ravi Mehta",
       coordinatorMobile: "9822222222",
       coordinatorEmail: "ravi@river.example",
@@ -37,8 +37,8 @@ function record(): RegistrationRecord {
       printedBooks: "yes",
       bookQuantity: 2,
       ebookAccess: "yes",
-      representativeName: "Anita Verma",
-      representativeDesignation: "Principal",
+      representativeName: "Not Collected",
+      representativeDesignation: "Not Collected",
     },
     students: [
       {
@@ -71,6 +71,10 @@ test("a database registration writes the normalised rows and can be read back", 
   const calls: string[] = [];
   let ebookActivated = "";
   let paymentAmount = "";
+  let bookOrder = "";
+  let schoolBody = "";
+  let principalBody = "";
+  let registrationBody = "";
   const previous = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
   process.env.SUPABASE_URL = "https://example.supabase.co";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "s".repeat(24);
@@ -79,14 +83,22 @@ test("a database registration writes the normalised rows and can be read back", 
     const url = String(input);
     calls.push(`${init?.method ?? "GET"} ${new URL(url).pathname}`);
     if (url.includes("/tejas_schools?") && init?.method === "GET") return jsonResponse([], 200);
-    if (url.endsWith("/tejas_schools")) return jsonResponse([{ id: "school-1" }]);
-    if (url.endsWith("/tejas_registrations") && init?.method === "POST") return jsonResponse([{ id: "reg-1" }]);
+    if (url.endsWith("/tejas_schools") && init?.method === "POST") {
+      schoolBody = String(init.body ?? "");
+      return jsonResponse([{ id: "school-1" }]);
+    }
+    if (url.endsWith("/tejas_principals") && init?.method === "POST") principalBody = String(init.body ?? "");
+    if (url.endsWith("/tejas_registrations") && init?.method === "POST") {
+      registrationBody = String(init.body ?? "");
+      return jsonResponse([{ id: "reg-1" }]);
+    }
     if (url.includes("/tejas_registrations?") && init?.method === "GET") return jsonResponse([{ record_snapshot: record(), reference: REFERENCE }], 200);
     if (url.endsWith("/tejas_students")) return jsonResponse([{ id: "student-1" }]);
     if (url.endsWith("/tejas_payments")) {
       paymentAmount = String(init?.body ?? "");
-      return jsonResponse([{ id: "pay-1" }]);
+      return jsonResponse([{ id: "pay-1", registration_id: "reg-1" }]);
     }
+    if (url.endsWith("/tejas_book_orders")) bookOrder = String(init?.body ?? "");
     if (url.endsWith("/tejas_ebook_access")) ebookActivated = String(init?.body ?? "");
     if (url.includes("/storage/v1/object/")) return jsonResponse({ Key: "ok" });
     return jsonResponse([], 201);
@@ -111,7 +123,21 @@ test("a database registration writes the normalised rows and can be read back", 
     assert.equal(calls.some((call) => call.includes("tejas-payment-proofs")), false);
     assert.equal(ebookActivated.includes('"activated":false'), true);
     assert.equal(ebookActivated.includes('"student_count":0'), true);
-    assert.equal(paymentAmount.includes('"amount_due":640'), true);
+    assert.equal(calls.filter((call) => call === "POST /rest/v1/tejas_payments").length, 1);
+    const payment = JSON.parse(paymentAmount) as { registration_id: string; status: string; amount_due: number; history: { note: string }[] };
+    assert.equal(payment.registration_id, "reg-1");
+    assert.equal(payment.status, "pending_instructions");
+    assert.equal(payment.amount_due, 640);
+    assert.equal(payment.history[0]?.note, "Payment Pending");
+    assert.equal(bookOrder.includes('"quantity":2'), true);
+    assert.equal(bookOrder.includes('"amount":340'), true);
+    assert.equal(schoolBody.includes('"representative_name":null'), true);
+    assert.equal(schoolBody.includes('"representative_designation":null'), true);
+    assert.equal(schoolBody.includes("Not Collected"), false);
+    assert.equal(principalBody.includes('"designation":"Principal"'), true);
+    assert.equal(principalBody.includes("Headmaster"), false);
+    assert.equal(registrationBody.includes('"representativeName":null'), true);
+    assert.equal(registrationBody.includes("Not Collected"), false);
   } finally {
     globalThis.fetch = original;
     restore();

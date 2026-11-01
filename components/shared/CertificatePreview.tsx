@@ -28,7 +28,7 @@ export function CertificatePreview({
       <div className="relative">
         <div className="flex items-start justify-between">
           <Badge variant="gold">Official Certificate</Badge>
-          <Award className="h-10 w-10 text-tejas-gold" aria-hidden />
+          <Award className="h-10 w-10 text-tejas-gold-dark" aria-hidden />
         </div>
         <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-tejas-muted">
           Department of Holistic Education

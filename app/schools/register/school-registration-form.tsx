@@ -34,6 +34,9 @@ type Preview = {
 
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
+const controlClass =
+  "mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-base text-tejas-ink shadow-sm focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30";
+
 function Field({
   label,
   name,
@@ -54,7 +57,7 @@ function Field({
         name={name}
         type={type}
         required={required}
-        className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-tejas-ink"
+        className={controlClass}
       />
       {error ? <span className="mt-1 block text-red-700">{error}</span> : null}
     </label>
@@ -150,8 +153,8 @@ export function SchoolRegistrationForm() {
   return (
     <form className="space-y-10" onSubmit={submit}>
       <p className="text-sm text-tejas-muted">All fields marked with * are compulsory. Please complete all applicable fields before submitting the registration.</p>
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold text-tejas-ink">School details</h2>
+      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
+        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">School details</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Full registered school name *" name="schoolName" error={fieldErrors.schoolName} />
           <Field label="Complete school address *" name="schoolAddress" error={fieldErrors.schoolAddress} />
@@ -165,7 +168,7 @@ export function SchoolRegistrationForm() {
           <Field label="Affiliation or recognition board *" name="affiliationBoard" error={fieldErrors.affiliationBoard} />
           <label className="block text-sm">
             <span className="font-medium text-tejas-ink">School category *</span>
-            <select name="schoolCategory" required className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2">
+            <select name="schoolCategory" required className={controlClass}>
               <option value="">Select</option>
               <option>Government</option>
               <option>Government-aided</option>
@@ -176,7 +179,7 @@ export function SchoolRegistrationForm() {
           </label>
           <label className="block text-sm">
             <span className="font-medium text-tejas-ink">Affiliation or recognition number *</span>
-            <select name="affiliationHasNumber" value={affiliation} onChange={(event) => setAffiliation(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2">
+            <select name="affiliationHasNumber" value={affiliation} onChange={(event) => setAffiliation(event.target.value)} className={controlClass}>
               <option value="yes">The school has a number</option>
               <option value="no">Not applicable</option>
             </select>
@@ -184,16 +187,16 @@ export function SchoolRegistrationForm() {
           {affiliation === "yes" ? <Field label="Affiliation or recognition number *" name="affiliationNumber" error={fieldErrors.affiliationNumber} /> : <input type="hidden" name="affiliationNumber" value="" />}
         </div>
       </section>
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold text-tejas-ink">Principal</h2>
+      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
+        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Principal</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Principal's full name *" name="principalName" error={fieldErrors.principalName} />
           <Field label="Principal's mobile *" name="principalMobile" type="tel" error={fieldErrors.principalMobile} />
           <Field label="Principal's official email *" name="principalEmail" type="email" error={fieldErrors.principalEmail} />
         </div>
       </section>
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold text-tejas-ink">School coordinator</h2>
+      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
+        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">School coordinator</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Coordinator's full name *" name="coordinatorName" error={fieldErrors.coordinatorName} />
           <Field label="Coordinator's mobile *" name="coordinatorMobile" type="tel" error={fieldErrors.coordinatorMobile} />
@@ -202,15 +205,15 @@ export function SchoolRegistrationForm() {
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold text-tejas-ink">Previous Olympiad participation</h2>
+      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
+        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Previous Olympiad participation</h2>
         <label className="block text-sm">
           <span className="font-medium text-tejas-ink">Did the school take part in the 1st DHE English Olympiad (13–16 October 2025)?</span>
           <select
             name="previousParticipation"
             value={previous}
             onChange={(event) => setPrevious(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2"
+            className={controlClass}
           >
             <option value="no">No</option>
             <option value="yes">Yes</option>
@@ -224,8 +227,8 @@ export function SchoolRegistrationForm() {
         {fieldErrors.previousParticipation ? <p className="text-sm text-red-700">{fieldErrors.previousParticipation}</p> : null}
       </section>
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold text-tejas-ink">Student Excel/CSV upload</h2>
+      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
+        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Student Excel/CSV upload</h2>
         <p className="text-sm text-tejas-muted">
           Every column in the template is compulsory, including roll number, parent mobile, parent email, date of birth, and at least one stream. Classes III–X. Files up to 10 MB: .xlsx, .xls, or .csv.
         </p>
@@ -234,11 +237,11 @@ export function SchoolRegistrationForm() {
         </Link>
         <label className="block text-sm">
           <span className="font-medium text-tejas-ink">Student sheet</span>
-          <input name="file" type="file" accept=".xlsx,.xls,.csv,text/csv" required className="mt-1 block w-full text-sm" />
+          <input name="file" type="file" accept=".xlsx,.xls,.csv,text/csv" required className="mt-1 block w-full text-sm text-tejas-ink file:mr-3 file:rounded-lg file:border-0 file:bg-tejas-saffron-soft file:px-3 file:py-2 file:text-sm file:font-semibold file:text-tejas-saffron-dark" />
         </label>
         <button
           type="button"
-          className="rounded-lg border border-tejas-blue px-4 py-2 text-sm font-semibold text-tejas-blue"
+          className="rounded-lg border-2 border-tejas-blue px-4 py-2 text-sm font-semibold text-tejas-blue hover:bg-tejas-blue/5"
           disabled={busy !== null}
           onClick={(event) => {
             const form = event.currentTarget.form;
@@ -259,12 +262,12 @@ export function SchoolRegistrationForm() {
         ) : null}
       </section>
 
-      <section className="space-y-2 rounded-2xl border border-stone-200 bg-white p-6">
-        <h2 className="text-xl font-bold text-tejas-ink">Automatic fee summary</h2>
+      <section className="space-y-2 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
+        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Automatic fee summary</h2>
         <p className="text-sm text-tejas-muted">The server calculates ₹150 for each student-stream. Printed books are ₹170 each. The registration fee and the book amount are listed separately and paid together to the official account. E-book access is not for sale, so ₹49 is not added. A school share is not approved and is not deducted.</p>
         <label className="block text-sm">
           <span className="font-medium">Printed preparation books *</span>
-          <select name="printedBooks" value={books} onChange={(event) => setBooks(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2">
+          <select name="printedBooks" value={books} onChange={(event) => setBooks(event.target.value)} className={controlClass}>
             <option value="no">No, I do not want printed books</option>
             <option value="yes">Yes, I want printed books</option>
           </select>
@@ -286,8 +289,8 @@ export function SchoolRegistrationForm() {
         )}
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-6">
-        <h2 className="text-xl font-bold text-tejas-ink">Payment</h2>
+      <section className="space-y-4 rounded-2xl border border-tejas-warning/30 bg-tejas-warning/10 p-4 sm:p-6">
+        <h2 className="border-l-4 border-tejas-warning pl-3 text-xl font-bold text-tejas-blue">Payment</h2>
         <p className="font-semibold">{payment?.heading ?? "Official payment account"}</p>
         <p className="text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>
         <dl className="grid gap-3 text-sm">
@@ -317,8 +320,8 @@ export function SchoolRegistrationForm() {
         </p>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold text-tejas-ink">Declaration and submission</h2>
+      <section className="space-y-3 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
+        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Declaration and submission</h2>
         {[
           ["accurate", "The school information is accurate."],
           ["studentsChecked", "The school has checked the student information."],
@@ -329,14 +332,14 @@ export function SchoolRegistrationForm() {
           ["rules", "The school accepts the published registration rules and privacy terms."],
         ].map(([name, label]) => (
           <label key={name} className="flex gap-2 text-sm">
-            <input type="checkbox" name={name} value="yes" required />
+            <input type="checkbox" name={name} value="yes" required className="mt-0.5 h-4 w-4 accent-tejas-saffron" />
             <span>{label} *</span>
           </label>
         ))}
         {formErrors.map((error) => (
           <p key={error} className="text-sm text-red-700">{error}</p>
         ))}
-        <button type="submit" disabled={busy !== null} className="rounded-xl bg-tejas-blue px-5 py-3 text-sm font-semibold text-white disabled:opacity-60">
+        <button type="submit" disabled={busy !== null} className="rounded-xl bg-tejas-saffron px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-tejas-saffron-dark disabled:opacity-60">
           {busy === "submit" ? "Submitting…" : "Submit registration"}
         </button>
       </section>

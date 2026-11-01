@@ -37,7 +37,7 @@ export function EditionLandingPage({ edition }: Props) {
     <>
       <section
         className="py-20 text-white md:py-28"
-        style={{ background: `linear-gradient(135deg, ${edition.imageAccent} 0%, #1E3A5F 100%)` }}
+        style={{ background: `linear-gradient(135deg, ${edition.imageAccent} 0%, #1A2B5D 100%)` }}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Badge className="bg-white/20 text-white">

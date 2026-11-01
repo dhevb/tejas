@@ -63,7 +63,7 @@ export function HomeHero() {
 
         <FadeIn delay={0.15} className="relative">
           <HeroIllustration />
-          <div className="absolute -bottom-4 left-0 right-0 lg:-bottom-8">
+          <div className="relative z-10 mx-auto -mt-10 max-w-sm">
             <EditionCard
               year={edition.year}
               name={edition.name}

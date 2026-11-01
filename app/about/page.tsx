@@ -127,7 +127,7 @@ export default function AboutPage() {
               quoteHi={brandContent.vision.hi}
               author="Our Vision"
               role={`${brand.parentOrg} · Olympiad Cell`}
-              className="max-w-4xl mx-auto border-white/10 bg-white/5 [&_p]:text-white/90"
+              className="max-w-4xl mx-auto border-white/10 bg-white/5 [&_p]:text-white/90 [&_span]:text-tejas-gold"
             />
           </FadeIn>
         </div>

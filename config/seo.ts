@@ -56,6 +56,10 @@ export function createMetadata({
       description,
       images: [siteConfig.ogImage],
     },
+    icons: {
+      icon: "/brand/tejas-logo.jpg",
+      apple: "/brand/tejas-logo.jpg",
+    },
     robots: noIndex ? { index: false, follow: false } : { index: true, follow: true },
     keywords: [
       "TEJAS",

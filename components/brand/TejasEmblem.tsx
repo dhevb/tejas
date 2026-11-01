@@ -1,25 +1,27 @@
 import { cn } from "@/lib/utils";
 
 interface TejasEmblemProps {
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl" | "hero";
   className?: string;
 }
 
-const sizes = { sm: "h-8 w-8 text-xs", md: "h-10 w-10 text-sm", lg: "h-14 w-14 text-base" };
+const sizes = {
+  sm: "h-12 w-12",
+  md: "h-16 w-16",
+  lg: "h-24 w-24",
+  xl: "h-56 w-56",
+  hero: "h-44 w-44",
+};
 
-/** TEJAS signature saffron–blue gradient emblem */
+/** Official TEJAS seal. The image file is used as supplied; the circle is only a crop of its white canvas. */
 export function TejasEmblem({ size = "md", className }: TejasEmblemProps) {
   return (
-    <div
-      className={cn(
-        "relative flex items-center justify-center rounded-xl bg-gradient-to-br from-tejas-saffron via-tejas-saffron to-tejas-blue font-black text-white shadow-md ring-2 ring-white/20",
-        sizes[size],
-        className
-      )}
-      aria-hidden
-    >
-      <span className="relative z-10 tracking-tighter">T</span>
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/10 to-white/5" />
-    </div>
+    <img
+      src="/brand/tejas-logo.jpg"
+      alt="TEJAS logo"
+      width={806}
+      height={805}
+      className={cn("shrink-0 rounded-full object-cover shadow-sm ring-1 ring-tejas-gold/50", sizes[size], className)}
+    />
   );
 }

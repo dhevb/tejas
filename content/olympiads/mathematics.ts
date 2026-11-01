@@ -18,7 +18,7 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
   },
   status: "active",
   icon: "calculator",
-  color: "#172B67",
+  color: "#1A2B5D",
   grades: currentCycle.grades,
   duration: { en: "60 minutes", hi: "60 मिनट" },
   questions: 50,

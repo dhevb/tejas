@@ -4,13 +4,26 @@
 
 @layer base {
   :root {
-    --tejas-saffron: #E85D04;
-    --tejas-blue: #1E3A5F;
-    --tejas-ivory: #FAF9F6;
-    --tejas-emerald: #059669;
-    --tejas-gold: #D4A017;
-    --tejas-copper: #B87333;
+    --tejas-primary: #1A2B5D;
+    --tejas-primary-dark: #101C40;
+    --tejas-secondary: #A3531C;
+    --tejas-secondary-dark: #7C3A12;
+    --tejas-accent: #DE9A26;
+    --tejas-saffron: #A3531C;
+    --tejas-blue: #1A2B5D;
+    --tejas-ivory: #FBF8F3;
+    --tejas-surface: #FFFFFF;
+    --tejas-emerald: #047857;
+    --tejas-gold: #DE9A26;
+    --tejas-gold-dark: #8A5A10;
+    --tejas-copper: #A3531C;
     --tejas-ink: #1C1917;
+    --tejas-muted: #57534E;
+    --tejas-border: #E6E0D8;
+    --tejas-success: #047857;
+    --tejas-warning: #B45309;
+    --tejas-error: #B91C1C;
+    --tejas-info: #1A2B5D;
   }
 
   html {
@@ -46,26 +59,26 @@
 
   .tejas-pattern {
     background-image:
-      radial-gradient(circle at 20% 20%, rgba(232, 93, 4, 0.05) 0%, transparent 45%),
-      radial-gradient(circle at 80% 80%, rgba(30, 58, 95, 0.06) 0%, transparent 45%),
+      radial-gradient(circle at 20% 20%, rgba(163, 83, 28, 0.05) 0%, transparent 45%),
+      radial-gradient(circle at 80% 80%, rgba(26, 43, 93, 0.06) 0%, transparent 45%),
       repeating-linear-gradient(
         45deg,
         transparent,
         transparent 40px,
-        rgba(184, 115, 51, 0.03) 40px,
-        rgba(184, 115, 51, 0.03) 41px
+        rgba(222, 154, 38, 0.05) 40px,
+        rgba(222, 154, 38, 0.05) 41px
       );
   }
 
   .tejas-mandala {
     background-image:
-      radial-gradient(circle at center, transparent 0%, transparent 30%, rgba(30, 58, 95, 0.04) 31%, transparent 32%),
-      radial-gradient(circle at center, transparent 0%, transparent 50%, rgba(232, 93, 4, 0.03) 51%, transparent 52%);
+      radial-gradient(circle at center, transparent 0%, transparent 30%, rgba(26, 43, 93, 0.04) 31%, transparent 32%),
+      radial-gradient(circle at center, transparent 0%, transparent 50%, rgba(222, 154, 38, 0.05) 51%, transparent 52%);
     background-size: 120px 120px;
   }
 
   .tejas-copper-gradient {
-    background: linear-gradient(135deg, rgba(184, 115, 51, 0.12) 0%, rgba(232, 93, 4, 0.08) 50%, rgba(30, 58, 95, 0.06) 100%);
+    background: linear-gradient(135deg, rgba(163, 83, 28, 0.10) 0%, rgba(222, 154, 38, 0.08) 50%, rgba(26, 43, 93, 0.06) 100%);
   }
 
   .tejas-glass {

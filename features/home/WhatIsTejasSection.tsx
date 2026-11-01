@@ -40,7 +40,7 @@ export function WhatIsTejasSection() {
             </Link>
           </div>
           <div className="rounded-3xl border border-stone-200 bg-gradient-to-br from-tejas-blue to-tejas-blue-dark p-8 text-white shadow-tejas-lg">
-            <Sparkles className="h-8 w-8 text-tejas-saffron" aria-hidden />
+            <Sparkles className="h-8 w-8 text-tejas-gold" aria-hidden />
             <p className="mt-4 text-2xl font-bold">{brand.name}</p>
             <p className="text-white/80">{brand.fullName}</p>
             <p className="mt-6 text-sm leading-relaxed text-white/70">
@@ -48,11 +48,11 @@ export function WhatIsTejasSection() {
             </p>
             <div className="mt-8 grid grid-cols-2 gap-4 border-t border-white/20 pt-6 text-center text-sm">
               <div>
-                <p className="text-2xl font-bold text-tejas-saffron">3</p>
+                <p className="text-2xl font-bold text-tejas-gold">3</p>
                 <p className="text-white/70">Active Olympiads</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-tejas-saffron">10+</p>
+                <p className="text-2xl font-bold text-tejas-gold">10+</p>
                 <p className="text-white/70">Subject Ecosystem</p>
               </div>
             </div>

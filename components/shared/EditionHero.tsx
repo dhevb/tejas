@@ -25,14 +25,14 @@ export function EditionHero({
   theme,
   quote,
   bio,
-  accent = "#E85D04",
+  accent = "#A3531C",
   status = "current",
   className,
 }: EditionHeroProps) {
   return (
     <section
       className={cn("relative overflow-hidden py-20 md:py-28 text-white", className)}
-      style={{ background: `linear-gradient(135deg, ${accent} 0%, #1E3A5F 100%)` }}
+      style={{ background: `linear-gradient(135deg, ${accent} 0%, #1A2B5D 100%)` }}
     >
       <BackgroundPattern variant="mandala" className="opacity-20" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

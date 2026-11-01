@@ -4,6 +4,9 @@ import { useState } from "react";
 
 const MODES = ["UPI", "NEFT", "IMPS", "RTGS", "Bank Transfer", "Cheque", "Other"] as const;
 
+const controlClass =
+  "mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-base text-tejas-ink shadow-sm focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30";
+
 export function PaymentProofForm({ reference, amountDue }: { reference: string; amountDue: number }) {
   const [mode, setMode] = useState<(typeof MODES)[number]>("UPI");
   const [message, setMessage] = useState("");
@@ -29,37 +32,37 @@ export function PaymentProofForm({ reference, amountDue }: { reference: string; 
   if (done) return <p className="text-sm text-tejas-ink">{message}</p>;
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-2xl border border-stone-200 bg-white p-4">
-      <h2 className="text-lg font-bold text-tejas-ink">Upload payment proof</h2>
+    <form onSubmit={submit} className="space-y-3 rounded-2xl border border-tejas-border bg-white p-5 shadow-tejas">
+      <h2 className="border-l-4 border-tejas-saffron pl-3 text-lg font-bold text-tejas-blue">Upload payment proof</h2>
       <p className="text-sm text-tejas-muted">Reference {reference}. Amount due {amountDue.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}. Use a JPG, PNG, or PDF of 5 MB or less. This does not mark the payment as verified.</p>
       <label className="block text-sm">
         <span className="font-medium">Payment mode</span>
-        <select name="paymentMode" value={mode} onChange={(event) => setMode(event.target.value as (typeof MODES)[number])} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
+        <select name="paymentMode" value={mode} onChange={(event) => setMode(event.target.value as (typeof MODES)[number])} className={controlClass}>
           {MODES.map((item) => <option key={item}>{item}</option>)}
         </select>
       </label>
       <label className="block text-sm">
         <span className="font-medium">Payment date</span>
-        <input name="paymentDate" type="date" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+        <input name="paymentDate" type="date" required className={controlClass} />
       </label>
       <label className="block text-sm">
         <span className="font-medium">Amount paid</span>
-        <input name="amountPaid" type="number" required defaultValue={amountDue} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+        <input name="amountPaid" type="number" required defaultValue={amountDue} className={controlClass} />
       </label>
       <label className="block text-sm">
         <span className="font-medium">Name of payer</span>
-        <input name="payerName" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+        <input name="payerName" required className={controlClass} />
       </label>
       <label className="block text-sm">
         <span className="font-medium">{mode === "Cheque" ? "Cheque number" : mode === "UPI" ? "UPI transaction reference" : "UTR or bank reference"}</span>
-        <input name="transactionReference" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+        <input name="transactionReference" required className={controlClass} />
       </label>
       <label className="block text-sm">
         <span className="font-medium">Payment proof</span>
-        <input name="receipt" type="file" required accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" className="mt-1 block w-full text-sm" />
+        <input name="receipt" type="file" required accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" className="mt-1 block w-full text-sm text-tejas-ink file:mr-3 file:rounded-lg file:border-0 file:bg-tejas-saffron-soft file:px-3 file:py-2 file:text-sm file:font-semibold file:text-tejas-saffron-dark" />
       </label>
       {message ? <p className="text-sm text-red-700">{message}</p> : null}
-      <button type="submit" disabled={busy} className="rounded-xl bg-tejas-blue px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+      <button type="submit" disabled={busy} className="rounded-xl bg-tejas-saffron px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-tejas-saffron-dark disabled:opacity-60">
         {busy ? "Uploading…" : "Submit payment proof"}
       </button>
     </form>

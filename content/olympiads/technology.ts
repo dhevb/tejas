@@ -18,7 +18,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
   },
   status: "active",
   icon: "cpu",
-  color: "#6366F1",
+  color: "#8A5A10",
   grades: currentCycle.grades,
   duration: { en: "45 minutes", hi: "45 मिनट" },
   questions: 40,

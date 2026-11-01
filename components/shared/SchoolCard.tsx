@@ -38,7 +38,7 @@ export function SchoolCard({ school, className }: SchoolCardProps) {
           <Users className="h-4 w-4" aria-hidden />
           <span>{school.students.toLocaleString()} students</span>
         </div>
-        <div className="flex items-center gap-2 text-tejas-gold">
+        <div className="flex items-center gap-2 text-tejas-gold-dark">
           <Medal className="h-4 w-4" aria-hidden />
           <span>{school.medals} medals</span>
         </div>

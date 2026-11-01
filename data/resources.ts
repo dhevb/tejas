@@ -25,7 +25,7 @@ export const prepareCategories: PrepareCategory[] = [
     description: "Full-length simulated exams — English, Maths, Technology",
     count: 6,
     href: "/prepare/mock-tests",
-    gradient: "from-tejas-saffron to-orange-600",
+    gradient: "from-tejas-saffron to-tejas-saffron-dark",
   },
   {
     id: "practice",
@@ -33,7 +33,7 @@ export const prepareCategories: PrepareCategory[] = [
     description: "Topic-wise drills and OMR practice sheets",
     count: 24,
     href: "/prepare",
-    gradient: "from-tejas-blue to-indigo-800",
+    gradient: "from-tejas-blue to-tejas-blue-dark",
   },
   {
     id: "videos",
@@ -41,7 +41,7 @@ export const prepareCategories: PrepareCategory[] = [
     description: "Expert masterclasses from Olympiad Cell, DHE",
     count: 8,
     href: "/resources",
-    gradient: "from-tejas-emerald to-teal-700",
+    gradient: "from-tejas-emerald to-tejas-blue",
   },
   {
     id: "question-banks",
@@ -49,7 +49,7 @@ export const prepareCategories: PrepareCategory[] = [
     description: "Level-wise MCQ collections (A–E)",
     count: 500,
     href: "/resources",
-    gradient: "from-violet-600 to-purple-800",
+    gradient: "from-tejas-blue-dark to-tejas-saffron-dark",
   },
   {
     id: "papers",
@@ -57,7 +57,7 @@ export const prepareCategories: PrepareCategory[] = [
     description: "1st DHE English Olympiad 2025 collection",
     count: 5,
     href: "/editions/dhe-english-2025",
-    gradient: "from-tejas-gold to-amber-700",
+    gradient: "from-tejas-gold-dark to-tejas-saffron",
   },
   {
     id: "guides",
@@ -65,6 +65,6 @@ export const prepareCategories: PrepareCategory[] = [
     description: "Olympiad coordination and home support guides",
     count: 6,
     href: "/resources",
-    gradient: "from-rose-600 to-pink-800",
+    gradient: "from-tejas-saffron-dark to-tejas-blue-dark",
   },
 ];

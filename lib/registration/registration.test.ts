@@ -406,6 +406,17 @@ test("a second school with the same PAN is flagged, and listings mask it", async
   const updated = await updatePayment(saved.registration.reference, "rejected", "Amount did not match the bank statement.");
   assert.equal(updated?.payment.status, "rejected");
   assert.equal(updated?.payment.history?.some((event) => event.status === "rejected"), true);
+  const before = updated?.payment.history?.length ?? 0;
+  const amountDue = updated?.fee.amountDue;
+  const repeated = await updatePayment(saved.registration.reference, "rejected", "Amount did not match the bank statement.");
+  assert.equal(repeated?.payment.history?.length, before);
+  assert.equal(repeated?.fee.amountDue, amountDue);
+  assert.equal(repeated?.reference, updated?.reference);
+  const verified = await updatePayment(saved.registration.reference, "confirmed", null);
+  const verifiedAgain = await updatePayment(saved.registration.reference, "confirmed", null);
+  assert.equal(verifiedAgain?.payment.history?.length, verified?.payment.history?.length);
+  assert.equal(verifiedAgain?.payment.history?.filter((event) => event.status === "confirmed").length, 1);
+  assert.equal(verifiedAgain?.fee.amountDue, amountDue);
 });
 
 test("payment proof stays closed while the official account is public", async () => {
@@ -596,13 +607,19 @@ test("a payment proof is stored as verification pending and is not marked verifi
     if (method === "GET" && url.includes("transaction_reference=ilike")) {
       return new Response(JSON.stringify([]), { status: 200, headers: { "content-type": "application/json" } });
     }
+    if (method === "GET" && url.includes("select=status")) {
+      return new Response(JSON.stringify([{ status: "pending_instructions" }]), { status: 200, headers: { "content-type": "application/json" } });
+    }
     if (method === "GET") {
       return new Response(JSON.stringify([{ id: "row-1" }]), { status: 200, headers: { "content-type": "application/json" } });
     }
     if (method === "POST" && url.includes("/storage/v1/object/")) {
       return new Response(JSON.stringify({ Key: "ok" }), { status: 200, headers: { "content-type": "application/json" } });
     }
-    if (method === "PATCH" || method === "DELETE") return new Response(null, { status: 204 });
+    if (method === "PATCH") {
+      return new Response(JSON.stringify([{ id: "row-1", status: "reported" }]), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (method === "DELETE") return new Response(null, { status: 204 });
     return new Response(JSON.stringify([]), { status: 201, headers: { "content-type": "application/json" } });
   }) as typeof fetch;
   const restore = () => {

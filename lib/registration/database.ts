@@ -97,12 +97,18 @@ async function insert(table: string, body: unknown, prefer = "return=representat
 }
 
 async function patch(table: string, filter: string, body: unknown) {
+  await patchReturning(table, filter, body);
+}
+
+async function patchReturning(table: string, filter: string, body: unknown): Promise<Record<string, unknown>[]> {
   const result = await request(`/rest/v1/${table}?${filter}`, {
     method: "PATCH",
-    headers: { "content-type": "application/json", prefer: "return=minimal" },
+    headers: { "content-type": "application/json", prefer: "return=representation" },
     body: JSON.stringify(body),
   });
   assertOk(result.status, [200, 204]);
+  if (result.status === 204 || result.json == null) return [];
+  return rows(result.json);
 }
 
 async function remove(table: string, filter: string) {
@@ -249,11 +255,15 @@ async function registrationId(reference: string): Promise<string | null> {
   return typeof id === "string" ? id : null;
 }
 
-export async function updatePayment(reference: string, record: RegistrationRecord) {
+export async function updatePayment(reference: string, record: RegistrationRecord, actor: "staff" | "school"): Promise<"updated" | "unchanged" | "missing"> {
   const id = await registrationId(reference);
-  if (!id) return;
-  await patch("tejas_registrations", `reference=eq.${quote(reference)}`, { status: record.payment.status, record_snapshot: record });
-  await patch("tejas_payments", `registration_id=eq.${quote(id)}`, {
+  if (!id) return "missing";
+  const current = await request(`/rest/v1/tejas_payments?registration_id=eq.${quote(id)}&select=status`, { method: "GET" });
+  assertOk(current.status, [200]);
+  const status = rows(current.json)[0]?.status;
+  if (status === record.payment.status) return "unchanged";
+  if (typeof status !== "string") return "missing";
+  const updated = await patchReturning("tejas_payments", `registration_id=eq.${quote(id)}&status=eq.${quote(status)}`, {
     status: record.payment.status,
     review_note: record.payment.reviewNote,
     history: record.payment.history ?? [],
@@ -262,7 +272,10 @@ export async function updatePayment(reference: string, record: RegistrationRecor
     payer_name: record.payment.payerName ?? null,
     transaction_reference: record.payment.transactionReference,
   });
-  await insert("tejas_audit_logs", { registration_id: id, actor: "staff", action_name: "payment_status", note: record.payment.status }, "return=minimal");
+  if (!updated.length) return "unchanged";
+  await patch("tejas_registrations", `reference=eq.${quote(reference)}`, { status: record.payment.status, record_snapshot: record });
+  await insert("tejas_audit_logs", { registration_id: id, actor, action_name: "payment_status", note: record.payment.status }, "return=minimal");
+  return "updated";
 }
 
 export async function readUpload(reference: string, ext: RegistrationRecord["uploadExt"]): Promise<Buffer | null> {
@@ -433,5 +446,6 @@ export async function attachReceipt(reference: string, record: RegistrationRecor
     await deleteObject("tejas-payment-proofs", receiptPath).catch(() => undefined);
     throw error;
   }
-  await updatePayment(reference, record);
+  const saved = await updatePayment(reference, record, "school");
+  if (saved === "missing") throw new Error("Database request failed (missing)");
 }

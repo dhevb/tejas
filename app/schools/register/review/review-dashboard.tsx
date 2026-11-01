@@ -58,7 +58,7 @@ type Detail = {
     paidOn?: string | null;
     payerName?: string | null;
     reviewNote: string | null;
-    history?: { at: string; status: string; note: string | null }[];
+    history?: { at: string; status: string; note: string | null; actor?: string }[];
   };
   receiptExt: string | null;
   paymentLabel?: string;
@@ -95,6 +95,7 @@ export function ReviewDashboard() {
   const [rows, setRows] = useState<Row[]>([]);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -136,24 +137,33 @@ export function ReviewDashboard() {
   }
 
   async function setStatus(status: string) {
-    if (!detail) return;
+    if (!detail || saving) return;
+    if (status === detail.payment.status) {
+      setMessage("That payment status is already recorded.");
+      return;
+    }
     if ((status === "rejected" || status === "refund_pending") && note.trim().length < 5) {
       setMessage("Enter the reason for this decision.");
       return;
     }
     setMessage("");
-    const response = await fetch(`/api/register/admin/registrations/${detail.reference}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ status, note }),
-    });
-    const body = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setMessage(body.error ?? "The status was not saved.");
-      return;
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/register/admin/registrations/${detail.reference}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status, note }),
+      });
+      const body = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setMessage(body.error ?? "The status was not saved.");
+        return;
+      }
+      await openRow(detail.reference);
+      await load();
+    } finally {
+      setSaving(false);
     }
-    await openRow(detail.reference);
-    await load();
   }
 
   if (!ready) {
@@ -272,7 +282,7 @@ export function ReviewDashboard() {
           </ul>
           <ul>
             {(detail.payment.history ?? []).map((event) => (
-              <li key={`${event.at}-${event.status}`}>{event.at} · {paymentLabel(event.status)}{event.note ? ` · ${event.note}` : ""}</li>
+              <li key={`${event.at}-${event.status}`}>{event.at} · {paymentLabel(event.status)}{event.actor === "staff" ? " · Staff" : event.actor === "school" ? " · School" : ""}{event.note ? ` · ${event.note}` : ""}</li>
             ))}
           </ul>
           <label className="block">
@@ -280,9 +290,9 @@ export function ReviewDashboard() {
             <textarea value={note} onChange={(event) => setNote(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" rows={3} />
           </label>
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="rounded-lg bg-tejas-blue px-3 py-2 font-semibold text-white" onClick={() => setStatus("confirmed")}>Mark verified</button>
-            <button type="button" className="rounded-lg border border-stone-300 px-3 py-2 font-semibold" onClick={() => setStatus("rejected")}>Reject</button>
-            <button type="button" className="rounded-lg border border-stone-300 px-3 py-2 font-semibold" onClick={() => setStatus("refund_pending")}>Refund or adjustment pending</button>
+            <button type="button" className="rounded-lg bg-tejas-blue px-3 py-2 font-semibold text-white disabled:opacity-60" disabled={saving || detail.payment.status === "confirmed"} onClick={() => setStatus("confirmed")}>Mark verified</button>
+            <button type="button" className="rounded-lg border border-stone-300 px-3 py-2 font-semibold disabled:opacity-60" disabled={saving || detail.payment.status === "rejected"} onClick={() => setStatus("rejected")}>Reject</button>
+            <button type="button" className="rounded-lg border border-stone-300 px-3 py-2 font-semibold disabled:opacity-60" disabled={saving || detail.payment.status === "refund_pending"} onClick={() => setStatus("refund_pending")}>Refund or adjustment pending</button>
           </div>
           {message ? <p className="text-red-700">{message}</p> : null}
         </section>

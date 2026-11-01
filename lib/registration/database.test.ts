@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { calculateFee } from "@/lib/registration/fee";
-import { insertRegistration, readRegistration } from "@/lib/registration/database";
+import { insertRegistration, readRegistration, updatePayment } from "@/lib/registration/database";
 import type { RegistrationRecord } from "@/lib/registration/store";
 
 const REFERENCE = "TEJAS-2026-ABCDEFGHJKLMNPQRSTU2";
@@ -173,6 +173,65 @@ test("a failed database write removes the rows it already created", async () => 
     assert.ok(calls.some((call) => call.startsWith("DELETE /rest/v1/tejas_schools")));
   } finally {
     globalThis.fetch = original;
+    restore();
+  }
+});
+
+test("verifying a payment that is already verified does not write another history entry", async () => {
+  let paymentStatus = "reported";
+  const patches: string[] = [];
+  let audits = 0;
+  const previous = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
+  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "s".repeat(24);
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const method = init?.method ?? "GET";
+    if (method === "GET" && url.includes("/tejas_registrations")) return jsonResponse([{ id: "reg-1" }], 200);
+    if (method === "GET" && url.includes("select=status")) return jsonResponse([{ status: paymentStatus }], 200);
+    if (method === "PATCH" && url.includes("/tejas_payments")) {
+      patches.push(`${url}\n${String(init?.body ?? "")}`);
+      if (!url.includes("status=eq.reported")) return jsonResponse([], 200);
+      paymentStatus = "confirmed";
+      return jsonResponse([{ id: "pay-1", status: "confirmed" }], 200);
+    }
+    if (method === "PATCH") return jsonResponse([{ id: "reg-1" }], 200);
+    if (method === "POST" && url.includes("/tejas_audit_logs")) {
+      audits += 1;
+      const body = String(init?.body ?? "");
+      if (!body.includes('"actor":"staff"')) throw new Error("audit actor");
+      return jsonResponse([], 201);
+    }
+    return jsonResponse([], 200);
+  }) as typeof fetch;
+  const restore = () => {
+    globalThis.fetch = original;
+    if (previous.url === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = previous.url;
+    if (previous.key === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = previous.key;
+  };
+  const confirmed = record();
+  confirmed.payment = {
+    status: "confirmed",
+    transactionReference: "UPI654321",
+    reviewNote: null,
+    history: [
+      { at: "2026-11-01T04:36:36.314Z", status: "pending_instructions", note: "Payment Pending" },
+      { at: "2026-11-01T06:23:11.318Z", status: "confirmed", note: null, actor: "staff" },
+    ],
+  };
+  try {
+    assert.equal(await updatePayment(REFERENCE, confirmed, "staff"), "updated");
+    assert.equal(patches.length, 1);
+    assert.equal(patches[0]?.includes("amount_due"), false);
+    assert.equal(patches[0]?.includes(REFERENCE), false);
+    assert.equal(audits, 1);
+    assert.equal(await updatePayment(REFERENCE, confirmed, "staff"), "unchanged");
+    assert.equal(patches.length, 1);
+    assert.equal(audits, 1);
+  } finally {
     restore();
   }
 });

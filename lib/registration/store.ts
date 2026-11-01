@@ -31,6 +31,7 @@ export type PaymentEvent = {
   at: string;
   status: PaymentStatus;
   note: string | null;
+  actor?: "staff" | "school";
 };
 
 export type RegistrationRecord = {
@@ -233,18 +234,27 @@ export async function readReceipt(reference: string): Promise<{ filename: string
 export async function updatePayment(reference: string, status: PaymentStatus, reviewNote: string | null): Promise<RegistrationRecord | null> {
   const record = await readRegistration(reference);
   if (!record) return null;
-  record.payment.status = status;
-  record.payment.reviewNote = reviewNote;
-  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status, note: reviewNote }];
+  if (record.payment.status === status) return record;
+  const next: RegistrationRecord = {
+    ...record,
+    payment: {
+      ...record.payment,
+      status,
+      reviewNote,
+      history: [...(record.payment.history ?? []), { at: new Date().toISOString(), status, note: reviewNote, actor: "staff" }],
+    },
+  };
   if (remoteConfigured()) {
-    await updateRemotePayment(reference, record);
+    const saved = await updateRemotePayment(reference, next, "staff");
+    if (saved === "missing") return null;
+    if (saved === "unchanged") return readRegistration(reference);
     console.info(`payment status ${reference} ${status} durable=yes`);
-    return record;
+    return next;
   }
   if (process.env.VERCEL === "1") throw new Error("Registration storage is not configured.");
-  await writePrivate(path.join(regDir(reference), "record.json"), sealBytes(Buffer.from(JSON.stringify(record))));
+  await writePrivate(path.join(regDir(reference), "record.json"), sealBytes(Buffer.from(JSON.stringify(next))));
   console.info(`payment status ${reference} ${status} durable=no`);
-  return record;
+  return next;
 }
 
 export async function attachReceipt(
@@ -263,7 +273,7 @@ export async function attachReceipt(
   record.payment.paidOn = meta.paidOn;
   record.payment.payerName = meta.payerName;
   const purpose = record.fee.printedBooks > 0 ? "Registration fee and printed books" : "Registration fee";
-  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: "reported", note: purpose }];
+  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: "reported", note: purpose, actor: "school" }];
   record.receiptExt = receiptExt;
   if (remoteConfigured()) {
     await attachRemoteReceipt(reference, record, receipt);

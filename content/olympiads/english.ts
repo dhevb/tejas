@@ -18,7 +18,7 @@ export const englishOlympiad: OlympiadPortalContent = {
   },
   status: "active",
   icon: "book-open",
-  color: "#E85D04",
+  color: "#A3531C",
   grades: currentCycle.grades,
   duration: { en: "60 minutes", hi: "60 मिनट" },
   questions: 50,

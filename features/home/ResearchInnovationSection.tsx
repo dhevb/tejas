@@ -11,21 +11,21 @@ const items = [
     title: "Research",
     description: "Bal Shodh Patrika — national student research journal for Classes 9–12, nurturing inquiry and scientific writing.",
     href: "/resources",
-    color: "#059669",
+    color: "#047857",
   },
   {
     icon: Lightbulb,
     title: "Innovation",
     description: "Student projects, design thinking, and innovation awards aligned with Viksit Bharat 2047 and DHE's innovation cell.",
     href: "/innovation",
-    color: "#F59E0B",
+    color: "#8A5A10",
   },
   {
     icon: BookOpen,
     title: "Publications",
     description: "Research papers, teacher toolkits, and knowledge compendiums from Olympiad Cell and partner institutions.",
     href: "/research",
-    color: "#1E3A5F",
+    color: "#1A2B5D",
   },
 ];
 

@@ -172,7 +172,7 @@ export function ReviewDashboard() {
         <p className="text-sm text-tejas-muted">Staff review has no default password. It opens only when TEJAS_ADMIN_TOKEN is configured on the server.</p>
         <label className="block text-sm">
           <span className="font-medium">Staff token</span>
-          <input type="password" value={token} onChange={(event) => setToken(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" autoComplete="current-password" />
+          <input type="password" value={token} onChange={(event) => setToken(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" autoComplete="current-password" />
         </label>
         {message ? <p className="text-sm text-red-700">{message}</p> : null}
         <button type="submit" className="rounded-xl bg-tejas-blue px-4 py-2 text-sm font-semibold text-white">Open review</button>
@@ -217,11 +217,11 @@ export function ReviewDashboard() {
       <div className="flex flex-wrap gap-3">
         <label className="text-sm">
           <span className="font-medium">Search</span>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="School or reference" className="mt-1 block rounded-lg border border-stone-300 px-3 py-2" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="School or reference" className="mt-1 block rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" />
         </label>
         <label className="text-sm">
           <span className="font-medium">Payment status</span>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="mt-1 block rounded-lg border border-stone-300 px-3 py-2">
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="mt-1 block rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30">
             <option value="all">All</option>
             <option value="pending_instructions">Payment Pending</option>
             <option value="reported">Payment Submitted / Verification Pending</option>
@@ -287,7 +287,7 @@ export function ReviewDashboard() {
           </ul>
           <label className="block">
             <span className="font-medium">Staff note</span>
-            <textarea value={note} onChange={(event) => setNote(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" rows={3} />
+            <textarea value={note} onChange={(event) => setNote(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" rows={3} />
           </label>
           <div className="flex flex-wrap gap-2">
             <button type="button" className="rounded-lg bg-tejas-blue px-3 py-2 font-semibold text-white disabled:opacity-60" disabled={saving || detail.payment.status === "confirmed"} onClick={() => setStatus("confirmed")}>Mark verified</button>

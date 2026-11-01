@@ -100,7 +100,7 @@ export const scienceOlympiad = createComingSoonOlympiad({
     "विज्ञान नवाचार और राष्ट्रीय प्रगति को आगे बढ़ाता है।"
   ),
   icon: "flask",
-  color: "#059669",
+  color: "#047857",
   grades: ls("Classes I–XII", "कक्षा I–XII"),
 });
 
@@ -117,7 +117,7 @@ export const hindiOlympiad = createComingSoonOlympiad({
     "हिंदी छात्रों को भारत की साहित्यिक विरासत से जोड़ती है।"
   ),
   icon: "languages",
-  color: "#DC2626",
+  color: "#A3531C",
   grades: ls("Classes I–XII", "कक्षा I–XII"),
 });
 
@@ -134,7 +134,7 @@ export const sanskritOlympiad = createComingSoonOlympiad({
     "संस्कृत प्राचीन ज्ञान का द्वार है। DHE Sanskriti Olympiad की योजना।"
   ),
   icon: "scroll",
-  color: "#D4A017",
+  color: "#8A5A10",
   grades: ls("Classes V–XII", "कक्षा V–XII"),
 });
 
@@ -151,7 +151,7 @@ export const generalKnowledgeOlympiad = createComingSoonOlympiad({
     "सुसज्जित नागरिकों को पाठ्यपुस्तकों से परे जागरूकता चाहिए।"
   ),
   icon: "globe",
-  color: "#0EA5E9",
+  color: "#1A2B5D",
   grades: ls("Classes III–XII", "कक्षा III–XII"),
 });
 
@@ -168,7 +168,7 @@ export const aiOlympiad = createComingSoonOlympiad({
     "AI हर क्षेत्र को बदल रही है। TEJAS छात्रों को intelligent technology के creator बनाएगा।"
   ),
   icon: "brain",
-  color: "#8B5CF6",
+  color: "#101C40",
   grades: ls("Classes VIII–XII", "कक्षा VIII–XII"),
 });
 
@@ -185,7 +185,7 @@ export const codingOlympiad = createComingSoonOlympiad({
     "Viksit Bharat 2047 के लिए coding literacy आवश्यक।"
   ),
   icon: "code",
-  color: "#14B8A6",
+  color: "#7C3A12",
   grades: ls("Classes VI–XII", "कक्षा VI–XII"),
 });
 
@@ -202,6 +202,6 @@ export const innovationOlympiad = createComingSoonOlympiad({
     "नवाचार आत्मनिर्भर भारत को आगे बढ़ाता है।"
   ),
   icon: "lightbulb",
-  color: "#F59E0B",
+  color: "#5C3D12",
   grades: ls("Classes IX–XII", "कक्षा IX–XII"),
 });

@@ -23,7 +23,7 @@ const notoDevanagari = Noto_Sans_Devanagari({
 export const metadata: Metadata = createMetadata({});
 
 export const viewport: Viewport = {
-  themeColor: "#172B67",
+  themeColor: "#1A2B5D",
   width: "device-width",
   initialScale: 1,
 };

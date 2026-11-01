@@ -3,20 +3,31 @@
  * Phase 1 Premium Product Experience
  */
 
+/**
+ * Colours sampled from the official TEJAS seal (public/brand/tejas-logo.jpg).
+ * Copper is darkened from the sampled flame average so white button text stays readable.
+ * Gold is for navy surfaces. goldDark is for white icons and text on ivory.
+ */
 export const colors = {
-  primary: "#B65A28",
-  primarySoft: "#FAF8F2",
-  primaryDark: "#8C4318",
-  secondary: "#172B67",
-  secondaryDark: "#101D49",
-  background: "#FAF8F2",
-  success: "#059669",
-  gold: "#C99A2E",
-  copper: "#B65A28",
+  primary: "#1A2B5D",
+  primarySoft: "#F4F6FB",
+  primaryDark: "#101C40",
+  secondary: "#A3531C",
+  secondaryDark: "#7C3A12",
+  accent: "#DE9A26",
+  background: "#FBF8F3",
+  surface: "#FFFFFF",
+  success: "#047857",
+  warning: "#B45309",
+  error: "#B91C1C",
+  info: "#1A2B5D",
+  gold: "#DE9A26",
+  goldDark: "#8A5A10",
+  copper: "#A3531C",
   stone: "#78716C",
   text: "#1C1917",
   textMuted: "#57534E",
-  border: "#E7E5E4",
+  border: "#E6E0D8",
 } as const;
 
 export const typography = {

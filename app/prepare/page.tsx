@@ -31,7 +31,7 @@ export default function PreparePage() {
       <section className="tejas-section bg-tejas-blue text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <p className="text-sm font-semibold uppercase tracking-widest text-tejas-saffron">Continue Learning</p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-tejas-gold">Continue Learning</p>
             <h2 className="mt-2 text-2xl font-bold">Pick up where you left off</h2>
             <div className="mt-6 flex gap-4 overflow-x-auto pb-2">
               {trending.map((t) => (

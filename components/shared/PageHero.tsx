@@ -29,7 +29,7 @@ export function PageHero({
       <div className="absolute inset-0 bg-mandala-accent opacity-30" aria-hidden />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {eyebrow && (
-          <p className="text-sm font-semibold uppercase tracking-widest text-tejas-saffron">
+          <p className="text-sm font-semibold uppercase tracking-widest text-tejas-gold">
             {eyebrow}
           </p>
         )}

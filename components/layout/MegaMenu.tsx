@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,12 @@ interface MegaMenuProps {
 }
 
 export function MegaMenu({ item, isOpen, onOpen, onClose }: MegaMenuProps) {
+  const pathname = usePathname();
+  const sectionActive =
+    pathname === item.href ||
+    pathname.startsWith(item.href + "/") ||
+    item.megaMenu?.some((section) => section.items.some((sub) => pathname === sub.href)) === true;
+
   if (!item.megaMenu?.length) {
     return (
       <Link
@@ -30,8 +37,8 @@ export function MegaMenu({ item, isOpen, onOpen, onClose }: MegaMenuProps) {
       <button
         type="button"
         className={cn(
-          "inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition",
-          isOpen ? "text-tejas-saffron bg-tejas-saffron-soft/50" : "text-tejas-ink hover:text-tejas-saffron"
+          "inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium transition xl:px-2.5 xl:text-sm 2xl:px-3",
+          isOpen || sectionActive ? "bg-tejas-saffron-soft/70 text-tejas-saffron" : "text-tejas-ink hover:text-tejas-saffron"
         )}
         aria-expanded={isOpen}
         onClick={() => (isOpen ? onClose() : onOpen())}

@@ -44,7 +44,7 @@ export function TejasNavbar() {
           href="https://www.dhe.org.in"
           target="_blank"
           rel="noopener noreferrer"
-          className="font-semibold text-tejas-saffron hover:underline inline-flex items-center gap-0.5"
+          className="inline-flex items-center gap-0.5 font-semibold text-tejas-gold hover:underline"
         >
           {brand.parentOrg}
           <ExternalLink className="h-3 w-3" aria-hidden />
@@ -52,7 +52,7 @@ export function TejasNavbar() {
       </div>
 
       <nav
-        className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8"
+        className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8"
         aria-label="Main navigation"
       >
         <Link
@@ -60,17 +60,17 @@ export function TejasNavbar() {
           className="flex shrink-0 items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-saffron rounded-lg"
         >
           <TejasEmblem size="md" />
-          <div className="leading-tight">
-            <span className="block text-lg font-bold text-tejas-blue">{brand.name}</span>
-            <span className="hidden max-w-[11rem] truncate text-[10px] text-tejas-muted sm:block">{brand.fullName}</span>
+          <div className="min-w-0 leading-tight">
+            <span className="block text-lg font-bold tracking-wide text-tejas-blue">{brand.name}</span>
+            <span className="text-xs text-tejas-muted xl:hidden 2xl:block">{brand.tagline}</span>
           </div>
         </Link>
 
-        <div className="hidden flex-1 justify-center xl:flex max-w-sm">
+        <div className="hidden max-w-sm flex-1 justify-center 2xl:flex">
           <SearchBox className="w-full max-w-xs" />
         </div>
 
-        <div className="hidden items-center gap-0.5 lg:flex">
+        <div className="hidden items-center gap-0.5 xl:flex">
           {mainNav.map((item) =>
             item.megaMenu ? (
               <MegaMenu
@@ -85,7 +85,7 @@ export function TejasNavbar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-lg px-2.5 py-2 text-xs font-medium transition-colors xl:px-3 xl:text-sm",
+                  "whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium transition-colors xl:px-2.5 xl:text-sm 2xl:px-3",
                   pathname === item.href || pathname.startsWith(item.href + "/")
                     ? "text-tejas-saffron bg-tejas-saffron-soft/50"
                     : "text-tejas-ink hover:text-tejas-saffron"
@@ -97,7 +97,7 @@ export function TejasNavbar() {
           )}
         </div>
 
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden items-center gap-2 xl:flex">
           <button
             type="button"
             onClick={() => setLocale(locale === "en" ? "hi" : "en")}
@@ -111,12 +111,12 @@ export function TejasNavbar() {
             <User className="h-4 w-4" aria-hidden />
           </Button>
           <Link href="/prepare/mock-tests">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="whitespace-nowrap">
               Mock Test
             </Button>
           </Link>
           <Link href="/#register" onClick={() => AnalyticsEvents.registerClick("navbar")}>
-            <Button size="sm" title="Registration portal opening in Phase 4">
+            <Button size="sm" className="whitespace-nowrap" title="Registration portal opening in Phase 4">
               Register
             </Button>
           </Link>
@@ -124,7 +124,7 @@ export function TejasNavbar() {
 
         <button
           type="button"
-          className="rounded-lg p-2 text-tejas-ink lg:hidden"
+          className="rounded-lg p-2 text-tejas-ink xl:hidden"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-label={open ? "Close menu" : "Open menu"}
@@ -134,19 +134,38 @@ export function TejasNavbar() {
       </nav>
 
       {open && (
-        <div className="border-t border-stone-200 bg-white px-4 py-4 lg:hidden">
+        <div className="border-t border-stone-200 bg-white px-4 py-4 xl:hidden">
           <SearchBox className="mb-4" />
           <div className="flex flex-col gap-1">
-            {mainNav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 text-sm font-medium text-tejas-ink hover:bg-tejas-saffron-soft"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {mainNav.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "rounded-lg px-3 py-3 text-sm font-medium",
+                    active ? "bg-tejas-saffron-soft text-tejas-saffron" : "text-tejas-ink hover:bg-tejas-saffron-soft"
+                  )}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Link href="/prepare/mock-tests" onClick={() => setOpen(false)}>
+              <Button variant="outline" size="sm" className="w-full">
+                Mock Test
+              </Button>
+            </Link>
+            <Link href="/#register" onClick={() => { setOpen(false); AnalyticsEvents.registerClick("navbar"); }}>
+              <Button size="sm" className="w-full" title="Registration portal opening in Phase 4">
+                Register
+              </Button>
+            </Link>
           </div>
         </div>
       )}

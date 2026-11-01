@@ -41,7 +41,7 @@ export function PrepareZoneSection() {
           <div className="mt-10 text-center">
             <Link
               href="/prepare"
-              className="inline-flex items-center gap-2 font-semibold text-tejas-saffron hover:underline"
+              className="inline-flex items-center gap-2 font-semibold text-tejas-gold hover:underline"
             >
               Enter Prepare Hub
               <ArrowRight className="h-4 w-4" aria-hidden />

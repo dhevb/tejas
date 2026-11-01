@@ -14,7 +14,8 @@ export function TejasFooter() {
               <TejasEmblem size="md" />
               <div>
                 <span className="text-xl font-bold">{brand.name}</span>
-                <p className="text-xs text-white/60">{brand.fullName}</p>
+                <p className="text-xs text-tejas-gold">{brand.tagline}</p>
+                <p className="mt-1 max-w-[16rem] text-xs text-white/70">{brand.fullName}</p>
               </div>
             </div>
             <p className="mt-4 max-w-sm text-sm text-white/70 leading-relaxed">
@@ -27,7 +28,7 @@ export function TejasFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-tejas-saffron">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-tejas-gold">
               Platform
             </h3>
             <ul className="mt-4 space-y-2">
@@ -42,7 +43,7 @@ export function TejasFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-tejas-saffron">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-tejas-gold">
               Learning
             </h3>
             <ul className="mt-4 space-y-2">
@@ -57,7 +58,7 @@ export function TejasFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-tejas-saffron">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-tejas-gold">
               Olympiads
             </h3>
             <ul className="mt-4 space-y-2">
@@ -72,7 +73,7 @@ export function TejasFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-tejas-saffron">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-tejas-gold">
               Support
             </h3>
             <ul className="mt-4 space-y-2">
@@ -84,7 +85,7 @@ export function TejasFooter() {
                 </li>
               ))}
             </ul>
-            <h3 className="mt-8 text-sm font-semibold uppercase tracking-wider text-tejas-saffron">
+            <h3 className="mt-8 text-sm font-semibold uppercase tracking-wider text-tejas-gold">
               DHE Ecosystem
             </h3>
             <ul className="mt-4 space-y-2">

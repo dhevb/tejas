@@ -29,7 +29,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
     <>
       <PageHero eyebrow="Registration received" title={summary.reference} subtitle={summary.schoolName} />
       <section className="py-12">
-        <div className="mx-auto max-w-3xl space-y-4 px-4 text-sm text-tejas-ink sm:px-6">
+        <div className="mx-auto max-w-3xl space-y-4 rounded-2xl border border-tejas-border bg-white px-4 py-6 text-sm text-tejas-ink shadow-tejas sm:px-6">
           <p>{summary.studentCount} students. {summary.studentStreamRegistrations} student-stream registrations.</p>
           <p>Registration amount: {inr.format(summary.totalStudentFees)}. Printed books: {inr.format(summary.printedBookAmount)}. Amount due: {inr.format(summary.amountDue)}.</p>
           <p>The book amount is separate from the registration fee. Both are paid to the official account. This page does not mark books as dispatched or delivered.</p>

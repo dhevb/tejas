@@ -25,7 +25,7 @@ export function HallOfFameCard({ entry, className }: HallOfFameCardProps) {
       )}
     >
       <div className="flex items-start justify-between">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tejas-gold/15 text-tejas-gold">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tejas-gold/15 text-tejas-gold-dark">
           <Icon className="h-6 w-6" aria-hidden />
         </div>
         <Badge variant="gold">#{entry.rank}</Badge>

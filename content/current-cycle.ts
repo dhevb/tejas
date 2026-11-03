@@ -18,8 +18,8 @@ export const currentCycle = {
     hi: "कक्षा III–X",
   } satisfies LocalizedString,
   registrationStatus: {
-    en: "Registration is open from 1 November 2026 to 20 November 2026.",
-    hi: "पंजीकरण 1 नवंबर 2026 से 20 नवंबर 2026 तक खुला है।",
+    en: "Registration opens on 3 November 2026 and closes on 20 November 2026.",
+    hi: "पंजीकरण 3 नवंबर 2026 से 20 नवंबर 2026 तक खुला है।",
   } satisfies LocalizedString,
   examDates: {
     en: "Mathematics 9 December 2026, English 10 December 2026, Future Tech 11 December 2026.",

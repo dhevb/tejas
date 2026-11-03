@@ -20,7 +20,7 @@ export default function OlympiadsPage() {
       <PageHero
         eyebrow="Olympiads"
         title="National Olympiad Series"
-        subtitle="TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X. Registration 1–20 November 2026."
+        subtitle="TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X. Registration 3–20 November 2026."
         primaryCta={{ label: "School registration", href: "/schools/register" }}
         secondaryCta={{ label: "Prepare Hub", href: "/prepare" }}
       />

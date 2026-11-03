@@ -1,34 +1,92 @@
 import Link from "next/link";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { createMetadata } from "@/config/seo";
-import { PageHero } from "@/components/shared/PageHero";
 import { currentCycle } from "@/content/current-cycle";
 import { SchoolRegistrationForm } from "./school-registration-form";
 
 export const metadata = createMetadata({
   title: "School registration",
-  description: "Register a school for TEJAS Olympiad 2026–27 and upload the student sheet.",
+  description: "Register a school for TEJAS Olympiad 2026–27. Registration opens on 3 November 2026 and closes on 20 November 2026.",
   path: "/schools/register",
 });
 
+const steps = [
+  ["1", "School details", "Name, address, principal, and coordinator"],
+  ["2", "Student sheet", "Excel or CSV, with a stream for each student"],
+  ["3", "Fee summary", "Server-calculated stream fees and printed books"],
+  ["4", "Submit", "Receive a registration reference"],
+] as const;
+
 export default function SchoolRegisterPage() {
   return (
-    <>
-      <PageHero
-        eyebrow="TEJAS Olympiad 2026–27"
-        title="School registration"
-        subtitle={`${currentCycle.registrationStatus.en} ${currentCycle.examDates.en}`}
-      />
-      <section className="py-12 md:py-16">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <p className="mb-8 text-sm text-tejas-muted">
-            {currentCycle.convener.name}, {currentCycle.convener.titles.join(" and ")}. {currentCycle.convener.phoneDisplay}. {currentCycle.olympiadEmail}.
+    <div className="bg-tejas-ivory">
+      <section className="bg-tejas-blue text-white">
+        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-tejas-gold">TEJAS Olympiad 2026–27</p>
+          <h1 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">School Registration</h1>
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/85">
+            Empowering students to discover their potential and explore new opportunities.
           </p>
-          <SchoolRegistrationForm />
-          <p className="mt-8 text-sm text-tejas-muted">
-            <Link href="/schools/register/review" className="font-semibold text-tejas-blue underline">Staff review</Link>
-          </p>
+          <dl className="mt-8 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
+              <dt className="text-xs font-semibold uppercase tracking-widest text-tejas-gold">Registration opens</dt>
+              <dd className="mt-1 text-2xl font-bold">3 November 2026</dd>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
+              <dt className="text-xs font-semibold uppercase tracking-widest text-tejas-gold">Registration closes</dt>
+              <dd className="mt-1 text-2xl font-bold">20 November 2026</dd>
+            </div>
+          </dl>
+          <p className="mt-5 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.examDates.en}</p>
         </div>
       </section>
-    </>
+
+      <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8" aria-label="Registration steps">
+        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {steps.map(([n, title, text]) => (
+            <li key={n} className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-tejas-blue text-sm font-bold text-white">{n}</span>
+              <p className="mt-3 font-semibold text-tejas-ink">{title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-tejas-muted">{text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
+        <SchoolRegistrationForm />
+        <aside className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-bold text-tejas-blue">Registration support</h2>
+            <p className="mt-2 text-sm leading-relaxed text-tejas-muted">
+              Use these published contact details if the school needs help with the form or the student sheet.
+            </p>
+            <ul className="mt-4 space-y-3 text-sm text-tejas-ink">
+              <li className="flex items-start gap-2">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-tejas-saffron" aria-hidden />
+                <a className="font-semibold text-tejas-blue underline" href={`tel:${currentCycle.convener.phoneTel}`}>{currentCycle.convener.phoneDisplay}</a>
+              </li>
+              <li className="flex items-start gap-2">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-tejas-saffron" aria-hidden />
+                <a className="break-all font-semibold text-tejas-blue underline" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a>
+              </li>
+              <li className="flex items-start gap-2">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-tejas-saffron" aria-hidden />
+                <span>{currentCycle.address}</span>
+              </li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-bold text-tejas-blue">After you submit</h2>
+            <p className="mt-2 text-sm leading-relaxed text-tejas-muted">
+              The confirmation page shows the registration reference and the server-calculated amount due. Payment proof, when that step is open, is uploaded against that reference. Submitting this form does not by itself mark a payment as verified.
+            </p>
+            <p className="mt-4 text-sm">
+              <Link href="/schools/register/review" className="font-semibold text-tejas-blue underline">Staff review</Link>
+            </p>
+          </div>
+        </aside>
+      </section>
+    </div>
   );
 }

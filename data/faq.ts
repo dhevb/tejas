@@ -29,7 +29,7 @@ export const faqItems: FAQItem[] = [
     category: "Registration",
     question: "How do schools participate?",
     answer:
-      "Schools register at /schools/register from 3 November 2026 to 20 November 2026 and upload a student sheet. The fee collected by this registration is ₹150 per student per stream, payable to TEJAS Olympiad. The school's PAN, principal's mobile number, every student field, and a stream choice are required. Write to tejasolympiad@shikshamahakumbh.com or call +91 99886 90588 or +91 79034 31900.",
+      "Schools register at /schools/register from 3 November 2026 to 20 November 2026 and upload a student sheet. The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS. Printed books are optional at ₹170 per copy; the school retains ₹34 and remits ₹136. The school's PAN, principal's mobile number, every student field, and a stream choice are required. Write to tejas@dhe.org.in or call +91 99886 90588 or +91 79034 31900.",
   },
   {
     category: "Exams",

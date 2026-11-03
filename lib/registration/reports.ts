@@ -1,3 +1,4 @@
+import { presentFee } from "@/lib/registration/fee";
 import { maskPan } from "@/lib/registration/fields";
 import { streamById } from "@/lib/registration/schema";
 import { statusLabel, type RegistrationRecord } from "@/lib/registration/store";
@@ -18,8 +19,9 @@ function line(values: Array<string | number | null | undefined>): string {
 export function registrationsToCsv(records: RegistrationRecord[], kind: ReportKind, revealPan: boolean): string {
   const rows: string[] = [];
   if (kind === "schools") {
-    rows.push(line(["Reference", "School", "PAN", "State", "District", "City", "PIN", "Principal", "Coordinator", "Students", "Student-streams", "Amount due", "Payment status", "PAN flagged"]));
+    rows.push(line(["Reference", "School", "PAN", "State", "District", "City", "PIN", "Principal", "Coordinator", "Students", "Student-streams", "Gross registration", "Registration school share", "Registration payable to TEJAS", "Book gross", "Book school share", "Book payable to TEJAS", "Combined gross", "Combined school share", "Payable to TEJAS", "Payment status", "PAN flagged"]));
     for (const record of records) {
+      const fee = presentFee(record.fee);
       rows.push(line([
         record.reference,
         record.school.schoolName,
@@ -31,8 +33,16 @@ export function registrationsToCsv(records: RegistrationRecord[], kind: ReportKi
         record.school.principalName,
         record.school.coordinatorName,
         record.students.length,
-        record.fee.studentStreamRegistrations,
-        record.fee.amountDue ?? record.fee.payableToTejas,
+        fee.studentStreamRegistrations,
+        fee.totalStudentFees,
+        fee.registrationSchoolShare,
+        fee.registrationPayable,
+        fee.printedBookAmount,
+        fee.bookSchoolShare,
+        fee.bookPayable,
+        fee.grossTotal,
+        fee.schoolShare,
+        fee.amountDue,
         statusLabel(record.payment.status),
         record.school.panDuplicate ? "review" : "",
       ]));
@@ -56,8 +66,9 @@ export function registrationsToCsv(records: RegistrationRecord[], kind: ReportKi
       }
     }
   } else if (kind === "payments") {
-    rows.push(line(["Reference", "School", "Status", "Mode", "Paid on", "Payer", "Transaction reference", "Amount due", "Review note"]));
+    rows.push(line(["Reference", "School", "Status", "Mode", "Paid on", "Payer", "Transaction reference", "Gross collected", "School share retained", "Payable to TEJAS", "Review note"]));
     for (const record of records) {
+      const fee = presentFee(record.fee);
       rows.push(line([
         record.reference,
         record.school.schoolName,
@@ -66,15 +77,18 @@ export function registrationsToCsv(records: RegistrationRecord[], kind: ReportKi
         record.payment.paidOn ?? "",
         record.payment.payerName ?? "",
         record.payment.transactionReference ?? "",
-        record.fee.amountDue ?? record.fee.payableToTejas,
+        fee.grossTotal,
+        fee.schoolShare,
+        fee.amountDue,
         record.payment.reviewNote ?? "",
       ]));
     }
   } else if (kind === "books") {
-    rows.push(line(["Reference", "School", "Choice", "Quantity", "Amount"]));
+    rows.push(line(["Reference", "School", "Choice", "Quantity", "Gross book amount", "School book share", "Book payable to TEJAS"]));
     for (const record of records) {
+      const fee = presentFee(record.fee);
       const quantity = record.school.printedBooks === "yes" ? record.school.bookQuantity : 0;
-      rows.push(line([record.reference, record.school.schoolName, record.school.printedBooks ?? "no", quantity, record.fee.printedBookAmount ?? 0]));
+      rows.push(line([record.reference, record.school.schoolName, record.school.printedBooks ?? "no", quantity, fee.printedBookAmount, fee.bookSchoolShare, fee.bookPayable]));
     }
   } else {
     rows.push(line(["Reference", "School", "Choice", "Students", "Amount", "Access"]));

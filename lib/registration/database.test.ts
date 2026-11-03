@@ -127,7 +127,7 @@ test("a database registration writes the normalised rows and can be read back", 
     const payment = JSON.parse(paymentAmount) as { registration_id: string; status: string; amount_due: number; history: { note: string }[] };
     assert.equal(payment.registration_id, "reg-1");
     assert.equal(payment.status, "pending_instructions");
-    assert.equal(payment.amount_due, 640);
+    assert.equal(payment.amount_due, 512);
     assert.equal(payment.history[0]?.note, "Payment Pending");
     assert.equal(bookOrder.includes('"quantity":2'), true);
     assert.equal(bookOrder.includes('"amount":340'), true);

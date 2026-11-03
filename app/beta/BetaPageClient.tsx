@@ -27,7 +27,7 @@ export function BetaPage() {
     const data = Object.fromEntries(new FormData(form));
 
     try {
-      const res = await fetch("https://formsubmit.co/ajax/olympiad@shikshamahakumbh.com", {
+      const res = await fetch("https://formsubmit.co/ajax/tejas@dhe.org.in", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({

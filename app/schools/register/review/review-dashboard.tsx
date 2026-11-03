@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { presentFee } from "@/lib/registration/fee";
 
 type Overview = {
   schools: number;
   students: number;
   studentStreams: number;
   amountDue: number;
+  grossCollected: number;
+  schoolShare: number;
+  amountReceived: number;
+  pendingPayable: number;
+  bookGross: number;
+  bookSchoolShare: number;
+  bookPayable: number;
   classCounts: Record<string, number>;
   streamCounts: Record<string, number>;
   printedBooks: number;
@@ -20,6 +28,8 @@ type Row = {
   studentCount: number;
   studentStreamRegistrations: number;
   amountDue: number;
+  grossTotal: number;
+  schoolShare: number;
   paymentLabel: string;
   paymentStatus: string;
   maskedPan: string;
@@ -50,7 +60,20 @@ type Detail = {
     ebookAccess: string;
   };
   students: { fullName: string; classLabel: string; section: string; rollNumber: string; streams: string[] }[];
-  fee: { amountDue: number; totalStudentFees: number; printedBookAmount: number; ebookAmount: number };
+  fee: {
+    amountDue: number;
+    totalStudentFees: number;
+    payableToTejas: number;
+    schoolShare: number;
+    schoolShareApproved?: boolean;
+    registrationSchoolShare?: number;
+    registrationPayable?: number;
+    printedBookAmount: number;
+    bookSchoolShare?: number;
+    bookPayable?: number;
+    ebookAmount: number;
+    grossTotal?: number;
+  };
   payment: {
     status: string;
     transactionReference: string | null;
@@ -78,6 +101,18 @@ function paymentLabel(status: string): string {
 }
 
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+
+function FeeLines({ fee, books }: { fee: Detail["fee"]; books: number }) {
+  const shown = presentFee(fee);
+  return (
+    <>
+      <p>Registration collected {inr.format(shown.totalStudentFees)}. School registration share {inr.format(shown.registrationSchoolShare)}. Registration payable to TEJAS {inr.format(shown.registrationPayable)}.</p>
+      <p>Printed books {books}: collected {inr.format(shown.printedBookAmount)}, school book share {inr.format(shown.bookSchoolShare)}, book remittance {inr.format(shown.bookPayable)}.</p>
+      <p>Combined gross {inr.format(shown.grossTotal)}. Combined school share {inr.format(shown.schoolShare)}. Net payable to TEJAS {inr.format(shown.amountDue)}.</p>
+      {fee.schoolShareApproved === true ? null : <p>These amounts are the figures saved with this registration. They have not been recalculated.</p>}
+    </>
+  );
+}
 
 function bookOrderLabel(status: string): string {
   if (status === "reported") return "Book payment submitted";
@@ -189,7 +224,14 @@ export function ReviewDashboard() {
             ["Schools", overview.schools],
             ["Students", overview.students],
             ["Student-streams", overview.studentStreams],
-            ["Amount expected", inr.format(overview.amountDue)],
+            ["Gross collected by schools", inr.format(overview.grossCollected)],
+            ["School share retained", inr.format(overview.schoolShare)],
+            ["Net payable to TEJAS", inr.format(overview.amountDue)],
+            ["Received by TEJAS", inr.format(overview.amountReceived)],
+            ["Pending payable", inr.format(overview.pendingPayable)],
+            ["Book amount collected", inr.format(overview.bookGross)],
+            ["Book share retained", inr.format(overview.bookSchoolShare)],
+            ["Book remittance", inr.format(overview.bookPayable)],
             ["Payment Submitted / Verification Pending", overview.payments.reported ?? 0],
             ["Verified", overview.payments.confirmed ?? 0],
             ["Payment Pending", (overview.payments.pending_instructions ?? 0) + (overview.payments.awaiting_payment ?? 0)],
@@ -238,7 +280,9 @@ export function ReviewDashboard() {
               <th className="py-2 pr-3">School</th>
               <th className="py-2 pr-3">PAN</th>
               <th className="py-2 pr-3">Students</th>
-              <th className="py-2 pr-3">Due</th>
+              <th className="py-2 pr-3">Gross</th>
+              <th className="py-2 pr-3">School share</th>
+              <th className="py-2 pr-3">Payable to TEJAS</th>
               <th className="py-2 pr-3">Payment</th>
             </tr>
           </thead>
@@ -256,6 +300,8 @@ export function ReviewDashboard() {
                 </td>
                 <td className="py-2 pr-3">{row.maskedPan}{row.panDuplicate ? " · review" : ""}</td>
                 <td className="py-2 pr-3">{row.studentCount} / {row.studentStreamRegistrations}</td>
+                <td className="py-2 pr-3">{inr.format(row.grossTotal)}</td>
+                <td className="py-2 pr-3">{inr.format(row.schoolShare)}</td>
                 <td className="py-2 pr-3">{inr.format(row.amountDue)}</td>
                 <td className="py-2 pr-3">{row.paymentLabel}</td>
               </tr>
@@ -270,7 +316,7 @@ export function ReviewDashboard() {
           <p>PAN for this staff view: {detail.school.pan}{detail.school.panDuplicate ? " (duplicate, needs review)" : ""}</p>
           <p>Principal: {detail.school.principalName}, {detail.school.principalMobile}, {detail.school.principalEmail}</p>
           <p>Coordinator: {detail.school.coordinatorName}, {detail.school.coordinatorMobile}, {detail.school.coordinatorEmail}</p>
-          <p>Registration {inr.format(detail.fee.totalStudentFees)}. Printed books {detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0} ({inr.format(detail.fee.printedBookAmount ?? 0)}). Due {inr.format(detail.fee.amountDue)}.</p>
+          <FeeLines fee={detail.fee} books={detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0} />
           <p>Book order: {detail.school.printedBooks === "yes" ? bookOrderLabel(detail.payment.status) : "No printed books ordered"}. Dispatch and delivery are not recorded here.</p>
           <p>E-book access is not for sale and is not activated from this screen.</p>
           <p>Payment: {detail.paymentLabel ?? paymentLabel(detail.payment.status)}. {detail.payment.mode ?? ""} {detail.payment.paidOn ?? ""} {detail.payment.payerName ?? ""} {detail.payment.transactionReference ?? ""}</p>

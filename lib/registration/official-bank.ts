@@ -31,8 +31,8 @@ export function officialPublicPayment(proofsAccepted: boolean): PublicPayment {
     proofsAccepted,
     heading: "Official payment account",
     message: proofsAccepted
-      ? "Transfer the server-calculated amount to this account. Uploading proof does not confirm the payment. Registration stays pending until TEJAS Olympiad verifies it."
-      : "These are the official account details. Payment-proof submission will open once the secure payment system is operational. You can submit the registration without a receipt. Sending this form does not confirm that a payment has been received.",
+      ? "Transfer only the net amount payable to TEJAS. The school collects the gross fee and retains its share. Uploading proof does not confirm the payment. Registration stays pending until TEJAS Olympiad verifies it."
+      : "These are the official account details. Transfer only the net amount payable to TEJAS. The school retains its share. Payment-proof submission will open once the secure payment system is operational. You can submit the registration without a receipt. Sending this form does not confirm that a payment has been received.",
     bankName: OFFICIAL_BANK.bankName,
     branch: OFFICIAL_BANK.branch,
     accountHolder: OFFICIAL_BANK.accountHolder,

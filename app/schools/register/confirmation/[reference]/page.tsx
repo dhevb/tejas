@@ -32,10 +32,20 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
           <h1 className="break-all text-2xl font-bold text-tejas-blue sm:text-3xl">{summary.reference}</h1>
           <p className="text-base leading-relaxed">The school registration for {summary.schoolName} has been received. Keep this reference for payment and any later enquiry.</p>
           <p>{summary.studentCount} students. {summary.studentStreamRegistrations} student-stream registrations.</p>
-          <p>Registration amount: {inr.format(summary.totalStudentFees)}. Printed books: {inr.format(summary.printedBookAmount)}. Amount due: {inr.format(summary.amountDue)}.</p>
-          <p>The book amount is separate from the registration fee. Both are paid to the official account. This page does not mark books as dispatched or delivered.</p>
+          <dl className="grid gap-2 sm:grid-cols-2">
+            <div><dt className="text-tejas-muted">Registration fee collected</dt><dd className="font-semibold">{inr.format(summary.totalStudentFees)}</dd></div>
+            <div><dt className="text-tejas-muted">School's registration share</dt><dd className="font-semibold">{inr.format(summary.registrationSchoolShare)}</dd></div>
+            <div><dt className="text-tejas-muted">Registration payable to TEJAS</dt><dd className="font-semibold">{inr.format(summary.registrationPayable)}</dd></div>
+            <div><dt className="text-tejas-muted">Printed books collected</dt><dd className="font-semibold">{inr.format(summary.printedBookAmount)}</dd></div>
+            <div><dt className="text-tejas-muted">School's book share</dt><dd className="font-semibold">{inr.format(summary.bookSchoolShare)}</dd></div>
+            <div><dt className="text-tejas-muted">Books payable to TEJAS</dt><dd className="font-semibold">{inr.format(summary.bookPayable)}</dd></div>
+            <div><dt className="text-tejas-muted">Combined gross amount</dt><dd className="font-semibold">{inr.format(summary.grossTotal)}</dd></div>
+            <div><dt className="text-tejas-muted">Combined school share</dt><dd className="font-semibold">{inr.format(summary.schoolShare)}</dd></div>
+          </dl>
+          <p className="rounded-xl bg-tejas-blue px-4 py-3 text-base font-semibold text-white">Net amount payable to TEJAS: {inr.format(summary.amountDue)}</p>
+          <p>The school retains the school share and transfers the net amount to the official account. The book amount is separate from the registration fee. This page does not mark books as dispatched or delivered.</p>
           <p>E-book access is not for sale, so no e-book fee is included.</p>
-          <p>The amount due is the full registration amount plus any printed books. This registration does not deduct a separate school share from the amount paid to the official account.</p>
+          {summary.schoolShareApproved ? null : <p>These amounts are the figures saved with this registration. They have not been recalculated.</p>}
           <p className="font-semibold">{summary.paymentLabel}</p>
           <p>{summary.nextStep}</p>
           {paymentProofsAccepted() && ["pending_instructions", "awaiting_payment", "rejected"].includes(summary.paymentStatus) ? (

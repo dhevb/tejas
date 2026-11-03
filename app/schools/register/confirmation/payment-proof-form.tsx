@@ -34,7 +34,7 @@ export function PaymentProofForm({ reference, amountDue }: { reference: string; 
   return (
     <form onSubmit={submit} className="space-y-3 rounded-2xl border border-tejas-border bg-white p-5 shadow-tejas">
       <h2 className="border-l-4 border-tejas-saffron pl-3 text-lg font-bold text-tejas-blue">Upload payment proof</h2>
-      <p className="text-sm text-tejas-muted">Reference {reference}. Amount due {amountDue.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}. Use a JPG, PNG, or PDF of 5 MB or less. This does not mark the payment as verified.</p>
+      <p className="text-sm text-tejas-muted">Reference {reference}. Net amount payable to TEJAS {amountDue.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}. The school retains its share and does not include that share in this transfer. Use a JPG, PNG, or PDF of 5 MB or less. This does not mark the payment as verified.</p>
       <label className="block text-sm">
         <span className="font-medium">Payment mode</span>
         <select name="paymentMode" value={mode} onChange={(event) => setMode(event.target.value as (typeof MODES)[number])} className={controlClass}>
@@ -46,7 +46,7 @@ export function PaymentProofForm({ reference, amountDue }: { reference: string; 
         <input name="paymentDate" type="date" required className={controlClass} />
       </label>
       <label className="block text-sm">
-        <span className="font-medium">Amount paid</span>
+        <span className="font-medium">Amount paid to TEJAS</span>
         <input name="amountPaid" type="number" required defaultValue={amountDue} className={controlClass} />
       </label>
       <label className="block text-sm">

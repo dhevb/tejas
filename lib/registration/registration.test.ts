@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import * as XLSX from "xlsx";
 import { adminConfigured, createSessionValue, sessionIsValid, tokenMatches } from "@/lib/registration/auth";
-import { BOOK_PRICE, calculateFee, EBOOK_FEE, EBOOK_SALE_OPEN, FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, ONLINE_EXAM_APPROVED, SCHOOL_SHARE_APPROVED } from "@/lib/registration/fee";
+import { BOOK_PRICE, BOOK_SCHOOL_SHARE, BOOK_TEJAS, calculateFee, EBOOK_FEE, EBOOK_SALE_OPEN, FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, ONLINE_EXAM_APPROVED, presentFee, SCHOOL_SHARE_APPROVED } from "@/lib/registration/fee";
+import { currentCycle } from "@/content/current-cycle";
 import { maskPan, parseIndianMobile, parsePan, validateDob } from "@/lib/registration/fields";
 import { OFFICIAL_BANK, officialPublicPayment } from "@/lib/registration/official-bank";
 import { durableStorageConfigured, paymentProofsAccepted, serverKeyName } from "@/lib/registration/durable";
@@ -63,35 +64,80 @@ function registrations(buffer: Buffer, name = "students.xlsx") {
   return parseStudentSheet(buffer, name, SCHOOL);
 }
 
-test("fee is ₹150 per student-stream and unapproved shares are not deducted", () => {
+test("new registrations remit the school share split from the invitation", () => {
   assert.equal(FEE_TOTAL, 150);
-  assert.equal(FEE_TEJAS, 150);
-  assert.equal(FEE_SCHOOL, 0);
-  assert.equal(SCHOOL_SHARE_APPROVED, false);
+  assert.equal(FEE_TEJAS, 120);
+  assert.equal(FEE_SCHOOL, 30);
+  assert.equal(SCHOOL_SHARE_APPROVED, true);
   assert.equal(ONLINE_EXAM_APPROVED, false);
   assert.equal(BOOK_PRICE, 170);
+  assert.equal(BOOK_SCHOOL_SHARE, 34);
+  assert.equal(BOOK_TEJAS, 136);
   assert.equal(EBOOK_FEE, 49);
   assert.equal(EBOOK_SALE_OPEN, false);
+
   const one = calculateFee(1);
-  assert.deepEqual([one.totalStudentFees, one.payableToTejas, one.schoolShare, one.amountDue], [150, 150, 0, 150]);
-  assert.equal(one.schoolShareApproved, false);
-  const two = calculateFee(2);
-  assert.deepEqual([two.totalStudentFees, two.payableToTejas, two.schoolShare], [300, 300, 0]);
-  const three = calculateFee(3);
-  assert.deepEqual([three.totalStudentFees, three.payableToTejas, three.schoolShare], [450, 450, 0]);
-  const fifty = calculateFee(50);
-  assert.equal(fifty.schoolShare, 0);
-  const extras = calculateFee(4, { printedBooks: 2, ebookAccess: 3 });
-  assert.equal(extras.totalStudentFees, 600);
-  assert.equal(extras.printedBookAmount, 340);
-  assert.equal(extras.ebookAmount, 0);
-  assert.equal(extras.ebookAccess, 0);
-  assert.equal(extras.amountDue, 940);
-  const example = calculateFee(30, { printedBooks: 5, ebookAccess: 20 });
-  assert.equal(example.totalStudentFees, 4500);
-  assert.equal(example.printedBookAmount, 850);
-  assert.equal(example.ebookAmount, 0);
-  assert.equal(example.amountDue, 5350);
+  assert.deepEqual([one.totalStudentFees, one.registrationSchoolShare, one.payableToTejas, one.amountDue], [150, 30, 120, 120]);
+
+  const twoStreams = calculateFee(2);
+  assert.deepEqual([twoStreams.totalStudentFees, twoStreams.schoolShare, twoStreams.amountDue], [300, 60, 240]);
+
+  const ten = calculateFee(10);
+  assert.deepEqual([ten.totalStudentFees, ten.registrationSchoolShare, ten.amountDue], [1500, 300, 1200]);
+
+  const oneBook = calculateFee(0, { printedBooks: 1 });
+  assert.deepEqual([oneBook.printedBookAmount, oneBook.bookSchoolShare, oneBook.bookPayable, oneBook.amountDue], [170, 34, 136, 136]);
+
+  const fiveBooks = calculateFee(0, { printedBooks: 5 });
+  assert.deepEqual([fiveBooks.printedBookAmount, fiveBooks.bookSchoolShare, fiveBooks.bookPayable, fiveBooks.amountDue], [850, 170, 680, 680]);
+
+  const mixed = calculateFee(2, { printedBooks: 1, ebookAccess: 4 });
+  assert.equal(mixed.ebookAmount, 0);
+  assert.equal(mixed.grossTotal, 470);
+  assert.equal(mixed.schoolShare, 94);
+  assert.equal(mixed.amountDue, 376);
+  assert.equal(presentFee(mixed).amountDue, mixed.amountDue);
+});
+
+test("a previously recorded full remittance is not recalculated", () => {
+  const historical = {
+    studentStreamRegistrations: 2,
+    totalStudentFees: 300,
+    payableToTejas: 300,
+    schoolShare: 0,
+    schoolShareApproved: false,
+    printedBooks: 1,
+    printedBookAmount: 170,
+    ebookAccess: 0,
+    ebookAmount: 0,
+    amountDue: 470,
+  };
+  const shown = presentFee(historical);
+  assert.equal(shown.registrationPayable, 300);
+  assert.equal(shown.registrationSchoolShare, 0);
+  assert.equal(shown.bookPayable, 170);
+  assert.equal(shown.bookSchoolShare, 0);
+  assert.equal(shown.schoolShare, 0);
+  assert.equal(shown.grossTotal, 470);
+  assert.equal(shown.amountDue, 470);
+  assert.notEqual(shown.amountDue, calculateFee(2, { printedBooks: 1 }).amountDue);
+});
+
+test("public pages use the official TEJAS email", () => {
+  assert.equal(currentCycle.olympiadEmail, "tejas@dhe.org.in");
+  assert.equal(currentCycle.academicEnquiries, "tejas@dhe.org.in");
+  const previous = `tejasolympiad@${"shikshamahakumbh.com"}`;
+  const hits: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === ".next") continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(ts|tsx|js|jsx|json|md|html)$/.test(entry.name) && readFileSync(full, "utf8").includes(previous)) hits.push(full);
+    }
+  };
+  for (const root of ["app", "components", "content", "data", "config", "features", "lib", "docs"]) walk(root);
+  assert.deepEqual(hits, []);
 });
 
 test("one, two, and three streams are counted separately", () => {
@@ -99,11 +145,11 @@ test("one, two, and three streams are counted separately", () => {
   assert.equal(one.rowErrors.length, 0);
   assert.equal(one.fee?.studentStreamRegistrations, 1);
   const two = registrations(sheet([student({ streams: "TEJAS English, TEJAS Mathematics" })]));
-  assert.equal(two.fee?.payableToTejas, 300);
+  assert.equal(two.fee?.payableToTejas, 240);
   const three = registrations(sheet([student({ className: "VI", streams: "TEJAS English, TEJAS Mathematics, TEJAS Future Tech" })]));
   assert.equal(three.students[0]?.streams.length, 3);
   assert.equal(three.fee?.totalStudentFees, 450);
-  assert.equal(three.fee?.payableToTejas, 450);
+  assert.equal(three.fee?.payableToTejas, 360);
 });
 
 test("mixed students keep their own stream counts", () => {
@@ -115,7 +161,7 @@ test("mixed students keep their own stream counts", () => {
   assert.equal(parsed.rowErrors.length, 0);
   assert.equal(parsed.students.length, 3);
   assert.equal(parsed.fee?.studentStreamRegistrations, 4);
-  assert.equal(parsed.fee?.payableToTejas, 600);
+  assert.equal(parsed.fee?.payableToTejas, 480);
 });
 
 test("blank roll number, parent mobile, and parent email are rejected", () => {
@@ -187,8 +233,8 @@ test("csv and xls uploads use the same rules", () => {
   const xls = registrations(sheet([row], "xls"), "students.xls");
   assert.equal(csv.students.length, 1, csv.formErrors.join(" ") + csv.rowErrors.map((error) => error.messages.join(" ")).join(" "));
   assert.equal(xls.students.length, 1, xls.formErrors.join(" ") + xls.rowErrors.map((error) => error.messages.join(" ")).join(" "));
-  assert.equal(csv.fee?.payableToTejas, 150);
-  assert.equal(xls.fee?.payableToTejas, 150);
+  assert.equal(csv.fee?.payableToTejas, 120);
+  assert.equal(xls.fee?.payableToTejas, 120);
 });
 
 test("unsupported, oversized, and macro files are refused", () => {
@@ -344,8 +390,8 @@ test("submission stores a reference, ignores a repeated post, and hides student 
   assert.equal(first.status, 201);
   assert.equal(saved.registration.studentCount, 2);
   assert.equal(saved.registration.studentStreamRegistrations, 3);
-  assert.equal(saved.registration.payableToTejas, 450);
-  assert.equal(saved.registration.amountDue, 450);
+  assert.equal(saved.registration.payableToTejas, 360);
+  assert.equal(saved.registration.amountDue, 360);
   assert.equal(saved.registration.emailSent, false);
   const second = await send();
   const repeated = (await second.json()) as { registration: { reference: string } };
@@ -646,6 +692,9 @@ test("a payment proof is stored as verification pending and is not marked verifi
     else process.env.SUPABASE_SERVICE_ROLE_KEY = previous.key;
   };
   try {
+    assert.equal(fee.amountDue, 392);
+    assert.equal(fee.grossTotal, 490);
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1]);
     const bad = new FormData();
     bad.set("paymentMode", "UPI");
     bad.set("paymentDate", "2026-11-02");
@@ -659,13 +708,25 @@ test("a payment proof is stored as verification pending and is not marked verifi
     assert.equal(rejected.status, 400);
     assert.equal(calls.some((call) => call.includes("/storage/v1/object/")), false);
 
+    const gross = new FormData();
+    gross.set("paymentMode", "UPI");
+    gross.set("paymentDate", "2026-11-02");
+    gross.set("payerName", "Anita Verma");
+    gross.set("amountPaid", String(fee.grossTotal));
+    gross.set("transactionReference", "UPI000111");
+    gross.set("receipt", new File([new Uint8Array(jpeg)], "proof.jpg", { type: "image/jpeg" }));
+    const grossRejected = await receiptPost(new Request(`http://localhost/api/register/${reference}/payment`, { method: "POST", body: gross }), {
+      params: Promise.resolve({ reference }),
+    });
+    assert.equal(grossRejected.status, 400);
+    assert.equal(calls.some((call) => call.includes("/storage/v1/object/")), false);
+
     const good = new FormData();
     good.set("paymentMode", "UPI");
     good.set("paymentDate", "2026-11-02");
     good.set("payerName", "Anita Verma");
     good.set("amountPaid", String(fee.amountDue));
     good.set("transactionReference", "UPI654321");
-    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1]);
     good.set("receipt", new File([new Uint8Array(jpeg)], "proof.jpg", { type: "image/jpeg" }));
     const accepted = await receiptPost(new Request(`http://localhost/api/register/${reference}/payment`, { method: "POST", body: good }), {
       params: Promise.resolve({ reference }),
@@ -797,9 +858,9 @@ test("registration with proof upload open still saves a pending payment and igno
     assert.equal(first.status, 201, JSON.stringify(saved));
     assert.equal(saved.ok, true);
     assert.equal(saved.registration.studentStreamRegistrations, 30);
-    assert.equal(saved.registration.payableToTejas, 4500);
+    assert.equal(saved.registration.payableToTejas, 3600);
     assert.equal(saved.registration.printedBookAmount, 850);
-    assert.equal(saved.registration.amountDue, 5350);
+    assert.equal(saved.registration.amountDue, 4280);
     assert.equal(saved.registration.paymentStatus, "pending_instructions");
     assert.equal(saved.registration.paymentLabel, "Payment Pending");
     assert.equal(JSON.stringify(saved).includes("Not Collected"), false);
@@ -808,7 +869,7 @@ test("registration with proof upload open still saves a pending payment and igno
     assert.equal(paymentPosts, 1);
     assert.equal(payment.registration_id, "reg-1");
     assert.equal(payment.status, "pending_instructions");
-    assert.equal(payment.amount_due, 5350);
+    assert.equal(payment.amount_due, 4280);
     assert.equal(payment.history[0]?.note, "Payment Pending");
     assert.equal(bookBodies[0]?.includes('"quantity":5'), true);
     assert.equal(bookBodies[0]?.includes('"amount":850'), true);

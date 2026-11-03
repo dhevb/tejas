@@ -128,14 +128,14 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     { year: 2026, title: { en: "TEJAS Mathematics", hi: "TEJAS गणित" }, description: { en: "9 December 2026", hi: "9 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" }, description: { en: "10 December 2026", hi: "10 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" }, description: { en: "11 December 2026", hi: "11 दिसंबर 2026" } },
-    { year: 2027, title: { en: "Results", hi: "परिणाम" }, description: { en: "The brochure prints a tentative date of 12 January 2027. The invitation says the declaration of results will be communicated separately.", hi: "ब्रोशर में 12 जनवरी 2027 संभावित है। निमंत्रण कहता है कि घोषणा अलग से होगी।" } },
+    { year: 2027, title: { en: "Results", hi: "परिणाम" }, description: { en: "12 January 2027 (Tentative).", hi: "12 जनवरी 2027 (संभावित)।" } },
   ],
   quotes: [],
   majorContributions: [
     { en: "Examinations are offline and are held at the participating schools on the allotted dates.", hi: "परीक्षाएँ ऑफ़लाइन हैं और निर्धारित तिथि पर विद्यालय में होती हैं।" },
     { en: "Question papers and OMR sheets are dispatched in advance.", hi: "प्रश्नपत्र और OMR पहले भेजी जाती हैं।" },
     { en: "Completed OMR sheets are couriered the same day to the designated evaluation centre. The centre address is shared with the detailed instructions.", hi: "भरी हुई OMR उसी दिन कूरियर से जाती हैं।" },
-    { en: "Printed preparation books are optional and cost ₹170 per copy. The school retains ₹34 and remits ₹136. A school can participate without ordering them.", hi: "मुद्रित तैयारी पुस्तकें अनिवार्य नहीं हैं। कीमत ₹170 प्रति प्रति है। विद्यालय ₹34 रखता है और ₹136 भेजता है।" },
+    { en: "Printed books are ordered on a separate form at ₹170 per copy. The school may retain ₹34 and remits ₹136. Olympiad registration does not order them.", hi: "मुद्रित पुस्तकें अलग प्रपत्र पर ₹170 प्रति प्रति हैं। ओलंपियाड पंजीकरण उन्हें नहीं मँगवाता।" },
   ],
   olympiadStreams: [
     { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" },

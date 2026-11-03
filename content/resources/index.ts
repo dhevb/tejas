@@ -57,7 +57,7 @@ export const resourceRegistry: ResourceItem[] = [
   {
     id: "doc-report-2025",
     title: ls("2025 English Olympiad report", "2025 रिपोर्ट"),
-    description: ls("The previous report of the 1st DHE English Olympiad. It is not the 2026–27 brochure.", "2025 की पिछली रिपोर्ट। यह 2026–27 का ब्रोशर नहीं है।"),
+    description: ls("Historical report of the 1st DHE English Olympiad. It is not the 2026–27 brochure.", "2025 की ऐतिहासिक रिपोर्ट। यह 2026–27 का ब्रोशर नहीं है।"),
     category: "downloads",
     type: "article",
     href: "/documents/dhe-english-olympiad-2025-brief-report.pdf",
@@ -65,10 +65,26 @@ export const resourceRegistry: ResourceItem[] = [
   {
     id: "ebook-status",
     title: ls("E-book", "ई-बुक"),
-    description: ls("The invitation sets a student login fee of ₹49. No e-book file or login is open yet.", "निमंत्रण में विद्यार्थी लॉगिन शुल्क ₹49 है। लॉगिन अभी खुला नहीं है।"),
+    description: ls("Separate registration at ₹49 per student. No e-book file has been supplied yet.", "अलग पंजीकरण, ₹49 प्रति विद्यार्थी। ई-बुक फ़ाइल अभी नहीं दी गई है।"),
     category: "books",
     type: "article",
-    href: "/prepare/ebook",
+    href: "/ebook/register",
+  },
+  {
+    id: "printed-books",
+    title: ls("Printed book order", "मुद्रित पुस्तक आदेश"),
+    description: ls("Separate from Olympiad registration. ₹170 per book, ₹34 school share, ₹136 payable to TEJAS.", "ओलंपियाड पंजीकरण से अलग। ₹170 प्रति पुस्तक।"),
+    category: "books",
+    type: "article",
+    href: "/books/order",
+  },
+  {
+    id: "ebook-login",
+    title: ls("E-book login", "ई-बुक लॉगिन"),
+    description: ls("Sign in after payment is verified. Reading is online only.", "भुगतान सत्यापन के बाद साइन इन। पढ़ना केवल ऑनलाइन है।"),
+    category: "books",
+    type: "article",
+    href: "/ebook/login",
   },
 ];
 

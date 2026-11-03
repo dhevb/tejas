@@ -13,7 +13,7 @@ export const metadata = createMetadata({
 const documents = [
   {
     title: "TEJAS Olympiad 2026–27 brochure",
-    description: "The updated brochure: streams, the tentative timeline, student benefits, medals and e-certificates, the 2025 legacy, and the published office address.",
+    description: "The updated brochure, published unchanged. The website follows the approved dates, prizes, and separate registration routes where this file differs.",
     href: "/documents/tejas-olympiad-2026-27-brochure.pdf",
     file: "tejas-olympiad-2026-27-brochure.pdf",
   },
@@ -24,8 +24,8 @@ const documents = [
     file: "tejas-olympiad-2026-27-invitation.pdf",
   },
   {
-    title: "Brief report of the 1st DHE English Olympiad (2025)",
-    description: "The previous report of the 2025 English Olympiad. It is not the brochure or the invitation for TEJAS Olympiad 2026–27. It records 10,040 students, 25 schools, and the 2025 prize lists.",
+    title: "Historical report: 1st DHE English Olympiad (2025)",
+    description: "Historical. This is the previous report of the 2025 English Olympiad. It is not the brochure or the invitation for TEJAS Olympiad 2026–27. It records 10,040 students, 25 schools, and the 2025 prize lists.",
     href: "/documents/dhe-english-olympiad-2025-brief-report.pdf",
     file: "dhe-english-olympiad-2025-brief-report.pdf",
   },
@@ -63,10 +63,10 @@ export default function DocumentsPage() {
             <div className="rounded-2xl border border-tejas-saffron/40 bg-tejas-saffron/5 p-6 text-sm leading-relaxed text-tejas-ink">
               <h2 className="text-lg font-bold">Where the documents differ</h2>
               <ul className="mt-3 list-disc space-y-2 pl-5">
-                <li>The invitation sets registration from {programme.registrationOpens} to {programme.registrationCloses}. The brochure’s tentative timeline prints {programme.brochureRegistration}. The school form follows the invitation.</li>
-                <li>{programme.results}</li>
-                <li>{programme.awardNote}</li>
-                <li>The brochure’s QR code opens <a className="font-semibold text-tejas-blue underline" href="https://forms.gle/mfKRAEPLLE5fkDDT6" target="_blank" rel="noopener noreferrer">this Google Form</a>. The invitation’s registration link is the school form on this website: <Link className="font-semibold text-tejas-blue underline" href="/schools/register">/schools/register</Link>.</li>
+                <li>The organisation has confirmed the invitation dates: registration from {programme.registrationOpens} to {programme.registrationCloses}. The brochure file is unchanged and still prints {programme.brochureRegistration}. The school form uses the confirmed dates.</li>
+                <li>The official results date is {programme.results}</li>
+                <li>The approved awards are the cash prizes in the invitation. Wording in the unchanged brochure about medals or an e-certificate is not an additional approved award.</li>
+                <li>Olympiad registration, printed book orders, and e-book registration are three separate processes. The brochure QR code opens a Google Form. That form is not the Olympiad registration route. The route is <Link className="font-semibold text-tejas-blue underline" href="/schools/register">the school registration form</Link>.</li>
               </ul>
             </div>
           </FadeIn>

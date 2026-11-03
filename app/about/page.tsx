@@ -140,16 +140,15 @@ export default function AboutPage() {
             <FadeIn>
               <h2 className="text-2xl font-bold text-tejas-ink">Announced prizes</h2>
               <p className="mt-4 text-tejas-muted leading-relaxed">{programme.awards}</p>
-              <p className="mt-3 text-tejas-muted leading-relaxed">{programme.brochureAwards}</p>
-              <p className="mt-3 text-tejas-muted leading-relaxed">{programme.awardNote}</p>
+              <p className="mt-3 text-tejas-muted leading-relaxed">Results: {programme.results}</p>
             </FadeIn>
             <FadeIn delay={0.1}>
               <h2 className="text-2xl font-bold text-tejas-ink">For schools</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
                 <li>Registration opens on 3 November 2026 and closes on 20 November 2026.</li>
                 <li>The school collects ₹150 per student per stream, retains ₹30, and remits ₹120 to TEJAS.</li>
-                <li>Printed books are optional at ₹170. The school retains ₹34 and remits ₹136.</li>
-                <li>The invitation says e-books will be made available at ₹49 per student login. Access is not open yet, and the form does not charge ₹49.</li>
+                <li>Printed books are a separate order at ₹170. The school may retain ₹34 and remits ₹136. Olympiad registration does not order them.</li>
+                <li>E-book registration is separate, at ₹49 per student. No e-book file has been supplied for reading yet.</li>
               </ul>
             </FadeIn>
           </div>

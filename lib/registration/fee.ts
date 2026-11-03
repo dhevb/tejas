@@ -10,7 +10,10 @@ export const BOOK_SCHOOL_SHARE = 34;
 export const BOOK_TEJAS = 136;
 export const BOOK_SHARE_APPROVED = true;
 export const EBOOK_FEE = 49;
-/** No e-book file is published, so the ₹49 rate is not collected. */
+/**
+ * Olympiad registration never collects the ₹49 e-book fee.
+ * E-book registration is a separate record and is not priced here.
+ */
 export const EBOOK_SALE_OPEN = false;
 export const ONLINE_EXAM_FEE = 30;
 export const ONLINE_EXAM_APPROVED = false;

@@ -44,13 +44,13 @@ const differentiators = [
     icon: Lightbulb,
     title: "School share",
     titleHi: "विद्यालय हिस्सा",
-    description: "The school collects ₹150, retains ₹30, and remits ₹120. Printed books are ₹170, with ₹34 retained and ₹136 remitted.",
+    description: "The school collects ₹150, retains ₹30, and remits ₹120. Printed books are ordered separately.",
   },
   {
     icon: Brain,
     title: "Results",
     titleHi: "परिणाम",
-    description: "The brochure prints a tentative date of 12 January 2027. The invitation says the declaration will be communicated separately.",
+    description: "12 January 2027 (Tentative).",
   },
 ];
 

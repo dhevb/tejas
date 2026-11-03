@@ -59,9 +59,9 @@ const reasons = [
 const steps = [
   { n: "1", title: "School registration", text: "A school submits the form between 3 and 20 November 2026." },
   { n: "2", title: "Student sheet", text: "The school uploads the student sheet and chooses a stream for each student." },
-  { n: "3", title: "Preparation", text: "A syllabus and sample papers have not been published. Printed books are optional. This website does not start an online test." },
+  { n: "3", title: "Preparation", text: "A syllabus and sample papers have not been published. Printed books and e-books are separate from this registration. This website does not start an online test." },
   { n: "4", title: "Examination", text: "Mathematics, English, and Future Tech are held offline at the school on 9, 10, and 11 December 2026." },
-  { n: "5", title: "Results", text: "The brochure prints a tentative date of 12 January 2027. The invitation says the declaration will be communicated separately." },
+  { n: "5", title: "Results", text: "12 January 2027 (Tentative)." },
 ] as const;
 
 const learning = [
@@ -229,7 +229,26 @@ export function HomeLanding() {
               </article>
             ))}
           </div>
-          <p className="mt-5 text-sm text-tejas-muted">{currentCycle.felicitation.en}</p>
+          <p className="mt-5 text-sm text-tejas-muted">Results: {currentCycle.results.en} {currentCycle.felicitation.en}</p>
+        </div>
+      </section>
+
+      <section className="bg-white py-16 md:py-20" aria-labelledby="separate-heading">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 id="separate-heading" className="text-3xl font-bold tracking-tight text-tejas-ink md:text-4xl">Three separate processes</h2>
+          <p className="mt-3 max-w-2xl text-tejas-muted">Registering for the Olympiad does not order a printed book or an e-book. Each process has its own form, fee, and record.</p>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              ["/schools/register", "Olympiad registration", "3–20 November 2026. ₹150 per student per stream. The school retains ₹30 and remits ₹120."],
+              ["/books/order", "Printed book order", "₹170 per book. The school may retain ₹34. ₹136 is payable to TEJAS. Quantities are entered by class and stream."],
+              ["/ebook/register", "E-book registration", "₹49 per student. A login is created after payment is verified. Reading is online only."],
+            ].map(([href, title, text]) => (
+              <Link key={href} href={href} className="rounded-2xl border border-tejas-border bg-tejas-ivory p-5">
+                <h3 className="text-lg font-bold text-tejas-blue">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-tejas-muted">{text}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -280,7 +299,7 @@ export function HomeLanding() {
             <School className="h-7 w-7 text-tejas-saffron" aria-hidden />
             <h2 id="schools-heading" className="mt-3 text-3xl font-bold tracking-tight text-tejas-ink md:text-4xl">Schools register their students</h2>
             <p className="mt-4 text-tejas-muted leading-relaxed">
-              TEJAS is organised through schools. The coordinator uploads one student sheet and selects the streams. The school collects ₹150 for each student-stream, retains ₹30, and remits ₹120 to the published account. Printed books, when requested, are ₹170 each; the school retains ₹34 and remits ₹136. E-book access is not for sale.
+              TEJAS is organised through schools. The coordinator uploads one student sheet and selects the streams. The school collects ₹150 for each student-stream, retains ₹30, and remits ₹120 to the published account. Printed book orders and e-book registration are separate and are not included in that fee.
             </p>
             <p className="mt-3 text-sm text-tejas-muted">{currentCycle.administeredBy.en}.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">

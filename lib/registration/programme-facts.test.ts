@@ -20,6 +20,7 @@ test("approved programme facts stay the single published record", () => {
   assert.equal(programme.bookSchoolShare, 34);
   assert.equal(programme.bookPayable, 136);
   assert.equal(programme.ebookSaleOpen, false);
+  assert.equal(programme.results, "12 January 2027 (Tentative).");
   assert.equal(programme.prizes.first, 3100);
   assert.equal(programme.prizes.consolationCount, 10);
 });
@@ -50,6 +51,11 @@ test("public source does not keep replaced programme claims", () => {
       lines.forEach((line, index) => {
         if (forbidden.some((pattern) => pattern.test(line))) hits.push(`${file}:${index + 1}:${line.trim()}`);
         if (/Future Tech/.test(line) && /III–X/.test(line) && !/VI/.test(line)) hits.push(`${file}:${index + 1}:${line.trim()}`);
+        if (/communicated separately/.test(line)) hits.push(`${file}:${index + 1}:${line.trim()}`);
+        if (/gold medal|e-certificate/i.test(line) && !file.endsWith(`${path.sep}app${path.sep}documents${path.sep}page.tsx`)) hits.push(`${file}:${index + 1}:${line.trim()}`);
+        if (/02–22 November/.test(line) && !file.endsWith(`${path.sep}content${path.sep}current-cycle.ts`) && !file.endsWith(`${path.sep}app${path.sep}documents${path.sep}page.tsx`)) {
+          hits.push(`${file}:${index + 1}:${line.trim()}`);
+        }
       });
     }
   }

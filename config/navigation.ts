@@ -60,6 +60,9 @@ export const mainNav: NavItem[] = [
         items: [
           { label: "Prepare Hub", href: "/prepare", description: "No sample paper is published" },
           { label: "Mock Tests", href: "/prepare/mock-tests", description: "No test is open" },
+          { label: "Printed books", href: "/books/order", description: "Separate from registration" },
+          { label: "E-book registration", href: "/ebook/register", description: "₹49 per student" },
+          { label: "E-book login", href: "/ebook/login", description: "Online reading only" },
           { label: "Resources", href: "/resources", description: "Published pages only" },
         ],
       },
@@ -118,10 +121,13 @@ export const footerNav = {
     { label: "Mathematics", href: "/olympiads/mathematics" },
     { label: "Future Tech", href: "/olympiads/technology" },
     { label: "School registration", href: "/schools/register" },
+    { label: "Printed book order", href: "/books/order" },
+    { label: "E-book registration", href: "/ebook/register" },
     { label: "All Olympiads", href: "/olympiads" },
   ],
   learning: [
     { label: "Prepare Hub", href: "/prepare" },
+    { label: "E-book login", href: "/ebook/login" },
     { label: "Mock Tests", href: "/prepare/mock-tests" },
     { label: "Resources", href: "/resources" },
     { label: "Hall of Fame", href: "/hall-of-fame" },

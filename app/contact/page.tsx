@@ -3,6 +3,7 @@ import { PageHero } from "@/components/shared/PageHero";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { brand } from "@/design-system/tokens";
+import Link from "next/link";
 import { currentCycle } from "@/content/current-cycle";
 
 export const metadata = createMetadata({
@@ -49,6 +50,12 @@ export default function ContactPage() {
                     <p className="text-tejas-muted">{currentCycle.administeredBy.en}</p>
                     <p className="text-tejas-muted">{currentCycle.officeAddress}</p>
                     <p className="mt-2 text-tejas-muted">{currentCycle.convener}, {currentCycle.convenerRole}</p>
+                    <ul className="mt-4 space-y-2 text-sm">
+                      <li><Link className="font-semibold text-tejas-blue underline" href="/schools/register">Olympiad school registration</Link></li>
+                      <li><Link className="font-semibold text-tejas-blue underline" href="/books/order">Printed book order</Link></li>
+                      <li><Link className="font-semibold text-tejas-blue underline" href="/ebook/register">E-book registration</Link></li>
+                      <li><Link className="font-semibold text-tejas-blue underline" href="/ebook/login">E-book login</Link></li>
+                    </ul>
                   </div>
                 </div>
               </div>

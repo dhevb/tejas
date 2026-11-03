@@ -327,7 +327,8 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   assert.ok(missing.errors.principalMobile);
   assert.ok(missing.errors.coordinatorMobile);
   assert.ok(missing.errors.principalEmail);
-  assert.ok(missing.errors.printedBooks);
+  assert.equal(missing.errors.printedBooks, undefined);
+  assert.equal(missing.errors.bookQuantity, undefined);
   assert.equal(missing.errors.principalDesignation, undefined);
   assert.equal(missing.errors.representativeName, undefined);
   assert.equal(missing.errors.representativeDesignation, undefined);
@@ -362,9 +363,12 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   const withBooks = new FormData();
   schoolFields(withBooks);
   withBooks.set("printedBooks", "yes");
-  withBooks.set("bookQuantity", "");
+  withBooks.set("bookQuantity", "12");
+  withBooks.set("totalAmount", "1");
   const bookResult = readSchoolForm(withBooks);
-  assert.equal(bookResult.errors.bookQuantity, "Enter how many printed books are required.");
+  assert.equal(bookResult.value?.printedBooks, "no");
+  assert.equal(bookResult.value?.bookQuantity, 0);
+  assert.equal(bookResult.errors.bookQuantity, undefined);
   assert.equal(books.value, null);
   const paid = readPaymentSubmission(withBooks, 150);
   assert.equal(paid.value, null);
@@ -373,6 +377,7 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   schoolFields(ebookYes);
   ebookYes.set("ebookAccess", "yes");
   assert.equal(readSchoolForm(ebookYes).value?.ebookAccess, "no");
+  assert.equal(readSchoolForm(ebookYes).value?.printedBooks, "no");
 });
 
 test("submission stores a reference, ignores a repeated post, and hides student details", async () => {
@@ -863,8 +868,8 @@ test("registration with proof upload open still saves a pending payment and igno
     assert.equal(saved.ok, true);
     assert.equal(saved.registration.studentStreamRegistrations, 30);
     assert.equal(saved.registration.payableToTejas, 3600);
-    assert.equal(saved.registration.printedBookAmount, 850);
-    assert.equal(saved.registration.amountDue, 4280);
+    assert.equal(saved.registration.printedBookAmount, 0);
+    assert.equal(saved.registration.amountDue, 3600);
     assert.equal(saved.registration.paymentStatus, "pending_instructions");
     assert.equal(saved.registration.paymentLabel, "Payment Pending");
     assert.equal(JSON.stringify(saved).includes("Not Collected"), false);
@@ -873,10 +878,10 @@ test("registration with proof upload open still saves a pending payment and igno
     assert.equal(paymentPosts, 1);
     assert.equal(payment.registration_id, "reg-1");
     assert.equal(payment.status, "pending_instructions");
-    assert.equal(payment.amount_due, 4280);
+    assert.equal(payment.amount_due, 3600);
     assert.equal(payment.history[0]?.note, "Payment Pending");
-    assert.equal(bookBodies[0]?.includes('"quantity":5'), true);
-    assert.equal(bookBodies[0]?.includes('"amount":850'), true);
+    assert.equal(bookBodies[0]?.includes('"quantity":0'), true);
+    assert.equal(bookBodies[0]?.includes('"amount":0'), true);
     assert.equal(state.snapshot?.school.representativeName, null);
     const second = await send();
     const repeated = await second.json() as { registration: { reference: string } };

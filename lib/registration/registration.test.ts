@@ -100,7 +100,7 @@ test("one, two, and three streams are counted separately", () => {
   assert.equal(one.fee?.studentStreamRegistrations, 1);
   const two = registrations(sheet([student({ streams: "TEJAS English, TEJAS Mathematics" })]));
   assert.equal(two.fee?.payableToTejas, 300);
-  const three = registrations(sheet([student({ streams: "TEJAS English, TEJAS Mathematics, TEJAS Future Tech" })]));
+  const three = registrations(sheet([student({ className: "VI", streams: "TEJAS English, TEJAS Mathematics, TEJAS Future Tech" })]));
   assert.equal(three.students[0]?.streams.length, 3);
   assert.equal(three.fee?.totalStudentFees, 450);
   assert.equal(three.fee?.payableToTejas, 450);
@@ -109,7 +109,7 @@ test("one, two, and three streams are counted separately", () => {
 test("mixed students keep their own stream counts", () => {
   const parsed = registrations(sheet([
     student(),
-    student({ fullName: "Kavya Iyer", parentName: "Arun Iyer", dob: "02-02-2014", rollNumber: "2", streams: "TEJAS Mathematics, TEJAS Future Tech" }),
+    student({ fullName: "Kavya Iyer", parentName: "Arun Iyer", dob: "02-02-2014", className: "VI", rollNumber: "2", streams: "TEJAS Mathematics, TEJAS Future Tech" }),
     student({ fullName: "Neel Kapoor", parentName: "Sonia Kapoor", dob: "09-09-2013", className: "8", section: "B", rollNumber: "3", streams: "Future Tech" }),
   ]));
   assert.equal(parsed.rowErrors.length, 0);
@@ -141,6 +141,11 @@ test("classes outside III–X are rejected for each selected stream", () => {
   }
   assert.equal(registrations(sheet([student({ className: "III" })])).students.length, 1);
   assert.equal(registrations(sheet([student({ className: "10" })])).students.length, 1);
+  const futureTechInClassV = registrations(sheet([student({ className: "V", streams: "TEJAS Future Tech" })]));
+  assert.equal(futureTechInClassV.students.length, 0);
+  assert.match(futureTechInClassV.rowErrors[0]?.messages.join(" ") ?? "", /Classes VI–X/);
+  assert.equal(registrations(sheet([student({ className: "VI", streams: "TEJAS Future Tech" })])).students.length, 1);
+  assert.equal(registrations(sheet([student({ className: "V", streams: "TEJAS English" })])).students.length, 1);
 });
 
 test("duplicate students and duplicate roll numbers are reported", () => {
@@ -225,14 +230,9 @@ const PAN = "AAACB2468H";
 function schoolFields(body: FormData, pan = PAN) {
   body.set("schoolName", SCHOOL);
   body.set("schoolAddress", "12 Station Road, Mohali");
-  body.set("state", "Punjab");
-  body.set("district", "Sahibzada Ajit Singh Nagar");
-  body.set("city", "Mohali");
-  body.set("pin", "140301");
   body.set("pan", pan);
   body.set("schoolEmail", "office@river.example");
   body.set("schoolMobile", "9812345678");
-  body.set("affiliationBoard", "CBSE");
   body.set("schoolCategory", "Private");
   body.set("principalName", "Anita Verma");
   body.set("principalMobile", "9811111111");
@@ -291,13 +291,23 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   extra.set("principalDesignation", "Headmaster");
   extra.set("representativeName", "Not Collected");
   extra.set("representativeDesignation", "Not Collected");
+  extra.set("state", "Punjab");
+  extra.set("district", "Sahibzada Ajit Singh Nagar");
+  extra.set("city", "Mohali");
+  extra.set("pin", "140301");
+  extra.set("affiliationBoard", "CBSE");
+  extra.set("affiliationNumber", "1630123");
   const cleaned = readSchoolForm(extra).value;
   assert.equal(cleaned?.principalName, "Anita Verma");
   assert.equal(cleaned?.principalDesignation, "Principal");
   assert.equal(cleaned?.representativeName, null);
   assert.equal(cleaned?.representativeDesignation, null);
   assert.equal(cleaned?.affiliationNumber, null);
-  assert.equal(cleaned?.affiliationBoard, "CBSE");
+  assert.equal(cleaned?.affiliationBoard, "");
+  assert.equal(cleaned?.state, "");
+  assert.equal(cleaned?.district, "");
+  assert.equal(cleaned?.city, "");
+  assert.equal(cleaned?.pin, "");
   const books = readSchoolForm({ ...Object.fromEntries(new FormData() as never) });
   const withBooks = new FormData();
   schoolFields(withBooks);
@@ -346,7 +356,9 @@ test("submission stores a reference, ignores a repeated post, and hides student 
   assert.equal(record?.students.length, 2);
   assert.equal(record?.school.previousReference, "DHE-2025-14");
   assert.equal(record?.school.affiliationNumber, null);
-  assert.equal(record?.school.affiliationBoard, "CBSE");
+  assert.equal(record?.school.affiliationBoard, "");
+  assert.equal(record?.school.state, "");
+  assert.equal(record?.school.pin, "");
   const summary = JSON.stringify(toPublicSummary(record!));
   assert.equal(summary.includes("Aarav"), false);
   assert.equal(summary.includes("15-08-2015"), false);

@@ -35,7 +35,11 @@ export default function ContactPage() {
                   <Phone className="h-6 w-6 text-tejas-saffron shrink-0" aria-hidden />
                   <div>
                     <h3 className="font-bold text-tejas-ink">Phone</h3>
-                    <p className="text-tejas-muted">{currentCycle.convener.phoneDisplay}</p>
+                    {currentCycle.phones.map((phone) => (
+                      <p key={phone.tel} className="text-tejas-muted">
+                        <a href={`tel:${phone.tel}`}>{phone.display}</a>
+                      </p>
+                    ))}
                     <p className="text-sm text-tejas-muted">{currentCycle.convener.name}, {currentCycle.convener.titles.join("; ")}</p>
                   </div>
                 </div>
@@ -43,7 +47,7 @@ export default function ContactPage() {
                   <MapPin className="h-6 w-6 text-tejas-saffron shrink-0" aria-hidden />
                   <div>
                     <h3 className="font-bold text-tejas-ink">Organisation</h3>
-                    <p className="text-tejas-muted">{brand.parentOrg}</p>
+                    <p className="text-tejas-muted">{currentCycle.administeredBy.en}</p>
                     <p className="text-sm text-tejas-muted">{currentCycle.address}</p>
                   </div>
                 </div>

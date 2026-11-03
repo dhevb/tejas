@@ -43,7 +43,7 @@ const streams = [
     alt: "Illustration of two students looking at a small classroom robot and a laptop",
     text: "Digital literacy, computational thinking, and a first look at emerging technology.",
     when: "11 December 2026",
-    classes: "Classes III–X",
+    classes: "Classes VI–X",
   },
 ] as const;
 
@@ -94,7 +94,7 @@ export function HomeLanding() {
               Discover your talent. Explore your potential. Build your future.
             </p>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-tejas-muted">
-              Talent Exploration for Junior Aspiring Scholars. Three Olympiads for Classes III–X, administered by the Department of Holistic Education.
+              Talent Exploration for Junior Aspiring Scholars. English and Mathematics for Classes III–X, and Future Tech for Classes VI–X, organised by the Department of Holistic Education (DHE), VBITR, Kurukshetra.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/olympiads">
@@ -134,7 +134,7 @@ export function HomeLanding() {
           <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["3", "Olympiad streams", "English, Mathematics, Future Tech"],
-              ["III–X", "Participating classes", "The same range in each active stream"],
+              ["III–X", "English and Mathematics", "Future Tech is Classes VI–X"],
               ["₹150", "Registration fee", "Per student, per stream"],
               ["20 Nov", "Last registration day", "Opens 3 November 2026"],
             ].map(([value, label, note]) => (

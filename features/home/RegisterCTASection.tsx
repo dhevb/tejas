@@ -19,8 +19,8 @@ export function RegisterCTASection() {
           Join the {currentCycle.editionName.en}
         </h2>
         <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
-          Schools register on this website. TEJAS English, TEJAS Mathematics, and TEJAS Future Tech
-          for Classes III–X. {currentCycle.registrationStatus.en} {currentCycle.fee.en}
+          Schools register on this website. TEJAS English and TEJAS Mathematics are for Classes III–X. TEJAS Future Tech is for Classes VI–X.
+          {currentCycle.registrationStatus.en} {currentCycle.fee.en}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link href="/schools/register" onClick={() => AnalyticsEvents.registerClick("homepage_cta")}>

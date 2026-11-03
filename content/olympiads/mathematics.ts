@@ -180,7 +180,7 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       level: { en: "National Top Achievers", hi: "राष्ट्रीय शीर्ष achievers" },
       description: {
-        en: "₹3,100, ₹2,100, ₹1,500, and five consolation prizes of ₹500 for overall toppers in each class. Gold, silver, and bronze medals for outstanding students.",
+        en: "₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500 each for overall toppers in each class. The school with the highest student participation is recognised, and its principal receives a Certificate of Appreciation. Gold, silver, and bronze medals for outstanding students.",
         hi: "पदक, प्रमाणपत्र और TEJAS राष्ट्रीय सम्मान",
       },
     },

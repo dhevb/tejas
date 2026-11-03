@@ -266,7 +266,7 @@ export function ReviewDashboard() {
       {detail ? (
         <section className="space-y-3 rounded-2xl border border-stone-200 bg-white p-4 text-sm">
           <h2 className="text-lg font-bold">{detail.school.schoolName}</h2>
-          <p>{detail.school.schoolAddress}, {detail.school.city}, {detail.school.district}, {detail.school.state} {detail.school.pin}</p>
+          <p>{[detail.school.schoolAddress, detail.school.city, detail.school.district, detail.school.state, detail.school.pin].filter(Boolean).join(", ")}</p>
           <p>PAN for this staff view: {detail.school.pan}{detail.school.panDuplicate ? " (duplicate, needs review)" : ""}</p>
           <p>Principal: {detail.school.principalName}, {detail.school.principalMobile}, {detail.school.principalEmail}</p>
           <p>Coordinator: {detail.school.coordinatorName}, {detail.school.coordinatorMobile}, {detail.school.coordinatorEmail}</p>

@@ -23,13 +23,13 @@ export const faqItems: FAQItem[] = [
     category: "Olympiads",
     question: "Which Olympiads are active in the current TEJAS edition?",
     answer:
-      "TEJAS English on 10 December 2026, TEJAS Mathematics on 9 December 2026, and TEJAS Future Tech on 11 December 2026. Classes III–X.",
+      "TEJAS English on 10 December 2026 and TEJAS Mathematics on 9 December 2026 are for Classes III–X. TEJAS Future Tech on 11 December 2026 is for Classes VI–X. The examinations are offline, at the participating schools.",
   },
   {
     category: "Registration",
     question: "How do schools participate?",
     answer:
-      "Schools register at /schools/register from 3 November 2026 to 20 November 2026 and upload a student sheet. The fee is ₹150 per student per stream, payable to TEJAS Olympiad. A school share has not been approved. The school's PAN, principal's mobile number, every student field, and a stream choice are required. Write to tejasolympiad@shikshamahakumbh.com or call +91-99886 90588.",
+      "Schools register at /schools/register from 3 November 2026 to 20 November 2026 and upload a student sheet. The fee collected by this registration is ₹150 per student per stream, payable to TEJAS Olympiad. The school's PAN, principal's mobile number, every student field, and a stream choice are required. Write to tejasolympiad@shikshamahakumbh.com or call +91 99886 90588 or +91 79034 31900.",
   },
   {
     category: "Exams",
@@ -41,13 +41,13 @@ export const faqItems: FAQItem[] = [
     category: "Exams",
     question: "What are the examination levels?",
     answer:
-      "Level A: Class I–II, Level B: Class III–IV, Level C: Class V–VI, Level D: Class VII–VIII, Level E: Class IX–X. Current active streams focus on Classes III–X (Levels B–E).",
+      "The 2025 English Olympiad used Level A: Class I–II, Level B: Class III–IV, Level C: Class V–VI, Level D: Class VII–VIII, Level E: Class IX–X. In 2026–27, English and Mathematics are for Classes III–X and Future Tech is for Classes VI–X.",
   },
   {
     category: "Awards",
     question: "What awards do winners receive?",
     answer:
-      "Every participant receives an e-certificate. Outstanding students receive gold, silver, and bronze medals. Overall toppers in each class, in every stream, across participating schools receive ₹3,100, ₹2,100, ₹1,500, and five consolation prizes of ₹500. School-level winners receive certificates, medals, and books. The school with the highest participation may receive special recognition.",
+      "Every participant receives an e-certificate. Outstanding students receive gold, silver, and bronze medals. Overall toppers in each class, in every stream, across participating schools receive ₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500 each. School-level winners receive certificates, medals, and books. The school with the highest student participation is recognised, and its principal receives a Certificate of Appreciation.",
   },
   {
     category: "Preparation",

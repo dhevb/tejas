@@ -37,7 +37,8 @@ export default function SchoolRegisterPage() {
               <dd className="mt-1 text-2xl font-bold">20 November 2026</dd>
             </div>
           </dl>
-          <p className="mt-5 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.examDates.en}</p>
+          <p className="mt-5 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.examDates.en} The examinations are offline, at the participating schools.</p>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.administeredBy.en}.</p>
         </div>
       </section>
 
@@ -53,7 +54,19 @@ export default function SchoolRegisterPage() {
         </ol>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-5xl px-4 pb-2 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-bold text-tejas-blue">Examination arrangements</h2>
+          <ul className="mt-3 grid gap-2 text-sm leading-relaxed text-tejas-muted sm:grid-cols-2">
+            <li>Examinations are offline, at the participating school, on the allotted date.</li>
+            <li>Question papers and OMR sheets are sent in advance.</li>
+            <li>Completed OMR sheets are couriered to the designated evaluation centre on the same day.</li>
+            <li>The evaluation-centre address is shared with the examination instructions.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
         <SchoolRegistrationForm />
         <aside className="mt-8 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm">
@@ -62,10 +75,12 @@ export default function SchoolRegisterPage() {
               Use these published contact details if the school needs help with the form or the student sheet.
             </p>
             <ul className="mt-4 space-y-3 text-sm text-tejas-ink">
-              <li className="flex items-start gap-2">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-tejas-saffron" aria-hidden />
-                <a className="font-semibold text-tejas-blue underline" href={`tel:${currentCycle.convener.phoneTel}`}>{currentCycle.convener.phoneDisplay}</a>
-              </li>
+              {currentCycle.phones.map((phone) => (
+                <li key={phone.tel} className="flex items-start gap-2">
+                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-tejas-saffron" aria-hidden />
+                  <a className="font-semibold text-tejas-blue underline" href={`tel:${phone.tel}`}>{phone.display}</a>
+                </li>
+              ))}
               <li className="flex items-start gap-2">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-tejas-saffron" aria-hidden />
                 <a className="break-all font-semibold text-tejas-blue underline" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a>

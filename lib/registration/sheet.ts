@@ -62,6 +62,14 @@ export type SheetParse = {
 
 export type SheetKind = "xlsx" | "xls" | "csv";
 
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+
+function eligibleClassLabel(classes: readonly number[]): string {
+  const min = Math.min(...classes);
+  const max = Math.max(...classes);
+  return `Classes ${ROMAN[min]}–${ROMAN[max]}`;
+}
+
 export function detectSheetKind(filename: string, buf: Buffer): { kind: SheetKind } | { error: string } {
   const ext = filename.toLowerCase().split(".").pop() ?? "";
   const zip = buf.length > 4 && buf[0] === 0x50 && buf[1] === 0x4b;
@@ -269,7 +277,7 @@ export function parseStudentSheet(buf: Buffer, filename: string, schoolName: str
         pushError(
           errors,
           rowNumber,
-          `Class ${classLabel.trim()} is not eligible for ${ineligible.map((id) => streamById(id).name).join(", ")}. The brochure states Classes III–X for the Olympiad and does not print a separate range for each stream.`,
+          `Class ${classLabel.trim()} is not eligible for ${ineligible.map((id) => `${streamById(id).name} (${eligibleClassLabel(streamById(id).classes)})`).join(", ")}.`,
         );
       }
     }

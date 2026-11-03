@@ -33,8 +33,8 @@ export default function EditionsPage() {
             <div className="mb-8 rounded-2xl border border-tejas-saffron/30 bg-tejas-saffron/5 p-6">
               <p className="text-sm font-semibold text-tejas-saffron">TEJAS Olympiad 2026–27 · 6th Edition of Shiksha Mahakumbh</p>
               <p className="mt-2 text-tejas-muted">
-                TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X.
-                Registration 3–20 November 2026. Fee ₹150 per student per stream.
+                TEJAS English and Mathematics for Classes III–X. TEJAS Future Tech for Classes VI–X.
+                Registration 3–20 November 2026. Fee collected on this website: ₹150 per student per stream.
               </p>
               <Link href={`/editions/${current.slug}`} className="mt-4 inline-block text-sm font-semibold text-tejas-saffron hover:underline">
                 Explore {current.name} →

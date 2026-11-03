@@ -35,7 +35,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
           <p>Registration amount: {inr.format(summary.totalStudentFees)}. Printed books: {inr.format(summary.printedBookAmount)}. Amount due: {inr.format(summary.amountDue)}.</p>
           <p>The book amount is separate from the registration fee. Both are paid to the official account. This page does not mark books as dispatched or delivered.</p>
           <p>E-book access is not for sale, so no e-book fee is included.</p>
-          <p>A school share has not been approved and is not deducted.</p>
+          <p>The amount due is the full registration amount plus any printed books. This registration does not deduct a separate school share from the amount paid to the official account.</p>
           <p className="font-semibold">{summary.paymentLabel}</p>
           <p>{summary.nextStep}</p>
           {paymentProofsAccepted() && ["pending_instructions", "awaiting_payment", "rejected"].includes(summary.paymentStatus) ? (

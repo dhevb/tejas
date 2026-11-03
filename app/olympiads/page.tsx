@@ -7,7 +7,7 @@ import { olympiads, getActiveOlympiads } from "@/data/olympiads";
 
 export const metadata = createMetadata({
   title: "Olympiads",
-  description: "TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X in TEJAS Olympiad 2026–27.",
+  description: "TEJAS English and TEJAS Mathematics for Classes III–X, and TEJAS Future Tech for Classes VI–X, in TEJAS Olympiad 2026–27.",
   path: "/olympiads",
 });
 
@@ -20,7 +20,7 @@ export default function OlympiadsPage() {
       <PageHero
         eyebrow="Olympiads"
         title="National Olympiad Series"
-        subtitle="TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X. Registration 3–20 November 2026."
+        subtitle="TEJAS English and Mathematics for Classes III–X. TEJAS Future Tech for Classes VI–X. Registration 3–20 November 2026."
         primaryCta={{ label: "School registration", href: "/schools/register" }}
         secondaryCta={{ label: "Prepare Hub", href: "/prepare" }}
       />
@@ -30,7 +30,7 @@ export default function OlympiadsPage() {
             <SectionHeader
               eyebrow="TEJAS Olympiad 2026–27"
               title="Active Olympiad Streams"
-              subtitle="Classes III–X · Mathematics 9 December, English 10 December, Future Tech 11 December 2026"
+              subtitle="Mathematics 9 December, English 10 December, Future Tech 11 December 2026. Examinations are offline at the participating schools."
             />
           </FadeIn>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

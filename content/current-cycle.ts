@@ -9,8 +9,8 @@ export const currentCycle = {
   } satisfies LocalizedString,
   editionYear: 2026,
   independenceNote: {
-    en: "TEJAS Olympiad 2026–27 is conducted in the 6th Edition of Shiksha Mahakumbh. It is administered by the Department of Holistic Education, a unit of Vidya Bharti Institute of Training & Research Trust, under the guidance and support of Vidya Bharti – North Zone.",
-    hi: "TEJAS ओलंपियाड 2026–27 शिक्षा महाकुंभ के 6वें संस्करण में आयोजित है। इसका संचालन समग्र शिक्षा विभाग करता है।",
+    en: "TEJAS Olympiad 2026–27 is conducted in the 6th Edition of Shiksha Mahakumbh. It is organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.",
+    hi: "TEJAS ओलंपियाड 2026–27 शिक्षा महाकुंभ के 6वें संस्करण में आयोजित है। आयोजक समग्र शिक्षा विभाग (DHE), विद्या भारती इंस्टिट्यूट ऑफ ट्रेनिंग एंड रिसर्च ट्रस्ट (VBITR), कुरुक्षेत्र है।",
   } satisfies LocalizedString,
   activeStreams: ["english", "mathematics", "technology"] as const,
   grades: {
@@ -26,21 +26,25 @@ export const currentCycle = {
     hi: "गणित 9 दिसंबर 2026, अंग्रेज़ी 10 दिसंबर 2026, फ्यूचर टेक 11 दिसंबर 2026।",
   } satisfies LocalizedString,
   fee: {
-    en: "₹150 per student per stream, payable to TEJAS Olympiad. A school share has not been approved and is not part of this fee.",
-    hi: "₹150 प्रति विद्यार्थी प्रति स्ट्रीम, TEJAS को देय। विद्यालय हिस्सा अभी स्वीकृत नहीं है।",
+    en: "This registration collects ₹150 per student per stream, payable to TEJAS Olympiad. Printed preparation books are optional at ₹170 per copy.",
+    hi: "यह पंजीकरण ₹150 प्रति विद्यार्थी प्रति स्ट्रीम TEJAS को एकत्र करता है। मुद्रित पुस्तक ₹170 प्रति प्रति, वैकल्पिक।",
   } satisfies LocalizedString,
   felicitation: {
     en: "Results are placed in February 2027. A declaration date has not been fixed.",
     hi: "परिणाम फरवरी 2027 में रखे गए हैं। घोषणा की तारीख तय नहीं हुई है।",
   } satisfies LocalizedString,
   administeredBy: {
-    en: "Department of Holistic Education (DHE), a unit of Vidya Bharti Institute of Training & Research Trust",
-    hi: "समग्र शिक्षा विभाग (DHE)",
+    en: "Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra",
+    hi: "समग्र शिक्षा विभाग (DHE), विद्या भारती इंस्टिट्यूट ऑफ ट्रेनिंग एंड रिसर्च ट्रस्ट (VBITR), कुरुक्षेत्र",
   } satisfies LocalizedString,
+  phones: [
+    { display: "+91 99886 90588", tel: "+919988690588" },
+    { display: "+91 79034 31900", tel: "+917903431900" },
+  ],
   convener: {
     name: "Sonu Agnihotri Sharma",
     titles: ["Convener, TEJAS Olympiad", "President, Department of Holistic Education"],
-    phoneDisplay: "+91-99886 90588",
+    phoneDisplay: "+91 99886 90588",
     phoneTel: "+919988690588",
   },
   address: "E7, Orchid Towers, Sector-125, SAS Nagar, Punjab 140301",

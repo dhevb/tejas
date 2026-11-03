@@ -1,7 +1,6 @@
 /**
- * Class range source: the TEJAS brochure cover prints Classes III–X for the
- * Olympiad and does not print a separate range for any stream. Eligibility is
- * stored per stream so a later approved range can differ without a rewrite.
+ * Eligibility from the 31 October 2026 invitation: Mathematics and English
+ * are Classes III–X. Future Tech is Classes VI–X.
  */
 export const CLASS_MIN = 3;
 export const CLASS_MAX = 10;
@@ -9,7 +8,7 @@ export const CLASS_MAX = 10;
 export const STREAMS = [
   { id: "english", name: "TEJAS English", classes: [3, 4, 5, 6, 7, 8, 9, 10] },
   { id: "mathematics", name: "TEJAS Mathematics", classes: [3, 4, 5, 6, 7, 8, 9, 10] },
-  { id: "technology", name: "TEJAS Future Tech", classes: [3, 4, 5, 6, 7, 8, 9, 10] },
+  { id: "technology", name: "TEJAS Future Tech", classes: [6, 7, 8, 9, 10] },
 ] as const;
 
 export type StreamId = (typeof STREAMS)[number]["id"];

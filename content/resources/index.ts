@@ -14,7 +14,7 @@ export const resourceRegistry: ResourceItem[] = [
   { id: "qb-math", title: ls("Maths Olympiad Question Bank", "गणित प्रश्न बैंक"), description: ls("Topic-wise maths questions by grade", "कक्षावार गणित प्रश्न"), category: "question-bank", subject: "Mathematics", type: "practice", href: "#" },
   // Practice
   { id: "prac-eng-omr", title: ls("OMR Practice Sheet — English Olympiad", "OMR अभ्यास शीट"), description: ls("Practice OMR filling for exam day", "परीक्षा दिवस OMR अभ्यास"), category: "practice", subject: "English", type: "practice", href: "#" },
-  { id: "prac-mock-all", title: ls("Full-Length Mock Tests — All Active Streams", "पूर्ण मॉक टेस्ट"), description: ls("English, Maths, Technology mock tests", "तीनों streams"), category: "practice", subject: "All", type: "practice", href: "/prepare/mock-tests" },
+  { id: "prac-mock-all", title: ls("Online mock tests", "ऑनलाइन मॉक टेस्ट"), description: ls("The team is working towards online mock tests. This page does not start a test.", "ऑनलाइन मॉक टेस्ट अभी उपलब्ध नहीं हैं।"), category: "practice", subject: "All", type: "practice", href: "/prepare/mock-tests" },
   // Videos
   { id: "vid-eng-strategy", title: ls("English Olympiad Strategy Session", "अंग्रेज़ी रणनीति सत्र"), description: ls("Olympiad Cell, DHE masterclass", "Olympiad Cell masterclass"), category: "videos", subject: "English", type: "video", href: "#" },
   { id: "vid-ai-intro", title: ls("Introduction to AI for School Students", "AI परिचय"), description: ls("DHE Innovation Cell — 35 min session", "35 मिनट सत्र"), category: "videos", subject: "Technology", type: "video", href: "#" },

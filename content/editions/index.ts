@@ -114,8 +114,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     hi: "शिक्षा महाकुंभ का 6वाँ संस्करण",
   },
   bio: {
-    en: "Talent Exploration for Junior Aspiring Scholars. English, Mathematics, and Future Tech for Classes III–X. Administered by the Department of Holistic Education, a unit of Vidya Bharti Institute of Training & Research Trust, under the guidance and support of Vidya Bharti – North Zone.",
-    hi: "कक्षा III–X के लिए अंग्रेज़ी, गणित और फ्यूचर टेक। संचालन समग्र शिक्षा विभाग।",
+    en: "Talent Exploration for Junior Aspiring Scholars. English and Mathematics for Classes III–X, and Future Tech for Classes VI–X. Organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.",
+    hi: "अंग्रेज़ी और गणित कक्षा III–X, फ्यूचर टेक कक्षा VI–X। आयोजक समग्र शिक्षा विभाग (DHE), VBITR, कुरुक्षेत्र।",
   },
   theme: {
     en: "Find your spark...",
@@ -147,10 +147,10 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
   ],
   quotes: [],
   majorContributions: [
-    { en: "Examinations are held at participating schools.", hi: "परीक्षाएँ विद्यालयों में होती हैं।" },
+    { en: "Examinations are offline and are held at the participating schools on the allotted dates.", hi: "परीक्षाएँ ऑफ़लाइन हैं और निर्धारित तिथि पर विद्यालय में होती हैं।" },
     { en: "Question papers and OMR sheets are dispatched in advance.", hi: "प्रश्नपत्र और OMR पहले भेजी जाती हैं।" },
     { en: "Completed OMR sheets are couriered the same day to the designated evaluation centre. The centre address is shared with the detailed instructions.", hi: "भरी हुई OMR उसी दिन कूरियर से जाती हैं।" },
-    { en: "Preparation books are optional. The expected cost is about ₹150 per book. Ordering and dispatch are not open.", hi: "तैयारी पुस्तकें अनिवार्य नहीं हैं। अनुमानित कीमत लगभग ₹150।" },
+    { en: "Printed preparation books are optional and cost ₹170 per copy. A school can participate without ordering them.", hi: "मुद्रित तैयारी पुस्तकें अनिवार्य नहीं हैं। कीमत ₹170 प्रति प्रति है।" },
   ],
   olympiadStreams: [
     { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" },
@@ -164,15 +164,15 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     { label: { en: "Platform", hi: "मंच" }, value: "TEJAS" },
   ],
   felicitation: {
-    en: "Overall toppers in each class, in every stream: ₹3,100, ₹2,100, ₹1,500, and five consolation prizes of ₹500. Every participant receives an e-certificate. Gold, silver, and bronze medals go to outstanding students. School-level winners receive certificates, medals, and books.",
-    hi: "प्रथम ₹3,100, द्वितीय ₹2,100, तृतीय ₹1,500, और पाँच सांत्वना पुरस्कार ₹500।",
+    en: "Overall toppers in each class, in every stream: ₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500 each. The school with the highest student participation is recognised, and its principal receives a Certificate of Appreciation. Every participant receives an e-certificate. Gold, silver, and bronze medals go to outstanding students. School-level winners receive certificates, medals, and books.",
+    hi: "प्रथम ₹3,100, द्वितीय ₹2,100, तृतीय ₹1,500, और दस सांत्वना पुरस्कार ₹500। सर्वाधिक भागीदारी वाले विद्यालय के प्रधानाचार्य को प्रशस्ति पत्र।",
   },
   faqs: [
     {
       question: { en: "Which Olympiads are part of this edition?", hi: "इस संस्करण में कौन से ओलंपियाड?" },
       answer: {
-        en: "Three streams: TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X.",
-        hi: "तीन स्ट्रीम: अंग्रेज़ी, गणित और फ्यूचर टेक — कक्षा III–X।",
+        en: "Three streams: TEJAS English and TEJAS Mathematics for Classes III–X, and TEJAS Future Tech for Classes VI–X.",
+        hi: "तीन स्ट्रीम: अंग्रेज़ी और गणित कक्षा III–X, फ्यूचर टेक कक्षा VI–X।",
       },
     },
     {

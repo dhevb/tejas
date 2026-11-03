@@ -1,5 +1,5 @@
 import type { OlympiadPortalContent } from "@/content/types";
-import { currentCycle, CURRENT_EDITION_LABEL } from "@/content/current-cycle";
+import { CURRENT_EDITION_LABEL } from "@/content/current-cycle";
 
 export const technologyOlympiad: OlympiadPortalContent = {
   slug: "technology",
@@ -9,7 +9,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
     hi: "DHE टेक ओलंपियाड — डिजिटल साक्षरता, नवाचार और उभरती प्रौद्योगिकियाँ",
   },
   description: {
-    en: "TEJAS Future Tech is examined on 11 December 2026 for Classes III–X. It assesses digital literacy, computational thinking, and awareness of emerging technologies.",
+    en: "TEJAS Future Tech is examined offline on 11 December 2026 for Classes VI–X. It assesses digital literacy, computational thinking, and awareness of emerging technologies.",
     hi: "DHE टेक ओलंपियाड डिजिटल साक्षरता, computational thinking और उभरती प्रौद्योगिकियों की जागरूकता का मूल्यांकन करता है।",
   },
   whySubject: {
@@ -19,22 +19,25 @@ export const technologyOlympiad: OlympiadPortalContent = {
   status: "active",
   icon: "cpu",
   color: "#8A5A10",
-  grades: currentCycle.grades,
+  grades: {
+    en: "Classes VI–X",
+    hi: "कक्षा VI–X",
+  },
   duration: { en: "45 minutes", hi: "45 मिनट" },
   questions: 40,
   registrationOpen: true,
   eligibility: [
     {
-      en: "Students in Classes III–X in recognised schools",
-      hi: "मान्यता प्राप्त विद्यालयों में कक्षा III–X के छात्र",
+      en: "Students in Classes VI–X in recognised schools",
+      hi: "मान्यता प्राप्त विद्यालयों में कक्षा VI–X के छात्र",
     },
     {
       en: "School registration via Olympiad Cell, DHE",
       hi: "DHE ओलंपियाड सेल के माध्यम से पंजीकरण",
     },
     {
-      en: "No prior coding experience required for lower levels",
-      hi: "निचले स्तरों के लिए prior coding अनुभव आवश्यक नहीं",
+      en: "No prior coding experience is required",
+      hi: "पहले से coding अनुभव आवश्यक नहीं",
     },
   ],
   examPattern: [
@@ -61,17 +64,8 @@ export const technologyOlympiad: OlympiadPortalContent = {
   ],
   syllabus: [
     {
-      level: { en: "Level B", hi: "स्तर B" },
-      classes: { en: "Class III–IV", hi: "कक्षा III–IV" },
-      topics: [
-        { en: "Basic computer parts and functions", hi: "मूल कंप्यूटर भाग और कार्य" },
-        { en: "Safe internet usage for children", hi: "बच्चों के लिए सुरक्षित इंटरनेट उपयोग" },
-        { en: "Introduction to keyboard and mouse skills", hi: "कीबोर्ड और माउस कौशल परिचय" },
-      ],
-    },
-    {
       level: { en: "Level C", hi: "स्तर C" },
-      classes: { en: "Class V–VI", hi: "कक्षा V–VI" },
+      classes: { en: "Class VI", hi: "कक्षा VI" },
       topics: [
         { en: "MS Office basics and file management", hi: "MS Office मूल बातें" },
         { en: "Algorithms and flowcharts introduction", hi: "एल्गोरिदम और फ्लोचार्ट परिचय" },
@@ -170,7 +164,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
     {
       level: { en: "National Top Achievers", hi: "राष्ट्रीय शीर्ष achievers" },
       description: {
-        en: "₹3,100, ₹2,100, ₹1,500, and five consolation prizes of ₹500 for overall toppers in each class. Gold, silver, and bronze medals for outstanding students.",
+        en: "₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500 each for overall toppers in each class. The school with the highest student participation is recognised, and its principal receives a Certificate of Appreciation. Gold, silver, and bronze medals for outstanding students.",
         hi: "TEJAS राष्ट्रीय सम्मान में पदक और प्रमाणपत्र",
       },
     },
@@ -193,7 +187,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
     {
       question: { en: "Do I need to know coding?", hi: "क्या coding आना चाहिए?" },
       answer: {
-        en: "No prior coding is required for lower levels. The Olympiad focuses on digital literacy, logical thinking, and technology awareness appropriate to each grade.",
+        en: "No prior coding is required. Future Tech is for Classes VI–X and focuses on digital literacy, logical thinking, and technology awareness appropriate to each grade.",
         hi: "निचले स्तरों के लिए prior coding आवश्यक नहीं।",
       },
     },

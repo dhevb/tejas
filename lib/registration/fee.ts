@@ -1,6 +1,10 @@
-/** Registration fee decided on 26–27 October 2026. The earlier ₹100 fee is not active. */
+/** Gross fee printed in the 31 October 2026 invitation. */
 export const FEE_TOTAL = 150;
-/** School share is not approved, so the full registration fee is payable to TEJAS. */
+/**
+ * The invitation also states a ₹30 school share and ₹120 net payable to TEJAS.
+ * This workflow still collects the full ₹150. Do not switch the charged amount
+ * until the payment records and bank instructions are changed together.
+ */
 export const FEE_TEJAS = 150;
 export const FEE_SCHOOL = 0;
 export const SCHOOL_SHARE_PER_STREAM = 30;

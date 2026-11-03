@@ -32,9 +32,11 @@ export function TejasFooter() {
               <p>
                 <a className="hover:text-white" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a>
               </p>
-              <p>
-                <a className="hover:text-white" href={`tel:${currentCycle.convener.phoneTel}`}>{currentCycle.convener.phoneDisplay}</a>
-              </p>
+              {currentCycle.phones.map((phone) => (
+                <p key={phone.tel}>
+                  <a className="hover:text-white" href={`tel:${phone.tel}`}>{phone.display}</a>
+                </p>
+              ))}
             </address>
           </div>
 

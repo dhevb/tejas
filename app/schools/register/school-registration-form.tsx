@@ -202,13 +202,8 @@ export function SchoolRegistrationForm() {
       <Section step="01 · School information" title="School information" icon={Building2} hint="Use the school's registered name and the address used for official correspondence.">
         <div className="grid gap-4 md:grid-cols-2">
           <Field className="md:col-span-2" label="Full registered school name" name="schoolName" error={fieldErrors.schoolName} />
-          <Field className="md:col-span-2" label="Complete school address" name="schoolAddress" error={fieldErrors.schoolAddress} />
-          <Field label="State" name="state" error={fieldErrors.state} />
-          <Field label="District" name="district" error={fieldErrors.district} />
-          <Field label="City or block" name="city" error={fieldErrors.city} />
-          <Field label="PIN code" name="pin" hint="6 digits." error={fieldErrors.pin} />
+          <Field className="md:col-span-2" label="Complete school address" name="schoolAddress" hint="Include the area, city, and PIN in this address." error={fieldErrors.schoolAddress} />
           <Field label="School PAN" name="pan" hint="The school's PAN, in the standard 10-character format." error={fieldErrors.pan} />
-          <Field label="Affiliation or recognition board" name="affiliationBoard" hint="For example, CBSE, a state board, or the recognising authority." error={fieldErrors.affiliationBoard} />
           <label className="block text-sm">
             <span className="font-medium text-tejas-ink">School category <span className="text-tejas-saffron">*</span></span>
             <select name="schoolCategory" required className={controlClass}>
@@ -281,7 +276,7 @@ export function SchoolRegistrationForm() {
           </div>
           <div className="rounded-xl bg-tejas-ivory p-4 text-sm">
             <p className="font-semibold text-tejas-ink">Classes</p>
-            <p className="mt-1 text-tejas-muted">III–X. At least one stream on each row.</p>
+            <p className="mt-1 text-tejas-muted">English and Mathematics: III–X. Future Tech: VI–X.</p>
           </div>
         </div>
         <div>
@@ -369,20 +364,21 @@ export function SchoolRegistrationForm() {
       >
         <ul className="grid gap-3 sm:grid-cols-3">
           {[
-            ["TEJAS Mathematics", "9 December 2026"],
-            ["TEJAS English", "10 December 2026"],
-            ["TEJAS Future Tech", "11 December 2026"],
-          ].map(([name, date]) => (
+            ["TEJAS Mathematics", "9 December 2026", "Classes III–X"],
+            ["TEJAS English", "10 December 2026", "Classes III–X"],
+            ["TEJAS Future Tech", "11 December 2026", "Classes VI–X"],
+          ].map(([name, date, classes]) => (
             <li key={name} className="rounded-xl border border-tejas-border bg-tejas-ivory p-4">
               <p className="font-semibold text-tejas-blue">{name}</p>
               <p className="mt-1 text-sm text-tejas-muted">{date}</p>
+              <p className="mt-1 text-sm text-tejas-muted">{classes}</p>
               <p className="mt-2 text-sm text-tejas-ink">₹150 per student</p>
             </li>
           ))}
         </ul>
       </Section>
 
-      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. ₹170 per printed copy. E-book access is not for sale, so it is not charged.">
+      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy. E-book access is not for sale, so it is not charged.">
         <label className="block text-sm">
           <span className="font-medium text-tejas-ink">Printed preparation books <span className="text-tejas-saffron">*</span></span>
           <select
@@ -467,7 +463,7 @@ export function SchoolRegistrationForm() {
               : "Check the student sheet to see the fee calculated on the server."}
           </p>
         )}
-        <p className="text-sm text-tejas-muted">A school share is not approved and is not deducted. The registration amount and the printed-book amount are listed separately and paid together to the official account.</p>
+        <p className="text-sm text-tejas-muted">The amount due is the full ₹150 for each student-stream plus ₹170 for each printed book ordered. This form does not deduct a separate school share from the amount paid to the official account. The two amounts are listed separately and paid together.</p>
         <div className="rounded-xl border border-tejas-warning/30 bg-tejas-warning/10 p-4">
           <h3 className="text-base font-bold text-tejas-blue">{payment?.heading ?? "Official payment account"}</h3>
           <p className="mt-2 text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>

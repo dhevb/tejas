@@ -225,8 +225,8 @@ export const englishOlympiad: OlympiadPortalContent = {
     {
       level: { en: "Overall Top 3 (Each Level)", hi: "समग्र शीर्ष 3 (प्रत्येक स्तर)" },
       description: {
-        en: "₹3,100, ₹2,100, and ₹1,500, plus five consolation prizes of ₹500, for overall toppers in each class across participating schools. Outstanding students also receive gold, silver, and bronze medals.",
-        hi: "₹3,100, ₹2,100, ₹1,500 और पाँच सांत्वना पुरस्कार ₹500।",
+        en: "₹3,100, ₹2,100, and ₹1,500, plus ten consolation prizes of ₹500 each, for overall toppers in each class across participating schools. The school with the highest student participation is recognised, and its principal receives a Certificate of Appreciation. Outstanding students also receive gold, silver, and bronze medals.",
+        hi: "₹3,100, ₹2,100, ₹1,500 और दस सांत्वना पुरस्कार ₹500।",
       },
     },
     {
@@ -282,7 +282,7 @@ export const englishOlympiad: OlympiadPortalContent = {
     {
       question: { en: "How do schools participate?", hi: "विद्यालय कैसे भाग लें?" },
       answer: {
-        en: "Schools register at /schools/register. Write to tejasolympiad@shikshamahakumbh.com or call +91-99886 90588.",
+        en: "Schools register at /schools/register. Write to tejasolympiad@shikshamahakumbh.com or call +91 99886 90588 or +91 79034 31900.",
         hi: "विद्यालय /schools/register पर पंजीकरण करें।",
       },
     },

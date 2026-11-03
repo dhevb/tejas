@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { chmod, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { paymentProofsAccepted } from "@/lib/registration/durable";
-import type { FeeBreakdown } from "@/lib/registration/fee";
+import { presentFee, type FeeBreakdown } from "@/lib/registration/fee";
 import { maskPan } from "@/lib/registration/fields";
 import type { SchoolForm } from "@/lib/registration/school";
 import { streamById } from "@/lib/registration/schema";
@@ -61,9 +61,15 @@ export type PublicSummary = {
   totalStudentFees: number;
   payableToTejas: number;
   schoolShare: number;
+  registrationSchoolShare: number;
+  registrationPayable: number;
+  bookSchoolShare: number;
+  bookPayable: number;
+  grossTotal: number;
   printedBookAmount: number;
   ebookAmount: number;
   amountDue: number;
+  schoolShareApproved: boolean;
   paymentStatus: PaymentStatus;
   paymentLabel: string;
   nextStep: string;
@@ -93,23 +99,30 @@ const NEXT_STEP: Record<PaymentStatus, string> = {
 
 function nextStepFor(record: RegistrationRecord): string {
   if ((record.payment.status === "pending_instructions" || record.payment.status === "awaiting_payment") && paymentProofsAccepted()) {
-    return "This registration is saved. It is not a payment receipt. Transfer the amount due to the official account, then upload the proof on this page. Uploading the proof does not confirm the payment. No confirmation email has been sent.";
+    return "This registration is saved. It is not a payment receipt. Transfer the net amount payable to TEJAS to the official account, then upload the proof on this page. The school retains its share. Uploading the proof does not confirm the payment. No confirmation email has been sent.";
   }
   return NEXT_STEP[record.payment.status];
 }
 
 export function toPublicSummary(record: RegistrationRecord): PublicSummary {
+  const fee = presentFee(record.fee);
   return {
     reference: record.reference,
     schoolName: record.school.schoolName,
     studentCount: record.students.length,
-    studentStreamRegistrations: record.fee.studentStreamRegistrations,
-    totalStudentFees: record.fee.totalStudentFees,
-    payableToTejas: record.fee.payableToTejas,
-    schoolShare: record.fee.schoolShare,
-    printedBookAmount: record.fee.printedBookAmount ?? 0,
-    ebookAmount: record.fee.ebookAmount ?? 0,
-    amountDue: record.fee.amountDue ?? record.fee.payableToTejas,
+    studentStreamRegistrations: fee.studentStreamRegistrations,
+    totalStudentFees: fee.totalStudentFees,
+    payableToTejas: fee.registrationPayable,
+    schoolShare: fee.schoolShare,
+    registrationSchoolShare: fee.registrationSchoolShare,
+    registrationPayable: fee.registrationPayable,
+    bookSchoolShare: fee.bookSchoolShare,
+    bookPayable: fee.bookPayable,
+    grossTotal: fee.grossTotal,
+    printedBookAmount: fee.printedBookAmount,
+    ebookAmount: fee.ebookAmount,
+    amountDue: fee.amountDue,
+    schoolShareApproved: record.fee.schoolShareApproved === true,
     paymentStatus: record.payment.status,
     paymentLabel: STATUS_LABEL[record.payment.status],
     nextStep: nextStepFor(record),
@@ -337,6 +350,13 @@ export type StaffOverview = {
   students: number;
   studentStreams: number;
   amountDue: number;
+  grossCollected: number;
+  schoolShare: number;
+  amountReceived: number;
+  pendingPayable: number;
+  bookGross: number;
+  bookSchoolShare: number;
+  bookPayable: number;
   classCounts: Record<string, number>;
   streamCounts: Record<string, number>;
   printedBooks: number;
@@ -359,14 +379,30 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
   let students = 0;
   let studentStreams = 0;
   let amountDue = 0;
+  let grossCollected = 0;
+  let schoolShare = 0;
+  let amountReceived = 0;
+  let pendingPayable = 0;
+  let bookGross = 0;
+  let bookSchoolShare = 0;
+  let bookPayable = 0;
   let printedBooks = 0;
   let ebookAccess = 0;
   const registrations: StaffRow[] = [];
+  const pendingStatuses: PaymentStatus[] = ["pending_instructions", "awaiting_payment", "reported", "refund_pending"];
   for (const record of records) {
+    const fee = presentFee(record.fee);
     payments[record.payment.status] += 1;
     students += record.students.length;
-    studentStreams += record.fee.studentStreamRegistrations;
-    amountDue += record.fee.amountDue ?? record.fee.payableToTejas;
+    studentStreams += fee.studentStreamRegistrations;
+    amountDue += fee.amountDue;
+    grossCollected += fee.grossTotal;
+    schoolShare += fee.schoolShare;
+    bookGross += fee.printedBookAmount;
+    bookSchoolShare += fee.bookSchoolShare;
+    bookPayable += fee.bookPayable;
+    if (record.payment.status === "confirmed") amountReceived += fee.amountDue;
+    if (pendingStatuses.includes(record.payment.status)) pendingPayable += fee.amountDue;
     const books = record.school.printedBooks === "yes" ? record.school.bookQuantity ?? 0 : 0;
     const ebooks = record.school.ebookAccess === "yes" ? record.students.length : 0;
     printedBooks += books;
@@ -396,7 +432,24 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
   registrations.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   return {
     registrations,
-    overview: { schools: records.length, students, studentStreams, amountDue, classCounts, streamCounts, printedBooks, ebookAccess, payments },
+    overview: {
+      schools: records.length,
+      students,
+      studentStreams,
+      amountDue,
+      grossCollected,
+      schoolShare,
+      amountReceived,
+      pendingPayable,
+      bookGross,
+      bookSchoolShare,
+      bookPayable,
+      classCounts,
+      streamCounts,
+      printedBooks,
+      ebookAccess,
+      payments,
+    },
   };
 }
 

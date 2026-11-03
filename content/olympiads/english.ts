@@ -268,7 +268,7 @@ export const englishOlympiad: OlympiadPortalContent = {
         hi: "अगला DHE अंग्रेज़ी ओलंपियाड कब है?",
       },
       answer: {
-        en: "TEJAS English is on 10 December 2026. Schools register from 3 November 2026 to 20 November 2026. The fee is ₹150 per student per stream.",
+        en: "TEJAS English is on 10 December 2026. Schools register from 3 November 2026 to 20 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
         hi: "TEJAS अंग्रेज़ी 10 दिसंबर 2026 को है। पंजीकरण 3–20 नवंबर 2026।",
       },
     },
@@ -282,7 +282,7 @@ export const englishOlympiad: OlympiadPortalContent = {
     {
       question: { en: "How do schools participate?", hi: "विद्यालय कैसे भाग लें?" },
       answer: {
-        en: "Schools register at /schools/register. Write to tejasolympiad@shikshamahakumbh.com or call +91 99886 90588 or +91 79034 31900.",
+        en: `Schools register at /schools/register. Write to ${currentCycle.olympiadEmail} or call +91 99886 90588 or +91 79034 31900.`,
         hi: "विद्यालय /schools/register पर पंजीकरण करें।",
       },
     },

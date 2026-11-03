@@ -12,7 +12,7 @@ export const newsItems: NewsItem[] = [
     id: "n2",
     title: "Three streams, with Future Tech from Class VI",
     date: "2026-10-26",
-    excerpt: "TEJAS English and TEJAS Mathematics are for Classes III–X. TEJAS Future Tech is for Classes VI–X. The fee collected on this website is ₹150 per student per stream.",
+    excerpt: "TEJAS English and TEJAS Mathematics are for Classes III–X. TEJAS Future Tech is for Classes VI–X. The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
     category: "Olympiads",
   },
 ];

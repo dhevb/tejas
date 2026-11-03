@@ -99,7 +99,7 @@ Latest automated results: see `docs/LAUNCH_AUDIT_REPORT.md`
 ## Day 2–3 — Beta feedback
 
 - Beta page: [https://tejas.dhe.org.in/beta](https://tejas.dhe.org.in/beta)
-- Feedback delivered to: `olympiad@shikshamahakumbh.com`
+- Feedback delivered to: `tejas@dhe.org.in`
 - Monitor: `npx vercel logs tejas.dhe.org.in --since 24h`
 
 ---

@@ -150,7 +150,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     { en: "Examinations are offline and are held at the participating schools on the allotted dates.", hi: "परीक्षाएँ ऑफ़लाइन हैं और निर्धारित तिथि पर विद्यालय में होती हैं।" },
     { en: "Question papers and OMR sheets are dispatched in advance.", hi: "प्रश्नपत्र और OMR पहले भेजी जाती हैं।" },
     { en: "Completed OMR sheets are couriered the same day to the designated evaluation centre. The centre address is shared with the detailed instructions.", hi: "भरी हुई OMR उसी दिन कूरियर से जाती हैं।" },
-    { en: "Printed preparation books are optional and cost ₹170 per copy. A school can participate without ordering them.", hi: "मुद्रित तैयारी पुस्तकें अनिवार्य नहीं हैं। कीमत ₹170 प्रति प्रति है।" },
+    { en: "Printed preparation books are optional and cost ₹170 per copy. The school retains ₹34 and remits ₹136. A school can participate without ordering them.", hi: "मुद्रित तैयारी पुस्तकें अनिवार्य नहीं हैं। कीमत ₹170 प्रति प्रति है। विद्यालय ₹34 रखता है और ₹136 भेजता है।" },
   ],
   olympiadStreams: [
     { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" },
@@ -185,8 +185,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     {
       question: { en: "When is registration opening?", hi: "पंजीकरण कब?" },
       answer: {
-        en: "Registration opens on 3 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹150 per student per stream.",
-        hi: "पंजीकरण 3 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम।",
+        en: "Registration opens on 3 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
+        hi: "पंजीकरण 3 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है।",
       },
     },
   ],

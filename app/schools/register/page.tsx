@@ -94,7 +94,7 @@ export default function SchoolRegisterPage() {
           <div className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm">
             <h2 className="text-lg font-bold text-tejas-blue">After you submit</h2>
             <p className="mt-2 text-sm leading-relaxed text-tejas-muted">
-              The confirmation page shows the registration reference and the server-calculated amount due. Payment proof, when that step is open, is uploaded against that reference. Submitting this form does not by itself mark a payment as verified.
+              The confirmation page shows the registration reference and the net amount payable to TEJAS. The school retains its share. Payment proof, when that step is open, is uploaded against that net amount. Submitting this form does not by itself mark a payment as verified.
             </p>
             <p className="mt-4 text-sm">
               <Link href="/schools/register/review" className="font-semibold text-tejas-blue underline">Staff review</Link>

@@ -26,8 +26,8 @@ export const currentCycle = {
     hi: "गणित 9 दिसंबर 2026, अंग्रेज़ी 10 दिसंबर 2026, फ्यूचर टेक 11 दिसंबर 2026।",
   } satisfies LocalizedString,
   fee: {
-    en: "This registration collects ₹150 per student per stream, payable to TEJAS Olympiad. Printed preparation books are optional at ₹170 per copy.",
-    hi: "यह पंजीकरण ₹150 प्रति विद्यार्थी प्रति स्ट्रीम TEJAS को एकत्र करता है। मुद्रित पुस्तक ₹170 प्रति प्रति, वैकल्पिक।",
+    en: "The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS. Printed books are optional at ₹170 per copy; the school retains ₹34 and remits ₹136.",
+    hi: "शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम है। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है। मुद्रित पुस्तक ₹170 प्रति प्रति, वैकल्पिक; विद्यालय ₹34 रखता है और ₹136 भेजता है।",
   } satisfies LocalizedString,
   felicitation: {
     en: "Results are placed in February 2027. A declaration date has not been fixed.",
@@ -48,8 +48,8 @@ export const currentCycle = {
     phoneTel: "+919988690588",
   },
   address: "E7, Orchid Towers, Sector-125, SAS Nagar, Punjab 140301",
-  academicEnquiries: "tejasolympiad@shikshamahakumbh.com",
-  olympiadEmail: "tejasolympiad@shikshamahakumbh.com",
+  academicEnquiries: "tejas@dhe.org.in",
+  olympiadEmail: "tejas@dhe.org.in",
   shikshaMahakumbhReference: "https://www.shikshamahakumbh.com",
   shikshaMahakumbhOlympiadReference: "https://www.shikshamahakumbh.com",
   registrationHref: "/schools/register",

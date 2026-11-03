@@ -12,10 +12,15 @@ type Fee = {
   totalStudentFees: number;
   payableToTejas: number;
   schoolShare: number;
+  registrationSchoolShare?: number;
+  registrationPayable?: number;
   printedBooks?: number;
   printedBookAmount?: number;
+  bookSchoolShare?: number;
+  bookPayable?: number;
   ebookAccess?: number;
   ebookAmount?: number;
+  grossTotal?: number;
   amountDue?: number;
 };
 
@@ -372,13 +377,13 @@ export function SchoolRegistrationForm() {
               <p className="font-semibold text-tejas-blue">{name}</p>
               <p className="mt-1 text-sm text-tejas-muted">{date}</p>
               <p className="mt-1 text-sm text-tejas-muted">{classes}</p>
-              <p className="mt-2 text-sm text-tejas-ink">₹150 per student</p>
+              <p className="mt-2 text-sm text-tejas-ink">₹150 collected · ₹120 to TEJAS</p>
             </li>
           ))}
         </ul>
       </Section>
 
-      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy. E-book access is not for sale, so it is not charged.">
+      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy: the school retains ₹34 and remits ₹136. E-book access is not for sale, so it is not charged.">
         <label className="block text-sm">
           <span className="font-medium text-tejas-ink">Printed preparation books <span className="text-tejas-saffron">*</span></span>
           <select
@@ -415,55 +420,65 @@ export function SchoolRegistrationForm() {
         <p className="text-sm text-tejas-muted">E-book files and student logins are not available. This form does not charge ₹49. Dispatch and delivery are not recorded here.</p>
       </Section>
 
-      <Section step="07 · Fee" title="Registration fee summary" icon={Receipt} hint="This total comes from the server after you check the sheet. A figure typed in the browser is not the amount due.">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl bg-tejas-ivory p-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-muted">Student streams</p>
-            <p className="mt-1 text-lg font-bold text-tejas-ink">₹150</p>
-            <p className="mt-1 text-sm text-tejas-muted">Per student, per selected stream.</p>
-          </div>
-          <div className="rounded-xl bg-tejas-ivory p-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-muted">Printed books</p>
-            <p className="mt-1 text-lg font-bold text-tejas-ink">₹170</p>
-            <p className="mt-1 text-sm text-tejas-muted">Per copy, only if ordered.</p>
-          </div>
-          <div className="rounded-xl bg-tejas-ivory p-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-muted">E-book</p>
-            <p className="mt-1 text-lg font-bold text-tejas-ink">₹0</p>
-            <p className="mt-1 text-sm text-tejas-muted">Not for sale on this form.</p>
-          </div>
+      <Section step="07 · Fee" title="Registration fee summary" icon={Receipt} hint="The school collects the gross amount, retains its share, and transfers the net amount to TEJAS. The server calculates that net amount. A figure typed in the browser is not used.">
+        <div className="overflow-x-auto rounded-xl border border-tejas-border">
+          <table className="min-w-full text-left text-sm">
+            <caption className="sr-only">Published fee shares</caption>
+            <thead className="bg-tejas-ivory text-tejas-muted">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Particulars</th>
+                <th className="px-4 py-3 font-semibold">Gross amount</th>
+                <th className="px-4 py-3 font-semibold">School share</th>
+                <th className="px-4 py-3 font-semibold">Payable to TEJAS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-tejas-border">
+                <th className="px-4 py-3 font-medium text-tejas-ink">Registration fee</th>
+                <td className="px-4 py-3">₹150 per student per stream</td>
+                <td className="px-4 py-3">₹30</td>
+                <td className="px-4 py-3 font-semibold">₹120</td>
+              </tr>
+              <tr className="border-t border-tejas-border">
+                <th className="px-4 py-3 font-medium text-tejas-ink">Printed book</th>
+                <td className="px-4 py-3">₹170 per copy</td>
+                <td className="px-4 py-3">₹34</td>
+                <td className="px-4 py-3 font-semibold">₹136</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         {fee ? (
           <dl className="divide-y divide-tejas-border rounded-xl border border-tejas-border">
-            <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-              <dt>Student-stream registrations</dt>
-              <dd className="font-semibold">{fee.studentStreamRegistrations}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-              <dt>Registration amount</dt>
-              <dd className="font-semibold">{inr.format(fee.totalStudentFees)}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-              <dt>Printed book charges</dt>
-              <dd className="font-semibold">{inr.format(fee.printedBookAmount ?? 0)}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-              <dt>E-book access</dt>
-              <dd className="font-semibold">{inr.format(fee.ebookAmount ?? 0)}</dd>
-            </div>
+            {[
+              ["Student-stream registrations", String(fee.studentStreamRegistrations)],
+              ["Total registration fee collected", inr.format(fee.totalStudentFees)],
+              ["School's registration share", inr.format(fee.registrationSchoolShare ?? 0)],
+              ["Registration amount payable to TEJAS", inr.format(fee.registrationPayable ?? fee.payableToTejas)],
+              ["Total printed book amount", inr.format(fee.printedBookAmount ?? 0)],
+              ["School's book share", inr.format(fee.bookSchoolShare ?? 0)],
+              ["Book amount payable to TEJAS", inr.format(fee.bookPayable ?? 0)],
+              ["Combined gross amount", inr.format(fee.grossTotal ?? 0)],
+              ["Combined school share", inr.format(fee.schoolShare)],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
+                <dt>{label}</dt>
+                <dd className="font-semibold">{value}</dd>
+              </div>
+            ))}
             <div className="flex items-center justify-between gap-4 bg-tejas-blue px-4 py-3 text-white">
-              <dt className="font-semibold">Amount due</dt>
+              <dt className="font-semibold">Final net amount payable to TEJAS</dt>
               <dd className="text-lg font-bold">{inr.format(fee.amountDue ?? fee.payableToTejas)}</dd>
             </div>
           </dl>
         ) : (
           <p className="rounded-xl border border-dashed border-tejas-border px-4 py-3 text-sm text-tejas-muted">
             {feeStale
-              ? "The book choice changed. Check the sheet again so the server can recalculate the amount due."
-              : "Check the student sheet to see the fee calculated on the server."}
+              ? "The book choice changed. Check the sheet again so the server can recalculate the amount payable to TEJAS."
+              : "Check the student sheet to see this school's fee calculated on the server."}
           </p>
         )}
-        <p className="text-sm text-tejas-muted">The amount due is the full ₹150 for each student-stream plus ₹170 for each printed book ordered. This form does not deduct a separate school share from the amount paid to the official account. The two amounts are listed separately and paid together.</p>
+        <p className="text-sm text-tejas-muted">The school collects ₹150 for each student-stream and ₹170 for each printed book, retains ₹30 per student-stream and ₹34 per book, and transfers the remaining ₹120 per student-stream and ₹136 per book to the official TEJAS account. The school share stays with the school. It is not an additional payment. This form does not charge ₹49 for an e-book.</p>
         <div className="rounded-xl border border-tejas-warning/30 bg-tejas-warning/10 p-4">
           <h3 className="text-base font-bold text-tejas-blue">{payment?.heading ?? "Official payment account"}</h3>
           <p className="mt-2 text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>

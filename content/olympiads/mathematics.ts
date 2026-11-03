@@ -203,8 +203,8 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       question: { en: "When is the DHE Maths Olympiad?", hi: "DHE गणित ओलंपियाड कब है?" },
       answer: {
-        en: "TEJAS Mathematics is on 9 December 2026. Schools register from 1 November 2026 to 20 November 2026.",
-        hi: "TEJAS गणित 9 दिसंबर 2026 को है। पंजीकरण 1–20 नवंबर 2026।",
+        en: "TEJAS Mathematics is on 9 December 2026. Schools register from 3 November 2026 to 20 November 2026.",
+        hi: "TEJAS गणित 9 दिसंबर 2026 को है। पंजीकरण 3–20 नवंबर 2026।",
       },
     },
     {

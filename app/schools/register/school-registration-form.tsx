@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BookOpen, Building2, FileSpreadsheet, Layers, Receipt, Send, UserRound, Users } from "lucide-react";
 import { OFFICIAL_BANK } from "@/lib/registration/official-bank";
+import { STUDENT_COLUMNS } from "@/lib/registration/schema";
 
 type Fee = {
   studentStreamRegistrations: number;
@@ -35,7 +37,7 @@ type Preview = {
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
 const controlClass =
-  "mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-base text-tejas-ink shadow-sm focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30";
+  "mt-1.5 w-full rounded-xl border border-tejas-border bg-white px-3 py-2.5 text-base text-tejas-ink shadow-sm focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30";
 
 function Field({
   label,
@@ -43,29 +45,63 @@ function Field({
   type = "text",
   required = true,
   error,
+  hint,
+  className,
 }: {
   label: string;
   name: string;
   type?: string;
   required?: boolean;
   error?: string;
+  hint?: string;
+  className?: string;
 }) {
   return (
-    <label className="block text-sm">
-      <span className="font-medium text-tejas-ink">{label}</span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        className={controlClass}
-      />
-      {error ? <span className="mt-1 block text-red-700">{error}</span> : null}
+    <label className={`block text-sm ${className ?? ""}`}>
+      <span className="font-medium text-tejas-ink">
+        {label}
+        {required ? <span className="text-tejas-saffron"> *</span> : null}
+      </span>
+      {hint ? <span className="mt-0.5 block text-xs leading-relaxed text-tejas-muted">{hint}</span> : null}
+      <input name={name} type={type} required={required} className={controlClass} />
+      {error ? <span className="mt-1 block text-sm text-red-700">{error}</span> : null}
     </label>
+  );
+}
+
+function Section({
+  step,
+  title,
+  icon: Icon,
+  hint,
+  children,
+}: {
+  step: string;
+  title: string;
+  icon: typeof Building2;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F4F6FB] text-tejas-blue">
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-widest text-tejas-saffron">{step}</p>
+          <h2 className="text-xl font-bold text-tejas-blue">{title}</h2>
+          {hint ? <p className="mt-1 text-sm leading-relaxed text-tejas-muted">{hint}</p> : null}
+        </div>
+      </div>
+      <div className="mt-5 space-y-4">{children}</div>
+    </section>
   );
 }
 
 export function SchoolRegistrationForm() {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const idempotencyKey = useMemo(() => {
     const bytes = new Uint8Array(16);
     crypto.getRandomValues(bytes);
@@ -73,7 +109,8 @@ export function SchoolRegistrationForm() {
   }, []);
   const [previous, setPrevious] = useState("no");
   const [books, setBooks] = useState("no");
-  const [affiliation, setAffiliation] = useState("yes");
+  const [sheetName, setSheetName] = useState("");
+  const [feeStale, setFeeStale] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formErrors, setFormErrors] = useState<string[]>([]);
@@ -105,6 +142,10 @@ export function SchoolRegistrationForm() {
     }
   }
 
+  function markFeeStale() {
+    setFeeStale(true);
+  }
+
   async function checkSheet(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -116,6 +157,7 @@ export function SchoolRegistrationForm() {
     const body = (await response.json()) as Preview;
     setPreview(body);
     setFormErrors(body.formErrors ?? []);
+    setFeeStale(false);
     setBusy(null);
   }
 
@@ -148,26 +190,27 @@ export function SchoolRegistrationForm() {
     if (body.rowErrors?.length) setPreview((current) => ({ ...(current ?? { ok: false }), rowErrors: body.rowErrors }));
   }
 
-  const fee = preview?.fee;
+  const fee = feeStale ? undefined : preview?.fee;
+  const sheetReady = Boolean(preview?.students?.length) && !preview?.rowErrors?.length && !preview?.formErrors?.length;
 
   return (
-    <form className="space-y-10" onSubmit={submit}>
-      <p className="text-sm text-tejas-muted">All fields marked with * are compulsory. Please complete all applicable fields before submitting the registration.</p>
-      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
-        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">School details</h2>
+    <form className="space-y-6" onSubmit={submit}>
+      <p className="rounded-2xl border border-tejas-border bg-white px-4 py-3 text-sm text-tejas-muted shadow-sm">
+        Fields marked <span className="font-semibold text-tejas-saffron">*</span> are required. The amount due is calculated on the server after the student sheet is checked.
+      </p>
+
+      <Section step="01 · School information" title="School information" icon={Building2} hint="Use the school's registered name and the address used for official correspondence.">
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Full registered school name *" name="schoolName" error={fieldErrors.schoolName} />
-          <Field label="Complete school address *" name="schoolAddress" error={fieldErrors.schoolAddress} />
-          <Field label="State *" name="state" error={fieldErrors.state} />
-          <Field label="District *" name="district" error={fieldErrors.district} />
-          <Field label="City or block *" name="city" error={fieldErrors.city} />
-          <Field label="PIN code *" name="pin" error={fieldErrors.pin} />
-          <Field label="School PAN *" name="pan" error={fieldErrors.pan} />
-          <Field label="School email *" name="schoolEmail" type="email" error={fieldErrors.schoolEmail} />
-          <Field label="School contact mobile *" name="schoolMobile" type="tel" error={fieldErrors.schoolMobile} />
-          <Field label="Affiliation or recognition board *" name="affiliationBoard" error={fieldErrors.affiliationBoard} />
+          <Field className="md:col-span-2" label="Full registered school name" name="schoolName" error={fieldErrors.schoolName} />
+          <Field className="md:col-span-2" label="Complete school address" name="schoolAddress" error={fieldErrors.schoolAddress} />
+          <Field label="State" name="state" error={fieldErrors.state} />
+          <Field label="District" name="district" error={fieldErrors.district} />
+          <Field label="City or block" name="city" error={fieldErrors.city} />
+          <Field label="PIN code" name="pin" hint="6 digits." error={fieldErrors.pin} />
+          <Field label="School PAN" name="pan" hint="The school's PAN, in the standard 10-character format." error={fieldErrors.pan} />
+          <Field label="Affiliation or recognition board" name="affiliationBoard" hint="For example, CBSE, a state board, or the recognising authority." error={fieldErrors.affiliationBoard} />
           <label className="block text-sm">
-            <span className="font-medium text-tejas-ink">School category *</span>
+            <span className="font-medium text-tejas-ink">School category <span className="text-tejas-saffron">*</span></span>
             <select name="schoolCategory" required className={controlClass}>
               <option value="">Select</option>
               <option>Government</option>
@@ -175,81 +218,133 @@ export function SchoolRegistrationForm() {
               <option>Private</option>
               <option>Other recognised school</option>
             </select>
-            {fieldErrors.schoolCategory ? <span className="mt-1 block text-red-700">{fieldErrors.schoolCategory}</span> : null}
+            {fieldErrors.schoolCategory ? <span className="mt-1 block text-sm text-red-700">{fieldErrors.schoolCategory}</span> : null}
           </label>
+        </div>
+        <div className="rounded-xl border border-tejas-border bg-tejas-ivory p-4">
           <label className="block text-sm">
-            <span className="font-medium text-tejas-ink">Affiliation or recognition number *</span>
-            <select name="affiliationHasNumber" value={affiliation} onChange={(event) => setAffiliation(event.target.value)} className={controlClass}>
-              <option value="yes">The school has a number</option>
-              <option value="no">Not applicable</option>
+            <span className="font-medium text-tejas-ink">Did the school take part in the 1st DHE English Olympiad (13–16 October 2025)? <span className="text-tejas-saffron">*</span></span>
+            <select
+              name="previousParticipation"
+              value={previous}
+              onChange={(event) => setPrevious(event.target.value)}
+              className={controlClass}
+            >
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
             </select>
           </label>
-          {affiliation === "yes" ? <Field label="Affiliation or recognition number *" name="affiliationNumber" error={fieldErrors.affiliationNumber} /> : <input type="hidden" name="affiliationNumber" value="" />}
+          {previous === "yes" ? (
+            <div className="mt-4">
+              <Field label="Previous registration reference, if you have one" name="previousReference" required={false} error={fieldErrors.previousReference} />
+            </div>
+          ) : (
+            <input type="hidden" name="previousReference" value="" />
+          )}
+          {fieldErrors.previousParticipation ? <p className="mt-2 text-sm text-red-700">{fieldErrors.previousParticipation}</p> : null}
         </div>
-      </section>
-      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
-        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Principal</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Principal's full name *" name="principalName" error={fieldErrors.principalName} />
-          <Field label="Principal's mobile *" name="principalMobile" type="tel" error={fieldErrors.principalMobile} />
-          <Field label="Principal's official email *" name="principalEmail" type="email" error={fieldErrors.principalEmail} />
-        </div>
-      </section>
-      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
-        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">School coordinator</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Coordinator's full name *" name="coordinatorName" error={fieldErrors.coordinatorName} />
-          <Field label="Coordinator's mobile *" name="coordinatorMobile" type="tel" error={fieldErrors.coordinatorMobile} />
-          <Field label="Coordinator's email *" name="coordinatorEmail" type="email" error={fieldErrors.coordinatorEmail} />
-          <Field label="Coordinator's designation *" name="coordinatorDesignation" error={fieldErrors.coordinatorDesignation} />
-        </div>
-      </section>
+      </Section>
 
-      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
-        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Previous Olympiad participation</h2>
-        <label className="block text-sm">
-          <span className="font-medium text-tejas-ink">Did the school take part in the 1st DHE English Olympiad (13–16 October 2025)?</span>
-          <select
-            name="previousParticipation"
-            value={previous}
-            onChange={(event) => setPrevious(event.target.value)}
-            className={controlClass}
-          >
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-        </label>
-        {previous === "yes" ? (
-          <Field label="Previous registration reference, if you have one" name="previousReference" required={false} error={fieldErrors.previousReference} />
-        ) : (
-          <input type="hidden" name="previousReference" value="" />
-        )}
-        {fieldErrors.previousParticipation ? <p className="text-sm text-red-700">{fieldErrors.previousParticipation}</p> : null}
-      </section>
+      <Section step="02 · Principal and school contact" title="Principal and school contact details" icon={UserRound}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Principal's full name" name="principalName" error={fieldErrors.principalName} />
+          <Field label="Principal's mobile" name="principalMobile" type="tel" hint="10-digit Indian mobile number." error={fieldErrors.principalMobile} />
+          <Field label="Principal's official email" name="principalEmail" type="email" error={fieldErrors.principalEmail} />
+          <Field label="School email" name="schoolEmail" type="email" error={fieldErrors.schoolEmail} />
+          <Field label="School contact mobile" name="schoolMobile" type="tel" hint="10-digit school contact number." error={fieldErrors.schoolMobile} />
+        </div>
+      </Section>
 
-      <section className="space-y-4 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
-        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Student Excel/CSV upload</h2>
-        <p className="text-sm text-tejas-muted">
-          Every column in the template is compulsory, including roll number, parent mobile, parent email, date of birth, and at least one stream. Classes III–X. Files up to 10 MB: .xlsx, .xls, or .csv.
-        </p>
+      <Section step="03 · Coordinator" title="Coordinator information" icon={Users} hint="The coordinator is the person the programme can reach about this registration.">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Coordinator's full name" name="coordinatorName" error={fieldErrors.coordinatorName} />
+          <Field label="Coordinator's mobile" name="coordinatorMobile" type="tel" error={fieldErrors.coordinatorMobile} />
+          <Field label="Coordinator's email" name="coordinatorEmail" type="email" error={fieldErrors.coordinatorEmail} />
+          <Field label="Coordinator's designation" name="coordinatorDesignation" error={fieldErrors.coordinatorDesignation} />
+        </div>
+      </Section>
+
+      <Section
+        step="04 · Students"
+        title="Student information and Excel/CSV upload"
+        icon={FileSpreadsheet}
+        hint="Upload one sheet for this school. The existing column headings and row rules are unchanged."
+      >
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl bg-tejas-ivory p-4 text-sm">
+            <p className="font-semibold text-tejas-ink">Accepted formats</p>
+            <p className="mt-1 text-tejas-muted">.xlsx, .xls, or .csv</p>
+          </div>
+          <div className="rounded-xl bg-tejas-ivory p-4 text-sm">
+            <p className="font-semibold text-tejas-ink">Maximum file size</p>
+            <p className="mt-1 text-tejas-muted">10 MB</p>
+          </div>
+          <div className="rounded-xl bg-tejas-ivory p-4 text-sm">
+            <p className="font-semibold text-tejas-ink">Classes</p>
+            <p className="mt-1 text-tejas-muted">III–X. At least one stream on each row.</p>
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-tejas-ink">Required columns</p>
+          <ul className="mt-2 grid gap-1 text-sm text-tejas-muted sm:grid-cols-2">
+            {STUDENT_COLUMNS.map((column) => (
+              <li key={column.key}>{column.header}</li>
+            ))}
+          </ul>
+        </div>
         <Link href="/api/register/template" className="inline-flex text-sm font-semibold text-tejas-blue underline">
           Download the Excel template
         </Link>
-        <label className="block text-sm">
-          <span className="font-medium text-tejas-ink">Student sheet</span>
-          <input name="file" type="file" accept=".xlsx,.xls,.csv,text/csv" required className="mt-1 block w-full text-sm text-tejas-ink file:mr-3 file:rounded-lg file:border-0 file:bg-tejas-saffron-soft file:px-3 file:py-2 file:text-sm file:font-semibold file:text-tejas-saffron-dark" />
-        </label>
-        <button
-          type="button"
-          className="rounded-lg border-2 border-tejas-blue px-4 py-2 text-sm font-semibold text-tejas-blue hover:bg-tejas-blue/5"
-          disabled={busy !== null}
-          onClick={(event) => {
-            const form = event.currentTarget.form;
-            if (form) void checkSheet({ preventDefault() {}, currentTarget: form } as React.FormEvent<HTMLFormElement>);
-          }}
-        >
-          {busy === "preview" ? "Checking sheet…" : "Check the sheet"}
-        </button>
+        <div className="rounded-xl border border-dashed border-tejas-border bg-tejas-ivory p-4">
+          <label className="block text-sm">
+            <span className="font-medium text-tejas-ink">Student sheet <span className="text-tejas-saffron">*</span></span>
+            <input
+              ref={fileRef}
+              name="file"
+              type="file"
+              accept=".xlsx,.xls,.csv,text/csv"
+              required
+              className="mt-2 block w-full text-sm text-tejas-ink file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-sm file:font-semibold file:text-tejas-blue"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                setSheetName(file?.name ?? "");
+                setPreview(null);
+                setFeeStale(false);
+                setFormErrors([]);
+              }}
+            />
+          </label>
+          <p className="mt-3 text-sm text-tejas-ink" role="status">
+            {sheetName ? <>Selected file: <span className="font-semibold">{sheetName}</span></> : "No file selected."}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-lg border border-tejas-border bg-white px-3 py-2 text-sm font-semibold text-tejas-ink"
+              onClick={() => fileRef.current?.click()}
+            >
+              {sheetName ? "Replace file" : "Choose file"}
+            </button>
+            <button
+              type="button"
+              className="rounded-lg border-2 border-tejas-blue px-4 py-2 text-sm font-semibold text-tejas-blue hover:bg-tejas-blue/5 disabled:opacity-60"
+              disabled={busy !== null}
+              onClick={(event) => {
+                const form = event.currentTarget.form;
+                if (form) void checkSheet({ preventDefault() {}, currentTarget: form } as React.FormEvent<HTMLFormElement>);
+              }}
+            >
+              {busy === "preview" ? "Checking sheet…" : "Check the sheet"}
+            </button>
+          </div>
+        </div>
+        {formErrors.length ? (
+          <ul className="space-y-1 text-sm text-red-700">
+            {formErrors.map((error) => (
+              <li key={error}>{error}</li>
+            ))}
+          </ul>
+        ) : null}
         {preview?.rowErrors?.length ? (
           <ul className="space-y-1 text-sm text-red-700">
             {preview.rowErrors.map((row) => (
@@ -257,92 +352,165 @@ export function SchoolRegistrationForm() {
             ))}
           </ul>
         ) : null}
-        {preview?.students?.length ? (
-          <p className="text-sm text-tejas-muted">{preview.students.length} student {preview.students.length === 1 ? "row" : "rows"} ready.</p>
+        {sheetReady ? (
+          <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+            {preview?.students?.length} student {preview?.students?.length === 1 ? "row is" : "rows are"} ready.
+          </p>
+        ) : sheetName && !busy && !preview ? (
+          <p className="text-sm text-tejas-muted">Check the sheet before you rely on the fee summary.</p>
         ) : null}
-      </section>
+      </Section>
 
-      <section className="space-y-2 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
-        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Automatic fee summary</h2>
-        <p className="text-sm text-tejas-muted">The server calculates ₹150 for each student-stream. Printed books are ₹170 each. The registration fee and the book amount are listed separately and paid together to the official account. E-book access is not for sale, so ₹49 is not added. A school share is not approved and is not deducted.</p>
+      <Section
+        step="05 · Streams"
+        title="Olympiad stream selection"
+        icon={Layers}
+        hint="Streams are chosen in the student sheet, in the column Selected TEJAS Stream(s). There is no separate stream control on this form."
+      >
+        <ul className="grid gap-3 sm:grid-cols-3">
+          {[
+            ["TEJAS Mathematics", "9 December 2026"],
+            ["TEJAS English", "10 December 2026"],
+            ["TEJAS Future Tech", "11 December 2026"],
+          ].map(([name, date]) => (
+            <li key={name} className="rounded-xl border border-tejas-border bg-tejas-ivory p-4">
+              <p className="font-semibold text-tejas-blue">{name}</p>
+              <p className="mt-1 text-sm text-tejas-muted">{date}</p>
+              <p className="mt-2 text-sm text-tejas-ink">₹150 per student</p>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. ₹170 per printed copy. E-book access is not for sale, so it is not charged.">
         <label className="block text-sm">
-          <span className="font-medium">Printed preparation books *</span>
-          <select name="printedBooks" value={books} onChange={(event) => setBooks(event.target.value)} className={controlClass}>
-            <option value="no">No, I do not want printed books</option>
-            <option value="yes">Yes, I want printed books</option>
+          <span className="font-medium text-tejas-ink">Printed preparation books <span className="text-tejas-saffron">*</span></span>
+          <select
+            name="printedBooks"
+            value={books}
+            onChange={(event) => {
+              setBooks(event.target.value);
+              markFeeStale();
+            }}
+            className={controlClass}
+          >
+            <option value="no">No, the school does not want printed books</option>
+            <option value="yes">Yes, the school wants printed books</option>
           </select>
         </label>
-        {books === "yes" ? <Field label="Number of printed books *" name="bookQuantity" type="number" error={fieldErrors.bookQuantity} /> : <input type="hidden" name="bookQuantity" value="0" />}
-        <p className="text-sm text-tejas-muted">There is no separate book list by class. The school chooses how many copies it needs. This page does not record dispatch or delivery.</p>
+        {books === "yes" ? (
+          <label className="block text-sm">
+            <span className="font-medium text-tejas-ink">Number of printed books <span className="text-tejas-saffron">*</span></span>
+            <span className="mt-0.5 block text-xs text-tejas-muted">There is no class-wise book list. Enter the number of copies the school wants.</span>
+            <input
+              name="bookQuantity"
+              type="number"
+              required
+              min={1}
+              className={controlClass}
+              onChange={markFeeStale}
+            />
+            {fieldErrors.bookQuantity ? <span className="mt-1 block text-sm text-red-700">{fieldErrors.bookQuantity}</span> : null}
+          </label>
+        ) : (
+          <input type="hidden" name="bookQuantity" value="0" />
+        )}
         <input type="hidden" name="ebookAccess" value="no" />
-        <p className="text-sm text-tejas-muted">E-book files and student logins are not available. The form does not charge ₹49.</p>
+        <p className="text-sm text-tejas-muted">E-book files and student logins are not available. This form does not charge ₹49. Dispatch and delivery are not recorded here.</p>
+      </Section>
+
+      <Section step="07 · Fee" title="Registration fee summary" icon={Receipt} hint="This total comes from the server after you check the sheet. A figure typed in the browser is not the amount due.">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl bg-tejas-ivory p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-muted">Student streams</p>
+            <p className="mt-1 text-lg font-bold text-tejas-ink">₹150</p>
+            <p className="mt-1 text-sm text-tejas-muted">Per student, per selected stream.</p>
+          </div>
+          <div className="rounded-xl bg-tejas-ivory p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-muted">Printed books</p>
+            <p className="mt-1 text-lg font-bold text-tejas-ink">₹170</p>
+            <p className="mt-1 text-sm text-tejas-muted">Per copy, only if ordered.</p>
+          </div>
+          <div className="rounded-xl bg-tejas-ivory p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-muted">E-book</p>
+            <p className="mt-1 text-lg font-bold text-tejas-ink">₹0</p>
+            <p className="mt-1 text-sm text-tejas-muted">Not for sale on this form.</p>
+          </div>
+        </div>
         {fee ? (
-          <dl className="mt-4 grid gap-2 text-sm">
-            <div className="flex justify-between gap-4"><dt>Student-stream registrations</dt><dd>{fee.studentStreamRegistrations}</dd></div>
-            <div className="flex justify-between gap-4"><dt>Registration amount</dt><dd>{inr.format(fee.totalStudentFees)}</dd></div>
-            <div className="flex justify-between gap-4"><dt>Printed books</dt><dd>{inr.format(fee.printedBookAmount ?? 0)}</dd></div>
-            <div className="flex justify-between gap-4"><dt>E-book access (not for sale)</dt><dd>{inr.format(fee.ebookAmount ?? 0)}</dd></div>
-            <div className="flex justify-between gap-4 font-semibold"><dt>Amount due</dt><dd>{inr.format(fee.amountDue ?? fee.payableToTejas)}</dd></div>
+          <dl className="divide-y divide-tejas-border rounded-xl border border-tejas-border">
+            <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
+              <dt>Student-stream registrations</dt>
+              <dd className="font-semibold">{fee.studentStreamRegistrations}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
+              <dt>Registration amount</dt>
+              <dd className="font-semibold">{inr.format(fee.totalStudentFees)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
+              <dt>Printed book charges</dt>
+              <dd className="font-semibold">{inr.format(fee.printedBookAmount ?? 0)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
+              <dt>E-book access</dt>
+              <dd className="font-semibold">{inr.format(fee.ebookAmount ?? 0)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 bg-tejas-blue px-4 py-3 text-white">
+              <dt className="font-semibold">Amount due</dt>
+              <dd className="text-lg font-bold">{inr.format(fee.amountDue ?? fee.payableToTejas)}</dd>
+            </div>
           </dl>
         ) : (
-          <p className="text-sm text-tejas-muted">Check the sheet to see the fee calculated on the server.</p>
+          <p className="rounded-xl border border-dashed border-tejas-border px-4 py-3 text-sm text-tejas-muted">
+            {feeStale
+              ? "The book choice changed. Check the sheet again so the server can recalculate the amount due."
+              : "Check the student sheet to see the fee calculated on the server."}
+          </p>
         )}
-      </section>
+        <p className="text-sm text-tejas-muted">A school share is not approved and is not deducted. The registration amount and the printed-book amount are listed separately and paid together to the official account.</p>
+        <div className="rounded-xl border border-tejas-warning/30 bg-tejas-warning/10 p-4">
+          <h3 className="text-base font-bold text-tejas-blue">{payment?.heading ?? "Official payment account"}</h3>
+          <p className="mt-2 text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            {([
+              ["Account name", OFFICIAL_BANK.accountHolder, false],
+              ["Account number", OFFICIAL_BANK.accountNumber, true],
+              ["Bank", OFFICIAL_BANK.bankName, false],
+              ["Branch", OFFICIAL_BANK.branch, false],
+              ["IFSC", OFFICIAL_BANK.ifsc, true],
+              ["UPI ID", OFFICIAL_BANK.upiId, true],
+            ] as const).map(([label, value, canCopy]) => (
+              <div key={label} className="rounded-xl bg-white p-3">
+                <dt className="text-xs text-tejas-muted">{label}</dt>
+                <dd className="mt-1 break-all text-base font-semibold text-tejas-ink">{value}</dd>
+                {canCopy ? (
+                  <button type="button" className="mt-2 min-h-11 text-sm font-semibold text-tejas-blue underline" onClick={() => copyValue(label, value)}>
+                    {copied === label ? "Copied" : "Copy"}
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </dl>
+          <p className="mt-3 text-sm text-tejas-muted">
+            {payment?.proofsAccepted
+              ? "Submit the registration first. The confirmation page then accepts a JPG, PNG, or PDF proof for this reference. Uploading the proof does not verify the payment. There is no payment link and no QR code."
+              : "Do not attach a receipt on this form. There is no payment link and no QR code."}
+          </p>
+        </div>
+      </Section>
 
-      <section className="space-y-4 rounded-2xl border border-tejas-warning/30 bg-tejas-warning/10 p-4 sm:p-6">
-        <h2 className="border-l-4 border-tejas-warning pl-3 text-xl font-bold text-tejas-blue">Payment</h2>
-        <p className="font-semibold">{payment?.heading ?? "Official payment account"}</p>
-        <p className="text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>
-        <dl className="grid gap-3 text-sm">
-          {([
-            ["Account name", OFFICIAL_BANK.accountHolder, false],
-            ["Account number", OFFICIAL_BANK.accountNumber, true],
-            ["Bank", OFFICIAL_BANK.bankName, false],
-            ["Branch", OFFICIAL_BANK.branch, false],
-            ["IFSC", OFFICIAL_BANK.ifsc, true],
-            ["UPI ID", OFFICIAL_BANK.upiId, true],
-          ] as const).map(([label, value, canCopy]) => (
-            <div key={label} className="rounded-lg bg-white p-3">
-              <dt className="text-tejas-muted">{label}</dt>
-              <dd className="mt-1 break-all text-base font-semibold">{value}</dd>
-              {canCopy ? (
-                <button type="button" className="mt-2 min-h-[44px] text-sm font-semibold text-tejas-blue underline" onClick={() => copyValue(label, value)}>
-                  {copied === label ? "Copied" : "Copy"}
-                </button>
-              ) : null}
-            </div>
-          ))}
-        </dl>
-        <p className="text-sm text-tejas-muted">
-          {payment?.proofsAccepted
-            ? "Submit the registration first. The confirmation page then accepts a JPG, PNG, or PDF proof for this reference. Uploading the proof does not verify the payment. There is no payment link and no QR code."
-            : "Do not attach a receipt on this form yet. There is no payment link and no QR code."}
-        </p>
-      </section>
-
-      <section className="space-y-3 rounded-2xl border border-tejas-border bg-white p-5 sm:p-6">
-        <h2 className="border-l-4 border-tejas-saffron pl-3 text-xl font-bold text-tejas-blue">Declaration and submission</h2>
-        {[
-          ["accurate", "The school information is accurate."],
-          ["studentsChecked", "The school has checked the student information."],
-          ["streamsCorrect", "The selected streams are correct."],
-          ["feeUnderstood", "The school has understood the fee structure."],
-          ["paymentGenuine", "Any payment information submitted is genuine."],
-          ["authorised", "I am authorised by the school to submit this registration."],
-          ["rules", "The school accepts the published registration rules and privacy terms."],
-        ].map(([name, label]) => (
-          <label key={name} className="flex gap-2 text-sm">
-            <input type="checkbox" name={name} value="yes" required className="mt-0.5 h-4 w-4 accent-tejas-saffron" />
-            <span>{label} *</span>
-          </label>
-        ))}
+      <Section step="08 · Submit" title="Final submission" icon={Send} hint="Submit once. A repeated submission with the same browser session does not create a second registration.">
         {formErrors.map((error) => (
           <p key={error} className="text-sm text-red-700">{error}</p>
         ))}
-        <button type="submit" disabled={busy !== null} className="rounded-xl bg-tejas-saffron px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-tejas-saffron-dark disabled:opacity-60">
+        <button
+          type="submit"
+          disabled={busy !== null}
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-tejas-saffron px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-tejas-saffron-dark disabled:opacity-60 sm:w-auto"
+        >
           {busy === "submit" ? "Submitting…" : "Submit registration"}
         </button>
-      </section>
+      </Section>
     </form>
   );
 }

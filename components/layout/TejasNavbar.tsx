@@ -61,7 +61,7 @@ export function TejasNavbar() {
         >
           <TejasEmblem size="md" />
           <div className="min-w-0 leading-tight">
-            <span className="block text-lg font-bold tracking-wide text-tejas-blue">{brand.name}</span>
+            <span lang="hi" className="block font-hindi text-[1.65rem] font-bold leading-tight text-[#C6530A]">{brand.nameHi}</span>
             <span className="text-xs text-tejas-muted xl:hidden 2xl:block">{brand.tagline}</span>
           </div>
         </Link>

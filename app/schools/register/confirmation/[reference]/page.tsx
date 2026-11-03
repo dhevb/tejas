@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createMetadata } from "@/config/seo";
-import { PageHero } from "@/components/shared/PageHero";
 import { paymentProofsAccepted } from "@/lib/registration/durable";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { readRegistration, toPublicSummary } from "@/lib/registration/store";
@@ -26,10 +25,12 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
   const summary = toPublicSummary(record);
 
   return (
-    <>
-      <PageHero eyebrow="Registration received" title={summary.reference} subtitle={summary.schoolName} />
-      <section className="py-12">
-        <div className="mx-auto max-w-3xl space-y-4 rounded-2xl border border-tejas-border bg-white px-4 py-6 text-sm text-tejas-ink shadow-tejas sm:px-6">
+    <section className="bg-tejas-ivory py-12 md:py-16">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <div className="space-y-4 rounded-3xl border border-tejas-border bg-white px-5 py-6 text-sm text-tejas-ink shadow-sm sm:px-8 sm:py-8">
+          <p className="text-xs font-semibold uppercase tracking-widest text-tejas-saffron">Registration received</p>
+          <h1 className="break-all text-2xl font-bold text-tejas-blue sm:text-3xl">{summary.reference}</h1>
+          <p className="text-base leading-relaxed">The school registration for {summary.schoolName} has been received. Keep this reference for payment and any later enquiry.</p>
           <p>{summary.studentCount} students. {summary.studentStreamRegistrations} student-stream registrations.</p>
           <p>Registration amount: {inr.format(summary.totalStudentFees)}. Printed books: {inr.format(summary.printedBookAmount)}. Amount due: {inr.format(summary.amountDue)}.</p>
           <p>The book amount is separate from the registration fee. Both are paid to the official account. This page does not mark books as dispatched or delivered.</p>
@@ -42,7 +43,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
           ) : null}
           <Link href="/schools/register" className="inline-flex font-semibold text-tejas-blue underline">Back to the form</Link>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

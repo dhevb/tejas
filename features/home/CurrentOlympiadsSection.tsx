@@ -16,7 +16,7 @@ export function CurrentOlympiadsSection() {
           <SectionHeader
             eyebrow="TEJAS Olympiad 2026–27"
             title="Active Olympiad Streams"
-            subtitle="TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X. Registration 1–20 November 2026."
+            subtitle="TEJAS English, TEJAS Mathematics, and TEJAS Future Tech for Classes III–X. Registration 3–20 November 2026."
           />
         </FadeIn>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

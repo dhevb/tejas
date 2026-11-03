@@ -128,8 +128,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     hi: "एक परीक्षा से आगे, युवा विद्यार्थियों को पहचानने और सशक्त करने का राष्ट्रीय मंच।",
   },
   whyThisEdition: {
-    en: "The approved brochure places this Olympiad in the 6th Edition of Shiksha Mahakumbh in 2026. Registration runs from 1 November 2026 to 20 November 2026. Mathematics is on 9 December 2026, English on 10 December 2026, and Future Tech on 11 December 2026.",
-    hi: "पंजीकरण 1–20 नवंबर 2026। परीक्षाएँ 9, 10 और 11 दिसंबर 2026।",
+    en: "The approved brochure places this Olympiad in the 6th Edition of Shiksha Mahakumbh in 2026. Registration runs from 3 November 2026 to 20 November 2026. Mathematics is on 9 December 2026, English on 10 December 2026, and Future Tech on 11 December 2026.",
+    hi: "पंजीकरण 3–20 नवंबर 2026। परीक्षाएँ 9, 10 और 11 दिसंबर 2026।",
   },
   learningValues: [
     { en: "Scientific temper and curiosity", hi: "वैज्ञानिक दृष्टिकोण और जिज्ञासा" },
@@ -138,7 +138,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     { en: "Dream big, work hard, stay rooted", hi: "बड़े सपने, कड़ी मेहनत, जड़ें भारतीय" },
   ],
   timeline: [
-    { year: 2026, title: { en: "Registration opens", hi: "पंजीकरण शुरू" }, description: { en: "1 November 2026", hi: "1 नवंबर 2026" } },
+    { year: 2026, title: { en: "Registration opens", hi: "पंजीकरण शुरू" }, description: { en: "3 November 2026", hi: "3 नवंबर 2026" } },
     { year: 2026, title: { en: "Last date to register", hi: "अंतिम तिथि" }, description: { en: "20 November 2026", hi: "20 नवंबर 2026" } },
     { year: 2026, title: { en: "TEJAS Mathematics", hi: "TEJAS गणित" }, description: { en: "9 December 2026", hi: "9 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" }, description: { en: "10 December 2026", hi: "10 दिसंबर 2026" } },
@@ -185,8 +185,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     {
       question: { en: "When is registration opening?", hi: "पंजीकरण कब?" },
       answer: {
-        en: "Registration opens on 1 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹150 per student per stream.",
-        hi: "पंजीकरण 1 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम।",
+        en: "Registration opens on 3 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹150 per student per stream.",
+        hi: "पंजीकरण 3 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम।",
       },
     },
   ],

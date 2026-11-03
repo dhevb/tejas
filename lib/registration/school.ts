@@ -64,13 +64,6 @@ export type SchoolField =
   | "ebookAccess"
   | "representativeName"
   | "representativeDesignation"
-  | "accurate"
-  | "studentsChecked"
-  | "streamsCorrect"
-  | "feeUnderstood"
-  | "paymentGenuine"
-  | "authorised"
-  | "rules"
   | "transactionReference"
   | "paymentMode"
   | "paymentDate"
@@ -104,8 +97,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   const schoolEmail = parseEmail(get("schoolEmail"));
   const schoolMobile = parseIndianMobile(get("schoolMobile"));
   const affiliationBoard = cleanLine(get("affiliationBoard"), 120);
-  const affiliationChoice = get("affiliationHasNumber").trim().toLowerCase();
-  const affiliationRaw = cleanLine(get("affiliationNumber"), 40);
   const categoryRaw = cleanLine(get("schoolCategory"), 80);
   const principalRaw = cleanLine(get("principalName"), 120);
   const principalMobile = parseIndianMobile(get("principalMobile"));
@@ -126,13 +117,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   if (!schoolEmail) errors.schoolEmail = "Enter the school's email address.";
   if (!schoolMobile) errors.schoolMobile = "Enter the school's 10-digit contact mobile number.";
   if (affiliationBoard.length < 2) errors.affiliationBoard = "Enter the affiliation or recognition board.";
-  let affiliationNumber: string | null = null;
-  if (affiliationChoice !== "yes" && affiliationChoice !== "no") {
-    errors.affiliationNumber = "Say whether the school has an affiliation or recognition number.";
-  } else if (affiliationChoice === "yes") {
-    if (!/^[A-Za-z0-9][A-Za-z0-9./-]{1,39}$/.test(affiliationRaw)) errors.affiliationNumber = "Enter the affiliation or recognition number.";
-    else affiliationNumber = affiliationRaw;
-  }
   if (!SCHOOL_CATEGORIES.includes(categoryRaw as (typeof SCHOOL_CATEGORIES)[number])) {
     errors.schoolCategory = "Select the school category.";
   }
@@ -166,9 +150,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   }
   const ebookChoice: "yes" | "no" = EBOOK_SALE_OPEN && ebookAccess === "yes" ? "yes" : "no";
   if (EBOOK_SALE_OPEN && ebookAccess !== "yes" && ebookAccess !== "no") errors.ebookAccess = "Choose whether the school wants e-book access.";
-  for (const key of ["accurate", "studentsChecked", "streamsCorrect", "feeUnderstood", "paymentGenuine", "authorised", "rules"] as const) {
-    if (get(key) !== "yes") errors[key] = "This declaration is required.";
-  }
 
   if (
     Object.keys(errors).length ||
@@ -198,7 +179,7 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
       schoolEmail,
       schoolMobile,
       affiliationBoard,
-      affiliationNumber,
+      affiliationNumber: null,
       schoolCategory: categoryRaw as (typeof SCHOOL_CATEGORIES)[number],
       principalName: principal.value,
       principalMobile,

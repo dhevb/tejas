@@ -200,8 +200,8 @@ export const technologyOlympiad: OlympiadPortalContent = {
     {
       question: { en: "When is the DHE Tech Olympiad?", hi: "DHE टेक ओलंपियाड कब है?" },
       answer: {
-        en: "TEJAS Future Tech is on 11 December 2026. Schools register from 1 November 2026 to 20 November 2026.",
-        hi: "TEJAS फ्यूचर टेक 11 दिसंबर 2026 को है। पंजीकरण 1–20 नवंबर 2026।",
+        en: "TEJAS Future Tech is on 11 December 2026. Schools register from 3 November 2026 to 20 November 2026.",
+        hi: "TEJAS फ्यूचर टेक 11 दिसंबर 2026 को है। पंजीकरण 3–20 नवंबर 2026।",
       },
     },
   ],

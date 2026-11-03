@@ -233,8 +233,6 @@ function schoolFields(body: FormData, pan = PAN) {
   body.set("schoolEmail", "office@river.example");
   body.set("schoolMobile", "9812345678");
   body.set("affiliationBoard", "CBSE");
-  body.set("affiliationHasNumber", "yes");
-  body.set("affiliationNumber", "1630123");
   body.set("schoolCategory", "Private");
   body.set("principalName", "Anita Verma");
   body.set("principalMobile", "9811111111");
@@ -248,9 +246,6 @@ function schoolFields(body: FormData, pan = PAN) {
   body.set("printedBooks", "no");
   body.set("bookQuantity", "0");
   body.set("ebookAccess", "no");
-  for (const key of ["accurate", "studentsChecked", "streamsCorrect", "feeUnderstood", "paymentGenuine", "authorised", "rules"]) {
-    body.set(key, "yes");
-  }
 }
 
 test("school fields, PAN, and Indian mobile numbers are checked", () => {
@@ -274,7 +269,8 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
     previousParticipation: "",
     printedBooks: "",
     ebookAccess: "",
-    authorised: "",
+    affiliationNumber: "1630123",
+    accurate: "yes",
   });
   assert.ok(missing.errors.schoolName);
   assert.ok(missing.errors.pan);
@@ -285,6 +281,10 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   assert.equal(missing.errors.principalDesignation, undefined);
   assert.equal(missing.errors.representativeName, undefined);
   assert.equal(missing.errors.representativeDesignation, undefined);
+  assert.equal(missing.errors.affiliationNumber, undefined);
+  assert.equal("accurate" in missing.errors, false);
+  assert.equal("authorised" in missing.errors, false);
+  assert.equal("rules" in missing.errors, false);
   assert.equal(missing.value, null);
   const extra = new FormData();
   schoolFields(extra);
@@ -296,6 +296,8 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   assert.equal(cleaned?.principalDesignation, "Principal");
   assert.equal(cleaned?.representativeName, null);
   assert.equal(cleaned?.representativeDesignation, null);
+  assert.equal(cleaned?.affiliationNumber, null);
+  assert.equal(cleaned?.affiliationBoard, "CBSE");
   const books = readSchoolForm({ ...Object.fromEntries(new FormData() as never) });
   const withBooks = new FormData();
   schoolFields(withBooks);
@@ -343,6 +345,8 @@ test("submission stores a reference, ignores a repeated post, and hides student 
   const record = await readRegistration(saved.registration.reference);
   assert.equal(record?.students.length, 2);
   assert.equal(record?.school.previousReference, "DHE-2025-14");
+  assert.equal(record?.school.affiliationNumber, null);
+  assert.equal(record?.school.affiliationBoard, "CBSE");
   const summary = JSON.stringify(toPublicSummary(record!));
   assert.equal(summary.includes("Aarav"), false);
   assert.equal(summary.includes("15-08-2015"), false);

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Building2, FileSpreadsheet, Layers, Receipt, Send, UserRound, Users } from "lucide-react";
+import { Building2, FileSpreadsheet, Layers, Receipt, Send, UserRound, Users } from "lucide-react";
 import { OFFICIAL_BANK } from "@/lib/registration/official-bank";
 import { STUDENT_COLUMNS } from "@/lib/registration/schema";
 
@@ -113,9 +113,7 @@ export function SchoolRegistrationForm() {
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
   }, []);
   const [previous, setPrevious] = useState("no");
-  const [books, setBooks] = useState("no");
   const [sheetName, setSheetName] = useState("");
-  const [feeStale, setFeeStale] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formErrors, setFormErrors] = useState<string[]>([]);
@@ -147,10 +145,6 @@ export function SchoolRegistrationForm() {
     }
   }
 
-  function markFeeStale() {
-    setFeeStale(true);
-  }
-
   async function checkSheet(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -162,7 +156,6 @@ export function SchoolRegistrationForm() {
     const body = (await response.json()) as Preview;
     setPreview(body);
     setFormErrors(body.formErrors ?? []);
-    setFeeStale(false);
     setBusy(null);
   }
 
@@ -195,7 +188,7 @@ export function SchoolRegistrationForm() {
     if (body.rowErrors?.length) setPreview((current) => ({ ...(current ?? { ok: false }), rowErrors: body.rowErrors }));
   }
 
-  const fee = feeStale ? undefined : preview?.fee;
+  const fee = preview?.fee;
   const sheetReady = Boolean(preview?.students?.length) && !preview?.rowErrors?.length && !preview?.formErrors?.length;
 
   return (
@@ -309,7 +302,6 @@ export function SchoolRegistrationForm() {
                 const file = event.target.files?.[0];
                 setSheetName(file?.name ?? "");
                 setPreview(null);
-                setFeeStale(false);
                 setFormErrors([]);
               }}
             />
@@ -383,44 +375,13 @@ export function SchoolRegistrationForm() {
         </ul>
       </Section>
 
-      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy: the school retains ₹34 and remits ₹136. E-book access is not for sale, so it is not charged.">
-        <label className="block text-sm">
-          <span className="font-medium text-tejas-ink">Printed preparation books <span className="text-tejas-saffron">*</span></span>
-          <select
-            name="printedBooks"
-            value={books}
-            onChange={(event) => {
-              setBooks(event.target.value);
-              markFeeStale();
-            }}
-            className={controlClass}
-          >
-            <option value="no">No, the school does not want printed books</option>
-            <option value="yes">Yes, the school wants printed books</option>
-          </select>
-        </label>
-        {books === "yes" ? (
-          <label className="block text-sm">
-            <span className="font-medium text-tejas-ink">Number of printed books <span className="text-tejas-saffron">*</span></span>
-            <span className="mt-0.5 block text-xs text-tejas-muted">There is no class-wise book list. Enter the number of copies the school wants.</span>
-            <input
-              name="bookQuantity"
-              type="number"
-              required
-              min={1}
-              className={controlClass}
-              onChange={markFeeStale}
-            />
-            {fieldErrors.bookQuantity ? <span className="mt-1 block text-sm text-red-700">{fieldErrors.bookQuantity}</span> : null}
-          </label>
-        ) : (
-          <input type="hidden" name="bookQuantity" value="0" />
-        )}
-        <input type="hidden" name="ebookAccess" value="no" />
-        <p className="text-sm text-tejas-muted">E-book files and student logins are not available. This form does not charge ₹49. Dispatch and delivery are not recorded here.</p>
+      <Section step="06 · Separate orders" title="Books are not part of this form" icon={Layers} hint="Olympiad registration does not order a printed book or an e-book.">
+        <p className="text-sm leading-relaxed text-tejas-muted">
+          Printed books are ordered on the <Link className="font-semibold text-tejas-blue underline" href="/books/order">printed book order form</Link>. E-book registration and online reading are on the <Link className="font-semibold text-tejas-blue underline" href="/ebook/register">e-book registration page</Link>. A quantity or amount entered here is not saved as a book order and is not added to the Olympiad fee.
+        </p>
       </Section>
 
-      <Section step="07 · Fee" title="Registration fee summary" icon={Receipt} hint="The school collects the gross amount, retains its share, and transfers the net amount to TEJAS. The server calculates that net amount. A figure typed in the browser is not used.">
+      <Section step="07 · Fee" title="Olympiad fee summary" icon={Receipt} hint="The school collects the registration fee, retains its share, and transfers the net amount to TEJAS. The server calculates that net amount. A figure typed in the browser is not used. Printed books and e-books are not included.">
         <div className="overflow-x-auto rounded-xl border border-tejas-border">
           <table className="min-w-full text-left text-sm">
             <caption className="sr-only">Published fee shares</caption>
@@ -439,12 +400,6 @@ export function SchoolRegistrationForm() {
                 <td className="px-4 py-3">₹30</td>
                 <td className="px-4 py-3 font-semibold">₹120</td>
               </tr>
-              <tr className="border-t border-tejas-border">
-                <th className="px-4 py-3 font-medium text-tejas-ink">Printed book</th>
-                <td className="px-4 py-3">₹170 per copy</td>
-                <td className="px-4 py-3">₹34</td>
-                <td className="px-4 py-3 font-semibold">₹136</td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -455,11 +410,6 @@ export function SchoolRegistrationForm() {
               ["Total registration fee collected", inr.format(fee.totalStudentFees)],
               ["School's registration share", inr.format(fee.registrationSchoolShare ?? 0)],
               ["Registration amount payable to TEJAS", inr.format(fee.registrationPayable ?? fee.payableToTejas)],
-              ["Total printed book amount", inr.format(fee.printedBookAmount ?? 0)],
-              ["School's book share", inr.format(fee.bookSchoolShare ?? 0)],
-              ["Book amount payable to TEJAS", inr.format(fee.bookPayable ?? 0)],
-              ["Combined gross amount", inr.format(fee.grossTotal ?? 0)],
-              ["Combined school share", inr.format(fee.schoolShare)],
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
                 <dt>{label}</dt>
@@ -467,18 +417,16 @@ export function SchoolRegistrationForm() {
               </div>
             ))}
             <div className="flex items-center justify-between gap-4 bg-tejas-blue px-4 py-3 text-white">
-              <dt className="font-semibold">Final net amount payable to TEJAS</dt>
+              <dt className="font-semibold">Olympiad amount payable to TEJAS</dt>
               <dd className="text-lg font-bold">{inr.format(fee.amountDue ?? fee.payableToTejas)}</dd>
             </div>
           </dl>
         ) : (
           <p className="rounded-xl border border-dashed border-tejas-border px-4 py-3 text-sm text-tejas-muted">
-            {feeStale
-              ? "The book choice changed. Check the sheet again so the server can recalculate the amount payable to TEJAS."
-              : "Check the student sheet to see this school's fee calculated on the server."}
+            Check the student sheet to see this school's Olympiad fee calculated on the server.
           </p>
         )}
-        <p className="text-sm text-tejas-muted">The school collects ₹150 for each student-stream and ₹170 for each printed book, retains ₹30 per student-stream and ₹34 per book, and transfers the remaining ₹120 per student-stream and ₹136 per book to the official TEJAS account. The school share stays with the school. It is not an additional payment. This form does not charge ₹49 for an e-book.</p>
+        <p className="text-sm text-tejas-muted">The school collects ₹150 for each student-stream, retains ₹30, and transfers ₹120 to the official TEJAS account. The school share stays with the school. It is not an additional payment. This form does not charge ₹170 for a printed book or ₹49 for an e-book.</p>
         <div className="rounded-xl border border-tejas-warning/30 bg-tejas-warning/10 p-4">
           <h3 className="text-base font-bold text-tejas-blue">{payment?.heading ?? "Official payment account"}</h3>
           <p className="mt-2 text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>
@@ -510,7 +458,7 @@ export function SchoolRegistrationForm() {
         </div>
       </Section>
 
-      <Section step="08 · Submit" title="Final submission" icon={Send} hint="Submit once. A repeated submission with the same browser session does not create a second registration.">
+      <Section step="08 · Submit" title="Final submission" icon={Send} hint="Submit once. A repeated submission with the same browser session does not create a second registration. It also does not create a book order.">
         {formErrors.map((error) => (
           <p key={error} className="text-sm text-red-700">{error}</p>
         ))}

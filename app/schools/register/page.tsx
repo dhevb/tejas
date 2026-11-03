@@ -13,7 +13,7 @@ export const metadata = createMetadata({
 const steps = [
   ["1", "School details", "Name, address, principal, and coordinator"],
   ["2", "Student sheet", "Excel or CSV, with a stream for each student"],
-  ["3", "Fee summary", "Server-calculated stream fees and printed books"],
+  ["3", "Fee summary", "Server-calculated Olympiad fee only"],
   ["4", "Submit", "Receive a registration reference"],
 ] as const;
 
@@ -39,7 +39,7 @@ export default function SchoolRegisterPage() {
           </dl>
           <p className="mt-5 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.examDates.en} The examinations are offline, at the participating schools.</p>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.administeredBy.en}. {currentCycle.officeAddress}.</p>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/75">The invitation says the ₹30 retained by the school is for the conduct of the examination, including the supervisor’s remuneration. Printed books are not compulsory. The invitation says the school’s ₹34 share of a printed book is at the school’s discretion.</p>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/75">The invitation says the ₹30 retained by the school is for the conduct of the examination, including the supervisor’s remuneration. This form registers students for the Olympiad only. Printed books and e-books have separate forms and are not added to this fee.</p>
         </div>
       </section>
 

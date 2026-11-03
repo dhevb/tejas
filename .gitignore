@@ -10,3 +10,4 @@ next-env.d.ts
 /data/registrations
 /data/idempotency.json
 /data/payment-config.json
+/data/separate-orders

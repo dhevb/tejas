@@ -17,7 +17,7 @@ export default function ResourcesPage() {
       <PageHero
         eyebrow="Resources"
         title="Learning Resources Hub"
-        subtitle="Only pages and the student-sheet template that exist on this website. A syllabus PDF, mock test, and e-book file are not available."
+        subtitle="Olympiad pages, the printed book order, and e-book registration are listed separately. No e-book file is available for download."
         primaryCta={{ label: "Prepare Hub", href: "/prepare" }}
         secondaryCta={{ label: "Olympiads", href: "/olympiads" }}
       />

@@ -37,28 +37,21 @@ export const programme = {
   ebookInvitationPrice: 49,
   ebookSaleOpen: false,
   ebookAccess:
-    "The invitation says e-book versions will be made available on this website, with a student login fee of ₹49 per student. No e-book file or student login is open yet, and the registration form does not charge ₹49.",
+    "E-book registration is separate from Olympiad registration and from printed-book orders. The fee is ₹49 per student. A login is created only after that payment is verified. No e-book file has been supplied, so online reading cannot open a book yet.",
   registrationShareUse:
     "The invitation says the ₹30 retained by the school is for expenses of conducting the examination, including remuneration for the examination supervisor and other related expenses.",
   bookShareUse:
-    "The invitation says the school's ₹34 share of a printed book stays at the school's discretion. Printed books are not compulsory.",
+    "Printed books are ordered on a separate form. The price is ₹170 per book. The school may retain ₹34, and ₹136 is payable to TEJAS. That share is at the school's discretion. Printed books are not compulsory, and an Olympiad registration does not order them.",
   mockTests:
     "The invitation says the team is working towards making online mock tests available on this website, so students can practise the format before the offline examination. No mock test is open yet.",
   brochureRegistration: "02–22 November 2026",
   brochureResults: "12 January 2027",
-  brochureAwards:
-    "The brochure says outstanding students will receive a gold medal, a silver medal and a bronze medal, and that every participant receives an e-certificate.",
-  awardNote:
-    "The invitation sets the cash prizes. The brochure describes medals and an e-certificate. The documents do not say whether the medals are in addition to the cash prizes.",
-  letterResults:
-    "The invitation says detailed instructions, including the declaration of results, will be communicated separately.",
   posterLaunch:
     "The brochure says the TEJAS poster was launched at the 6th Edition of Shiksha Mahakumbh in 2026.",
   prizes: { first: 3100, second: 2100, third: 1500, consolation: 500, consolationCount: 10 },
   awards:
     "For each class in each of the three streams, the first prize is ₹3,100, the second prize is ₹2,100, the third prize is ₹1,500, and there are ten consolation prizes of ₹500 each. Participating schools with the highest participation receive recognition, and the Principal receives a Certificate of Appreciation.",
-  results:
-    "The brochure prints a tentative results date of 12 January 2027. The invitation says the declaration of results will be communicated separately.",
+  results: "12 January 2027 (Tentative).",
   syllabus: "The syllabus, question count, duration, and section pattern will be announced officially.",
   examProcess: [
     "Examinations are conducted offline at participating schools.",
@@ -94,8 +87,8 @@ export const currentCycle = {
     hi: "गणित 9 दिसंबर 2026, अंग्रेज़ी 10 दिसंबर 2026, फ्यूचर टेक 11 दिसंबर 2026।",
   } satisfies LocalizedString,
   fee: {
-    en: "The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS. Printed books are optional at ₹170 per copy; the school retains ₹34 and remits ₹136.",
-    hi: "शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम है। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है। मुद्रित पुस्तक ₹170 प्रति प्रति, वैकल्पिक; विद्यालय ₹34 रखता है और ₹136 भेजता है।",
+    en: "The Olympiad registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS. Printed books are a separate order at ₹170 per copy; the school may retain ₹34 and remits ₹136. E-book access is a separate registration at ₹49 per student.",
+    hi: "ओलंपियाड शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम है। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है। मुद्रित पुस्तक अलग आदेश है, ₹170 प्रति प्रति। ई-बुक अलग पंजीकरण है, ₹49 प्रति विद्यार्थी।",
   } satisfies LocalizedString,
   felicitation: {
     en: programme.awards,
@@ -103,7 +96,7 @@ export const currentCycle = {
   } satisfies LocalizedString,
   results: {
     en: programme.results,
-    hi: "ब्रोशर में संभावित परिणाम तिथि 12 जनवरी 2027 है। निमंत्रण पत्र कहता है कि परिणाम की घोषणा अलग से बताई जाएगी।",
+    hi: "12 जनवरी 2027 (संभावित)।",
   } satisfies LocalizedString,
   officeAddress: programme.officeAddress,
   convener: programme.convener,

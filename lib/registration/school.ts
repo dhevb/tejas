@@ -1,4 +1,3 @@
-import { EBOOK_SALE_OPEN } from "@/lib/registration/fee";
 import { parseEmail, parseIndianMobile, parsePan, validatePersonName } from "@/lib/registration/fields";
 
 export const SCHOOL_CATEGORIES = ["Government", "Government-aided", "Private", "Other recognised school"] as const;
@@ -96,8 +95,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   const coordinatorDesignation = cleanLine(get("coordinatorDesignation"), 80);
   const previousRaw = get("previousParticipation").trim().toLowerCase();
   const previousReferenceRaw = cleanLine(get("previousReference"), 80);
-  const printedBooks = get("printedBooks").trim().toLowerCase();
-  const ebookAccess = get("ebookAccess").trim().toLowerCase();
 
   if (schoolName.length < 3 || !/\p{L}/u.test(schoolName)) errors.schoolName = "Enter the full registered school name.";
   if (schoolAddress.length < 10) errors.schoolAddress = "Enter the complete school address.";
@@ -128,16 +125,6 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
       errors.previousReference = "The earlier reference can contain letters, numbers, dots, and hyphens.";
     } else previousReference = previousReferenceRaw;
   }
-  if (printedBooks !== "yes" && printedBooks !== "no") errors.printedBooks = "Choose whether the school wants printed books.";
-  let bookQuantity = 0;
-  if (printedBooks === "yes") {
-    const quantity = Number(get("bookQuantity").trim());
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) errors.bookQuantity = "Enter how many printed books are required.";
-    else bookQuantity = quantity;
-  }
-  const ebookChoice: "yes" | "no" = EBOOK_SALE_OPEN && ebookAccess === "yes" ? "yes" : "no";
-  if (EBOOK_SALE_OPEN && ebookAccess !== "yes" && ebookAccess !== "no") errors.ebookAccess = "Choose whether the school wants e-book access.";
-
   if (
     Object.keys(errors).length ||
     !principal.ok ||
@@ -177,9 +164,9 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
       coordinatorDesignation,
       previousParticipation: previousRaw === "yes",
       previousReference,
-      printedBooks: printedBooks as "yes" | "no",
-      bookQuantity,
-      ebookAccess: ebookChoice,
+      printedBooks: "no",
+      bookQuantity: 0,
+      ebookAccess: "no",
       representativeName: null,
       representativeDesignation: null,
     },

@@ -17,6 +17,10 @@ export const programme = {
     { display: "+91 99886 90588", tel: "+919988690588" },
     { display: "+91 79034 31900", tel: "+917903431900" },
   ],
+  officeAddress: "E7, Orchid Towers, Sector-125, SAS Nagar, Punjab 140301",
+  convener: "Sonu Agnihotri Sharma",
+  convenerRole: "Convener, TEJAS Olympiad",
+  guidance: "The brochure says TEJAS is administered by the Department of Holistic Education, a unit of Vidya Bharti Institute of Training and Research Trust, under the guidance and support of Vidya Bharti – North Zone.",
   registrationOpens: "3 November 2026",
   registrationCloses: "20 November 2026",
   streams: [
@@ -32,10 +36,29 @@ export const programme = {
   bookPayable: 136,
   ebookInvitationPrice: 49,
   ebookSaleOpen: false,
+  ebookAccess:
+    "The invitation says e-book versions will be made available on this website, with a student login fee of ₹49 per student. No e-book file or student login is open yet, and the registration form does not charge ₹49.",
+  registrationShareUse:
+    "The invitation says the ₹30 retained by the school is for expenses of conducting the examination, including remuneration for the examination supervisor and other related expenses.",
+  bookShareUse:
+    "The invitation says the school's ₹34 share of a printed book stays at the school's discretion. Printed books are not compulsory.",
+  mockTests:
+    "The invitation says the team is working towards making online mock tests available on this website, so students can practise the format before the offline examination. No mock test is open yet.",
+  brochureRegistration: "02–22 November 2026",
+  brochureResults: "12 January 2027",
+  brochureAwards:
+    "The brochure says outstanding students will receive a gold medal, a silver medal and a bronze medal, and that every participant receives an e-certificate.",
+  awardNote:
+    "The invitation sets the cash prizes. The brochure describes medals and an e-certificate. The documents do not say whether the medals are in addition to the cash prizes.",
+  letterResults:
+    "The invitation says detailed instructions, including the declaration of results, will be communicated separately.",
+  posterLaunch:
+    "The brochure says the TEJAS poster was launched at the 6th Edition of Shiksha Mahakumbh in 2026.",
   prizes: { first: 3100, second: 2100, third: 1500, consolation: 500, consolationCount: 10 },
   awards:
     "For each class in each of the three streams, the first prize is ₹3,100, the second prize is ₹2,100, the third prize is ₹1,500, and there are ten consolation prizes of ₹500 each. Participating schools with the highest participation receive recognition, and the Principal receives a Certificate of Appreciation.",
-  results: "A results date has not been announced.",
+  results:
+    "The brochure prints a tentative results date of 12 January 2027. The invitation says the declaration of results will be communicated separately.",
   syllabus: "The syllabus, question count, duration, and section pattern will be announced officially.",
   examProcess: [
     "Examinations are conducted offline at participating schools.",
@@ -80,8 +103,11 @@ export const currentCycle = {
   } satisfies LocalizedString,
   results: {
     en: programme.results,
-    hi: "परिणाम की तिथि घोषित नहीं हुई है।",
+    hi: "ब्रोशर में संभावित परिणाम तिथि 12 जनवरी 2027 है। निमंत्रण पत्र कहता है कि परिणाम की घोषणा अलग से बताई जाएगी।",
   } satisfies LocalizedString,
+  officeAddress: programme.officeAddress,
+  convener: programme.convener,
+  convenerRole: programme.convenerRole,
   administeredBy: {
     en: `${programme.organiser}, ${programme.affiliation}`,
     hi: "समग्र शिक्षा विभाग (DHE), विद्या भारती इंस्टिट्यूट ऑफ ट्रेनिंग एंड रिसर्च ट्रस्ट (VBITR), कुरुक्षेत्र",

@@ -7,7 +7,7 @@ import { olympiads } from "@/data/olympiads";
 
 export const metadata = createMetadata({
   title: "Mock Tests",
-  description: "No mock test is published for TEJAS Olympiad 2026–27. The December examinations are offline at participating schools.",
+  description: "The invitation says online mock tests are being prepared for TEJAS Olympiad 2026–27. None is open. The December examinations are offline.",
   path: "/prepare/mock-tests",
 });
 
@@ -17,7 +17,7 @@ export default function MockTestsPage() {
       <PageHero
         eyebrow="Mock Tests"
         title="Online mock tests are not open yet"
-        subtitle="No mock test is published. This page does not start a test, show a score, or run an examination. The examinations on 9, 10, and 11 December 2026 are offline, at the participating schools."
+        subtitle="The invitation dated 31 October 2026 says the team is working towards making online mock tests available on this website. This page does not start a test, show a score, or run an examination. The examinations on 9, 10, and 11 December 2026 are offline, at the participating schools."
         primaryCta={{ label: "Prepare Hub", href: "/prepare" }}
       />
       <section className="py-16 md:py-24">
@@ -25,7 +25,7 @@ export default function MockTestsPage() {
           <FadeIn>
             <SectionHeader
               title="Choose Your Subject"
-              subtitle="Subject pages describe the streams. Online mock tests are being worked on and are not available here."
+              subtitle="Subject pages describe the streams. The invitation says mock tests are being prepared. None is available here."
             />
           </FadeIn>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

@@ -38,7 +38,8 @@ export default function SchoolRegisterPage() {
             </div>
           </dl>
           <p className="mt-5 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.examDates.en} The examinations are offline, at the participating schools.</p>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.administeredBy.en}.</p>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/75">{currentCycle.administeredBy.en}. {currentCycle.officeAddress}.</p>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/75">The invitation says the ₹30 retained by the school is for the conduct of the examination, including the supervisor’s remuneration. Printed books are not compulsory. The invitation says the school’s ₹34 share of a printed book is at the school’s discretion.</p>
         </div>
       </section>
 

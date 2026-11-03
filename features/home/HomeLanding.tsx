@@ -61,7 +61,7 @@ const steps = [
   { n: "2", title: "Student sheet", text: "The school uploads the student sheet and chooses a stream for each student." },
   { n: "3", title: "Preparation", text: "A syllabus and sample papers have not been published. Printed books are optional. This website does not start an online test." },
   { n: "4", title: "Examination", text: "Mathematics, English, and Future Tech are held offline at the school on 9, 10, and 11 December 2026." },
-  { n: "5", title: "Results", text: "A results date has not been announced." },
+  { n: "5", title: "Results", text: "The brochure prints a tentative date of 12 January 2027. The invitation says the declaration will be communicated separately." },
 ] as const;
 
 const learning = [
@@ -328,6 +328,7 @@ export function HomeLanding() {
             <Link href="/research" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Research</Link>
             <Link href="/innovation" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Innovation</Link>
             <Link href="/editions/tejas-2026-27" className="font-semibold text-tejas-blue hover:text-tejas-saffron">This edition</Link>
+            <Link href="/documents" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Official documents</Link>
             <Link href="/about" className="font-semibold text-tejas-blue hover:text-tejas-saffron">About</Link>
             <Link href="/contact" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Contact</Link>
           </nav>

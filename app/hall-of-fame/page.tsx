@@ -21,7 +21,8 @@ export default function HallOfFamePage() {
       <PageHero
         eyebrow="Legacy Archive"
         title="Hall of Fame"
-        subtitle="These names are from the 1st DHE English Olympiad, examined on 13–16 October 2025. They are not TEJAS Olympiad 2026–27 results."
+        subtitle="These overall level results are from the 2025 report of the 1st DHE English Olympiad, examined on 13–16 October 2025. School-wise lists are in that report. They are not TEJAS Olympiad 2026–27 results."
+        primaryCta={{ label: "2025 report", href: "/documents/dhe-english-olympiad-2025-brief-report.pdf" }}
       />
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

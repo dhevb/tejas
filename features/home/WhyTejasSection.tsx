@@ -6,51 +6,51 @@ import { FadeIn } from "@/components/shared/FadeIn";
 const differentiators = [
   {
     icon: BookOpen,
-    title: "Bharatiya Knowledge + Modern Education",
-    titleHi: "भारतीय ज्ञान + आधुनिक शिक्षा",
-    description: "Contemporary excellence rooted in ethical values, culture, character, and life skills.",
-  },
-  {
-    icon: Brain,
-    title: "Concept-Based Assessment",
-    titleHi: "अवधारणा-आधारित मूल्यांकन",
-    description: "Logical reasoning, creativity, problem-solving — not rote memorization.",
-  },
-  {
-    icon: Shield,
-    title: "Secure Online Examinations",
-    titleHi: "सुरक्षित ऑनलाइन परीक्षा",
-    description: "Technology-enabled integrity with transparent, fair evaluation processes.",
-  },
-  {
-    icon: Target,
-    title: "Comprehensive Preparation",
-    titleHi: "समग्र तैयारी",
-    description: "Mock tests, sample papers, concept videos, and performance materials.",
-  },
-  {
-    icon: Lightbulb,
-    title: "Innovation & Entrepreneurship",
-    titleHi: "नवाचार और उद्यमिता",
-    description: "Inspiring job creators — not merely job seekers.",
-  },
-  {
-    icon: Users,
-    title: "National Movement",
-    titleHi: "राष्ट्रीय आंदोलन",
-    description: "Beyond examinations — talent, research, innovation, and nation building.",
+    title: "English and Mathematics",
+    titleHi: "अंग्रेज़ी और गणित",
+    description: "Classes III–X. The syllabus has not been published.",
   },
   {
     icon: Cpu,
-    title: "Future-Ready Ecosystem",
-    titleHi: "भविष्य-तैयार पारिस्थितिकी तंत्र",
-    description: "AI learning, digital credentials, and research pathways — coming soon.",
+    title: "Future Tech",
+    titleHi: "फ्यूचर टेक",
+    description: "Classes VI–X only. It is an offline OMR examination, not a computer-based test.",
+  },
+  {
+    icon: Shield,
+    title: "Offline examinations",
+    titleHi: "ऑफ़लाइन परीक्षा",
+    description: "Question papers and OMR sheets are sent to the school. Completed sheets are couriered the same day.",
+  },
+  {
+    icon: Target,
+    title: "Preparation material",
+    titleHi: "तैयारी सामग्री",
+    description: "Sample papers, mock tests, and videos have not been published.",
   },
   {
     icon: Sparkles,
-    title: "Bal Shodh Patrika",
-    titleHi: "बाल शोध पत्रिका",
-    description: "Children's research journal nurturing curiosity from Classes 1–12.",
+    title: "Announced prizes",
+    titleHi: "घोषित पुरस्कार",
+    description: "₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500 in each class of each stream.",
+  },
+  {
+    icon: Users,
+    title: "Schools register",
+    titleHi: "विद्यालय पंजीकरण",
+    description: "Registration opens on 3 November 2026 and closes on 20 November 2026.",
+  },
+  {
+    icon: Lightbulb,
+    title: "School share",
+    titleHi: "विद्यालय हिस्सा",
+    description: "The school collects ₹150, retains ₹30, and remits ₹120. Printed books are ₹170, with ₹34 retained and ₹136 remitted.",
+  },
+  {
+    icon: Brain,
+    title: "Results",
+    titleHi: "परिणाम",
+    description: "A results date has not been announced.",
   },
 ];
 
@@ -62,8 +62,8 @@ export function WhyTejasSection() {
         <FadeIn>
           <SectionHeader
             eyebrow="Why TEJAS"
-            title="Not Just an Olympiad — a National Movement"
-            subtitle="Gurukul clarity × Nalanda wisdom × modern technology — for Bharat's next generation."
+            title="TEJAS Olympiad 2026–27"
+            subtitle="Talent Exploration for Junior Aspiring Scholars. Organised by the Department of Holistic Education."
           />
         </FadeIn>
         <FeatureGrid items={differentiators} columns={4} />

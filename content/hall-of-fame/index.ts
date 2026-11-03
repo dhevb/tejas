@@ -27,7 +27,7 @@ export const hallOfFameRegistry: HallOfFameFullEntry[] = [
 ];
 
 export const hallOfFameCategories = [
-  { id: "national", label: { en: "National Toppers", hi: "राष्ट्रीय शीर्ष achievers" } },
+  { id: "national", label: { en: "1st DHE English Olympiad 2025 — level toppers", hi: "प्रथम DHE अंग्रेज़ी ओलंपियाड 2025" } },
   { id: "state", label: { en: "State Toppers", hi: "राज्य शीर्ष achievers" } },
   { id: "school", label: { en: "School Excellence", hi: "विद्यालय उत्कृष्टता" } },
   { id: "teacher", label: { en: "Teacher Excellence", hi: "शिक्षक उत्कृष्टता" } },

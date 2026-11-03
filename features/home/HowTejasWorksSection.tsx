@@ -8,22 +8,22 @@ const steps = [
   {
     year: 1,
     title: "Discover",
-    description: "Register through school or individually. TEJAS identifies talent across every district of Bharat.",
+    description: "A school registers its students. There is no individual online entry.",
   },
   {
     year: 2,
     title: "Prepare",
-    description: "Access mock tests, practice sets, videos, and olympiad books — built for conceptual mastery.",
+    description: "Sample papers and mock tests have not been published. Printed books are optional.",
   },
   {
     year: 3,
     title: "Assess",
-    description: "Fair, analytical assessments measuring reasoning, creativity, and real-world application.",
+    description: "Examinations are offline at the participating school, using question papers and OMR sheets.",
   },
   {
     year: 4,
     title: "Celebrate",
-    description: "National recognition, scholarships, Hall of Fame, and pathways to research & innovation.",
+    description: "Class-wise cash prizes have been announced. A results date has not been announced. No scholarship has been announced.",
   },
 ];
 
@@ -35,7 +35,7 @@ export function HowTejasWorksSection() {
           <SectionHeader
             eyebrow="How It Works"
             title="Your TEJAS Journey"
-            subtitle="From discovery to national recognition — a complete talent development pathway."
+            subtitle="School registration, an offline examination, and announced class-wise prizes."
           />
         </FadeIn>
         <Timeline

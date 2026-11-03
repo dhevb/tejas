@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { createMetadata } from "@/config/seo";
 import { currentCycle } from "@/content/current-cycle";
 import { SchoolRegistrationForm } from "./school-registration-form";
@@ -25,7 +25,7 @@ export default function SchoolRegisterPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-tejas-gold">TEJAS Olympiad 2026–27</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">School Registration</h1>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/85">
-            Empowering students to discover their potential and explore new opportunities.
+            Schools register their students. The school collects ₹150 per student per stream, retains ₹30, and remits ₹120 to TEJAS.
           </p>
           <dl className="mt-8 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
@@ -84,10 +84,6 @@ export default function SchoolRegisterPage() {
               <li className="flex items-start gap-2">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-tejas-saffron" aria-hidden />
                 <a className="break-all font-semibold text-tejas-blue underline" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-tejas-saffron" aria-hidden />
-                <span>{currentCycle.address}</span>
               </li>
             </ul>
           </div>

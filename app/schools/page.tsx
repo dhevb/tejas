@@ -5,7 +5,7 @@ import { FadeIn } from "@/components/shared/FadeIn";
 
 export const metadata = createMetadata({
   title: "For Schools",
-  description: "Partner with TEJAS — school registration, dashboards, and recognition tiers.",
+  description: "School registration for TEJAS Olympiad 2026–27. Schools collect ₹150 per student per stream, retain ₹30, and remit ₹120.",
   path: "/schools",
 });
 
@@ -14,7 +14,7 @@ export default function SchoolsPage() {
     <>
       <PageHero
         eyebrow="Schools"
-        title="School Partnership Program"
+        title="For schools"
         subtitle="Register the school for TEJAS Olympiad 2026–27 and upload the student sheet."
         primaryCta={{ label: "School registration", href: "/schools/register" }}
       />

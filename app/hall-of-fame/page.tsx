@@ -1,7 +1,6 @@
 import { createMetadata } from "@/config/seo";
 import { PageHero } from "@/components/shared/PageHero";
 import { HallOfFameCard } from "@/components/shared/HallOfFameCard";
-import { CertificatePreview } from "@/components/shared/CertificatePreview";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { ComingSoonCard } from "@/components/shared/ComingSoonCard";
@@ -9,7 +8,7 @@ import { hallOfFameCategories, getHallOfFameByCategory } from "@/data/hall-of-fa
 
 export const metadata = createMetadata({
   title: "Hall of Fame",
-  description: "Bharat's National Talent Gallery — national champions, school excellence, innovation and research awards. Permanent legacy archive of TEJAS.",
+  description: "Recorded results of the 1st DHE English Olympiad, 2025. TEJAS Olympiad 2026–27 results have not been published.",
   path: "/hall-of-fame",
 });
 
@@ -22,14 +21,10 @@ export default function HallOfFamePage() {
       <PageHero
         eyebrow="Legacy Archive"
         title="Hall of Fame"
-        subtitle="Bharat's National Talent Gallery — permanent recognition for meritorious students, schools, and future innovators."
+        subtitle="These names are from the 1st DHE English Olympiad, examined on 13–16 October 2025. They are not TEJAS Olympiad 2026–27 results."
       />
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <CertificatePreview studentName="Kanav Goyal" rank="Overall 1st — Level D, English Olympiad 2025" />
-          </FadeIn>
-
           {populated.map((cat, catIndex) => {
             const entries = getHallOfFameByCategory(cat.id);
             return (
@@ -63,9 +58,9 @@ export default function HallOfFamePage() {
               <FadeIn delay={0.1}>
                 <SectionHeader
                   className="mt-20"
-                  eyebrow="Growing Archive"
-                  title="Future Categories"
-                  subtitle="Populated as TEJAS Olympiad cycles expand nationwide."
+                  eyebrow="2026–27"
+                  title="No winners published"
+                  subtitle="No 2026–27 winners are listed. These categories have not been awarded."
                 />
               </FadeIn>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -74,7 +69,7 @@ export default function HallOfFamePage() {
                     key={cat.id}
                     title={cat.label.en}
                     titleHi={cat.label.hi}
-                    description="Winners from upcoming TEJAS editions will be permanently archived here."
+                    description="Nothing has been announced for this category in TEJAS Olympiad 2026–27."
                   />
                 ))}
               </div>

@@ -25,7 +25,7 @@ export function FutureModulesSection() {
                 <ComingSoonCard
                   title={mod.label}
                   titleHi={mod.labelHi}
-                  description={`${mod.label} will integrate seamlessly into the TEJAS platform.`}
+                  description="This has not been announced for TEJAS Olympiad 2026–27."
                   icon={<Icon className="h-5 w-5" aria-hidden />}
                 />
               </FadeIn>

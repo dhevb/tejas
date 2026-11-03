@@ -19,7 +19,7 @@ export default function OlympiadsPage() {
     <>
       <PageHero
         eyebrow="Olympiads"
-        title="National Olympiad Series"
+        title="TEJAS Olympiad 2026–27"
         subtitle="TEJAS English and Mathematics for Classes III–X. TEJAS Future Tech for Classes VI–X. Registration 3–20 November 2026."
         primaryCta={{ label: "School registration", href: "/schools/register" }}
         secondaryCta={{ label: "Prepare Hub", href: "/prepare" }}
@@ -44,9 +44,9 @@ export default function OlympiadsPage() {
           <FadeIn delay={0.1}>
             <SectionHeader
               className="mt-20"
-              eyebrow="Roadmap"
-              title="Expanding Ecosystem"
-              subtitle="Science, Hindi, Sanskrit, GK, AI, Coding, Innovation — add data, not redesign."
+              eyebrow="Not this edition"
+              title="Not part of 2026–27"
+              subtitle="These subjects have not been announced for TEJAS Olympiad 2026–27. They are not open for registration."
             />
           </FadeIn>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

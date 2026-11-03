@@ -9,21 +9,21 @@ const items = [
   {
     icon: FlaskConical,
     title: "Research",
-    description: "Bal Shodh Patrika — national student research journal for Classes 9–12, nurturing inquiry and scientific writing.",
+    description: "No research journal or paper from TEJAS Olympiad 2026–27 is published on this website.",
     href: "/resources",
     color: "#047857",
   },
   {
     icon: Lightbulb,
     title: "Innovation",
-    description: "Student projects, design thinking, and innovation awards aligned with Viksit Bharat 2047 and DHE's innovation cell.",
+    description: "No innovation award has been announced for TEJAS Olympiad 2026–27.",
     href: "/innovation",
     color: "#8A5A10",
   },
   {
     icon: BookOpen,
     title: "Publications",
-    description: "Research papers, teacher toolkits, and knowledge compendiums from Olympiad Cell and partner institutions.",
+    description: "No teacher toolkit or knowledge compendium has been published for this edition.",
     href: "/research",
     color: "#1A2B5D",
   },
@@ -36,7 +36,7 @@ export function ResearchInnovationSection() {
         <SectionHeader
           eyebrow="Beyond Olympiads"
           title="Research & Innovation"
-          subtitle="TEJAS nurtures researchers, innovators, and young authors — not just test-takers."
+          subtitle="This website does not publish a research journal, an innovation award, or a toolkit for 2026–27."
         />
         <BentoGrid>
           {items.map((item) => {

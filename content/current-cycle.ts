@@ -1,25 +1,70 @@
 import type { LocalizedString } from "./types";
 
-/** Current TEJAS Olympiad 2026–27, as printed in the approved brochure. */
+/**
+ * Approved facts for TEJAS Olympiad 2026–27.
+ * Source: the invitation letter dated 31 October 2026 and the latest approved programme details.
+ * Historical 2025 figures stay in `pastEnglishOlympiad2025` and must not be presented as this edition.
+ * Do not add a date, fee, eligibility rule, award, contact, syllabus, or result that is not recorded here.
+ */
+export const programme = {
+  name: "TEJAS Olympiad 2026–27",
+  fullForm: "Talent Exploration for Junior Aspiring Scholars",
+  tagline: "Find your spark...",
+  organiser: "Department of Holistic Education (DHE)",
+  affiliation: "Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra",
+  email: "tejas@dhe.org.in",
+  phones: [
+    { display: "+91 99886 90588", tel: "+919988690588" },
+    { display: "+91 79034 31900", tel: "+917903431900" },
+  ],
+  registrationOpens: "3 November 2026",
+  registrationCloses: "20 November 2026",
+  streams: [
+    { id: "mathematics", name: "TEJAS Mathematics", classes: "Classes III–X", examDate: "9 December 2026" },
+    { id: "english", name: "TEJAS English", classes: "Classes III–X", examDate: "10 December 2026" },
+    { id: "technology", name: "TEJAS Future Tech", classes: "Classes VI–X", examDate: "11 December 2026" },
+  ],
+  registrationGross: 150,
+  registrationSchoolShare: 30,
+  registrationPayable: 120,
+  bookGross: 170,
+  bookSchoolShare: 34,
+  bookPayable: 136,
+  ebookInvitationPrice: 49,
+  ebookSaleOpen: false,
+  prizes: { first: 3100, second: 2100, third: 1500, consolation: 500, consolationCount: 10 },
+  awards:
+    "For each class in each of the three streams, the first prize is ₹3,100, the second prize is ₹2,100, the third prize is ₹1,500, and there are ten consolation prizes of ₹500 each. Participating schools with the highest participation receive recognition, and the Principal receives a Certificate of Appreciation.",
+  results: "A results date has not been announced.",
+  syllabus: "The syllabus, question count, duration, and section pattern will be announced officially.",
+  examProcess: [
+    "Examinations are conducted offline at participating schools.",
+    "Question papers and OMR sheets are dispatched to schools in advance.",
+    "Completed OMR sheets are couriered on the same day to the designated evaluation centre.",
+    "The evaluation centre address is communicated through detailed instructions.",
+  ],
+} as const;
+
+/** Current TEJAS Olympiad 2026–27, drawn from the approved programme record above. */
 export const currentCycle = {
   editionSlug: "tejas-2026-27",
   editionName: {
-    en: "TEJAS Olympiad 2026–27",
+    en: programme.name,
     hi: "TEJAS ओलंपियाड 2026–27",
   } satisfies LocalizedString,
   editionYear: 2026,
   independenceNote: {
-    en: "TEJAS Olympiad 2026–27 is conducted in the 6th Edition of Shiksha Mahakumbh. It is organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.",
-    hi: "TEJAS ओलंपियाड 2026–27 शिक्षा महाकुंभ के 6वें संस्करण में आयोजित है। आयोजक समग्र शिक्षा विभाग (DHE), विद्या भारती इंस्टिट्यूट ऑफ ट्रेनिंग एंड रिसर्च ट्रस्ट (VBITR), कुरुक्षेत्र है।",
+    en: `${programme.name} is organised by the ${programme.organiser}, ${programme.affiliation}. The 1st DHE English Olympiad (2025) was a separate examination.`,
+    hi: "TEJAS ओलंपियाड 2026–27 का आयोजन समग्र शिक्षा विभाग (DHE), विद्या भारती इंस्टिट्यूट ऑफ ट्रेनिंग एंड रिसर्च ट्रस्ट (VBITR), कुरुक्षेत्र करता है। प्रथम DHE अंग्रेज़ी ओलंपियाड (2025) एक अलग परीक्षा थी।",
   } satisfies LocalizedString,
   activeStreams: ["english", "mathematics", "technology"] as const,
   grades: {
-    en: "Classes III–X",
-    hi: "कक्षा III–X",
+    en: "TEJAS English and TEJAS Mathematics: Classes III–X. TEJAS Future Tech: Classes VI–X.",
+    hi: "TEJAS अंग्रेज़ी और TEJAS गणित: कक्षा III–X। TEJAS फ्यूचर टेक: कक्षा VI–X।",
   } satisfies LocalizedString,
   registrationStatus: {
-    en: "Registration opens on 3 November 2026 and closes on 20 November 2026.",
-    hi: "पंजीकरण 3 नवंबर 2026 से 20 नवंबर 2026 तक खुला है।",
+    en: `Registration opens on ${programme.registrationOpens} and closes on ${programme.registrationCloses}.`,
+    hi: "पंजीकरण 3 नवंबर 2026 को खुलता है और 20 नवंबर 2026 को बंद होता है।",
   } satisfies LocalizedString,
   examDates: {
     en: "Mathematics 9 December 2026, English 10 December 2026, Future Tech 11 December 2026.",
@@ -30,35 +75,28 @@ export const currentCycle = {
     hi: "शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम है। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है। मुद्रित पुस्तक ₹170 प्रति प्रति, वैकल्पिक; विद्यालय ₹34 रखता है और ₹136 भेजता है।",
   } satisfies LocalizedString,
   felicitation: {
-    en: "Results are placed in February 2027. A declaration date has not been fixed.",
-    hi: "परिणाम फरवरी 2027 में रखे गए हैं। घोषणा की तारीख तय नहीं हुई है।",
+    en: programme.awards,
+    hi: "प्रत्येक स्ट्रीम की प्रत्येक कक्षा में प्रथम पुरस्कार ₹3,100, द्वितीय ₹2,100, तृतीय ₹1,500, और दस सांत्वना पुरस्कार ₹500 प्रत्येक। सर्वाधिक भागीदारी वाले विद्यालयों को मान्यता मिलती है और प्रधानाचार्य को प्रशस्ति पत्र मिलता है।",
+  } satisfies LocalizedString,
+  results: {
+    en: programme.results,
+    hi: "परिणाम की तिथि घोषित नहीं हुई है।",
   } satisfies LocalizedString,
   administeredBy: {
-    en: "Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra",
+    en: `${programme.organiser}, ${programme.affiliation}`,
     hi: "समग्र शिक्षा विभाग (DHE), विद्या भारती इंस्टिट्यूट ऑफ ट्रेनिंग एंड रिसर्च ट्रस्ट (VBITR), कुरुक्षेत्र",
   } satisfies LocalizedString,
-  phones: [
-    { display: "+91 99886 90588", tel: "+919988690588" },
-    { display: "+91 79034 31900", tel: "+917903431900" },
-  ],
-  convener: {
-    name: "Sonu Agnihotri Sharma",
-    titles: ["Convener, TEJAS Olympiad", "President, Department of Holistic Education"],
-    phoneDisplay: "+91 99886 90588",
-    phoneTel: "+919988690588",
-  },
-  address: "E7, Orchid Towers, Sector-125, SAS Nagar, Punjab 140301",
-  academicEnquiries: "tejas@dhe.org.in",
-  olympiadEmail: "tejas@dhe.org.in",
+  phones: programme.phones,
+  academicEnquiries: programme.email,
+  olympiadEmail: programme.email,
   shikshaMahakumbhReference: "https://www.shikshamahakumbh.com",
-  shikshaMahakumbhOlympiadReference: "https://www.shikshamahakumbh.com",
   registrationHref: "/schools/register",
 } as const;
 
-/** Edition label used in sample papers and calendars. */
-export const CURRENT_EDITION_LABEL = "TEJAS Olympiad 2026–27";
+/** Edition label used where a current-edition name is required. */
+export const CURRENT_EDITION_LABEL = programme.name;
 
-/** 1st DHE English Olympiad — past cycle under Shiksha Mahakumbh (2025 report). */
+/** 1st DHE English Olympiad — past cycle. These figures are 2025 only. */
 export const pastEnglishOlympiad2025 = {
   name: {
     en: "1st DHE English Olympiad",
@@ -67,7 +105,7 @@ export const pastEnglishOlympiad2025 = {
   smkEdition: 5,
   underShikshaMahakumbh: {
     en: "Conducted under the aegis of Shiksha Mahakumbh 5th Edition",
-    hi: "शिक्षा महाकुंभ 5th Edition की छत्रछाया में आयोजित",
+    hi: "शिक्षा महाकुंभ के 5वें संस्करण के अंतर्गत आयोजित",
   } satisfies LocalizedString,
   examDates: {
     en: "13–16 October 2025",
@@ -81,7 +119,7 @@ export const pastEnglishOlympiad2025 = {
   totalSchools: 25,
   format: {
     en: "MCQ format using OMR sheets",
-    hi: "OMR शीट द्वारा MCQ प्रारूप",
+    hi: "OMR शीट पर MCQ प्रारूप",
   } satisfies LocalizedString,
   partner: {
     en: "English Connection — language enhancement platform",
@@ -89,11 +127,11 @@ export const pastEnglishOlympiad2025 = {
   } satisfies LocalizedString,
   overallFelicitation: {
     en: "1 November 2025 at Shiksha Mahakumbh 5th Edition, NIPER Mohali",
-    hi: "1 नवंबर 2025 — शिक्षा महाकुंभ 5th Edition, NIPER मोहाली",
+    hi: "1 नवंबर 2025 — शिक्षा महाकुंभ 5वाँ संस्करण, NIPER मोहाली",
   } satisfies LocalizedString,
   schoolFelicitation: {
     en: "13 February 2026 at ISTC Auditorium, CSIR–CSIO, Chandigarh",
-    hi: "13 फ़रवरी 2026 — ISTC Auditorium, CSIR–CSIO, Chandigarh",
+    hi: "13 फ़रवरी 2026 — ISTC Auditorium, CSIR–CSIO, चंडीगढ़",
   } satisfies LocalizedString,
   levels: [
     { level: "A", classes: { en: "Class I–II", hi: "कक्षा I–II" } },

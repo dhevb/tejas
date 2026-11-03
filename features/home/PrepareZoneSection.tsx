@@ -13,7 +13,7 @@ export function PrepareZoneSection() {
           <SectionHeader
             eyebrow="Prepare"
             title="Your Preparation Hub"
-            subtitle="Mock tests, practice sets, video learning, and more — everything you need to excel."
+            subtitle="Sample papers and mock tests have not been published for TEJAS Olympiad 2026–27."
             className="[&_h2]:text-white [&_p]:text-white/70"
           />
         </FadeIn>

@@ -32,7 +32,7 @@ export function ComingSoonCard({
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-tejas-blue/10 text-tejas-blue">
             {icon ?? <Sparkles className="h-5 w-5" aria-hidden />}
           </div>
-          <Badge variant="outline">Coming Soon</Badge>
+          <Badge variant="outline">Not announced</Badge>
         </div>
         <h3 className="mt-4 font-bold text-tejas-ink">{title}</h3>
         {titleHi && <p className="font-hindi text-sm text-tejas-muted">{titleHi}</p>}

@@ -129,7 +129,7 @@ Olympiad Cell
 Department of Holistic Education`;
 
   try {
-    const res = await fetch("https://formsubmit.co/ajax/olympiad@shikshamahakumbh.com", {
+    const res = await fetch("https://formsubmit.co/ajax/tejas@dhe.org.in", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
@@ -169,7 +169,7 @@ async function main() {
 
   console.log("\n4. Beta invite email to Olympiad Cell…");
   const invite = await sendBetaInviteEmail();
-  console.log(`   ${invite.ok ? "✓" : "✗"} FormSubmit → olympiad@shikshamahakumbh.com (${invite.status ?? invite.error})`);
+  console.log(`   ${invite.ok ? "✓" : "✗"} FormSubmit → tejas@dhe.org.in (${invite.status ?? invite.error})`);
 
   const report = `# TEJAS Post-Launch Report
 

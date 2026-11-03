@@ -73,7 +73,7 @@ export function OlympiadCard({
         {status === "active" ? (
           <Badge variant="success">Active</Badge>
         ) : status === "coming-soon" ? (
-          <Badge variant="outline">Coming Soon</Badge>
+          <Badge variant="outline">Not announced</Badge>
         ) : registrationOpen ? (
           <Badge variant="success">Open</Badge>
         ) : null}

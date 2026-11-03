@@ -43,7 +43,7 @@ export function RegisterCTASection() {
           href="/contact"
           className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-tejas-blue hover:underline"
         >
-          Contact Olympiad Cell
+          Contact tejas@dhe.org.in
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>

@@ -6,10 +6,10 @@ interface TrustBannerProps {
 }
 
 const items = [
-  { icon: Shield, label: "DHE Olympiad Cell", desc: "Official platform" },
-  { icon: Lock, label: "Secure Assessments", desc: "Technology-enabled integrity" },
-  { icon: Eye, label: "Transparent Process", desc: "Fair & credible evaluation" },
-  { icon: Award, label: "National Recognition", desc: "Verified credentials" },
+  { icon: Shield, label: "Department of Holistic Education", desc: "Organiser, with VBITR, Kurukshetra" },
+  { icon: Lock, label: "Offline OMR", desc: "At the participating school" },
+  { icon: Eye, label: "₹120 remitted", desc: "School retains ₹30 of ₹150" },
+  { icon: Award, label: "Announced prizes", desc: "₹3,100, ₹2,100, ₹1,500, and ₹500" },
 ];
 
 export function TrustBanner({ className }: TrustBannerProps) {

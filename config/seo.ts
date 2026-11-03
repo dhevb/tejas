@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { brand } from "@/design-system/tokens";
 
 const defaultDescription =
-  "TEJAS — Bharat's National Talent Development Ecosystem by the Department of Holistic Education. Olympiads, assessments, scholarships, and learning pathways for students across Bharat.";
+  "TEJAS Olympiad 2026–27 — Talent Exploration for Junior Aspiring Scholars. Organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.";
 
 export const siteConfig = {
   name: brand.name,
@@ -68,8 +68,7 @@ export function createMetadata({
       "national olympiad",
       "Department of Holistic Education",
       "student olympiad",
-      "mock tests",
-      "scholarships",
+      "school olympiad",
     ],
   };
 }

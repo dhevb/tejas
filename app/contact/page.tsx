@@ -7,7 +7,7 @@ import { currentCycle } from "@/content/current-cycle";
 
 export const metadata = createMetadata({
   title: "Contact",
-  description: "Contact TEJAS — Bharat's National Talent Development Ecosystem.",
+  description: "Contact TEJAS Olympiad 2026–27 at tejas@dhe.org.in or the published phone numbers.",
   path: "/contact",
 });
 
@@ -17,7 +17,7 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Contact"
         title="Get in Touch"
-        subtitle="Questions about olympiads, school partnerships, or the TEJAS platform."
+        subtitle="Write to tejas@dhe.org.in or call the published numbers. This page does not send a form."
       />
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -40,7 +40,6 @@ export default function ContactPage() {
                         <a href={`tel:${phone.tel}`}>{phone.display}</a>
                       </p>
                     ))}
-                    <p className="text-sm text-tejas-muted">{currentCycle.convener.name}, {currentCycle.convener.titles.join("; ")}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -48,7 +47,6 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-bold text-tejas-ink">Organisation</h3>
                     <p className="text-tejas-muted">{currentCycle.administeredBy.en}</p>
-                    <p className="text-sm text-tejas-muted">{currentCycle.address}</p>
                   </div>
                 </div>
               </div>
@@ -56,7 +54,7 @@ export default function ContactPage() {
             <FadeIn delay={0.1}>
               <form className="rounded-2xl border border-stone-200 bg-white p-8 shadow-tejas space-y-4">
                 <h2 className="text-xl font-bold text-tejas-ink">Send a Message</h2>
-                <p className="text-sm text-tejas-muted">Form submission is disabled in Phase 0.</p>
+                <p className="text-sm text-tejas-muted">This form does not send messages. Write to tejas@dhe.org.in.</p>
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-tejas-ink">Name</label>
                   <input id="name" type="text" disabled className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2 opacity-60" />
@@ -70,7 +68,7 @@ export default function ContactPage() {
                   <textarea id="message" rows={4} disabled className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2 opacity-60" />
                 </div>
                 <button type="button" disabled className="w-full rounded-xl bg-tejas-saffron/50 py-3 text-white font-medium cursor-not-allowed">
-                  Send Message — Coming Soon
+                  This form is not open
                 </button>
               </form>
             </FadeIn>

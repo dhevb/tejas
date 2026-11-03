@@ -10,7 +10,7 @@ export const dheEnglish2025Edition: EditionFullContent = {
     hi: "प्रथम पहल — 10,040 छात्र, 25 विद्यालय",
   },
   bio: {
-    en: "The first-ever DHE English Olympiad was organized under the aegis of the 5th Edition of Shiksha Mahakumbh by Olympiad Cell of Department of Holistic Education in collaboration with English Connection. Conducted 13–16 October 2025 across 25 schools of Punjab, Haryana and Chandigarh with 10,040+ students from Classes I–X.",
+    en: "The brochure says the first DHE English Olympiad was organised by the Department of Holistic Education under Shiksha Mahakumbh 5th Edition, in collaboration with NIPER Mohali and English Connection. The 2025 report records 10,040 students from Classes I–X across 25 schools in Punjab, Haryana and Chandigarh, examined on 13–16 October 2025 in an OMR-based MCQ format at five levels.",
     hi: "13–16 अक्टूबर 2025 को पंजाब, हरियाणा और चंडीगढ़ के 25 विद्यालयों में 10,040+ छात्रों के साथ आयोजित प्रथम DHE अंग्रेज़ी ओलंपियाड।",
   },
   theme: {
@@ -117,10 +117,10 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     hi: "पंजीकरण 3–20 नवंबर 2026। परीक्षाएँ 9, 10 और 11 दिसंबर 2026।",
   },
   learningValues: [
-    { en: "Scientific temper and curiosity", hi: "वैज्ञानिक दृष्टिकोण और जिज्ञासा" },
-    { en: "Innovation for national development", hi: "राष्ट्रीय विकास के लिए नवाचार" },
-    { en: "Integrity, humility, and service", hi: "ईमानदारी, विनम्रता और सेवा" },
-    { en: "Dream big, work hard, stay rooted", hi: "बड़े सपने, कड़ी मेहनत, जड़ें भारतीय" },
+    { en: "Improve conceptual understanding", hi: "अवधारणात्मक समझ" },
+    { en: "Develop logical and analytical thinking", hi: "तार्किक और विश्लेषणात्मक सोच" },
+    { en: "Enhance English, mathematics and technology skills", hi: "अंग्रेज़ी, गणित और तकनीकी कौशल" },
+    { en: "Build confidence", hi: "आत्मविश्वास" },
   ],
   timeline: [
     { year: 2026, title: { en: "Registration opens", hi: "पंजीकरण शुरू" }, description: { en: "3 November 2026", hi: "3 नवंबर 2026" } },
@@ -128,7 +128,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     { year: 2026, title: { en: "TEJAS Mathematics", hi: "TEJAS गणित" }, description: { en: "9 December 2026", hi: "9 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" }, description: { en: "10 December 2026", hi: "10 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" }, description: { en: "11 December 2026", hi: "11 दिसंबर 2026" } },
-    { year: 2027, title: { en: "Results", hi: "परिणाम" }, description: { en: "A results date has not been announced.", hi: "परिणाम की तिथि घोषित नहीं हुई है।" } },
+    { year: 2027, title: { en: "Results", hi: "परिणाम" }, description: { en: "The brochure prints a tentative date of 12 January 2027. The invitation says the declaration of results will be communicated separately.", hi: "ब्रोशर में 12 जनवरी 2027 संभावित है। निमंत्रण कहता है कि घोषणा अलग से होगी।" } },
   ],
   quotes: [],
   majorContributions: [
@@ -163,7 +163,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     {
       question: { en: "How is this different from Shiksha Mahakumbh Olympiads?", hi: "यह शिक्षा महाकुंभ ओलंपियाड से कैसे अलग है?" },
       answer: {
-        en: "The 1st DHE English Olympiad (2025) was under Shiksha Mahakumbh 5th Edition. TEJAS Olympiad 2026–27 is a separate programme organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.",
+        en: "The 1st DHE English Olympiad (2025) was under Shiksha Mahakumbh 5th Edition. The brochure says the TEJAS poster was launched at the 6th Edition of Shiksha Mahakumbh in 2026. TEJAS Olympiad 2026–27 is organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.",
         hi: "2025 का अंग्रेज़ी ओलंपियाड शिक्षा महाकुंभ के 5वें संस्करण के अंतर्गत था। TEJAS ओलंपियाड 2026–27 एक अलग कार्यक्रम है।",
       },
     },

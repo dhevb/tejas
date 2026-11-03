@@ -16,7 +16,7 @@ export const englishOlympiad: OlympiadPortalContent = {
     "TEJAS अंग्रेज़ी की परीक्षा 10 दिसंबर 2026 को कक्षा III–X के लिए ऑफ़लाइन है। प्रश्नपत्र और OMR पहले भेजे जाते हैं। पाठ्यक्रम, प्रश्न संख्या और अवधि अभी प्रकाशित नहीं हुई है।",
   ),
   whySubject: ls(
-    "The 1st DHE English Olympiad, held on 13–16 October 2025, is a separate past examination. TEJAS English in 2026–27 is Classes III–X and is not an online examination.",
+    "The brochure says TEJAS English will strengthen language proficiency, comprehension, communication skills and analytical thinking. The 2026–27 examination is offline for Classes III–X. The 1st DHE English Olympiad, held on 13–16 October 2025, is a separate past examination.",
     "13–16 अक्टूबर 2025 का प्रथम DHE अंग्रेज़ी ओलंपियाड एक अलग पिछली परीक्षा है। 2026–27 में TEJAS अंग्रेज़ी कक्षा III–X के लिए है और ऑनलाइन परीक्षा नहीं है।",
   ),
   status: "active",
@@ -39,7 +39,7 @@ export const englishOlympiad: OlympiadPortalContent = {
       title: ls("Printed preparation book", "मुद्रित तैयारी पुस्तक"),
       author: ls("Optional", "वैकल्पिक"),
       publisher: ls("₹170 per copy. The school retains ₹34 and remits ₹136 to TEJAS.", "₹170 प्रति प्रति। विद्यालय ₹34 रखता है और ₹136 TEJAS को भेजता है।"),
-      description: ls("A school may take part without ordering books. The ₹49 e-book is not for sale, and no e-book login is available.", "विद्यालय बिना पुस्तक लिए भाग ले सकता है। ₹49 की ई-बुक बिक्री के लिए नहीं है और लॉगिन उपलब्ध नहीं है।"),
+      description: ls(`${programme.bookShareUse} ${programme.ebookAccess}`, "मुद्रित पुस्तक अनिवार्य नहीं है। ई-बुक लॉगिन अभी खुला नहीं है।"),
     },
   ],
   mockTests: [],
@@ -49,7 +49,7 @@ export const englishOlympiad: OlympiadPortalContent = {
   awards: [
     {
       level: ls("Class-wise prizes", "कक्षावार पुरस्कार"),
-      description: ls(programme.awards, "प्रत्येक कक्षा में प्रथम ₹3,100, द्वितीय ₹2,100, तृतीय ₹1,500, और दस सांत्वना पुरस्कार ₹500। सर्वाधिक भागीदारी वाले विद्यालय के प्रधानाचार्य को प्रशस्ति पत्र।"),
+      description: ls(`${programme.awards} ${programme.brochureAwards} ${programme.awardNote}`, "निमंत्रण में नकद पुरस्कार हैं। ब्रोशर में पदक और ई-प्रमाणपत्र हैं।"),
     },
   ],
   faqs: [

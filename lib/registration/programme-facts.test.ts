@@ -40,9 +40,7 @@ test("public source does not keep replaced programme claims", () => {
     /1 November 2026/,
     /February 2027/,
     /National Talent Development Ecosystem/,
-    /receives an e-certificate/i,
-    /Gold, silver, and bronze/i,
-    /6th Edition of Shiksha Mahakumbh/,
+    /olympiad@shikshamahakumbh/i,
   ];
   const hits: string[] = [];
   for (const root of roots) {

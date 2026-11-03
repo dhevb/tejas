@@ -82,7 +82,13 @@ export default function AboutPage() {
                   TEJAS means {brand.fullName}. The current programme is TEJAS Olympiad 2026–27, organised by the {brand.parentOrg}, Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.
                 </p>
                 <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
-                  The 1st DHE English Olympiad was a separate examination on 13–16 October 2025 under Shiksha Mahakumbh 5th Edition. Its participation figures belong to 2025 and are not the 2026–27 figures.
+                  The 1st DHE English Olympiad was a separate examination on 13–16 October 2025 under Shiksha Mahakumbh 5th Edition. The 2025 report records 10,040 students from 25 schools. Those figures are not the 2026–27 figures.
+                </p>
+                <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
+                  The brochure says TEJAS is a long-term platform for identifying and nurturing young learners, administered by the Department of Holistic Education under the guidance and support of Vidya Bharti – North Zone. {programme.posterLaunch}
+                </p>
+                <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
+                  The 2025 report says the Department was founded in 2021 under Vidya Bharti Punjab and scaled nationally in 2023 under VBITR, and that the Olympiad Cell is one of 25 working cells. The brochure names Shiksha Mahakumbh Abhiyan among the Department’s flagship initiatives and refers to the National Education Policy 2020.
                 </p>
               </div>
             </div>
@@ -107,7 +113,9 @@ export default function AboutPage() {
               <li>Mathematics: 9 December 2026, Classes III–X.</li>
               <li>English: 10 December 2026, Classes III–X.</li>
               <li>Future Tech: 11 December 2026, Classes VI–X.</li>
-              <li>A results date has not been announced.</li>
+              <li>{programme.results}</li>
+              <li>{programme.posterLaunch}</li>
+              <li>{programme.guidance}</li>
             </ul>
           </FadeIn>
         </div>
@@ -132,6 +140,8 @@ export default function AboutPage() {
             <FadeIn>
               <h2 className="text-2xl font-bold text-tejas-ink">Announced prizes</h2>
               <p className="mt-4 text-tejas-muted leading-relaxed">{programme.awards}</p>
+              <p className="mt-3 text-tejas-muted leading-relaxed">{programme.brochureAwards}</p>
+              <p className="mt-3 text-tejas-muted leading-relaxed">{programme.awardNote}</p>
             </FadeIn>
             <FadeIn delay={0.1}>
               <h2 className="text-2xl font-bold text-tejas-ink">For schools</h2>
@@ -139,7 +149,7 @@ export default function AboutPage() {
                 <li>Registration opens on 3 November 2026 and closes on 20 November 2026.</li>
                 <li>The school collects ₹150 per student per stream, retains ₹30, and remits ₹120 to TEJAS.</li>
                 <li>Printed books are optional at ₹170. The school retains ₹34 and remits ₹136.</li>
-                <li>The ₹49 e-book is not for sale.</li>
+                <li>The invitation says e-books will be made available at ₹49 per student login. Access is not open yet, and the form does not charge ₹49.</li>
               </ul>
             </FadeIn>
           </div>

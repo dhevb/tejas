@@ -50,7 +50,7 @@ const differentiators = [
     icon: Brain,
     title: "Results",
     titleHi: "परिणाम",
-    description: "A results date has not been announced.",
+    description: "The brochure prints a tentative date of 12 January 2027. The invitation says the declaration will be communicated separately.",
   },
 ];
 

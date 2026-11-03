@@ -19,52 +19,38 @@ export function createComingSoonOlympiad(config: ComingSoonConfig): OlympiadPort
   return {
     ...config,
     status: "coming-soon",
-    duration: ls("60 minutes", "60 मिनट"),
-    questions: 50,
+    grades: ls("Not announced", "घोषित नहीं"),
+    duration: ls("Not announced", "घोषित नहीं"),
+    questions: 0,
     registrationOpen: false,
+    description: ls(
+      "This subject is not part of TEJAS Olympiad 2026–27. No date, eligibility, fee, or syllabus has been announced for it.",
+      "यह विषय TEJAS ओलंपियाड 2026–27 का भाग नहीं है। इसकी तिथि, पात्रता, शुल्क या पाठ्यक्रम घोषित नहीं हुआ है।",
+    ),
+    whySubject: ls(
+      "The active streams are TEJAS English, TEJAS Mathematics, and TEJAS Future Tech.",
+      "सक्रिय स्ट्रीम TEJAS अंग्रेज़ी, TEJAS गणित और TEJAS फ्यूचर टेक हैं।",
+    ),
+    tagline: ls("Not part of TEJAS Olympiad 2026–27.", "TEJAS ओलंपियाड 2026–27 का भाग नहीं।"),
     eligibility: [
-      ls("Students in recognised schools across Bharat", "भारत भर के मान्यता प्राप्त विद्यालयों के छात्र"),
-      ls(`Grade range: ${config.grades.en}`, `कक्षा सीमा: ${config.grades.hi}`),
-      ls("Launch planned under future TEJAS editions", "भविष्य TEJAS संस्करणों के तहत लॉन्च"),
+      ls("Not part of TEJAS Olympiad 2026–27.", "TEJAS ओलंपियाड 2026–27 का भाग नहीं।"),
+      ls("Eligibility will be announced officially if this subject is approved for a later edition.", "यदि यह विषय बाद के संस्करण के लिए स्वीकृत होता है, तो पात्रता आधिकारिक रूप से घोषित होगी।"),
     ],
-    examPattern: [
-      { section: ls("Objective MCQs", "वस्तुनिष्ठ MCQ"), questions: 40, marks: 40 },
-      { section: ls("Application & Analysis", "अनुप्रयोग एवं विश्लेषण"), questions: 10, marks: 10 },
-    ],
-    syllabus: [
-      {
-        level: ls("Grade-appropriate", "कक्षा-अनुकूल"),
-        classes: config.grades,
-        topics: [
-          ls("NCERT-aligned curriculum topics", "NCERT-अनुरूप पाठ्यक्रम"),
-          ls("Higher-order thinking questions", "उच्च स्तरीय सोच प्रश्न"),
-          ls("Detailed syllabus to be published before launch", "लॉन्च से पहले विस्तृत पाठ्यक्रम"),
-        ],
-      },
-    ],
-    preparationRoadmap: [
-      {
-        phase: ls("Foundation", "नींव"),
-        description: ls("Build strong fundamentals in the subject through NCERT and school curriculum.", "NCERT और school curriculum से मजबूत नींव।"),
-      },
-    ],
+    examPattern: [],
+    syllabus: [],
+    preparationRoadmap: [],
     books: [],
     mockTests: [],
     samplePapers: [],
     previousPapers: [],
     videoLectures: [],
-    awards: [
-      {
-        level: ls("National Recognition", "राष्ट्रीय मान्यता"),
-        description: ls("Medals, certificates, and Shiksha Mahakumbh felicitation", "पदक, प्रमाणपत्र और SMK सम्मान"),
-      },
-    ],
+    awards: [],
     faqs: [
       {
-        question: ls(`When will the ${config.name.en} Olympiad launch?`, `${config.name.hi} ओलंपियाड कब लॉन्च होगा?`),
+        question: ls(`Is ${config.name.en} part of TEJAS Olympiad 2026–27?`, `क्या ${config.name.hi} TEJAS ओलंपियाड 2026–27 का भाग है?`),
         answer: ls(
-          "This stream is part of TEJAS expansion roadmap. DHE Sanskriti Olympiad and additional subjects are planned after the current core streams (English, Maths, Technology).",
-          "यह TEJAS विस्तार roadmap का हिस्सा है। वर्तमान core streams के बाद अतिरिक्त विषय।"
+          "No. The active streams are TEJAS English, TEJAS Mathematics, and TEJAS Future Tech. A later subject will be announced officially if it is approved.",
+          "नहीं। सक्रिय स्ट्रीम TEJAS अंग्रेज़ी, TEJAS गणित और TEJAS फ्यूचर टेक हैं। बाद का विषय स्वीकृत होने पर आधिकारिक रूप से घोषित होगा।",
         ),
       },
     ],
@@ -73,16 +59,9 @@ export function createComingSoonOlympiad(config: ComingSoonConfig): OlympiadPort
     schoolGuide: [],
     calendar: [],
     hallOfFameHighlights: [],
-    skillsDeveloped: [
-      ls("Analytical thinking", "विश्लेषणात्मक सोच"),
-      ls("Problem-solving", "समस्या समाधान"),
-    ],
-    learningOutcomes: [
-      ls("Grade-appropriate competency mastery", "कक्षा-अनुकूल दक्षता"),
-    ],
-    careerPathways: [
-      ls("Details published before launch", "लॉन्च से पहले विवरण"),
-    ],
+    skillsDeveloped: [],
+    learningOutcomes: [],
+    careerPathways: [],
     sampleQuestions: [],
   };
 }

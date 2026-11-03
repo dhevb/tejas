@@ -7,7 +7,7 @@ import { resources, resourceCategories, getResourcesByCategory } from "@/data/re
 
 export const metadata = createMetadata({
   title: "Resources",
-  description: "Books, question banks, practice sets, videos, teacher guides, school resources, downloads, and Bal Shodh Patrika.",
+  description: "Published TEJAS Olympiad 2026–27 pages and the student-sheet template. Unpublished files are not listed.",
   path: "/resources",
 });
 
@@ -17,7 +17,7 @@ export default function ResourcesPage() {
       <PageHero
         eyebrow="Resources"
         title="Learning Resources Hub"
-        subtitle="Books, question banks, mock tests, videos, teacher toolkit, parent guide, school resources, research, and Bal Shodh Patrika."
+        subtitle="Only pages and the student-sheet template that exist on this website. A syllabus PDF, mock test, and e-book file are not available."
         primaryCta={{ label: "Prepare Hub", href: "/prepare" }}
         secondaryCta={{ label: "Olympiads", href: "/olympiads" }}
       />

@@ -23,16 +23,15 @@ export function WhatIsTejasSection() {
               subtitle={brand.fullName}
             />
             <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
-              {t(brandContent.ecosystem)} — administered by Olympiad Cell, {brand.parentOrg}.
-              TEJAS is not just an Olympiad. It is Bharat&apos;s long-term national initiative for
-              talent discovery, learning, research, innovation, and recognition.
+              {t(brandContent.ecosystem)} is organised by the {brand.parentOrg}.
+              The current programme is a school Olympiad with three streams.
             </p>
             <p className="mt-4 font-hindi text-tejas-muted">{brand.fullNameHi}</p>
             <ul className="mt-6 space-y-2 text-sm text-tejas-muted">
-              <li>• Olympiads &amp; national assessments</li>
-              <li>• Learning resources &amp; mock tests</li>
-              <li>• Research &amp; Bal Shodh Patrika</li>
-              <li>• Hall of Fame &amp; scholarships</li>
+              <li>• TEJAS English and Mathematics, Classes III–X</li>
+              <li>• TEJAS Future Tech, Classes VI–X</li>
+              <li>• Registration 3–20 November 2026</li>
+              <li>• Offline examinations on 9, 10, and 11 December 2026</li>
             </ul>
             <Link href="/about" className="mt-8 inline-flex items-center gap-2 font-semibold text-tejas-saffron hover:underline">
               Learn the full story

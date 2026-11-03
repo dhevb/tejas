@@ -204,7 +204,7 @@ export function parseStudentSheet(buf: Buffer, filename: string, schoolName: str
     if ([...texts.values()].every((value) => !value)) continue;
     dataRows += 1;
     if (dataRows > MAX_STUDENT_ROWS) {
-      return fail([`The sheet has more than ${MAX_STUDENT_ROWS} student rows. Split it, or write to the convener.`]);
+      return fail([`The sheet has more than ${MAX_STUDENT_ROWS} student rows. Split it, or write to tejas@dhe.org.in.`]);
     }
     if (formulaBlank) {
       pushError(errors, rowNumber, "A cell contains a formula without a stored value. Paste values and upload the sheet again.");
@@ -346,7 +346,7 @@ export function buildTemplateBuffer(): Buffer {
     ["TEJAS Olympiad 2026–27 student registration template"],
     ["Delete the example row on the Students sheet before you upload. That row is fictional and will be rejected."],
     ["Date of birth must be DD-MM-YYYY."],
-    ["Class is III–X for TEJAS English, TEJAS Mathematics, and TEJAS Future Tech. The brochure does not print a separate range for each stream."],
+    ["TEJAS English and TEJAS Mathematics: Classes III–X. TEJAS Future Tech: Classes VI–X. Class V cannot be entered for Future Tech."],
     ["Streams: TEJAS English, TEJAS Mathematics, TEJAS Future Tech. Separate more than one with a comma."],
     ["Every column is compulsory, including roll number, parent mobile, and parent email."],
     ["School name in every row must match the school name on the registration form."],

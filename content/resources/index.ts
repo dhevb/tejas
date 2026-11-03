@@ -4,39 +4,48 @@ function ls(en: string, hi: string) {
   return { en, hi };
 }
 
+/** Only pages and files that exist. Unpublished books, papers, and videos are not listed. */
 export const resourceRegistry: ResourceItem[] = [
-  // Books
-  { id: "book-eng-wb", title: ls("DHE English Olympiad Workbook — All Levels", "DHE अंग्रेज़ी कार्यपुस्तिका"), description: ls("Official level-wise preparation workbook (A–E)", "आधिकारिक स्तरवार कार्यपुस्तिका"), category: "books", subject: "English", type: "book", href: "#" },
-  { id: "book-math-wb", title: ls("DHE Maths Olympiad Workbook", "DHE गणित कार्यपुस्तिका"), description: ls("Grade-appropriate maths preparation", "कक्षा-अनुकूल गणित तैयारी"), category: "books", subject: "Mathematics", type: "book", href: "#" },
-  { id: "book-tech-guide", title: ls("Digital Bharat — Young Innovator's Handbook", "डिजिटल भारत पुस्तिका"), description: ls("Tech Olympiad preparation guide", "टेक ओलंपियाड गाइड"), category: "books", subject: "Technology", type: "book", href: "#" },
-  // Question Bank
-  { id: "qb-eng", title: ls("English Olympiad Question Bank — 500+ MCQs", "अंग्रेज़ी प्रश्न बैंक"), description: ls("Level-wise MCQ collection with answer keys", "स्तरवार MCQ संग्रह"), category: "question-bank", subject: "English", type: "practice", href: "#" },
-  { id: "qb-math", title: ls("Maths Olympiad Question Bank", "गणित प्रश्न बैंक"), description: ls("Topic-wise maths questions by grade", "कक्षावार गणित प्रश्न"), category: "question-bank", subject: "Mathematics", type: "practice", href: "#" },
-  // Practice
-  { id: "prac-eng-omr", title: ls("OMR Practice Sheet — English Olympiad", "OMR अभ्यास शीट"), description: ls("Practice OMR filling for exam day", "परीक्षा दिवस OMR अभ्यास"), category: "practice", subject: "English", type: "practice", href: "#" },
-  { id: "prac-mock-all", title: ls("Online mock tests", "ऑनलाइन मॉक टेस्ट"), description: ls("The team is working towards online mock tests. This page does not start a test.", "ऑनलाइन मॉक टेस्ट अभी उपलब्ध नहीं हैं।"), category: "practice", subject: "All", type: "practice", href: "/prepare/mock-tests" },
-  // Videos
-  { id: "vid-eng-strategy", title: ls("English Olympiad Strategy Session", "अंग्रेज़ी रणनीति सत्र"), description: ls("Olympiad Cell, DHE masterclass", "Olympiad Cell masterclass"), category: "videos", subject: "English", type: "video", href: "#" },
-  { id: "vid-ai-intro", title: ls("Introduction to AI for School Students", "AI परिचय"), description: ls("DHE Innovation Cell — 35 min session", "35 मिनट सत्र"), category: "videos", subject: "Technology", type: "video", href: "#" },
-  // Articles & Blogs
-  { id: "art-nep-olympiad", title: ls("NEP 2020 and Olympiad Culture in Bharat", "NEP 2020 और ओलंपियाड संस्कृति"), description: ls("How competitive assessment aligns with NEP vision", "NEP vision के साथ alignment"), category: "articles", type: "article", href: "#" },
-  { id: "blog-eng-tips", title: ls("10 Tips for Reading Comprehension Success", "पठन बोध 10 सुझाव"), description: ls("Expert tips from English Connection", "English Connection सुझाव"), category: "blogs", subject: "English", type: "article", href: "#" },
-  // Parent Guide
-  { id: "parent-guide", title: ls("Parent's Guide to TEJAS Olympiads", "TEJAS ओलंपियाड — अभिभावक गाइड"), description: ls("How to support your child — registration, preparation, exam day, and results", "पंजीकरण, तैयारी, परीक्षा दिवस और परिणाम"), category: "parent", type: "pdf", href: "#" },
-  { id: "parent-faq", title: ls("Parent FAQ — TEJAS Olympiad 2026–27", "अभिभावक FAQ"), description: ls("Common questions on eligibility, fees, and school coordination", "पात्रता, शुल्क और विद्यालय समन्वय"), category: "parent", type: "article", href: "/faq" },
-  { id: "tr-guide", title: ls("Teacher's Guide — DHE Olympiads", "शिक्षक गाइड"), description: ls("Complete guide for Olympiad coordinators", "ओलंपियाड समन्वयक गाइड"), category: "teacher", type: "pdf", href: "#" },
-  { id: "tr-lesson-plans", title: ls("Weekly Lesson Plans — English Olympiad Prep", "साप्ताहिक lesson plans"), description: ls("6-week classroom preparation plan", "6-सप्ताह कक्षा योजना"), category: "teacher", subject: "English", type: "pdf", href: "#" },
-  // School Resources
-  { id: "sch-reg-guide", title: ls("School registration — TEJAS Olympiad 2026–27", "विद्यालय पंजीकरण"), description: ls("Register the school and upload the student sheet", "पंजीकरण और छात्र सूची"), category: "school", type: "article", href: "/schools/register" },
-  { id: "sch-invigilation", title: ls("Exam Invigilation Standards", "परीक्षा निरीक्षण मानक"), description: ls("OMR exam day protocols for schools", "OMR exam day protocols"), category: "school", type: "pdf", href: "#" },
-  // Downloads
-  { id: "dl-eng-2025", title: ls("1st DHE English Olympiad — Brief Report", "प्रथम DHE English Olympiad रिपोर्ट"), description: ls("Official report with statistics and results", "आधिकारिक रिपोर्ट"), category: "downloads", subject: "English", type: "pdf", href: "#" },
-  { id: "dl-sample-cert", title: ls("Sample Participation Certificate", "नमूना प्रमाणपत्र"), description: ls("Certificate format with QR verification", "QR सत्यापन प्रमाणपत्र"), category: "downloads", type: "pdf", href: "#" },
-  { id: "dl-syllabus-all", title: ls("TEJAS Olympiad Syllabus — All Active Streams", "TEJAS पाठ्यक्रम"), description: ls("English, Maths, Technology syllabus PDF", "तीनों streams पाठ्यक्रम"), category: "downloads", type: "pdf", href: "#" },
-  // Research
-  { id: "res-olympiad-impact", title: ls("Impact of School Olympiads on Learning Outcomes", "ओलंपियाड का प्रभाव"), description: ls("DHE research paper on Olympiad Cell outcomes", "DHE research paper"), category: "research", type: "pdf", href: "#" },
-  // Bal Shodh Patrika
-  { id: "bsp-guide", title: ls("Bal Shodh Patrika — Submission Guide", "बाल शोध पत्रिका गाइड"), description: ls("Classes 9–12 student research journal guidelines", "कक्षा 9–12 शोध journal"), category: "bal-shodh", type: "pdf", href: "https://www.shikshamahakumbh.com" },
+  {
+    id: "sch-reg-guide",
+    title: ls("School registration — TEJAS Olympiad 2026–27", "विद्यालय पंजीकरण"),
+    description: ls("Register the school and upload the student sheet. Registration is open from 3 to 20 November 2026.", "3 से 20 नवंबर 2026 तक पंजीकरण।"),
+    category: "school",
+    type: "article",
+    href: "/schools/register",
+  },
+  {
+    id: "student-template",
+    title: ls("Student sheet template", "विद्यार्थी शीट"),
+    description: ls("Excel template. English and Mathematics are Classes III–X. Future Tech is Classes VI–X.", "अंग्रेज़ी और गणित कक्षा III–X। फ्यूचर टेक कक्षा VI–X।"),
+    category: "downloads",
+    type: "practice",
+    href: "/api/register/template",
+  },
+  {
+    id: "parent-faq",
+    title: ls("Questions about TEJAS Olympiad 2026–27", "प्रश्न"),
+    description: ls("Dates, eligibility, fees, and the offline examination.", "तिथियाँ, पात्रता, शुल्क और ऑफ़लाइन परीक्षा।"),
+    category: "parent",
+    type: "article",
+    href: "/faq",
+  },
+  {
+    id: "prac-mock-all",
+    title: ls("Mock tests", "मॉक टेस्ट"),
+    description: ls("No mock test is open. This page does not start a test or show a score.", "कोई मॉक टेस्ट खुला नहीं है।"),
+    category: "practice",
+    type: "practice",
+    href: "/prepare/mock-tests",
+  },
+  {
+    id: "ebook-status",
+    title: ls("E-book", "ई-बुक"),
+    description: ls("The invitation price is ₹49. Sales are closed and no login is available.", "निमंत्रण में कीमत ₹49 है। बिक्री बंद है।"),
+    category: "books",
+    type: "article",
+    href: "/prepare/ebook",
+  },
 ];
 
 export const resourceCategories = [

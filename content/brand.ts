@@ -10,15 +10,15 @@ export const brandContent = {
     hi: "केवल एक परीक्षा नहीं, बल्कि प्रतिभा, अनुसंधान, नवाचार और राष्ट्र निर्माण के लिए एक राष्ट्रीय आंदोलन",
   },
   ecosystem: {
-    en: "National Talent Development Ecosystem",
-    hi: "राष्ट्रीय प्रतिभा विकास पारिस्थितिकी तंत्र",
+    en: "TEJAS Olympiad 2026–27",
+    hi: "TEJAS ओलंपियाड 2026–27",
   },
   vision: {
-    en: "Every student should grow not merely as an examinee, but as a researcher, innovator, entrepreneur, responsible citizen, future leader, and nation builder.",
-    hi: "प्रत्येक विद्यार्थी केवल परीक्षार्थी नहीं, बल्कि शोधकर्ता, नवप्रवर्तक, उद्यमी, जिम्मेदार नागरिक, भविष्य के नेता और राष्ट्र निर्माता के रूप में विकसित हो।",
+    en: "TEJAS Olympiad 2026–27 is organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.",
+    hi: "TEJAS ओलंपियाड 2026–27 का आयोजन समग्र शिक्षा विभाग (DHE), विद्या भारती इंस्टिट्यूट ऑफ ट्रेनिंग एंड रिसर्च ट्रस्ट (VBITR), कुरुक्षेत्र करता है।",
   },
   taglineLong: {
-    en: "More than an Olympiad — a long-term national movement dedicated to discovering, nurturing, and empowering Bharat's future talent.",
-    hi: "एक ओलंपियाड से कहीं अधिक — भारत की भावी प्रतिभा की खोज, पोषण और सशक्तिकरण के लिए एक दीर्घकालिक राष्ट्रीय आंदोलन।",
+    en: "Talent Exploration for Junior Aspiring Scholars. English and Mathematics for Classes III–X. Future Tech for Classes VI–X.",
+    hi: "जूनियर आकांक्षी विद्यार्थियों के लिए प्रतिभा अन्वेषण। अंग्रेज़ी और गणित कक्षा III–X। फ्यूचर टेक कक्षा VI–X।",
   },
 } as const;

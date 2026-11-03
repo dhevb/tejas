@@ -4,15 +4,13 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { FeatureGrid } from "@/components/shared/FeatureGrid";
 import { QuoteCard } from "@/components/shared/QuoteCard";
-import { PhaseRoadmap } from "@/components/shared/PhaseRoadmap";
 import { TejasEmblem } from "@/components/brand/TejasEmblem";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { siteConfig } from "@/config/seo";
 import { brand } from "@/design-system/tokens";
-import { brandContent } from "@/content/brand";
-import { BookOpen, Brain, Shield, Lightbulb, Users, FlaskConical } from "lucide-react";
-import Link from "next/link";
+import { programme } from "@/content/current-cycle";
+import { BookOpen, CalendarDays, Shield, Award, Users, Mail } from "lucide-react";
 
 export const metadata = createMetadata({
   title: "About TEJAS",
@@ -23,33 +21,33 @@ export const metadata = createMetadata({
 const pillars = [
   {
     icon: BookOpen,
-    title: "Bharatiya Knowledge + Modern Education",
-    description: "Integrating contemporary education with rich knowledge traditions, ethical values, and life skills.",
+    title: "Three streams",
+    description: "English and Mathematics are for Classes III–X. Future Tech is for Classes VI–X.",
   },
   {
-    icon: Brain,
-    title: "Concept-Based Assessment",
-    description: "Logical reasoning, analytical thinking, creativity, and real-world application — not rote memorization.",
+    icon: CalendarDays,
+    title: "Examination dates",
+    description: "Mathematics 9 December 2026, English 10 December 2026, and Future Tech 11 December 2026.",
   },
   {
     icon: Shield,
-    title: "Secure Technology-Enabled Exams",
-    description: "OMR and digital modes with transparent, fair, and credible examination standards.",
+    title: "Offline OMR examinations",
+    description: "The 2026–27 examinations are held at participating schools with question papers and OMR sheets. They are not online examinations.",
   },
   {
-    icon: Lightbulb,
-    title: "Innovation & Entrepreneurship",
-    description: "Inspiring job creators — nurturing future innovators and entrepreneurs.",
+    icon: Award,
+    title: "Announced prizes",
+    description: programme.awards,
   },
   {
     icon: Users,
-    title: "Opportunities for Schools",
-    description: "National platforms for innovation, mentorship, and collaboration with premier institutions.",
+    title: "Registration through schools",
+    description: "Schools register their students from 3 November 2026 to 20 November 2026. The school collects ₹150, retains ₹30, and remits ₹120.",
   },
   {
-    icon: FlaskConical,
-    title: "Bal Shodh Patrika",
-    description: "Children's research journal for Classes 9–12 — nurturing curiosity and scientific inquiry.",
+    icon: Mail,
+    title: "Contact",
+    description: "Write to tejas@dhe.org.in, or call +91 99886 90588 or +91 79034 31900.",
   },
 ];
 
@@ -68,9 +66,9 @@ export default function AboutPage() {
       <PageHero
         eyebrow="About TEJAS"
         title={brand.name}
-        subtitle={`${brand.fullName} — an independent initiative by the Olympiad Cell, ${brand.parentOrg}. Standalone. Long-term. National.`}
+        subtitle={`${brand.fullName}. TEJAS Olympiad 2026–27 is organised by the ${brand.parentOrg}, Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.`}
         primaryCta={{ label: "Explore Olympiads", href: "/olympiads" }}
-        secondaryCta={{ label: "Register Interest", href: "/#register" }}
+        secondaryCta={{ label: "School registration", href: "/schools/register" }}
       />
 
       <section className="tejas-section">
@@ -79,13 +77,12 @@ export default function AboutPage() {
             <div className="flex items-start gap-6">
               <TejasEmblem size="lg" />
               <div className="max-w-3xl">
-                <h2 className="text-2xl font-bold text-tejas-ink">The Movement</h2>
-                <p className="mt-4 text-lg text-tejas-muted leading-relaxed">{brandContent.movement.en}</p>
-                <p className="mt-4 font-hindi text-tejas-muted">{brandContent.movement.hi}</p>
-                <p className="mt-6 text-lg text-tejas-muted leading-relaxed">
-                  While some activities were previously organized under the Shiksha Mahakumbh Abhiyan,
-                  TEJAS is a <strong className="text-tejas-ink">standalone, long-term national initiative</strong> with
-                  its own identity, vision, and mission — the flagship talent development platform of DHE.
+                <h2 className="text-2xl font-bold text-tejas-ink">The programme</h2>
+                <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
+                  TEJAS means {brand.fullName}. The current programme is TEJAS Olympiad 2026–27, organised by the {brand.parentOrg}, Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.
+                </p>
+                <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
+                  The 1st DHE English Olympiad was a separate examination on 13–16 October 2025 under Shiksha Mahakumbh 5th Edition. Its participation figures belong to 2025 and are not the 2026–27 figures.
                 </p>
               </div>
             </div>
@@ -96,25 +93,22 @@ export default function AboutPage() {
       <section className="tejas-section bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <SectionHeader title="What Makes TEJAS Different?" subtitle="Beyond rankings and certificates — a comprehensive ecosystem." />
+            <SectionHeader title="What this edition states" subtitle="Only the approved programme details are stated here." />
           </FadeIn>
           <FeatureGrid items={pillars} columns={3} />
         </div>
       </section>
 
       <section className="tejas-section">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <SectionHeader title="Product Roadmap" subtitle="Staged evolution from polished website to full national platform." />
-          </FadeIn>
-          <PhaseRoadmap />
-          <FadeIn delay={0.1}>
-            <p className="mt-6 text-sm text-tejas-muted">
-              Backend architecture planning:{" "}
-              <Link href="https://github.com/dheWeb/tejas/blob/main/docs/BACKEND_ARCHITECTURE.md" className="text-tejas-saffron hover:underline">
-                docs/BACKEND_ARCHITECTURE.md
-              </Link>
-            </p>
+            <SectionHeader title="Examinations" subtitle="Offline, at the participating schools." />
+            <ul className="mt-6 space-y-3 text-tejas-muted">
+              <li>Mathematics: 9 December 2026, Classes III–X.</li>
+              <li>English: 10 December 2026, Classes III–X.</li>
+              <li>Future Tech: 11 December 2026, Classes VI–X.</li>
+              <li>A results date has not been announced.</li>
+            </ul>
           </FadeIn>
         </div>
       </section>
@@ -123,10 +117,9 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <QuoteCard
-              quote={brandContent.vision.en}
-              quoteHi={brandContent.vision.hi}
-              author="Our Vision"
-              role={`${brand.parentOrg} · Olympiad Cell`}
+              quote={programme.tagline}
+              author={programme.name}
+              role={`${programme.organiser} · ${programme.affiliation}`}
               className="max-w-4xl mx-auto border-white/10 bg-white/5 [&_p]:text-white/90 [&_span]:text-tejas-gold"
             />
           </FadeIn>
@@ -137,21 +130,16 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 md:grid-cols-2">
             <FadeIn>
-              <h2 className="text-2xl font-bold text-tejas-ink">For Outstanding Students</h2>
-              <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>National & international recognition through prestigious platforms</li>
-                <li>Talent conclaves with scientists, innovators, and policymakers</li>
-                <li>Entrepreneurship and innovation orientation pathways</li>
-                <li>Scholarships and advanced learning opportunities</li>
-              </ul>
+              <h2 className="text-2xl font-bold text-tejas-ink">Announced prizes</h2>
+              <p className="mt-4 text-tejas-muted leading-relaxed">{programme.awards}</p>
             </FadeIn>
             <FadeIn delay={0.1}>
-              <h2 className="text-2xl font-bold text-tejas-ink">For Schools</h2>
+              <h2 className="text-2xl font-bold text-tejas-ink">For schools</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>National platform for school innovation and excellence</li>
-                <li>Project showcase and exhibition opportunities</li>
-                <li>Collaboration with IITs, NITs, and research institutions</li>
-                <li>Expert mentorship for educators and students</li>
+                <li>Registration opens on 3 November 2026 and closes on 20 November 2026.</li>
+                <li>The school collects ₹150 per student per stream, retains ₹30, and remits ₹120 to TEJAS.</li>
+                <li>Printed books are optional at ₹170. The school retains ₹34 and remits ₹136.</li>
+                <li>The ₹49 e-book is not for sale.</li>
               </ul>
             </FadeIn>
           </div>

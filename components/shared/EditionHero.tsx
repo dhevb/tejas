@@ -55,8 +55,8 @@ export function EditionHero({
           <div className="relative aspect-[4/3] rounded-3xl border border-white/20 bg-white/10 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center p-8">
               <p className="text-sm uppercase tracking-widest text-white/60">Edition Gallery</p>
-              <p className="mt-2 text-2xl font-bold">Coming Soon</p>
-              <p className="mt-2 text-sm text-white/70">Visual storytelling & archival media</p>
+              <p className="mt-2 text-2xl font-bold">No photographs published</p>
+              <p className="mt-2 text-sm text-white/70">This page does not show an unpublished photograph.</p>
             </div>
           </div>
         </div>

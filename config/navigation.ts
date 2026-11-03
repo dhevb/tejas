@@ -42,10 +42,10 @@ export const mainNav: NavItem[] = [
         title: "All Subjects",
         titleHi: "सभी विषय",
         items: [
-          { label: "Science", href: "/olympiads/science", description: "Coming in future edition" },
-          { label: "Hindi", href: "/olympiads/hindi", description: "Language & literature" },
-          { label: "AI & Data Science", href: "/olympiads/ai", description: "Responsible AI" },
-          { label: "View All", href: "/olympiads", description: "10-subject ecosystem" },
+          { label: "Science", href: "/olympiads/science", description: "Not part of 2026–27" },
+          { label: "Hindi", href: "/olympiads/hindi", description: "Not part of 2026–27" },
+          { label: "AI & Data Science", href: "/olympiads/ai", description: "Not part of 2026–27" },
+          { label: "View All", href: "/olympiads", description: "Three active streams" },
         ],
       },
     ],
@@ -58,9 +58,9 @@ export const mainNav: NavItem[] = [
       {
         title: "Prepare",
         items: [
-          { label: "Prepare Hub", href: "/prepare", description: "Topic-wise drills & strategy" },
-          { label: "Mock Tests", href: "/prepare/mock-tests", description: "Full-length simulations" },
-          { label: "Resources", href: "/resources", description: "Books, videos, downloads" },
+          { label: "Prepare Hub", href: "/prepare", description: "No sample paper is published" },
+          { label: "Mock Tests", href: "/prepare/mock-tests", description: "No test is open" },
+          { label: "Resources", href: "/resources", description: "Published pages only" },
         ],
       },
     ],
@@ -110,7 +110,6 @@ export const footerNav = {
   platform: [
     { label: "About TEJAS", href: "/about" },
     { label: "Editions", href: "/editions" },
-    { label: "Roadmap", href: "/about#roadmap" },
     { label: "Research", href: "/research" },
     { label: "Innovation", href: "/innovation" },
   ],

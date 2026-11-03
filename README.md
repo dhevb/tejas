@@ -2,7 +2,7 @@
 
 **Talent Exploration for Junior Aspiring Scholars**
 
-Independent frontend for [tejas.dhe.org.in](https://tejas.dhe.org.in) — Bharat's National Talent Development Ecosystem by the Department of Holistic Education (DHE).
+Independent frontend for [tejas.dhe.org.in](https://tejas.dhe.org.in) — TEJAS Olympiad 2026–27, organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.
 
 ## Architecture
 

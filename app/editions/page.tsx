@@ -3,7 +3,7 @@ import { createMetadata } from "@/config/seo";
 import { EditionHero } from "@/components/shared/EditionHero";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { editions } from "@/data/editions";
+import { editions, previousEditions } from "@/data/editions";
 import { getCurrentEdition } from "@/data/editions";
 
 export const metadata = createMetadata({
@@ -31,7 +31,7 @@ export default function EditionsPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="mb-8 rounded-2xl border border-tejas-saffron/30 bg-tejas-saffron/5 p-6">
-              <p className="text-sm font-semibold text-tejas-saffron">TEJAS Olympiad 2026–27 · 6th Edition of Shiksha Mahakumbh</p>
+              <p className="text-sm font-semibold text-tejas-saffron">TEJAS Olympiad 2026–27 · Department of Holistic Education</p>
               <p className="mt-2 text-tejas-muted">
                 TEJAS English and Mathematics for Classes III–X. TEJAS Future Tech for Classes VI–X.
                 Registration 3–20 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.
@@ -48,7 +48,7 @@ export default function EditionsPage() {
             />
           </FadeIn>
           <div className="grid gap-8 md:grid-cols-2">
-            {editions.filter((e) => e.slug !== current.slug).map((edition, i) => (
+            {[...editions.filter((e) => e.slug !== current.slug), ...previousEditions].map((edition, i) => (
               <FadeIn key={edition.slug} delay={i * 0.08}>
                 <Link href={`/editions/${edition.slug}`} className="block">
                   <article

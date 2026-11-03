@@ -11,7 +11,7 @@ export const faqItems: FAQItem[] = [
     category: "General",
     question: "What is the relationship between TEJAS and Shiksha Mahakumbh?",
     answer:
-      "The 1st DHE English Olympiad (2025) was conducted under Shiksha Mahakumbh 5th Edition. TEJAS Olympiad 2026–27 is placed in the 6th Edition of Shiksha Mahakumbh and is administered by the Department of Holistic Education, a unit of Vidya Bharti Institute of Training & Research Trust.",
+      "The 1st DHE English Olympiad (2025) was conducted under Shiksha Mahakumbh 5th Edition. TEJAS Olympiad 2026–27 is organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra. It is a separate programme from the 2025 examination.",
   },
   {
     category: "General",
@@ -35,7 +35,7 @@ export const faqItems: FAQItem[] = [
     category: "Exams",
     question: "What is the exam format?",
     answer:
-      "MCQ format using OMR sheets — ensuring transparency, objectivity, and fairness. Five examination levels (A–E) based on class groups. No negative marking in DHE English Olympiad.",
+      "The 2026–27 examinations are offline at the participating schools. Question papers and OMR sheets are dispatched in advance. Completed OMR sheets are couriered the same day to the designated evaluation centre. The centre address is sent with the detailed instructions. This is not an online examination. Question counts, duration, and negative marking have not been published for 2026–27.",
   },
   {
     category: "Exams",
@@ -47,18 +47,18 @@ export const faqItems: FAQItem[] = [
     category: "Awards",
     question: "What awards do winners receive?",
     answer:
-      "Every participant receives an e-certificate. Outstanding students receive gold, silver, and bronze medals. Overall toppers in each class, in every stream, across participating schools receive ₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500 each. School-level winners receive certificates, medals, and books. The school with the highest student participation is recognised, and its principal receives a Certificate of Appreciation.",
+      "For each class in each of the three streams, the first prize is ₹3,100, the second prize is ₹2,100, the third prize is ₹1,500, and there are ten consolation prizes of ₹500 each. Participating schools with the highest participation receive recognition, and the Principal receives a Certificate of Appreciation. No medal, e-certificate, scholarship, or additional prize has been announced.",
   },
   {
     category: "Preparation",
     question: "Are mock tests and resources free?",
     answer:
-      "Yes. TEJAS provides sample papers, mock test previews, preparation roadmaps, teacher/parent/school guides, and books through the Prepare Hub and Resources section.",
+      "No sample paper, mock test, video, or e-book is available. Printed preparation books are optional at ₹170 per copy. The school retains ₹34 and remits ₹136 to TEJAS. A school can participate without ordering them.",
   },
   {
     category: "Future",
     question: "What Olympiads are planned next?",
     answer:
-      "After the current core streams, DHE plans DHE Sanskriti Olympiad and expansion to Science, Hindi, Sanskrit, GK, AI, Coding, and Innovation under the TEJAS ecosystem.",
+      "No later subject has been approved. TEJAS Olympiad 2026–27 has three streams: English, Mathematics, and Future Tech. Any further subject will be announced officially.",
   },
 ];

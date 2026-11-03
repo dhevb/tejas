@@ -11,8 +11,8 @@ export function FutureVisionSection() {
         <FadeIn>
           <SectionHeader
             eyebrow="Vision"
-            title="Building Bharat's Talent Future"
-            subtitle="A national movement for talent, research, innovation, and nation building."
+            title="TEJAS Olympiad 2026–27"
+            subtitle="Organised by the Department of Holistic Education, VBITR, Kurukshetra."
             className="[&_h2]:text-white [&_p]:text-white/70"
           />
         </FadeIn>
@@ -21,7 +21,7 @@ export function FutureVisionSection() {
             quote={brandContent.vision.en}
             quoteHi={brandContent.vision.hi}
             author="TEJAS Vision"
-            role="Department of Holistic Education · Olympiad Cell"
+            role="Department of Holistic Education"
             className="max-w-4xl mx-auto border-white/10 bg-white/5 text-white [&_p]:text-white/90 [&_span]:text-tejas-gold"
           />
         </FadeIn>

@@ -2,7 +2,7 @@ import { createMetadata } from "@/config/seo";
 
 export const metadata = createMetadata({
   title: "Beta Feedback",
-  description: "Closed beta feedback for TEJAS — help shape Bharat's National Talent Development Ecosystem before public launch.",
+  description: "Feedback on the published TEJAS Olympiad 2026–27 website.",
   path: "/beta",
   noIndex: true,
 });

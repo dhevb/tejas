@@ -53,7 +53,7 @@ export function BetaPage() {
       <PageHero
         eyebrow="Closed Beta"
         title="Help Shape TEJAS"
-        subtitle="You're among the first teachers and students testing Bharat's National Talent Development Ecosystem. Your feedback directly improves the platform before public launch."
+        subtitle="Send a note about the published TEJAS Olympiad 2026–27 pages. The public website is already open for school registration."
       />
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
@@ -83,7 +83,7 @@ export function BetaPage() {
               <div className="mt-10 rounded-2xl border border-tejas-emerald/30 bg-tejas-emerald/5 p-8 text-center">
                 <CheckCircle2 className="mx-auto h-12 w-12 text-tejas-emerald" aria-hidden />
                 <h2 className="mt-4 text-xl font-bold text-tejas-ink">Thank you!</h2>
-                <p className="mt-2 text-tejas-muted">Your feedback has been sent to Olympiad Cell, DHE.</p>
+                <p className="mt-2 text-tejas-muted">Your feedback has been sent to tejas@dhe.org.in.</p>
                 <Link href="/" className="mt-6 inline-block">
                   <Button variant="outline">Back to TEJAS</Button>
                 </Link>

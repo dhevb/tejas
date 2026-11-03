@@ -83,23 +83,8 @@ export const dheEnglish2025Edition: EditionFullContent = {
       answer: pastEnglishOlympiad2025.format,
     },
   ],
-  downloads: [
-    {
-      title: { en: "1st DHE English Olympiad — Brief Report", hi: "संक्षिप्त रिपोर्ट" },
-      description: { en: "Official report with participation statistics and results", hi: "आधिकारिक रिपोर्ट" },
-      type: "PDF",
-    },
-    {
-      title: { en: "Sample Certificate", hi: "नमूना प्रमाणपत्र" },
-      description: { en: "Participation and merit certificate format", hi: "सहभागिता और merit प्रमाणपत्र" },
-      type: "PDF",
-    },
-  ],
-  galleryCaptions: [
-    { en: "Overall toppers felicitation at Shiksha Mahakumbh 5.0, NIPER Mohali", hi: "SMK 5.0 सम्मान" },
-    { en: "School-wise prize distribution at CSIR–CSIO, Chandigarh", hi: "CSIR–CSIO सम्मान" },
-    { en: "Distinguished dignitaries at felicitation ceremony", hi: "सम्मान समारोह में गणमान्य" },
-  ],
+  downloads: [],
+  galleryCaptions: [],
 };
 
 export const apjAbdulKalam2026Edition: EditionFullContent = {
@@ -110,8 +95,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     hi: "TEJAS ओलंपियाड 2026–27",
   },
   subtitle: {
-    en: "6th Edition of Shiksha Mahakumbh · Find your spark...",
-    hi: "शिक्षा महाकुंभ का 6वाँ संस्करण",
+    en: "Find your spark...",
+    hi: "Find your spark...",
   },
   bio: {
     en: "Talent Exploration for Junior Aspiring Scholars. English and Mathematics for Classes III–X, and Future Tech for Classes VI–X. Organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.",
@@ -128,7 +113,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     hi: "एक परीक्षा से आगे, युवा विद्यार्थियों को पहचानने और सशक्त करने का राष्ट्रीय मंच।",
   },
   whyThisEdition: {
-    en: "The approved brochure places this Olympiad in the 6th Edition of Shiksha Mahakumbh in 2026. Registration runs from 3 November 2026 to 20 November 2026. Mathematics is on 9 December 2026, English on 10 December 2026, and Future Tech on 11 December 2026.",
+    en: "Registration runs from 3 November 2026 to 20 November 2026. Mathematics is on 9 December 2026, English on 10 December 2026, and Future Tech on 11 December 2026. The examinations are offline at the participating schools.",
     hi: "पंजीकरण 3–20 नवंबर 2026। परीक्षाएँ 9, 10 और 11 दिसंबर 2026।",
   },
   learningValues: [
@@ -143,7 +128,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     { year: 2026, title: { en: "TEJAS Mathematics", hi: "TEJAS गणित" }, description: { en: "9 December 2026", hi: "9 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" }, description: { en: "10 December 2026", hi: "10 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" }, description: { en: "11 December 2026", hi: "11 दिसंबर 2026" } },
-    { year: 2027, title: { en: "Results window", hi: "परिणाम" }, description: { en: "February 2027. A declaration date has not been fixed.", hi: "फरवरी 2027" } },
+    { year: 2027, title: { en: "Results", hi: "परिणाम" }, description: { en: "A results date has not been announced.", hi: "परिणाम की तिथि घोषित नहीं हुई है।" } },
   ],
   quotes: [],
   majorContributions: [
@@ -159,12 +144,12 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
   ],
   stats: [
     { label: { en: "Olympiad Streams", hi: "ओलंपियाड streams" }, value: "3" },
-    { label: { en: "Classes", hi: "कक्षाएँ" }, value: "III–X" },
+    { label: { en: "Classes", hi: "कक्षाएँ" }, value: "III–X / VI–X" },
     { label: { en: "Fee", hi: "शुल्क" }, value: "₹150" },
     { label: { en: "Platform", hi: "मंच" }, value: "TEJAS" },
   ],
   felicitation: {
-    en: "Overall toppers in each class, in every stream: ₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500 each. The school with the highest student participation is recognised, and its principal receives a Certificate of Appreciation. Every participant receives an e-certificate. Gold, silver, and bronze medals go to outstanding students. School-level winners receive certificates, medals, and books.",
+    en: "For each class in each of the three streams, the first prize is ₹3,100, the second prize is ₹2,100, the third prize is ₹1,500, and there are ten consolation prizes of ₹500 each. Participating schools with the highest participation receive recognition, and the Principal receives a Certificate of Appreciation.",
     hi: "प्रथम ₹3,100, द्वितीय ₹2,100, तृतीय ₹1,500, और दस सांत्वना पुरस्कार ₹500। सर्वाधिक भागीदारी वाले विद्यालय के प्रधानाचार्य को प्रशस्ति पत्र।",
   },
   faqs: [
@@ -178,8 +163,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     {
       question: { en: "How is this different from Shiksha Mahakumbh Olympiads?", hi: "यह शिक्षा महाकुंभ ओलंपियाड से कैसे अलग है?" },
       answer: {
-        en: "The 1st DHE English Olympiad (2025) was under Shiksha Mahakumbh 5th Edition. TEJAS Olympiad 2026–27 is placed in the 6th Edition of Shiksha Mahakumbh and is administered by the Department of Holistic Education.",
-        hi: "2025 का English Olympiad SMK 5th Edition के तहत था। वर्तमान ओलंपियाड शिक्षा महाकुंभ के 6वें संस्करण में है।",
+        en: "The 1st DHE English Olympiad (2025) was under Shiksha Mahakumbh 5th Edition. TEJAS Olympiad 2026–27 is a separate programme organised by the Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra.",
+        hi: "2025 का अंग्रेज़ी ओलंपियाड शिक्षा महाकुंभ के 5वें संस्करण के अंतर्गत था। TEJAS ओलंपियाड 2026–27 एक अलग कार्यक्रम है।",
       },
     },
     {
@@ -190,18 +175,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
       },
     },
   ],
-  downloads: [
-    {
-      title: { en: "TEJAS Olympiad 2026–27 brochure", hi: "TEJAS ओलंपियाड 2026–27 ब्रोशर" },
-      description: { en: "Official TEJAS Olympiad 2026–27 programme brochure", hi: "आधिकारिक TEJAS ब्रोशर" },
-      type: "PDF",
-    },
-    {
-      title: { en: "Olympiad Registration Guide for Schools", hi: "विद्यालय पंजीकरण गाइड" },
-      description: { en: "Step-by-step school registration process", hi: "पंजीकरण प्रक्रिया" },
-      type: "PDF",
-    },
-  ],
+  downloads: [],
   galleryCaptions: [],
 };
 

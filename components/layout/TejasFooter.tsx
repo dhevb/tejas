@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { footerNav } from "@/config/navigation";
 import { brand } from "@/design-system/tokens";
-import { currentCycle } from "@/content/current-cycle";
+import { currentCycle, programme } from "@/content/current-cycle";
 import { TejasEmblem } from "@/components/brand/TejasEmblem";
 
 export function TejasFooter() {
@@ -20,15 +20,10 @@ export function TejasFooter() {
               </div>
             </div>
             <p className="mt-4 max-w-sm text-sm text-white/70 leading-relaxed">
-              {brand.fullName} — Bharat&apos;s National Talent Development Ecosystem by the{" "}
-              {brand.parentOrg}.
-            </p>
-            <p className="mt-2 font-hindi text-sm text-white/60">
-              भारत का राष्ट्रीय प्रतिभा विकास पारिस्थितिकी तंत्र
+              {programme.name}. {brand.fullName}. Organised by the {brand.parentOrg}, {programme.affiliation}.
             </p>
             <address className="mt-5 space-y-1 text-sm not-italic text-white/75">
               <p>{currentCycle.administeredBy.en}</p>
-              <p>{currentCycle.address}</p>
               <p>
                 <a className="hover:text-white" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a>
               </p>
@@ -99,7 +94,7 @@ export function TejasFooter() {
               ))}
             </ul>
             <h3 className="mt-8 text-sm font-semibold uppercase tracking-wider text-tejas-gold">
-              DHE Ecosystem
+              Related sites
             </h3>
             <ul className="mt-4 space-y-2">
               {footerNav.dhe.map((link) => (

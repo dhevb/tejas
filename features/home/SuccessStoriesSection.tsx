@@ -2,28 +2,13 @@ import { SuccessStoryCard } from "@/components/shared/SuccessStoryCard";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { FadeIn } from "@/components/shared/FadeIn";
 
-const stories = [
-  {
-    name: "Aarav Sharma",
-    achievement: "National Gold — Mathematics",
-    school: "DPS RK Puram",
-    state: "Delhi",
-    quote: "TEJAS helped me think beyond textbooks.",
-  },
-  {
-    name: "Priya Nair",
-    achievement: "National Gold — Science",
-    school: "Bhavan's Vidya Mandir",
-    state: "Kerala",
-    quote: "The mock tests built real exam confidence.",
-  },
-  {
-    name: "Rohan Mehta",
-    achievement: "National Silver — Technology",
-    school: "Ahmedabad Intl. School",
-    state: "Gujarat",
-  },
-];
+const stories: {
+  name: string;
+  achievement: string;
+  school: string;
+  state: string;
+  quote?: string;
+}[] = [];
 
 export function SuccessStoriesSection() {
   return (
@@ -32,8 +17,8 @@ export function SuccessStoriesSection() {
         <FadeIn>
           <SectionHeader
             eyebrow="Stories"
-            title="Student Success Stories"
-            subtitle="Real journeys from discovery to national recognition."
+            title="No success stories published"
+            subtitle="TEJAS Olympiad 2026–27 has not published a student story, quotation, or national award."
           />
         </FadeIn>
         <div className="grid gap-6 md:grid-cols-3">

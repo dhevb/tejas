@@ -225,6 +225,10 @@ test("the sample example row cannot be submitted", () => {
   const headersInTemplate = XLSX.read(buildTemplateBuffer(), { type: "buffer" }).Sheets.Students;
   const first = XLSX.utils.sheet_to_json<string[]>(headersInTemplate, { header: 1 })[0] as string[];
   assert.deepEqual(first, headers);
+  const instructions = XLSX.read(buildTemplateBuffer(), { type: "buffer" }).Sheets.Instructions;
+  const instructionText = XLSX.utils.sheet_to_json<string[]>(instructions, { header: 1 }).flat().join(" ");
+  assert.match(instructionText, /Future Tech: Classes VI–X/);
+  assert.doesNotMatch(instructionText, /Future Tech\. The brochure does not/);
 });
 
 test("csv and xls uploads use the same rules", () => {

@@ -5,8 +5,6 @@ import { useI18n } from "@/lib/i18n/context";
 import type { OlympiadPortalContent } from "@/content/types";
 import { StickySubNav } from "@/components/shared/StickySubNav";
 import { Countdown } from "@/components/shared/Countdown";
-import { CertificatePreview } from "@/components/shared/CertificatePreview";
-import { ResourceCard } from "@/components/shared/ResourceCard";
 import { FAQAccordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,18 +19,10 @@ interface Props {
 const portalNav = [
   { id: "overview", label: "Overview" },
   { id: "why", label: "Why" },
-  { id: "skills", label: "Skills" },
-  { id: "outcomes", label: "Outcomes" },
-  { id: "careers", label: "Careers" },
   { id: "eligibility", label: "Eligibility" },
   { id: "pattern", label: "Exam Pattern" },
   { id: "syllabus", label: "Syllabus" },
-  { id: "samples", label: "Samples" },
-  { id: "roadmap", label: "Roadmap" },
-  { id: "books", label: "Books" },
-  { id: "mock-tests", label: "Mock Tests" },
   { id: "awards", label: "Awards" },
-  { id: "guides", label: "Guides" },
   { id: "faq", label: "FAQ" },
 ];
 
@@ -53,7 +43,7 @@ export function OlympiadPortal({ olympiad }: Props) {
               <div className="flex flex-wrap gap-2">
                 <Badge className="bg-tejas-saffron text-white">{t(olympiad.grades)}</Badge>
                 {isComingSoon ? (
-                  <Badge variant="outline" className="border-white/40 text-white">Coming Soon</Badge>
+                  <Badge variant="outline" className="border-white/40 text-white">Not announced</Badge>
                 ) : (
                   <Badge variant="outline" className="border-emerald-400 text-emerald-300">Current Edition</Badge>
                 )}
@@ -65,8 +55,12 @@ export function OlympiadPortal({ olympiad }: Props) {
               <p className="mt-4 max-w-2xl text-white/80 leading-relaxed">{t(olympiad.description)}</p>
               <div className="mt-6 flex flex-wrap gap-4 text-sm">
                 <span>{t(olympiad.duration)}</span>
-                <span>·</span>
-                <span>{olympiad.questions} questions</span>
+                {olympiad.questions > 0 && (
+                  <>
+                    <span>·</span>
+                    <span>{olympiad.questions} questions</span>
+                  </>
+                )}
                 {olympiad.partner && (
                   <>
                     <span>·</span>
@@ -76,7 +70,7 @@ export function OlympiadPortal({ olympiad }: Props) {
               </div>
               <div className="mt-8 flex flex-wrap gap-4">
                 {isComingSoon ? (
-                  <Button disabled>Coming Soon</Button>
+                  <Button disabled>Not open for registration</Button>
                 ) : (
                   <Link href="/schools/register">
                     <Button>Register a school</Button>
@@ -119,6 +113,7 @@ export function OlympiadPortal({ olympiad }: Props) {
           <p className="mt-4 max-w-3xl text-tejas-muted leading-relaxed">{t(olympiad.whySubject)}</p>
         </section>
 
+        {olympiad.skillsDeveloped.length > 0 && (
         <section id="skills" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Skills Developed</h2>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -127,7 +122,9 @@ export function OlympiadPortal({ olympiad }: Props) {
             ))}
           </ul>
         </section>
+        )}
 
+        {olympiad.learningOutcomes.length > 0 && (
         <section id="outcomes" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Learning Outcomes</h2>
           <ul className="mt-6 space-y-3">
@@ -139,16 +136,18 @@ export function OlympiadPortal({ olympiad }: Props) {
             ))}
           </ul>
         </section>
+        )}
 
+        {olympiad.careerPathways.length > 0 && (
         <section id="careers" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Career Pathways</h2>
-          <p className="mt-2 text-sm text-tejas-muted">Subject excellence opens doors across disciplines:</p>
           <ul className="mt-6 flex flex-wrap gap-3">
             {olympiad.careerPathways.map((c) => (
               <li key={c.en} className="rounded-full border border-tejas-blue/20 bg-tejas-blue/5 px-4 py-2 text-sm text-tejas-blue">{t(c)}</li>
             ))}
           </ul>
         </section>
+        )}
 
         <section id="eligibility" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Eligibility</h2>
@@ -164,6 +163,9 @@ export function OlympiadPortal({ olympiad }: Props) {
 
         <section id="pattern" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Exam Pattern</h2>
+          {olympiad.examPattern.length === 0 ? (
+            <p className="mt-4 max-w-3xl text-tejas-muted">The examination pattern will be announced officially. The approved format for TEJAS Olympiad 2026–27 is an offline OMR examination at the participating school.</p>
+          ) : (
           <div className="mt-6 overflow-x-auto rounded-2xl border border-stone-200">
             <table className="w-full text-left text-sm">
               <thead>
@@ -184,10 +186,14 @@ export function OlympiadPortal({ olympiad }: Props) {
               </tbody>
             </table>
           </div>
+          )}
         </section>
 
         <section id="syllabus" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Syllabus</h2>
+          {olympiad.syllabus.length === 0 ? (
+            <p className="mt-4 max-w-3xl text-tejas-muted">The syllabus will be announced officially. This page does not publish an unverified topic list.</p>
+          ) : (
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             {olympiad.syllabus.map((level) => (
               <div key={level.level.en} className="rounded-2xl border border-stone-200 bg-white p-6">
@@ -203,6 +209,7 @@ export function OlympiadPortal({ olympiad }: Props) {
               </div>
             ))}
           </div>
+          )}
         </section>
 
         {olympiad.sampleQuestions.length > 0 && (
@@ -300,9 +307,11 @@ export function OlympiadPortal({ olympiad }: Props) {
         )}
 
         <section id="awards" className="scroll-mt-32 border-t border-stone-200 py-16">
-          <div className="grid gap-10 lg:grid-cols-2">
-            <div>
+          <div>
               <h2 className="text-2xl font-bold text-tejas-ink">Awards & Recognition</h2>
+              {olympiad.awards.length === 0 ? (
+                <p className="mt-4 max-w-3xl text-tejas-muted">No award has been announced for this subject.</p>
+              ) : (
               <ul className="mt-6 space-y-4">
                 {olympiad.awards.map((award) => (
                   <li key={award.level.en} className="rounded-xl border border-stone-200 p-4">
@@ -311,6 +320,7 @@ export function OlympiadPortal({ olympiad }: Props) {
                   </li>
                 ))}
               </ul>
+              )}
               {olympiad.hallOfFameHighlights.length > 0 && (
                 <div className="mt-8">
                   <h3 className="text-lg font-bold text-tejas-ink">Hall of Fame Highlights</h3>
@@ -326,8 +336,6 @@ export function OlympiadPortal({ olympiad }: Props) {
                   </Link>
                 </div>
               )}
-            </div>
-            <CertificatePreview olympiad={`${t(olympiad.name)} Olympiad`} />
           </div>
         </section>
 
@@ -385,10 +393,10 @@ export function OlympiadPortal({ olympiad }: Props) {
         </section>
 
         <section id="register" className="scroll-mt-32 border-t border-stone-200 py-16 text-center">
-          <h2 className="text-2xl font-bold text-tejas-ink">Ready to Participate?</h2>
-          <p className="mt-2 text-tejas-muted">Register through your school via Olympiad Cell, DHE.</p>
+          <h2 className="text-2xl font-bold text-tejas-ink">School registration</h2>
+          <p className="mt-2 text-tejas-muted">Schools register their students from 3 to 20 November 2026. Write to tejas@dhe.org.in.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
-            {isComingSoon ? <Button disabled>Coming Soon</Button> : (
+            {isComingSoon ? <Button disabled>Not open for registration</Button> : (
               <Link href="/schools/register"><Button>Register a school</Button></Link>
             )}
             <Link href="/schools">

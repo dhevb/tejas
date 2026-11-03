@@ -5,10 +5,10 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { FadeIn } from "@/components/shared/FadeIn";
 
 const benefits = [
-  { icon: Building2, label: "School Dashboard", desc: "Track registrations and performance" },
-  { icon: Users, label: "Bulk Registration", desc: "Enroll entire classes in minutes" },
-  { icon: Award, label: "Recognition Tiers", desc: "Platinum, Gold, and Silver partners" },
-  { icon: BarChart3, label: "Analytics", desc: "Insights on student progress" },
+  { icon: Building2, label: "School registration", desc: "Opens 3 November 2026 and closes 20 November 2026" },
+  { icon: Users, label: "Student sheet", desc: "The school uploads one sheet and chooses each stream" },
+  { icon: Award, label: "School share", desc: "Retain ₹30 of ₹150, and ₹34 of each ₹170 book" },
+  { icon: BarChart3, label: "No public ranking", desc: "A 2026–27 school list has not been published" },
 ];
 
 export function ForSchoolsSection() {
@@ -19,13 +19,13 @@ export function ForSchoolsSection() {
           <FadeIn>
             <SectionHeader
               eyebrow="For Schools"
-              title="Partner with TEJAS"
+              title="Register the school"
               subtitle="Register the school for TEJAS Olympiad 2026–27. A participating-school count for this cycle has not been published."
               align="left"
               className="mb-0"
             />
             <Link href="/schools" className="mt-8 inline-block">
-              <Button size="lg">Explore School Partnership</Button>
+              <Button size="lg">For schools</Button>
             </Link>
           </FadeIn>
           <FadeIn delay={0.1}>

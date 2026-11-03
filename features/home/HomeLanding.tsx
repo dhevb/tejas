@@ -23,7 +23,7 @@ const streams = [
     title: "TEJAS English",
     image: "/home/stream-english.jpg",
     alt: "Illustration of a student reading a book in an Indian classroom",
-    text: "Reading, vocabulary, grammar, and the confidence to express an idea clearly.",
+    text: "Offline examination at the school. A syllabus has not been published.",
     when: "10 December 2026",
     classes: "Classes III–X",
   },
@@ -32,7 +32,7 @@ const streams = [
     title: "TEJAS Mathematics",
     image: "/home/stream-maths.jpg",
     alt: "Illustration of a student drawing a circle and triangle with a compass",
-    text: "Number sense, geometry, patterns, and reasoning through a problem.",
+    text: "Offline examination at the school. A syllabus has not been published.",
     when: "9 December 2026",
     classes: "Classes III–X",
   },
@@ -41,33 +41,33 @@ const streams = [
     title: "TEJAS Future Tech",
     image: "/home/stream-tech.jpg",
     alt: "Illustration of two students looking at a small classroom robot and a laptop",
-    text: "Digital literacy, computational thinking, and a first look at emerging technology.",
+    text: "Offline OMR examination for Classes VI–X. It is not a computer-based test, and a syllabus has not been published.",
     when: "11 December 2026",
     classes: "Classes VI–X",
   },
 ] as const;
 
 const reasons = [
-  { icon: Compass, title: "Notice a strength", text: "A school Olympiad gives students a clear task beyond the regular test." },
-  { icon: BookOpen, title: "Stay with the idea", text: "The streams ask for reading, reasoning, and careful use of what has been taught." },
-  { icon: Lightbulb, title: "Try a new question", text: "Students meet problems that reward thinking, not only recall." },
-  { icon: Sparkles, title: "Speak with confidence", text: "English, mathematics, and technology each ask students to show what they can do." },
-  { icon: Cpu, title: "Look toward what is next", text: "Future Tech introduces digital tools, safety, and emerging technology at class level." },
-  { icon: Users, title: "Take part with the school", text: "Schools register their students. Participation is organised, not an individual online signup." },
+  { icon: Compass, title: "English and Mathematics", text: "Both streams are open to Classes III–X." },
+  { icon: BookOpen, title: "Syllabus not yet published", text: "Question counts, duration, and the section pattern will be announced officially." },
+  { icon: Lightbulb, title: "Papers sent to the school", text: "Question papers and OMR sheets are dispatched in advance. Completed sheets are couriered the same day." },
+  { icon: Sparkles, title: "Prizes already announced", text: "Each class in each stream has prizes of ₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500." },
+  { icon: Cpu, title: "Future Tech is Classes VI–X", text: "Classes III–V are not eligible. The examination is offline and uses OMR sheets." },
+  { icon: Users, title: "Take part with the school", text: "Schools register their students from 3 to 20 November 2026. There is no individual online signup." },
 ] as const;
 
 const steps = [
   { n: "1", title: "School registration", text: "A school submits the form between 3 and 20 November 2026." },
   { n: "2", title: "Student sheet", text: "The school uploads the student sheet and chooses a stream for each student." },
-  { n: "3", title: "Preparation", text: "Subject pages and published guides are available. They do not start an online test." },
-  { n: "4", title: "Examination", text: "Mathematics, English, and Future Tech are held on 9, 10, and 11 December 2026." },
-  { n: "5", title: "Results", text: "Results are placed in February 2027. A declaration date has not been fixed." },
+  { n: "3", title: "Preparation", text: "A syllabus and sample papers have not been published. Printed books are optional. This website does not start an online test." },
+  { n: "4", title: "Examination", text: "Mathematics, English, and Future Tech are held offline at the school on 9, 10, and 11 December 2026." },
+  { n: "5", title: "Results", text: "A results date has not been announced." },
 ] as const;
 
 const learning = [
-  { href: "/olympiads", title: "Olympiad guides", text: "What each stream covers, who may enter, and when it is examined." },
-  { href: "/prepare", title: "Prepare hub", text: "Preparation notes already published. This is not a live course or a scored test." },
-  { href: "/resources", title: "Resources", text: "Guides and published material for students, teachers, and parents." },
+  { href: "/olympiads", title: "Olympiad pages", text: "Who may enter, when each stream is examined, and the published fee." },
+  { href: "/prepare", title: "Prepare hub", text: "Mock tests and sample papers are not available. This is not a live course." },
+  { href: "/resources", title: "Resources", text: "Only published pages are listed. Missing files are not shown as downloads." },
   { href: "/prepare/mock-tests", title: "Mock test information", text: "This page does not start a test, show a score, or run an online examination." },
 ] as const;
 
@@ -91,7 +91,7 @@ export function HomeLanding() {
               Find your spark...
             </h1>
             <p className="mt-4 text-xl font-medium text-tejas-ink sm:text-2xl">
-              Discover your talent. Explore your potential. Build your future.
+              Talent Exploration for Junior Aspiring Scholars
             </p>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-tejas-muted">
               Talent Exploration for Junior Aspiring Scholars. English and Mathematics for Classes III–X, and Future Tech for Classes VI–X, organised by the Department of Holistic Education (DHE), VBITR, Kurukshetra.
@@ -238,7 +238,7 @@ export function HomeLanding() {
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-widest text-tejas-gold">For schools</p>
             <h2 id="join-heading" className="mt-3 text-3xl font-bold md:text-4xl">Be a part of TEJAS Olympiad 2026–27</h2>
-            <p className="mt-4 text-lg text-white/80">Give your students an opportunity to explore their abilities, strengthen their skills and discover their potential.</p>
+            <p className="mt-4 text-lg text-white/80">Registration is open to schools from 3 November 2026 to 20 November 2026. The school collects ₹150 per student per stream, retains ₹30, and remits ₹120.</p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <Link href="/schools/register">

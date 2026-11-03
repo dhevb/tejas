@@ -77,6 +77,5 @@ export const brand = {
   country: "Bharat",
   domain: "tejas.dhe.org.in",
   url: "https://tejas.dhe.org.in",
-  movement:
-    "Not Just an Examination, but a National Movement for Talent, Research, Innovation, and Nation Building",
+  movement: "Find your spark...",
 } as const;

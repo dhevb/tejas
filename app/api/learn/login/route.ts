@@ -21,7 +21,11 @@ export async function POST(request: Request) {
     return noStore({ ok: false, error: "The student portal database is not available." }, 503);
   }
   if (sessionVersion == null) return noStore({ ok: false, error: "The email or password was not accepted." }, 401);
-  const headers = new Headers({ "Cache-Control": "no-store", "Content-Type": "application/json" });
-  headers.set("Set-Cookie", learnCookieHeader(await sealSession(result.student.id, sessionVersion)));
-  return new Response(JSON.stringify({ ok: true, student: result.student }), { status: 200, headers });
+  try {
+    const headers = new Headers({ "Cache-Control": "no-store", "Content-Type": "application/json" });
+    headers.set("Set-Cookie", learnCookieHeader(await sealSession(result.student.id, sessionVersion)));
+    return new Response(JSON.stringify({ ok: true, student: result.student }), { status: 200, headers });
+  } catch {
+    return noStore({ ok: false, error: "Sign-in could not be completed. Try again." }, 503);
+  }
 }

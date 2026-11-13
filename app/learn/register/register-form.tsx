@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { authResult } from "@/lib/portal/auth-result";
 import { portalStreams } from "@/lib/portal/model";
 
 const fieldClass = "mt-1 w-full rounded-xl border border-tejas-border bg-white px-3 py-2 text-sm text-tejas-ink";
@@ -21,28 +22,33 @@ export function RegisterForm() {
     setError("");
     setPending(true);
     const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/learn/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fullName: form.get("fullName"),
-        parentName: form.get("parentName"),
-        mobile: form.get("mobile"),
-        email: form.get("email"),
-        schoolName: form.get("schoolName"),
-        password: form.get("password"),
-        streamId,
-        classLevel: Number(classLevel),
-      }),
-    });
-    const body = (await response.json()) as { ok?: boolean; error?: string };
-    setPending(false);
-    if (!response.ok || !body.ok) {
-      setError(body.error || "The account could not be created.");
-      return;
+    try {
+      const response = await fetch("/api/learn/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: form.get("fullName"),
+          parentName: form.get("parentName"),
+          mobile: form.get("mobile"),
+          email: form.get("email"),
+          schoolName: form.get("schoolName"),
+          password: form.get("password"),
+          streamId,
+          classLevel: Number(classLevel),
+        }),
+      });
+      const result = await authResult(response, "The account could not be created.");
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.push("/learn/dashboard");
+      router.refresh();
+    } catch {
+      setError("The account could not be created.");
+    } finally {
+      setPending(false);
     }
-    router.push("/learn/dashboard");
-    router.refresh();
   }
 
   return (

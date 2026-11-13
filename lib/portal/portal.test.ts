@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { GET as bookFileGet } from "@/app/api/learn/books/[bookId]/file/route";
+import { POST as publicationPost } from "@/app/api/learn/staff/publication/route";
 import { loadCatalog } from "@/lib/portal/catalog.server";
 import { booksForLearner, decideAccess, quoteFee, streamAcceptsClass } from "@/lib/portal/model";
 import { openSession, sealSession } from "@/lib/portal/session";
@@ -202,6 +203,36 @@ test("english registration does not invent a book or a fee", async () => {
   assert.equal((await reportPayment(student.id, "UTR49ENGLISH")).ok, false);
   assert.equal((await registerStudent({ ...baseStudent, email: "young@example.test", streamId: "technology", classLevel: 5 })).ok, false);
   assert.equal((await registerStudent({ ...baseStudent, email: "low@example.test", streamId: "english", classLevel: 2 })).ok, false);
+});
+
+test("an unsigned publication request is refused and a local publication records the staff identity", async () => {
+  const page = readFileSync(path.join(process.cwd(), "app/learn/staff/page.tsx"), "utf8");
+  const consoleSource = readFileSync(path.join(process.cwd(), "app/learn/staff/staff-console.tsx"), "utf8");
+  assert.equal(page.includes("does not deploy the site or write production data"), false);
+  assert.equal(consoleSource.includes("does not change production data"), false);
+  assert.equal(page.includes("writes that status to the production database"), true);
+  const refused = await publicationPost(new Request("http://localhost/api/learn/staff/publication", {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "http://localhost", host: "localhost" },
+    body: JSON.stringify({ kind: "book", id: "ft-book-1", status: "published", reason: "This request has no staff session." }),
+  }));
+  assert.equal(refused.status, 401);
+  const created = await registerStudent({ ...baseStudent, fullName: "Local Student", email: "local-pub@example.test", streamId: "technology", classLevel: 7 });
+  assert.equal(created.ok, true);
+  if (!created.ok) return;
+  const student = await readStudent(created.student.id);
+  assert.ok(student);
+  if (!student) return;
+  const closed = await accessFor(student, "ft-book-1", "ft-b1-mt02");
+  assert.equal(closed.ok, false);
+  if (!closed.ok) assert.equal(closed.reason, "unpublished");
+  const saved = await setPublication({ actor: "reviewer@example.test", kind: "test", id: "ft-b1-mt02", status: "published", reason: "Local check of the audit record only." });
+  assert.equal(saved.ok, true);
+  const audit = (await staffOverview()).audit.find((item) => item.action === "set-publication" && item.actor === "reviewer@example.test");
+  assert.ok(audit);
+  assert.equal(audit?.reason, "Local check of the audit record only.");
+  const stillClosed = await accessFor(student, "ft-book-1", "ft-b1-mt02");
+  assert.equal(stillClosed.ok, false);
 });
 
 test("the e-book file route refuses an anonymous request", async () => {

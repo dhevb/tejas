@@ -5,6 +5,8 @@ This audit did not apply a migration, change production data, merge the pull req
 
 ## 1. Executive summary
 
+The 6:22 PM IST finding was **B. READY AFTER SPECIFIC FIXES**. The follow-up later on 13 November 2026 fixes those two items. The current decision is in **Follow-up Security Fixes — 13 November 2026** at the end of this file.
+
 **B. READY AFTER SPECIFIC FIXES**
 
 Commit `6e65fad` closes the earlier hole that left seven security-definer functions executable by `anon` and `authenticated`. That result was reproduced on disposable PostgreSQL 17.12. Untrusted roles cannot call the functions, cannot create objects in `public`, and cannot change seeded book rows.
@@ -278,3 +280,134 @@ Apply the schema-qualified `search_path` correction in section 5 to `20261113_te
 Do not apply either file to production as part of this audit. Do not merge pull request 14. Do not publish the books or tests.
 
 NO PRODUCTION MIGRATION APPLIED. NO PRODUCTION DATA MODIFIED. NO PR MERGED. NO DEPLOYMENT OR CONTENT PUBLICATION PERFORMED.
+
+## Follow-up Security Fixes — 13 November 2026
+
+Follow-up time: 13 November 2026, 6:39 PM IST.
+These results are from disposable PostgreSQL 17.12 database `tejas_fix_sec` on local port 5433. This follow-up did not open a production database connection.
+
+### Decision
+
+**A. READY FOR OWNER APPROVAL**
+
+The two items that kept the 6:22 PM IST audit at B are fixed in the feature branch. Signed-in Preview browsing was not completed from this environment. That visit is recorded as not verified. It is not a code change.
+
+### Exact changed files and commit
+
+| Item | Value |
+| --- | --- |
+| Fix commit | `cefa39dbea2ae6fc38f97e19bde0cc764961a29d` |
+| Commit time | 13 November 2026, 6:39 PM IST |
+| Branch | `cursor/stream-class-portal-2878` |
+| Migration | `supabase/migrations/20261113_tejas_learning_portal_durable.sql` |
+| Report | `docs/PORTAL_FINAL_SECURITY_READINESS_REPORT.md` |
+| Application code | Unchanged |
+
+The durable file has never been applied to production. Editing it is the single correction. A later migration would have left the unsafe function bodies as the first apply. Migration 1 was not changed. No second fee migration was added.
+
+### SECURITY DEFINER functions
+
+All seven functions remain owned by `postgres`, security definer, and free of dynamic SQL. The configured search path changed from `public` to `pg_catalog`.
+
+| Function | Old search_path | New search_path | Unqualified portal table in the body |
+| --- | --- | --- | --- |
+| `tejas_staff_bump_session(text)` | `public` | `pg_catalog` | none |
+| `tejas_learn_rotate_session(uuid)` | `public` | `pg_catalog` | none |
+| `tejas_learn_register_student(text, text, text, text, text, text, text, text, integer, text, integer, integer)` | `public` | `pg_catalog` | none |
+| `tejas_learn_correct_registration(uuid, text, integer, text, integer, integer, text, text)` | `public` | `pg_catalog` | none |
+| `tejas_learn_report_payment(uuid, text, text, integer)` | `public` | `pg_catalog` | none |
+| `tejas_learn_review_payment(uuid, text, text, text, text)` | `public` | `pg_catalog` | none |
+| `tejas_learn_set_publication(text, text, text, text, text)` | `public` | `pg_catalog` | none |
+
+Every portal table reference in those bodies is `public.*`. `now()`, `jsonb_build_object()`, `regexp_like()`, `btrim()`, and `char_length()` are `pg_catalog.*`. There is no portal sequence. `COALESCE` is SQL syntax, not a `pg_catalog` function. The publication audit uses an assignment when the previous status is missing. A first draft that called `pg_catalog.coalesce` failed with "function does not exist" and was replaced before this result.
+
+After install, and again after running the durable file a second time:
+
+| Role | EXECUTE on the seven functions |
+| --- | --- |
+| `anon` | denied. A call returned `permission denied for function tejas_staff_bump_session`. |
+| `authenticated` | denied. A call returned `permission denied for function tejas_learn_review_payment`. |
+| `public` | denied. Privilege count 0. |
+| `service_role` | allowed. Privilege count 7. The calls below ran as this role. |
+
+### Temporary-table test
+
+The session created temporary tables named `tejas_staff_sessions`, `tejas_learn_students`, `tejas_learn_entitlements`, `tejas_learn_audit`, `tejas_learn_publication`, `tejas_learn_books`, and `tejas_learn_book_classes`, and inserted marker rows. `service_role` then called each function.
+
+| Function | Public result | Temporary table |
+| --- | --- | --- |
+| `tejas_staff_bump_session('temp-subject')` | Public version 1 | Stayed at 50 |
+| `tejas_learn_rotate_session` of the temporary student id | `student not found` | Stayed at session version 50 |
+| `tejas_learn_rotate_session` of the real student | Public version became 2 | Unchanged |
+| `tejas_learn_register_student` | Public student created | Temporary email was not copied |
+| `tejas_learn_report_payment` and `tejas_learn_review_payment` | Public entitlement changed | Temporary note stayed `TEMP`, status `verified`, amount 1 |
+| `tejas_learn_correct_registration` | Public class became 9 | Temporary student stayed at version 50 |
+| `tejas_learn_set_publication` | Public book and test stored `awaiting_approval` | Temporary publication stayed `published`. Temporary audit stayed at 1 row. |
+
+A temporary book named `fake-book` did not satisfy registration. The function returned `book does not match the stream and class`.
+
+### ₹49 enforcement
+
+The constraint `tejas_learn_entitlements_fee_49` requires `amount_inr = 49` and `mock_test_amount_inr = 0`. A `reported`, `verified`, or `rejected` row also needs a payment reference of 6 to 80 characters. The partial unique index `tejas_learn_entitlements_one_reference` allows that reference on only one entitlement row. Registration and correction functions reject any other amount before insert, and they write the literal 49 only when the book matches the student's stream and class. Review does the same match before it changes status.
+
+| Test | Result |
+| --- | --- |
+| Register class 7, book 1, amount 49 | PASS. Unpaid entitlement stored at 49. |
+| Register at 48, 50, 0, or -1 | PASS (rejected). Error `ebook fee must be 49`. No student row was kept. |
+| Direct insert of 48 or 0 | PASS (rejected). Check constraint `tejas_learn_entitlements_fee_49`. |
+| Direct insert of -5 | PASS (rejected). Existing check `amount_inr >= 0`. |
+| Direct insert of `verified` with no reference | PASS (rejected). Fee constraint. |
+| Report amount 48 | PASS (rejected). `ebook fee must be 49`. |
+| Report the matching book at 49 | PASS. Status became `reported`, not `verified`. |
+| Report the other book | PASS (rejected). `payment report was not accepted`. |
+| Same reference on a second student | PASS (rejected). `duplicate payment reference`. The second student then used a different reference. |
+| Reject the first report | PASS. Content stays locked because the status is not `verified`. |
+| Verify the second student | PASS. Only that student's book 1 row became `verified`. |
+| Verify book 2 for the class 7 student | PASS (rejected). `no reported payment`. No book 2 row was created. |
+| Correct class 7 to class 9 with amount 48 | PASS (rejected). `ebook fee must be 49`. |
+| Correct class 7 to class 9 with amount 49 | PASS. Old book 1 row became `superseded`. New book 2 row was `unpaid`. |
+| Reuse the old reference on the new row | PASS (rejected). `duplicate payment reference`. |
+| New reference, then staff verification | PASS. Only the new row became `verified` at 49. The old row stayed `superseded`. |
+| English registration with no book | PASS. No entitlement row. |
+| Seeded books | PASS. Both remained `awaiting_approval` at fee 49 and mock-test fee 0. |
+
+The application still quotes 49 before it calls these functions. The database now rejects a different amount even when the caller is `service_role` and uses the function or a direct insert.
+
+### Migration install and rollback
+
+On `tejas_fix_sec`, with sentinel rows in `tejas_registrations`, `tejas_payments`, `tejas_schools`, `tejas_book_orders`, and `tejas_audit_logs`:
+
+1. Migration 1 and migration 2 applied.
+2. Migration 2 applied again. Privileges stayed denied for `anon`, `authenticated`, and `public`.
+3. Portal functions and tables were dropped with the statements in section 12. Sentinel counts stayed 1. Portal table count became 0.
+4. Both migrations were applied again. Sentinel registration and payment counts stayed 1. Portal tables returned (12). `anon` execute count was 0. `service_role` execute count was 7. The fee constraint and the reference index were present.
+
+### Preview
+
+`NOT VERIFIED — AUTHENTICATED PREVIEW VISIT NOT COMPLETED`
+
+This environment has no Vercel session. Preview protection was not changed. An unauthenticated response is not evidence that `/learn` works after login. Production `https://tejas.dhe.org.in/learn` is a different site and was not used as a substitute.
+
+### Regression
+
+| Command | Result |
+| --- | --- |
+| `npm test` | 43 passed, 0 failed, 0 skipped |
+| `npx tsc --noEmit --incremental false` | Passed, no output, after the build had finished |
+| `npm run lint` | Passed, with the same two warnings in `TejasEmblem.tsx` and `Countdown.tsx` |
+| `npm run build` | Passed, 56 static pages, including `/learn`, `/learn/login`, `/learn/register`, `/learn/staff`, `/learn/dashboard`, `/learn/account`, and `/learn/pay` |
+
+The registration, school-share, printed-book payment, one-device session, rejected-payment, and server-scoring tests passed in that `npm test` run. Those tests use the file store and registration doubles. They do not write to production.
+
+### Remaining risks
+
+1. The service-role key still bypasses row-level security. A holder of that key can insert a valid ₹49 row. A browser caller cannot set the amount or the status.
+2. `password_salt` remains nullable.
+3. `anon` and `authenticated` still have table grants. Row-level security blocks the rows. Revoking the grants is optional and was not done.
+4. Question text stays in the catalog file. The database seeds identities only. Books and tests stay `awaiting_approval`.
+5. Supabase Auth and Storage objects are not in the SQL backup recorded earlier.
+6. The signed-in Preview visit is not verified.
+
+These do not change the decision. Production migration, merge, deployment, and publication were not done.
+
+ONLY FEATURE-BRANCH CODE/MIGRATION CHANGES WERE MADE. NO PRODUCTION MIGRATION APPLIED. NO PRODUCTION DATA MODIFIED. NO PR MERGED. NO PRODUCTION DEPLOYMENT OR CONTENT PUBLICATION PERFORMED.

@@ -386,7 +386,7 @@ On `tejas_fix_sec`, with sentinel rows in `tejas_registrations`, `tejas_payments
 
 `NOT VERIFIED — AUTHENTICATED PREVIEW VISIT NOT COMPLETED`
 
-This environment has no Vercel session. Preview protection was not changed. An unauthenticated response is not evidence that `/learn` works after login. Production `https://tejas.dhe.org.in/learn` is a different site and was not used as a substitute.
+This environment has no Vercel session. Preview protection was not changed. An unauthenticated response is not evidence that `/learn` works after login. Production `https://tejas.dhe.org.in/learn` is a different site and was not used as a substitute. The deployment URL and the per-route result are in **Authenticated Preview verification — 13 November 2026** below.
 
 ### Regression
 
@@ -406,8 +406,60 @@ The registration, school-share, printed-book payment, one-device session, reject
 3. `anon` and `authenticated` still have table grants. Row-level security blocks the rows. Revoking the grants is optional and was not done.
 4. Question text stays in the catalog file. The database seeds identities only. Books and tests stay `awaiting_approval`.
 5. Supabase Auth and Storage objects are not in the SQL backup recorded earlier.
-6. The signed-in Preview visit is not verified.
+6. The signed-in Preview visit is not verified. The exact deployment URL is in the preview section below.
 
 These do not change the decision. Production migration, merge, deployment, and publication were not done.
 
 ONLY FEATURE-BRANCH CODE/MIGRATION CHANGES WERE MADE. NO PRODUCTION MIGRATION APPLIED. NO PRODUCTION DATA MODIFIED. NO PR MERGED. NO PRODUCTION DEPLOYMENT OR CONTENT PUBLICATION PERFORMED.
+
+## Authenticated Preview verification — 13 November 2026
+
+Checked at 13 November 2026, 6:44 PM IST. No application source or migration file was changed. No Vercel protection setting was changed.
+
+### Commit and deployment
+
+| Item | Value |
+| --- | --- |
+| Security fix | `cefa39dbea2ae6fc38f97e19bde0cc764961a29d` (13 November 2026, 6:39 PM IST) |
+| Deployment of `cefa39d` alone | None. GitHub reports that commit as pending, with no check runs and no Preview deployment. |
+| Latest successful Preview that contains `cefa39d` | `45d8eaa307841fd6132ad8b06226f893dd413af7` |
+| Deployment | GitHub deployment `7766086830`, state `success`, created 13 November 2026, 6:42 PM IST |
+| Preview URL | https://tejas-gbvi64vui-dhe-projects.vercel.app |
+| Difference from `cefa39d` | `45d8eaa` changes only `docs/PORTAL_FINAL_SECURITY_READINESS_REPORT.md`. The portal route files are the ones from `cefa39d`. |
+| Vercel check | `Vercel` status success, “Deployment has completed”. `Vercel Preview Comments` success. `Supabase Preview` skipped. |
+
+The deployed tree contains `app/learn/page.tsx`, `app/learn/login/page.tsx`, `app/learn/register/page.tsx`, `app/learn/staff/page.tsx`, `app/learn/dashboard/page.tsx`, `app/learn/account/page.tsx`, and `app/learn/pay/page.tsx`. That is source evidence that this deployment includes the routes. It is not a signed-in page view.
+
+### What was reached without a Vercel session
+
+Each of the seven paths returned HTTP 302 to `https://vercel.com/sso-api`. The query string was not recorded. `x-matched-path` was absent, so the request did not reach the Next.js app. This shows Preview protection is on. It is not a pass for any route.
+
+No authorised browser session was available. No password or token was requested or stored.
+
+### Route results
+
+| Route | Result | Evidence |
+| --- | --- | --- |
+| `/learn` | NOT VERIFIED | Present in the deployed tree. Live response was the Vercel SSO redirect. |
+| `/learn/login` | NOT VERIFIED | Present in the deployed tree. Live response was the Vercel SSO redirect. |
+| `/learn/register` | NOT VERIFIED | Present in the deployed tree. Live response was the Vercel SSO redirect. |
+| `/learn/staff` | NOT VERIFIED | Present in the deployed tree. Live response was the Vercel SSO redirect. |
+| `/learn/dashboard` | NOT VERIFIED | Present in the deployed tree. Live response was the Vercel SSO redirect. |
+| `/learn/account` | NOT VERIFIED | Present in the deployed tree. Live response was the Vercel SSO redirect. |
+| `/learn/pay` | NOT VERIFIED | Present in the deployed tree. Live response was the Vercel SSO redirect. |
+
+`NOT VERIFIED — AUTHENTICATED PREVIEW VISIT NOT COMPLETED`
+
+### Manual check for the owner
+
+Open https://tejas-gbvi64vui-dhe-projects.vercel.app while already signed in to the Vercel team. Leave deployment protection on. Do not create a student account, submit a payment, or publish a book or test.
+
+1. `/learn` shows the heading “E-book and mock tests”, with links to create an account and to sign in.
+2. `/learn/login` shows the heading “Sign in” and a link to create an account. Leave the form blank.
+3. `/learn/register` shows the registration form. Leave it blank.
+4. `/learn/staff` shows “E-book and mock-test inventory” and a staff sign-in form. The student list stays empty before staff sign-in. Do not publish.
+5. `/learn/dashboard`, `/learn/account`, and `/learn/pay`, opened with no student session, redirect to `/learn/login`.
+
+Production `https://tejas.dhe.org.in` was not used for this check.
+
+NO PRODUCTION MIGRATION APPLIED. NO PRODUCTION DATA MODIFIED. NO PR MERGED. NO PRODUCTION DEPLOYMENT OR CONTENT PUBLICATION PERFORMED.

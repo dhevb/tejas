@@ -431,7 +431,7 @@ test("a data key encrypts registration bytes at rest", () => {
   delete process.env.TEJAS_DATA_KEY;
 });
 
-test("staff access has no default password", () => {
+test("staff access has no default password", async () => {
   assert.equal(adminConfigured(), false);
   assert.equal(tokenMatches("password"), false);
   process.env.TEJAS_ADMIN_TOKEN = "correct-horse-battery";
@@ -440,6 +440,20 @@ test("staff access has no default password", () => {
   const session = createSessionValue();
   assert.equal(sessionIsValid(session), true);
   assert.equal(sessionIsValid("v1.1.forged"), false);
+  process.env.TEJAS_ADMIN_TOKEN = "correct-horse-battery\n";
+  assert.equal(tokenMatches("correct-horse-battery"), true);
+  const { POST } = await import("@/app/api/register/admin/session/route");
+  const response = await POST(new Request("http://127.0.0.1/api/register/admin/session", {
+    method: "POST",
+    headers: { origin: "http://127.0.0.1", host: "127.0.0.1", "content-type": "application/json" },
+    body: JSON.stringify({ token: " correct-horse-battery " }),
+  }));
+  assert.equal(response.status, 200);
+  const cookie = response.headers.get("set-cookie") ?? "";
+  assert.equal(cookie.includes("tejas_staff="), true);
+  assert.equal(cookie.includes("HttpOnly"), true);
+  const value = cookie.slice("tejas_staff=".length).split(";")[0];
+  assert.equal(sessionIsValid(value), true);
   delete process.env.TEJAS_ADMIN_TOKEN;
 });
 

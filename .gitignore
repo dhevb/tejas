@@ -11,3 +11,4 @@ next-env.d.ts
 /data/portal
 /data/idempotency.json
 /data/payment-config.json
+__pycache__/

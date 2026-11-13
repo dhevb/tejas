@@ -4,9 +4,11 @@ Review date: 13 November 2026, afternoon IST.
 
 This review did not merge the pull request, did not deploy to production, did not apply the new migration to production, did not publish a book or a mock test, and did not change School Olympiad registration or printed-book order rules.
 
-**Recommendation: Changes required.**
+**Recommendation: ready for the owner to approve the database step. Not merged, not deployed, and not published.**
 
-The Future Tech question bank matches the supplied Word booklets, and the server does enforce stream, class, payment and publication. The portal is not ready for content approval. The Book 1 cover still disagrees with the launch mapping, the live app stores students in a local file rather than the unapplied database migration, and the Vercel preview could not be opened because it asks for a Vercel login.
+The Future Tech question bank matches the supplied Word booklets. Stream, class, payment and publication are enforced on the server. Staff sign-in now sets the session cookie on the response itself, and a hosted deploy will not store students in a local file. The portal migration was applied and rolled back only on an empty local PostgreSQL database. It has not been applied to production because the configured Supabase host does not resolve, so a backup could not be taken.
+
+The Book 1 cover note is deferred by the owner. The launch mapping stays Book 1 for Classes 6–8 and Book 2 for Classes 9–10. It is not a technical blocker.
 
 ## 1. Pull request and branch
 
@@ -226,9 +228,23 @@ No question, option, answer or explanation was edited. The class mapping was not
 
 ## 16. Recommendation
 
-**Changes required.**
+**Ready for owner approval of the production database step. Do not merge or publish yet.**
 
-The pull request is ready for a person to review. It is not ready for content approval and it is not ready to merge as a live student service.
+The pull request is ready for a person to review. Content stays unpublished. The production database step is waiting on a working Supabase connection and an explicit approval.
+
+## 17. Follow-up implementation on 13 November 2026
+
+Staff login was failing as a normal sign-in because the only credential was a shared server token, and the session cookie was not written on the HTTP response the browser stores. A valid token with accidental surrounding whitespace was also rejected. The route now writes an HttpOnly, SameSite=Lax cookie on the response. The recovery token still opens the school review page and the portal inventory, including when the new staff table is absent, so the owner is not locked out. After the portal migration is applied, an authorised person can create individual reviewer accounts from the inventory page. Those accounts use scrypt password hashes. Corrections, payment reviews and publication changes record that identity. The recovery path is recorded as `recovery`, which is a role, not a person's name. No staff password was invented.
+
+Student accounts, entitlements, attempts, publication flags and session generations use Supabase when `SUPABASE_URL` and a server key are configured. On Vercel, or when `NODE_ENV` is production, the portal refuses to write a local JSON file. Local tests still use the file store. Retakes stay closed unless `TEJAS_PORTAL_RETAKES=allow`. The 30-minute limit and the lack of negative marking remain. No passing score was added.
+
+The migration `supabase/migrations/20261113_tejas_learning_portal_durable.sql` adds the missing columns, staff tables, session functions, indexes and unpublished book and test identity rows. A local PostgreSQL test registered a Class 7 student, verified a ₹49 payment, corrected the class to 10, and confirmed the old entitlement became `superseded` while the new Book 2 entitlement stayed `unpaid`. A Future Tech Class 5 registration was rejected. Rolling the migration back left zero tables. A pre-existing local table row was still present after the portal migration. No local `portal.json` student file existed, so there was nothing to import. Nothing was published: the seeded book and test rows are `awaiting_approval`.
+
+Production was not changed. `db.zapccpipwxduzlnvjdmy.supabase.co` does not resolve, and the pooler reports that the tenant was not found. The production schema-status endpoint also reports the database as unreachable. Without a backup that can be restored, the production migration was not applied.
+
+ESLint is configured with `next/core-web-vitals`. `npm run lint` completes with two existing warnings and no errors. `npm test` passed 43 tests. `tsc --noEmit` and `next build` passed.
+
+The Vercel preview still redirects to a Vercel login. Preview protection was not turned off.
 
 Safe to keep in review:
 
@@ -238,9 +254,10 @@ Safe to keep in review:
 - Books and tests remain unpublished.
 - Production data and the production database were not changed.
 
-Still required before approval to publish or to admit students:
+Still required before students can be admitted:
 
-- Resolve the Book 1 cover, without silently giving Book 1 to Classes 9 and 10.
-- Decide where student accounts will be stored, and connect that store before relying on sign-in or one-device logout in production.
-- Confirm the 30-minute limit, the lack of negative marking, and whether retakes are allowed.
-- Have a named staff identity on correction and publication audit rows if the organisation needs to know which person acted.
+- Restore the Supabase project, or provide a working free-plan connection. The configured host does not resolve, so no production backup or migration was possible.
+- Approve applying `20261113_tejas_learning_portal.sql` and `20261113_tejas_learning_portal_durable.sql` after that backup succeeds.
+- Create the first named staff account from the inventory page after the migration. Until then, the recovery token remains the way in.
+- Leave retakes disabled, or set `TEJAS_PORTAL_RETAKES=allow` only after that policy is approved.
+- Leave books and tests unpublished until a separate publication approval.

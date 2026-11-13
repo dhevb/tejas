@@ -1,7 +1,6 @@
-import { cookies } from "next/headers";
-import { learnCookieOptions } from "@/lib/portal/current";
+import { learnCookieHeader } from "@/lib/portal/current";
 import { clientKey, noStore, rateLimit, sameOrigin } from "@/lib/registration/http";
-import { LEARN_COOKIE, sealSession } from "@/lib/portal/session";
+import { sealSession } from "@/lib/portal/session";
 import { readStudent, registerStudent } from "@/lib/portal/store";
 
 export const runtime = "nodejs";
@@ -15,7 +14,7 @@ export async function POST(request: Request) {
   if (!result.ok) return noStore(result, 400);
   const stored = await readStudent(result.student.id);
   if (!stored) return noStore({ ok: false, error: "The account could not be opened." }, 500);
-  const jar = await cookies();
-  jar.set(LEARN_COOKIE, await sealSession(stored.id, stored.sessionVersion), learnCookieOptions());
-  return noStore(result);
+  const headers = new Headers({ "Cache-Control": "no-store", "Content-Type": "application/json" });
+  headers.set("Set-Cookie", learnCookieHeader(await sealSession(stored.id, stored.sessionVersion)));
+  return new Response(JSON.stringify(result), { status: 200, headers });
 }

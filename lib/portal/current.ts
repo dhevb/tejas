@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { LEARN_COOKIE, openSession } from "@/lib/portal/session";
-import { readStudent, type PortalStudent } from "@/lib/portal/store";
+import { PortalUnavailable, readStudent, type PortalStudent } from "@/lib/portal/store";
 
 export async function currentStudent(): Promise<PortalStudent | null> {
   try {
@@ -10,7 +10,8 @@ export async function currentStudent(): Promise<PortalStudent | null> {
     const student = await readStudent(opened.studentId);
     if (!student || student.sessionVersion !== opened.sessionVersion) return null;
     return student;
-  } catch {
+  } catch (error) {
+    if (error instanceof PortalUnavailable) throw error;
     return null;
   }
 }
@@ -23,4 +24,17 @@ export function learnCookieOptions() {
     path: "/",
     maxAge: 12 * 60 * 60,
   };
+}
+
+export function learnCookieHeader(value: string): string {
+  const options = learnCookieOptions();
+  const parts = [`tejas_learn=${value}`, "Path=/", "HttpOnly", "SameSite=Lax", `Max-Age=${options.maxAge}`];
+  if (options.secure) parts.push("Secure");
+  return parts.join("; ");
+}
+
+export function clearLearnCookieHeader(): string {
+  const parts = ["tejas_learn=", "Path=/", "HttpOnly", "SameSite=Lax", "Max-Age=0"];
+  if (process.env.NODE_ENV === "production") parts.push("Secure");
+  return parts.join("; ");
 }

@@ -34,10 +34,10 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
           <p>{summary.studentCount} students. {summary.studentStreamRegistrations} student-stream registrations.</p>
           <dl className="grid gap-2 sm:grid-cols-2">
             <div><dt className="text-tejas-muted">Registration fee collected</dt><dd className="font-semibold">{inr.format(summary.totalStudentFees)}</dd></div>
-            <div><dt className="text-tejas-muted">School's registration share</dt><dd className="font-semibold">{inr.format(summary.registrationSchoolShare)}</dd></div>
+            <div><dt className="text-tejas-muted">School registration share</dt><dd className="font-semibold">{inr.format(summary.registrationSchoolShare)}</dd></div>
             <div><dt className="text-tejas-muted">Registration payable to TEJAS</dt><dd className="font-semibold">{inr.format(summary.registrationPayable)}</dd></div>
             <div><dt className="text-tejas-muted">Printed books collected</dt><dd className="font-semibold">{inr.format(summary.printedBookAmount)}</dd></div>
-            <div><dt className="text-tejas-muted">School's book share</dt><dd className="font-semibold">{inr.format(summary.bookSchoolShare)}</dd></div>
+            <div><dt className="text-tejas-muted">School book share</dt><dd className="font-semibold">{inr.format(summary.bookSchoolShare)}</dd></div>
             <div><dt className="text-tejas-muted">Books payable to TEJAS</dt><dd className="font-semibold">{inr.format(summary.bookPayable)}</dd></div>
             <div><dt className="text-tejas-muted">Combined gross amount</dt><dd className="font-semibold">{inr.format(summary.grossTotal)}</dd></div>
             <div><dt className="text-tejas-muted">Combined school share</dt><dd className="font-semibold">{inr.format(summary.schoolShare)}</dd></div>

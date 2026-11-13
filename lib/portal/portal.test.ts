@@ -28,6 +28,7 @@ import { EBOOK_SALE_OPEN } from "@/lib/registration/fee";
 
 process.env.TEJAS_PORTAL_DATA_DIR = mkdtempSync(path.join(tmpdir(), "tejas-portal-"));
 process.env.TEJAS_PORTAL_SECRET = "portal-test-secret-value";
+process.env.TEJAS_PORTAL_STORE = "file";
 
 const baseStudent = {
   fullName: "Asha Rao",
@@ -286,4 +287,25 @@ test("a submitted score is calculated by the server from the stored key", async 
   assert.notEqual(submitted.score, 25);
   const again = await submitAttempt(student, started.attemptId, { "1": "B" });
   assert.equal(again.ok, false);
+  const retake = await startAttempt(student, "ft-b2-mt01");
+  assert.equal(retake.ok, false);
+});
+
+test("a hosted portal does not store a student in a local file", async () => {
+  const previousStore = process.env.TEJAS_PORTAL_STORE;
+  const previousVercel = process.env.VERCEL;
+  delete process.env.TEJAS_PORTAL_STORE;
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  delete process.env.SUPABASE_SECRET_KEY;
+  process.env.VERCEL = "1";
+  try {
+    const created = await registerStudent({ ...baseStudent, fullName: "Una Vail", email: "una@example.test", streamId: "english", classLevel: 4 });
+    assert.equal(created.ok, false);
+    if (!created.ok) assert.match(created.error, /database is not available/);
+  } finally {
+    process.env.TEJAS_PORTAL_STORE = previousStore;
+    if (previousVercel === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = previousVercel;
+  }
 });

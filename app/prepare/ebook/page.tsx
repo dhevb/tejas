@@ -20,7 +20,7 @@ export default function EbookPage() {
       <section className="py-12">
         <div className="mx-auto max-w-3xl space-y-4 px-4 text-sm leading-relaxed text-tejas-ink sm:px-6">
           <p>Future Tech Book 1 and Book 2 are loaded and awaiting organisational approval. English and Mathematics files have not been supplied. Unpublished material is not offered as if it were ready.</p>
-          <p>Reading and mock tests stay locked until payment is verified and the item is published. The server checks the account's stream, class and entitlement on every request.</p>
+          <p>Reading and mock tests stay locked until payment is verified and the item is published. The server checks the account stream, class and entitlement on every request.</p>
           <Link href="/schools/register" className="inline-flex font-semibold text-tejas-blue underline">School registration</Link>
         </div>
       </section>

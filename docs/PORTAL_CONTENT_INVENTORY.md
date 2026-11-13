@@ -22,9 +22,9 @@ The mock-test booklets are titled **TEJAS Future Tech Olympiad 2026–27**.
 
 The PDF covers are titled **Vidya Bharati Uttar Kshetra Tech Olympiad 2026**. They do not print the word TEJAS. The topics match the booklets: Book 1 is *IoT using Arduino*; Book 2 is *IoT using ESP32 & Raspberry Pi*.
 
-### Unresolved editorial issue — Book 1 cover
+### Book 1 cover note
 
-This issue is unresolved. The original PDF has not been edited or replaced.
+The owner has deferred this note. It is not a technical blocker. The original PDF has not been edited or replaced, and the launch mapping below is unchanged.
 
 The Book 1 cover says the book is for Classes 6–8 and 9–10, and that Book 1 is for both groups. The same PDF’s model-test footer says Group-1 (Classes 6–8). The cover needs clarification or correction by the organisation before Book 1 is published. Until that happens, the portal keeps the launch mapping below and does not give Book 1 to Classes 9 or 10.
 

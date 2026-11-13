@@ -31,7 +31,7 @@ export type PaymentEvent = {
   at: string;
   status: PaymentStatus;
   note: string | null;
-  actor?: "staff" | "school";
+  actor?: string;
 };
 
 export type RegistrationRecord = {
@@ -244,7 +244,7 @@ export async function readReceipt(reference: string): Promise<{ filename: string
   }
 }
 
-export async function updatePayment(reference: string, status: PaymentStatus, reviewNote: string | null): Promise<RegistrationRecord | null> {
+export async function updatePayment(reference: string, status: PaymentStatus, reviewNote: string | null, actor = "staff"): Promise<RegistrationRecord | null> {
   const record = await readRegistration(reference);
   if (!record) return null;
   if (record.payment.status === status) return record;
@@ -254,11 +254,11 @@ export async function updatePayment(reference: string, status: PaymentStatus, re
       ...record.payment,
       status,
       reviewNote,
-      history: [...(record.payment.history ?? []), { at: new Date().toISOString(), status, note: reviewNote, actor: "staff" }],
+      history: [...(record.payment.history ?? []), { at: new Date().toISOString(), status, note: reviewNote, actor }],
     },
   };
   if (remoteConfigured()) {
-    const saved = await updateRemotePayment(reference, next, "staff");
+    const saved = await updateRemotePayment(reference, next, actor);
     if (saved === "missing") return null;
     if (saved === "unchanged") return readRegistration(reference);
     console.info(`payment status ${reference} ${status} durable=yes`);

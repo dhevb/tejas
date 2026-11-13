@@ -191,7 +191,7 @@ export function StaffConsole() {
           </label>
           <Button type="submit">Save publication status</Button>
         </form>
-        <p className="mt-3 text-sm text-tejas-muted">Publication is stored for this environment only. The supplied catalog remains awaiting approval until this action is taken. It does not change production data.</p>
+        <p className="mt-3 text-sm text-tejas-muted">Saving a publication status writes it to the production database and records the staff identity and reason in the audit trail. The catalog file stays awaiting approval until this action is saved. A published item opens only for a student with the matching stream, class and a verified payment. An item left awaiting approval stays closed.</p>
       </section>
       <section>
         <h2 className="text-2xl font-bold text-tejas-blue">Students</h2>

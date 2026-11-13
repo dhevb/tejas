@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { authResult } from "@/lib/portal/auth-result";
 
 const fieldClass = "mt-1 w-full rounded-xl border border-tejas-border bg-white px-3 py-2 text-sm";
 
@@ -16,19 +17,24 @@ export function LoginForm() {
     setPending(true);
     setError("");
     const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/learn/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: form.get("email"), password: form.get("password") }),
-    });
-    const body = (await response.json()) as { ok?: boolean; error?: string };
-    setPending(false);
-    if (!response.ok || !body.ok) {
-      setError(body.error || "Sign-in failed.");
-      return;
+    try {
+      const response = await fetch("/api/learn/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.get("email"), password: form.get("password") }),
+      });
+      const result = await authResult(response, "Sign-in failed.");
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.push("/learn/dashboard");
+      router.refresh();
+    } catch {
+      setError("Sign-in failed.");
+    } finally {
+      setPending(false);
     }
-    router.push("/learn/dashboard");
-    router.refresh();
   }
 
   return (

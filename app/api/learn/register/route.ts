@@ -12,9 +12,13 @@ export async function POST(request: Request) {
   if (!body) return noStore({ ok: false, error: "The form could not be read." }, 400);
   const result = await registerStudent(body);
   if (!result.ok) return noStore(result, 400);
-  const stored = await readStudent(result.student.id);
-  if (!stored) return noStore({ ok: false, error: "The account could not be opened." }, 500);
-  const headers = new Headers({ "Cache-Control": "no-store", "Content-Type": "application/json" });
-  headers.set("Set-Cookie", learnCookieHeader(await sealSession(stored.id, stored.sessionVersion)));
-  return new Response(JSON.stringify(result), { status: 200, headers });
+  try {
+    const stored = await readStudent(result.student.id);
+    if (!stored) return noStore({ ok: false, error: "The account was saved, but it could not be opened. Sign in to continue." }, 503);
+    const headers = new Headers({ "Cache-Control": "no-store", "Content-Type": "application/json" });
+    headers.set("Set-Cookie", learnCookieHeader(await sealSession(stored.id, stored.sessionVersion)));
+    return new Response(JSON.stringify({ ok: true, student: result.student }), { status: 200, headers });
+  } catch {
+    return noStore({ ok: false, error: "The account was saved, but sign-in could not be completed. Sign in to continue." }, 503);
+  }
 }

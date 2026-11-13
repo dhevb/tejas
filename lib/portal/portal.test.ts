@@ -5,10 +5,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { GET as bookFileGet } from "@/app/api/learn/books/[bookId]/file/route";
+import { POST as loginPost } from "@/app/api/learn/login/route";
+import { POST as registerPost } from "@/app/api/learn/register/route";
 import { POST as publicationPost } from "@/app/api/learn/staff/publication/route";
+import { authResult } from "@/lib/portal/auth-result";
 import { loadCatalog } from "@/lib/portal/catalog.server";
 import { booksForLearner, decideAccess, quoteFee, streamAcceptsClass } from "@/lib/portal/model";
-import { openSession, sealSession } from "@/lib/portal/session";
+import { openSession, sealSession, sessionKey } from "@/lib/portal/session";
 import {
   accessFor,
   dashboard,
@@ -338,5 +341,89 @@ test("a hosted portal does not store a student in a local file", async () => {
     process.env.TEJAS_PORTAL_STORE = previousStore;
     if (previousVercel === undefined) delete process.env.VERCEL;
     else process.env.VERCEL = previousVercel;
+  }
+});
+
+test("a hosted session uses one shared key and does not invent a file secret", async () => {
+  const previousSecret = process.env.TEJAS_PORTAL_SECRET;
+  const previousAdmin = process.env.TEJAS_ADMIN_TOKEN;
+  const previousNode = process.env.NODE_ENV;
+  const previousVercel = process.env.VERCEL;
+  const studentId = "11111111-1111-4111-8111-111111111111";
+  try {
+    delete process.env.TEJAS_PORTAL_SECRET;
+    process.env.TEJAS_ADMIN_TOKEN = "staff-token-value-16";
+    const sealed = await sealSession(studentId, 1);
+    assert.equal((await openSession(sealed))?.studentId, studentId);
+    process.env.TEJAS_ADMIN_TOKEN = "another-staff-token-16";
+    assert.equal(await openSession(sealed), null);
+    delete process.env.TEJAS_ADMIN_TOKEN;
+    process.env.NODE_ENV = "production";
+    process.env.VERCEL = "1";
+    assert.equal(sessionKey(), null);
+    await assert.rejects(() => sealSession(studentId, 1), /Student session secret is not configured/);
+  } finally {
+    process.env.TEJAS_PORTAL_SECRET = previousSecret;
+    if (previousAdmin === undefined) delete process.env.TEJAS_ADMIN_TOKEN;
+    else process.env.TEJAS_ADMIN_TOKEN = previousAdmin;
+    process.env.NODE_ENV = previousNode;
+    if (previousVercel === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = previousVercel;
+  }
+});
+
+function learnRequest(path: string, body: unknown) {
+  return new Request(`http://localhost${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "http://localhost", host: "localhost" },
+    body: JSON.stringify(body),
+  });
+}
+
+test("sign-up and sign-in set one session and surface failures", async () => {
+  const broken = new Response("<html>no</html>", { status: 500, headers: { "content-type": "text/html" } });
+  assert.deepEqual(await authResult(broken, "Sign-in failed."), { ok: false, error: "Sign-in failed." });
+  const invalid = await registerPost(learnRequest("/api/learn/register", { ...baseStudent, email: "not-an-email", streamId: "technology", classLevel: 6 }));
+  assert.equal(invalid.status, 400);
+  assert.match((await invalid.json()).error, /email/i);
+  const weak = await registerPost(learnRequest("/api/learn/register", { ...baseStudent, email: "weak@example.test", password: "short", streamId: "technology", classLevel: 6 }));
+  assert.equal(weak.status, 400);
+  assert.match((await weak.json()).error, /password/i);
+  const created = await registerPost(learnRequest("/api/learn/register", { ...baseStudent, fullName: "Nila Rao", email: "nila@example.test", streamId: "technology", classLevel: 6 }));
+  assert.equal(created.status, 200);
+  const createdBody = await created.json();
+  assert.equal(createdBody.ok, true);
+  const cookie = created.headers.get("set-cookie") ?? "";
+  const opened = await openSession(cookie.replace(/^tejas_learn=([^;]+).*$/, "$1"));
+  assert.equal(opened?.studentId, createdBody.student.id);
+  assert.equal(opened?.sessionVersion, 1);
+  const duplicate = await registerPost(learnRequest("/api/learn/register", { ...baseStudent, email: "nila@example.test", streamId: "technology", classLevel: 6 }));
+  assert.equal(duplicate.status, 400);
+  assert.match((await duplicate.json()).error, /already exists/);
+  const rejected = await loginPost(learnRequest("/api/learn/login", { email: "nila@example.test", password: "wrong-password" }));
+  assert.equal(rejected.status, 401);
+  const signedIn = await loginPost(learnRequest("/api/learn/login", { email: "nila@example.test", password: baseStudent.password }));
+  assert.equal(signedIn.status, 200);
+  const signedCookie = (signedIn.headers.get("set-cookie") ?? "").replace(/^tejas_learn=([^;]+).*$/, "$1");
+  const current = await openSession(signedCookie);
+  assert.equal(current?.sessionVersion, 2);
+  assert.equal((await openSession(cookie.replace(/^tejas_learn=([^;]+).*$/, "$1")))?.sessionVersion, 1);
+  const previousSecret = process.env.TEJAS_PORTAL_SECRET;
+  const previousAdmin = process.env.TEJAS_ADMIN_TOKEN;
+  const previousNode = process.env.NODE_ENV;
+  delete process.env.TEJAS_PORTAL_SECRET;
+  delete process.env.TEJAS_ADMIN_TOKEN;
+  process.env.NODE_ENV = "production";
+  try {
+    const failed = await loginPost(learnRequest("/api/learn/login", { email: "nila@example.test", password: baseStudent.password }));
+    assert.equal(failed.status, 503);
+    const failedBody = await failed.json();
+    assert.equal(failedBody.ok, false);
+    assert.match(failedBody.error, /could not be completed/);
+  } finally {
+    process.env.TEJAS_PORTAL_SECRET = previousSecret;
+    if (previousAdmin === undefined) delete process.env.TEJAS_ADMIN_TOKEN;
+    else process.env.TEJAS_ADMIN_TOKEN = previousAdmin;
+    process.env.NODE_ENV = previousNode;
   }
 });

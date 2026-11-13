@@ -18,9 +18,23 @@ export function passwordMatches(password: string, salt: string, expectedHex: str
   return timingSafeEqual(actual, expected);
 }
 
+const SESSION_LABEL = "tejas-learn-session-v1";
+
+/** A dedicated portal secret wins. Otherwise a key is derived from the staff token so every server shares it. */
+export function sessionKey(): string | null {
+  const dedicated = (process.env.TEJAS_PORTAL_SECRET ?? "").trim();
+  if (dedicated.length >= 16) return dedicated;
+  const staff = (process.env.TEJAS_ADMIN_TOKEN ?? "").trim();
+  if (staff.length >= 16) return createHmac("sha256", staff).update(SESSION_LABEL).digest("hex");
+  return null;
+}
+
 async function secret(): Promise<string> {
-  const fromEnv = process.env.TEJAS_PORTAL_SECRET ?? "";
-  if (fromEnv.length >= 16) return fromEnv;
+  const configured = sessionKey();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1") {
+    throw new Error("Student session secret is not configured.");
+  }
   const file = path.join(portalDataDir(), "session-secret");
   try {
     const stored = (await readFile(file, "utf8")).trim();

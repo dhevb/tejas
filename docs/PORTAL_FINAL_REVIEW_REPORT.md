@@ -1,14 +1,80 @@
 # TEJAS student portal — final review
 
-Review date: 13 November 2026, afternoon IST.
+Verification date: 13 November 2026, 1:58 PM IST.
+Commit verified: `27e8eff` on `cursor/stream-class-portal-2878`. Pull request [#14](https://github.com/dhevb/tejas/pull/14) is open and was not merged.
 
-This review did not merge the pull request, did not deploy to production, did not apply the new migration to production, did not publish a book or a mock test, and did not change School Olympiad registration or printed-book order rules.
+This check did not merge the pull request, did not deploy to production, did not apply a migration, did not publish a book or a mock test, and did not change School Olympiad registration or printed-book order records.
 
-**Recommendation: ready for the owner to approve the database step. Not merged, not deployed, and not published.**
+**Recommendation: not ready to admit students.** The production database is reachable from the live site, and the existing registration data is intact. The portal tables are not in that database. No restorable backup was produced, so the portal migration was not applied. The Vercel preview still requires a Vercel login.
 
-The Future Tech question bank matches the supplied Word booklets. Stream, class, payment and publication are enforced on the server. Staff sign-in now sets the session cookie on the response itself, and a hosted deploy will not store students in a local file. The portal migration was applied and rolled back only on an empty local PostgreSQL database. It has not been applied to production because the configured Supabase host does not resolve, so a backup could not be taken.
+The Book 1 cover note stays deferred. The launch mapping stays Book 1 for Classes 6–8 and Book 2 for Classes 9–10.
 
-The Book 1 cover note is deferred by the owner. The launch mapping stays Book 1 for Classes 6–8 and Book 2 for Classes 9–10. It is not a technical blocker.
+## Current verification
+
+Checked again on 13 November 2026 against the live project, not against the earlier report.
+
+| Area | Previous status | Current verified status | Evidence |
+| --- | --- | --- | --- |
+| Supabase project | Unreachable | The production site can read it. This environment cannot open a SQL session. | `GET /api/register/storage-status` on `https://tejas.dhe.org.in` returned `connected: true`, `reason: ok`. The service-role key and the project URL are present there. They are absent in this environment. |
+| Database hostname | Direct host did not resolve | The API host resolves. The direct database host is IPv6 only. The pooler host resolves. | `zapccpipwxduzlnvjdmy.supabase.co` has IPv4 addresses. `db.zapccpipwxduzlnvjdmy.supabase.co` returned only `2406:da14:311:1501:8d8d:5a73:fe74:1b71`, and a TCP connection from this environment failed. `aws-0-ap-northeast-1.pooler.supabase.com` resolved and rejected the stored database password. |
+| Free plan | Not confirmed | Not readable from here | No billing screen was opened. No paid feature was turned on. |
+| Database migrations | Portal SQL not applied | Still not applied. Registration tables are present. | OpenAPI on production lists 14 `tejas_*` tables and none of the `tejas_learn_*` portal tables. Row counts were returned with HTTP 200. `supabase_migrations` was not readable because SQL access failed. |
+| Production backup | Not verified | Still not verified | No dump file exists outside Git. A restore into a local database was not run. `schema-status` reports `backupVerified: false`. |
+| Vercel Preview | Protected | Deployment succeeded and remains protected | Deployment `7760377361` for `27e8eff` is `success`. Both the branch alias and `https://tejas-l1kkbchfi-dhe-projects.vercel.app/learn` return HTTP 302 to Vercel SSO. |
+| Staff login | Code fixed | Re-tested locally. Not tested on the preview. | `npm test` logged `staff sign-in accepted recovery` and passed the cookie assertion. Production `/learn` is 404 because this branch is not deployed there. |
+| Student persistence | Pending on Supabase | Not in the production database | Production has no `tejas_learn_students` table. The local file-store tests passed again. |
+| One-device login | Local test | Local test passed again. Not tested on Supabase. | Test “a second sign-in replaces the only active session” passed. |
+| Payment entitlement | Local test | Local test passed again. Not tested on Supabase. | The payment and class-correction tests passed. Production portal payment rows do not exist. |
+| E-book access | Local test | Local anonymous refusal passed. Preview could not be opened. | The file-route test returned 401 without a cookie. The preview file URL also redirected to Vercel SSO, before the application ran. |
+| Mock Tests | Unpublished | Still unpublished in the catalog. Not present as portal rows in production. | Catalog publication remains `awaiting_approval`. The scoring test passed locally. |
+
+### What is fully working
+
+- The existing production registration database answers through the live site. Counts read on 13 November 2026, 1:58 PM IST: 2 schools, 2 registrations, 2 students, 2 payments, 2 printed-book orders, 2 e-book access rows, 11 audit rows, 0 admin users. No row was written or deleted.
+- School registration pages on `https://tejas.dhe.org.in` still respond. `/schools/register/review` returned HTTP 200.
+- Local automated checks, listed below.
+
+### What is only locally tested
+
+- Student registration, password hashing, one active session, logout, stream and class lock, ₹49 entitlement, staff recovery login, server-side scoring, and the school-registration regressions. These ran in `npm test` against the file store and the registration test doubles, not against Supabase.
+
+### What is working on Vercel Preview
+
+- The deployment completed. The application itself was not opened. Both preview URLs stop at Vercel sign-in.
+
+### What is verified against Supabase production
+
+- The project responds to the production service role.
+- The registration, payment, school, student, printed-book and proof tables are present, and the two storage buckets `tejas-payment-proofs` and `tejas-registration-files` are private.
+- The portal tables, staff tables and publication rows are absent.
+- Row level security policies were not visible. The inspection path cannot run SQL (`management` returned 401, `pg` and `pg-meta` returned 404).
+
+### What is still blocked
+
+- A SQL session from this environment. The direct host is IPv6-only and the connection did not complete. The pooler rejected the database password stored for backups. No password was guessed and no credential was replaced.
+- A backup that can be restored and compared. Without that, the portal migration stays unapplied.
+- Preview browsing, until someone who can sign in to the Vercel team opens it. Protection was not turned off. Settings: [deployment protection](https://vercel.com/dhe-projects/tejas/settings/deployment-protection).
+- Named staff accounts. `tejas_learn_staff` does not exist, so no reviewer was created and the recovery path was not given a second identity.
+
+### What requires owner approval before the next production change
+
+Applying `20261113_tejas_learning_portal.sql` and `20261113_tejas_learning_portal_durable.sql` is a separate production change from restoring the project. It was not run. It needs both of these, in this order:
+
+1. A restorable backup of the current database, kept outside GitHub and outside any public directory, then restored into an isolated database and compared with the source counts.
+2. An approval that names those two migration files. The project dashboard is [zapccpipwxduzlnvjdmy](https://supabase.com/dashboard/project/zapccpipwxduzlnvjdmy). The SQL editor on that project is where the approved script would run. This environment cannot run it until the database password or the IPv6 path works.
+
+The stored backup password should be replaced with the current database password before that dump is attempted. This report does not contain the password.
+
+### Commands run on this check
+
+| Command | Result |
+| --- | --- |
+| `npm test` | 43 passed, 0 failed, 0 skipped |
+| `npx tsc --noEmit --incremental false` | Passed |
+| `npm run lint` | Passed, with the two existing warnings in `TejasEmblem.tsx` and `Countdown.tsx` |
+| `npm run build` | Passed. 56 static pages |
+
+The earlier sections below are the local review from the same day. Where they say the Supabase host does not resolve, use this section instead.
 
 ## 1. Pull request and branch
 
@@ -228,9 +294,7 @@ No question, option, answer or explanation was edited. The class mapping was not
 
 ## 16. Recommendation
 
-**Ready for owner approval of the production database step. Do not merge or publish yet.**
-
-The pull request is ready for a person to review. Content stays unpublished. The production database step is waiting on a working Supabase connection and an explicit approval.
+The recommendation in the opening section replaces this one. Do not merge or publish yet. The production database now answers the live site, and the portal migration is still waiting on a verified backup plus a separate approval.
 
 ## 17. Follow-up implementation on 13 November 2026
 
@@ -240,7 +304,7 @@ Student accounts, entitlements, attempts, publication flags and session generati
 
 The migration `supabase/migrations/20261113_tejas_learning_portal_durable.sql` adds the missing columns, staff tables, session functions, indexes and unpublished book and test identity rows. A local PostgreSQL test registered a Class 7 student, verified a ₹49 payment, corrected the class to 10, and confirmed the old entitlement became `superseded` while the new Book 2 entitlement stayed `unpaid`. A Future Tech Class 5 registration was rejected. Rolling the migration back left zero tables. A pre-existing local table row was still present after the portal migration. No local `portal.json` student file existed, so there was nothing to import. Nothing was published: the seeded book and test rows are `awaiting_approval`.
 
-Production was not changed. `db.zapccpipwxduzlnvjdmy.supabase.co` does not resolve, and the pooler reports that the tenant was not found. The production schema-status endpoint also reports the database as unreachable. Without a backup that can be restored, the production migration was not applied.
+Production was not changed during that follow-up. The later check in the opening section found that the live site can read the project, the direct database host is IPv6-only, and the pooler rejects the stored password. The portal migration is still unapplied because no backup could be restored.
 
 ESLint is configured with `next/core-web-vitals`. `npm run lint` completes with two existing warnings and no errors. `npm test` passed 43 tests. `tsc --noEmit` and `next build` passed.
 
@@ -256,7 +320,7 @@ Safe to keep in review:
 
 Still required before students can be admitted:
 
-- Restore the Supabase project, or provide a working free-plan connection. The configured host does not resolve, so no production backup or migration was possible.
+- Take a restorable backup first. The live site can read the project, but this environment still cannot open a SQL session, so no backup was verified.
 - Approve applying `20261113_tejas_learning_portal.sql` and `20261113_tejas_learning_portal_durable.sql` after that backup succeeds.
 - Create the first named staff account from the inventory page after the migration. Until then, the recovery token remains the way in.
 - Leave retakes disabled, or set `TEJAS_PORTAL_RETAKES=allow` only after that policy is approved.

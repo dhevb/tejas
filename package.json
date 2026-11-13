@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
-    "test": "tsx --test --test-concurrency=1 lib/registration/registration.test.ts lib/registration/database.test.ts lib/registration/supabase-inspect.test.ts",
+    "test": "tsx --test --test-concurrency=1 lib/registration/registration.test.ts lib/registration/database.test.ts lib/registration/supabase-inspect.test.ts lib/portal/portal.test.ts",
     "post-launch": "node scripts/post-launch.mjs",
     "launch-audit": "node scripts/launch-audit.mjs"
   },
@@ -26,6 +26,8 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.6",

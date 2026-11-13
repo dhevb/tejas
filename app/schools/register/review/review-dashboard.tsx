@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { presentFee } from "@/lib/registration/fee";
 
 type Overview = {
@@ -124,6 +125,8 @@ function bookOrderLabel(status: string): string {
 
 export function ReviewDashboard() {
   const [token, setToken] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [ready, setReady] = useState(false);
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -152,7 +155,7 @@ export function ReviewDashboard() {
     const response = await fetch("/api/register/admin/session", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ email, password, token }),
     });
     const body = (await response.json()) as { error?: string };
     if (!response.ok) {
@@ -204,10 +207,18 @@ export function ReviewDashboard() {
   if (!ready) {
     return (
       <form onSubmit={signIn} className="mx-auto max-w-md space-y-3">
-        <p className="text-sm text-tejas-muted">Staff review has no default password. It opens only when TEJAS_ADMIN_TOKEN is configured on the server.</p>
+        <p className="text-sm text-tejas-muted">Staff review has no default password. Use a staff email and password when an individual account exists. The recovery token configured on the server still opens this page.</p>
         <label className="block text-sm">
-          <span className="font-medium">Staff token</span>
-          <input type="password" value={token} onChange={(event) => setToken(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" autoComplete="current-password" />
+          <span className="font-medium">Email</span>
+          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" autoComplete="username" />
+        </label>
+        <label className="block text-sm">
+          <span className="font-medium">Password</span>
+          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" autoComplete="current-password" />
+        </label>
+        <label className="block text-sm">
+          <span className="font-medium">Recovery token</span>
+          <input type="password" value={token} onChange={(event) => setToken(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" autoComplete="off" />
         </label>
         {message ? <p className="text-sm text-red-700">{message}</p> : null}
         <button type="submit" className="rounded-xl bg-tejas-blue px-4 py-2 text-sm font-semibold text-white">Open review</button>
@@ -248,9 +259,9 @@ export function ReviewDashboard() {
       ) : null}
       <div className="flex flex-wrap gap-3 text-sm">
         {["schools", "students", "payments", "books", "ebooks"].map((report) => (
-          <a key={report} className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=${report}`}>{report} CSV</a>
+          <Link key={report} className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=${report}`} prefetch={false}>{report} CSV</Link>
         ))}
-        <a className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=schools&revealPan=yes">schools CSV with full PAN</a>
+        <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=schools&revealPan=yes" prefetch={false}>schools CSV with full PAN</Link>
       </div>
       <div className="grid gap-3 text-sm md:grid-cols-2">
         <p>Classes: {overview ? Object.entries(overview.classCounts).map(([label, count]) => `${label} ${count}`).join(", ") || "None" : "None"}</p>

@@ -280,7 +280,7 @@ export function HomeLanding() {
             <School className="h-7 w-7 text-tejas-saffron" aria-hidden />
             <h2 id="schools-heading" className="mt-3 text-3xl font-bold tracking-tight text-tejas-ink md:text-4xl">Schools register their students</h2>
             <p className="mt-4 text-tejas-muted leading-relaxed">
-              TEJAS is organised through schools. The coordinator uploads one student sheet and selects the streams. The school collects ₹150 for each student-stream, retains ₹30, and remits ₹120 to the published account. Printed books, when requested, are ₹170 each; the school retains ₹34 and remits ₹136. E-book access is not for sale.
+              TEJAS is organised through schools. The coordinator uploads one student sheet and selects the streams. The school collects ₹150 for each student-stream, retains ₹30, and remits ₹120 to the published account. Printed books, when requested, are ₹170 each; the school retains ₹34 and remits ₹136. This school form does not sell e-book access. A separate student portal handles that fee.
             </p>
             <p className="mt-3 text-sm text-tejas-muted">{currentCycle.administeredBy.en}.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">

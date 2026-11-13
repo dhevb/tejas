@@ -59,7 +59,8 @@ export const mainNav: NavItem[] = [
         title: "Prepare",
         items: [
           { label: "Prepare Hub", href: "/prepare", description: "Topic-wise drills & strategy" },
-          { label: "Mock Tests", href: "/prepare/mock-tests", description: "Full-length simulations" },
+          { label: "E-book portal", href: "/learn", description: "Stream and class library" },
+          { label: "Mock Tests", href: "/prepare/mock-tests", description: "Included with the e-book" },
           { label: "Resources", href: "/resources", description: "Books, videos, downloads" },
         ],
       },

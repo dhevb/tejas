@@ -10,7 +10,7 @@ export const BOOK_SCHOOL_SHARE = 34;
 export const BOOK_TEJAS = 136;
 export const BOOK_SHARE_APPROVED = true;
 export const EBOOK_FEE = 49;
-/** No e-book file is published, so the ₹49 rate is not collected. */
+/** School registration does not collect the ₹49 e-book fee. The learning portal prices that fee separately. */
 export const EBOOK_SALE_OPEN = false;
 export const ONLINE_EXAM_FEE = 30;
 export const ONLINE_EXAM_APPROVED = false;

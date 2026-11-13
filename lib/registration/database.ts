@@ -255,7 +255,7 @@ async function registrationId(reference: string): Promise<string | null> {
   return typeof id === "string" ? id : null;
 }
 
-export async function updatePayment(reference: string, record: RegistrationRecord, actor: "staff" | "school"): Promise<"updated" | "unchanged" | "missing"> {
+export async function updatePayment(reference: string, record: RegistrationRecord, actor: string): Promise<"updated" | "unchanged" | "missing"> {
   const id = await registrationId(reference);
   if (!id) return "missing";
   const current = await request(`/rest/v1/tejas_payments?registration_id=eq.${quote(id)}&select=status`, { method: "GET" });

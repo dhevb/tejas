@@ -1,7 +1,7 @@
 import { noStore } from "@/lib/registration/http";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { streamById } from "@/lib/registration/schema";
-import { staffAuthorised } from "@/lib/registration/staff";
+import { staffAuthorised, staffIdentity } from "@/lib/registration/staff";
 import { readRegistration, statusLabel, updatePayment, type PaymentStatus } from "@/lib/registration/store";
 
 export const runtime = "nodejs";
@@ -45,7 +45,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ refer
     return noStore({ ok: false, error: "Enter the reason for this decision." }, 400);
   }
   try {
-    const updated = await updatePayment(reference, body.status, note || null);
+    const actor = (await staffIdentity()) ?? "staff";
+    const updated = await updatePayment(reference, body.status, note || null, actor);
     if (!updated) return noStore({ ok: false }, 404);
     console.info(`staff payment update ${reference} ${body.status}`);
     return noStore({ ok: true, status: updated.payment.status });

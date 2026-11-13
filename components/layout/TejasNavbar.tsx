@@ -107,12 +107,12 @@ export function TejasNavbar() {
             <Globe className="h-4 w-4" aria-hidden />
             {locale === "en" ? "हिं" : "EN"}
           </button>
-          <Button variant="ghost" size="sm" disabled title="Login coming soon" aria-label="Login">
+          <Link href="/learn/login" className="inline-flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-medium text-tejas-ink hover:bg-stone-100" aria-label="Student sign in">
             <User className="h-4 w-4" aria-hidden />
-          </Button>
-          <Link href="/prepare/mock-tests">
-            <Button variant="outline" size="sm" className="whitespace-nowrap" title="Mock tests are not open. This page does not start a test.">
-              Practice
+          </Link>
+          <Link href="/learn">
+            <Button variant="outline" size="sm" className="whitespace-nowrap">
+              E-book
             </Button>
           </Link>
           <Link href="/schools/register" onClick={() => AnalyticsEvents.registerClick("navbar")}>
@@ -156,9 +156,9 @@ export function TejasNavbar() {
             })}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link href="/prepare/mock-tests" onClick={() => setOpen(false)}>
-              <Button variant="outline" size="sm" className="w-full" title="Mock tests are not open. This page does not start a test.">
-                Practice
+            <Link href="/learn" onClick={() => setOpen(false)}>
+              <Button variant="outline" size="sm" className="w-full">
+                E-book
               </Button>
             </Link>
             <Link href="/schools/register" onClick={() => { setOpen(false); AnalyticsEvents.registerClick("navbar"); }}>

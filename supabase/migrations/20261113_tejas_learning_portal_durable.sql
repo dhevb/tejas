@@ -2,6 +2,12 @@
 -- Additive portal tables, columns, indexes and functions.
 -- It does not drop, truncate or update Olympiad registration rows.
 -- Apply only after a verified backup and an explicit owner approval.
+--
+-- Security correction: each security-definer function below revokes EXECUTE
+-- from public, anon and authenticated, then grants EXECUTE only to service_role.
+-- Revoking public is not enough. This Supabase project also grants EXECUTE to
+-- anon and authenticated through default privileges. Those roles exist on the
+-- project. The statements name the exact function signatures.
 
 begin;
 
@@ -72,6 +78,9 @@ begin
 end;
 $$;
 
+revoke all on function tejas_staff_bump_session(text) from public, anon, authenticated;
+grant execute on function tejas_staff_bump_session(text) to service_role;
+
 create or replace function tejas_learn_rotate_session(p_student uuid)
 returns integer
 language plpgsql
@@ -91,6 +100,9 @@ begin
   return next_version;
 end;
 $$;
+
+revoke all on function tejas_learn_rotate_session(uuid) from public, anon, authenticated;
+grant execute on function tejas_learn_rotate_session(uuid) to service_role;
 
 create or replace function tejas_learn_register_student(
   p_full_name text,
@@ -130,6 +142,9 @@ begin
   return new_id;
 end;
 $$;
+
+revoke all on function tejas_learn_register_student(text, text, text, text, text, text, text, text, integer, text, integer, integer) from public, anon, authenticated;
+grant execute on function tejas_learn_register_student(text, text, text, text, text, text, text, text, integer, text, integer, integer) to service_role;
 
 create or replace function tejas_learn_correct_registration(
   p_student uuid,
@@ -180,6 +195,9 @@ begin
 end;
 $$;
 
+revoke all on function tejas_learn_correct_registration(uuid, text, integer, text, integer, integer, text, text) from public, anon, authenticated;
+grant execute on function tejas_learn_correct_registration(uuid, text, integer, text, integer, integer, text, text) to service_role;
+
 create or replace function tejas_learn_report_payment(
   p_student uuid,
   p_book text,
@@ -212,6 +230,9 @@ begin
   values ('student', 'report-payment', 'Student reported a payment reference.', p_student, jsonb_build_object('bookId', p_book, 'amountInr', p_amount));
 end;
 $$;
+
+revoke all on function tejas_learn_report_payment(uuid, text, text, integer) from public, anon, authenticated;
+grant execute on function tejas_learn_report_payment(uuid, text, text, integer) to service_role;
 
 create or replace function tejas_learn_review_payment(
   p_student uuid,
@@ -248,6 +269,9 @@ begin
 end;
 $$;
 
+revoke all on function tejas_learn_review_payment(uuid, text, text, text, text) from public, anon, authenticated;
+grant execute on function tejas_learn_review_payment(uuid, text, text, text, text) to service_role;
+
 create or replace function tejas_learn_set_publication(
   p_kind text,
   p_item text,
@@ -276,6 +300,9 @@ begin
   );
 end;
 $$;
+
+revoke all on function tejas_learn_set_publication(text, text, text, text, text) from public, anon, authenticated;
+grant execute on function tejas_learn_set_publication(text, text, text, text, text) to service_role;
 
 insert into tejas_learn_books (id, stream_id, title, source_filename, publication_status, fee_inr, mock_test_fee_inr)
 values
@@ -306,26 +333,5 @@ on conflict (id) do nothing;
 alter table tejas_learn_publication enable row level security;
 alter table tejas_learn_staff enable row level security;
 alter table tejas_staff_sessions enable row level security;
-
-revoke all on function tejas_staff_bump_session(text) from public;
-revoke all on function tejas_learn_rotate_session(uuid) from public;
-revoke all on function tejas_learn_register_student(text, text, text, text, text, text, text, text, integer, text, integer, integer) from public;
-revoke all on function tejas_learn_correct_registration(uuid, text, integer, text, integer, integer, text, text) from public;
-revoke all on function tejas_learn_report_payment(uuid, text, text, integer) from public;
-revoke all on function tejas_learn_review_payment(uuid, text, text, text, text) from public;
-revoke all on function tejas_learn_set_publication(text, text, text, text, text) from public;
-
-do $$
-begin
-  if exists (select 1 from pg_roles where rolname = 'service_role') then
-    grant execute on function tejas_staff_bump_session(text) to service_role;
-    grant execute on function tejas_learn_rotate_session(uuid) to service_role;
-    grant execute on function tejas_learn_register_student(text, text, text, text, text, text, text, text, integer, text, integer, integer) to service_role;
-    grant execute on function tejas_learn_correct_registration(uuid, text, integer, text, integer, integer, text, text) to service_role;
-    grant execute on function tejas_learn_report_payment(uuid, text, text, integer) to service_role;
-    grant execute on function tejas_learn_review_payment(uuid, text, text, text, text) to service_role;
-    grant execute on function tejas_learn_set_publication(text, text, text, text, text) to service_role;
-  end if;
-end $$;
 
 commit;

@@ -104,6 +104,4 @@ Pull request 14 was not merged. The portal was not deployed. No book or test was
 
 ## 7. Git commit
 
-The commit that adds this report is recorded below after the commit is created.
-
-Commit: pending
+The report was committed as `37c2c068e2de01cb2b9c4d8254f8e7c0fddd02d3`. This hash line was added in the following commit.

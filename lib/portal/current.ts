@@ -5,9 +5,11 @@ import { readStudent, type PortalStudent } from "@/lib/portal/store";
 export async function currentStudent(): Promise<PortalStudent | null> {
   try {
     const jar = await cookies();
-    const id = await openSession(jar.get(LEARN_COOKIE)?.value);
-    if (!id) return null;
-    return readStudent(id);
+    const opened = await openSession(jar.get(LEARN_COOKIE)?.value);
+    if (!opened) return null;
+    const student = await readStudent(opened.studentId);
+    if (!student || student.sessionVersion !== opened.sessionVersion) return null;
+    return student;
   } catch {
     return null;
   }

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { learnCookieOptions } from "@/lib/portal/current";
 import { clientKey, noStore, rateLimit, sameOrigin } from "@/lib/registration/http";
 import { LEARN_COOKIE, sealSession } from "@/lib/portal/session";
-import { registerStudent } from "@/lib/portal/store";
+import { readStudent, registerStudent } from "@/lib/portal/store";
 
 export const runtime = "nodejs";
 
@@ -13,7 +13,9 @@ export async function POST(request: Request) {
   if (!body) return noStore({ ok: false, error: "The form could not be read." }, 400);
   const result = await registerStudent(body);
   if (!result.ok) return noStore(result, 400);
+  const stored = await readStudent(result.student.id);
+  if (!stored) return noStore({ ok: false, error: "The account could not be opened." }, 500);
   const jar = await cookies();
-  jar.set(LEARN_COOKIE, await sealSession(result.student.id), learnCookieOptions());
+  jar.set(LEARN_COOKIE, await sealSession(stored.id, stored.sessionVersion), learnCookieOptions());
   return noStore(result);
 }

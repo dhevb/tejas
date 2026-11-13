@@ -440,8 +440,42 @@ def build() -> dict:
     return catalog
 
 
+def verify_saved(catalog: dict) -> None:
+    """Confirm the saved catalog still matches the Word paragraphs and answer rows."""
+    for booklet in BOOKLETS:
+        lines = paragraphs(SOURCE_DIR / booklet["filename"])
+        line_set = set(lines)
+        tests = [item for item in catalog["tests"] if item["bookNumber"] == booklet["bookNumber"]]
+        if [item["number"] for item in tests] != [1, 2, 3, 4, 5]:
+            raise SystemExit(f"Book {booklet['bookNumber']} does not contain tests 1–5 in order.")
+        for test in tests:
+            if [question["number"] for question in test["questions"]] != list(range(1, 26)):
+                raise SystemExit(f"{test['id']} question numbers are not 1–25 in order.")
+            seen = set()
+            for question in test["questions"]:
+                if question["sourceId"] in seen:
+                    raise SystemExit(f"Duplicate question id {question['sourceId']}.")
+                seen.add(question["sourceId"])
+                prompt_lines = {f"{question['number']}.  {question['prompt']}", f"{question['number']}. {question['prompt']}"}
+                if not prompt_lines & line_set:
+                    raise SystemExit(f"{test['id']} Q{question['number']} prompt is not a source paragraph.")
+                for option in question["options"]:
+                    matched = any(line.startswith(f"({option['key']})") and line.split(")", 1)[1].strip() == option["text"] for line in lines)
+                    if not matched:
+                        raise SystemExit(f"{test['id']} Q{question['number']} option {option['key']} is not a source paragraph.")
+                if question["correct"] != question["correctCompact"] or question["correctCompact"] != question["correctExplanationRow"]:
+                    raise SystemExit(f"{test['id']} Q{question['number']} answer key does not match its explanation row.")
+                if question["explanation"] not in line_set:
+                    raise SystemExit(f"{test['id']} Q{question['number']} explanation is not a source paragraph.")
+
+
 def main() -> None:
     catalog = build()
+    if "--verify" in sys.argv:
+        verify_saved(json.loads(OUT.read_text(encoding="utf-8")))
+        verify_saved(catalog)
+        print("verified 10 tests, 250 questions, no wording or answer-key mismatches")
+        return
     payload = json.dumps(catalog, ensure_ascii=False, indent=2) + "\n"
     if "--stdout" in sys.argv:
         sys.stdout.write(payload)

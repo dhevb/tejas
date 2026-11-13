@@ -34,26 +34,29 @@ async function secret(): Promise<string> {
   return created;
 }
 
-export async function sealSession(studentId: string): Promise<string> {
-  const exp = Date.now() + SESSION_MS;
-  const payload = `v1.${studentId}.${exp}`;
+export type OpenSession = { studentId: string; sessionVersion: number };
+
+/** The signed cookie names one account and one session generation. A newer sign-in replaces that generation. */
+export async function sealSession(studentId: string, sessionVersion: number, expiresAt = Date.now() + SESSION_MS): Promise<string> {
+  if (!Number.isInteger(sessionVersion) || sessionVersion < 1) throw new Error("Session generation is invalid.");
+  const payload = `v2.${studentId}.${sessionVersion}.${expiresAt}`;
   const sig = createHmac("sha256", await secret()).update(payload).digest("base64url");
   return `${payload}.${sig}`;
 }
 
-export async function openSession(value: string | undefined): Promise<string | null> {
+export async function openSession(value: string | undefined): Promise<OpenSession | null> {
   if (!value) return null;
   const parts = value.split(".");
-  if (parts.length !== 4) return null;
-  const [version, studentId, exp, sig] = parts;
-  if (version !== "v1" || !/^[0-9a-f-]{36}$/i.test(studentId) || !/^\d+$/.test(exp)) return null;
-  const payload = `${version}.${studentId}.${exp}`;
+  if (parts.length !== 5) return null;
+  const [version, studentId, sessionVersion, exp, sig] = parts;
+  if (version !== "v2" || !/^[0-9a-f-]{36}$/i.test(studentId) || !/^\d+$/.test(sessionVersion) || !/^\d+$/.test(exp)) return null;
+  const payload = `${version}.${studentId}.${sessionVersion}.${exp}`;
   const expected = createHmac("sha256", await secret()).update(payload).digest("base64url");
   const a = Buffer.from(sig);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   if (Number(exp) <= Date.now()) return null;
-  return studentId;
+  return { studentId, sessionVersion: Number(sessionVersion) };
 }
 
 export function passwordIsAcceptable(password: string): boolean {

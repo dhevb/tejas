@@ -16,9 +16,10 @@ export async function GET(_request: Request, context: { params: Promise<{ bookId
   return new Response(bytes, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(decision.book.sourceFilename)}`,
+      "Content-Disposition": "inline",
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
+      "X-Robots-Tag": "noindex, nofollow",
     },
   });
 }

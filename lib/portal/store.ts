@@ -35,6 +35,8 @@ export type PortalStudent = {
   passwordSalt: string;
   streamId: StreamId;
   classLevel: number;
+  /** Incremented on each sign-in and on logout. Older cookies stop matching. */
+  sessionVersion: number;
 };
 
 export type Entitlement = {
@@ -222,6 +224,7 @@ export async function registerStudent(input: RegisterInput): Promise<{ ok: true;
       passwordSalt: password.salt,
       streamId,
       classLevel,
+      sessionVersion: 1,
     };
     db.students.push(student);
     const quote = quoteFee(loadCatalog(), streamId, classLevel);
@@ -261,7 +264,22 @@ export async function authenticate(emailInput: unknown, password: unknown): Prom
 
 export async function readStudent(id: string): Promise<PortalStudent | null> {
   const db = await readDb();
-  return db.students.find((student) => student.id === id) ?? null;
+  const student = db.students.find((item) => item.id === id);
+  if (!student) return null;
+  student.sessionVersion ??= 1;
+  return student;
+}
+
+/** Replace the one active session for this account. Earlier cookies no longer match. */
+export async function rotateSession(studentId: string): Promise<number | null> {
+  return withLock(async () => {
+    const db = await readDb();
+    const student = db.students.find((item) => item.id === studentId);
+    if (!student) return null;
+    student.sessionVersion = (student.sessionVersion ?? 1) + 1;
+    await writeDb(db);
+    return student.sessionVersion;
+  });
 }
 
 export type ProfileInput = {

@@ -16,6 +16,7 @@ import {
   registerStudent,
   reportPayment,
   reviewPayment,
+  rotateSession,
   setPublication,
   staffOverview,
   startAttempt,
@@ -37,6 +38,7 @@ const baseStudent = {
 };
 
 test("the catalog is a fresh extraction of the supplied booklets", () => {
+  execFileSync("python3", ["scripts/extract_portal_content.py", "--verify"], { encoding: "utf8" });
   const fresh = execFileSync("python3", ["scripts/extract_portal_content.py", "--stdout"], { encoding: "utf8" });
   const saved = readFileSync(path.join(process.cwd(), "content/portal/catalog.json"), "utf8");
   assert.equal(fresh, saved);
@@ -208,11 +210,80 @@ test("the e-book file route refuses an anonymous request", async () => {
   assert.equal(body.includes("%PDF"), false);
 });
 
-test("a student session token names only that account", async () => {
+test("a second sign-in replaces the only active session", async () => {
   const created = await registerStudent({ ...baseStudent, fullName: "Om Das", email: "om@example.test", streamId: "mathematics", classLevel: 4 });
   assert.equal(created.ok, true);
   if (!created.ok) return;
-  const token = await sealSession(created.student.id);
-  assert.equal(await openSession(token), created.student.id);
-  assert.equal(await openSession(`${token}x`), null);
+  const first = await sealSession(created.student.id, 1);
+  const replacement = await rotateSession(created.student.id);
+  assert.equal(replacement, 2);
+  const second = await sealSession(created.student.id, replacement ?? 0);
+  const stored = await readStudent(created.student.id);
+  const openedFirst = await openSession(first);
+  const openedSecond = await openSession(second);
+  assert.equal(openedFirst?.studentId, created.student.id);
+  assert.notEqual(openedFirst?.sessionVersion, stored?.sessionVersion);
+  assert.equal(openedSecond?.sessionVersion, stored?.sessionVersion);
+  assert.equal(await openSession(`${second}x`), null);
+  assert.equal(await openSession(await sealSession(created.student.id, stored?.sessionVersion ?? 1, Date.now() - 1000)), null);
+  const loggedOut = await rotateSession(created.student.id);
+  const afterLogout = await readStudent(created.student.id);
+  assert.equal(afterLogout?.sessionVersion, loggedOut);
+  assert.notEqual(openedSecond?.sessionVersion, afterLogout?.sessionVersion);
+});
+
+test("payment status cannot be set by the student and a second report does not add an entitlement", async () => {
+  const created = await registerStudent({ ...baseStudent, fullName: "Ria Sen", email: "ria@example.test", streamId: "technology", classLevel: 8 });
+  assert.equal(created.ok, true);
+  if (!created.ok) return;
+  const ignored = await updateProfile(created.student.id, { fullName: "Ria Sen", status: "verified", paid: true } as never);
+  assert.equal(ignored.ok, true);
+  let student = await readStudent(created.student.id);
+  assert.ok(student);
+  if (!student) return;
+  assert.equal((await accessFor(student, "ft-book-1")).ok, false);
+  assert.equal((await reportPayment(student.id, "UTR49RIA001")).ok, true);
+  assert.equal((await reportPayment(student.id, "UTR49RIA002")).ok, true);
+  const overview = await staffOverview();
+  const row = overview.students.find((item) => item.id === student?.id);
+  assert.equal(row?.payment.filter((item) => item.bookId === "ft-book-1" && item.status !== "superseded").length, 1);
+  assert.equal(row?.payment.find((item) => item.bookId === "ft-book-1")?.status, "reported");
+  assert.equal((await reviewPayment({ actor: "staff", studentId: student.id, bookId: "ft-book-1", decision: "rejected", note: "The credit was not found." })).ok, true);
+  student = await readStudent(created.student.id);
+  assert.ok(student);
+  if (!student) return;
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "published", reason: "Review publication of one book only." })).ok, true);
+  const stillUnpaid = await accessFor(student, "ft-book-1");
+  assert.equal(stillUnpaid.ok, false);
+  if (!stillUnpaid.ok) assert.equal(stillUnpaid.reason, "unpaid");
+  const book2 = (await staffOverview()).rows.filter((item) => item.book.startsWith("Book 2"));
+  assert.equal(book2.every((item) => item.publicationStatus === "awaiting_approval"), true);
+});
+
+test("a submitted score is calculated by the server from the stored key", async () => {
+  const created = await registerStudent({ ...baseStudent, fullName: "Kabir Das", email: "kabir@example.test", streamId: "technology", classLevel: 10 });
+  assert.equal(created.ok, true);
+  if (!created.ok) return;
+  const student = await readStudent(created.student.id);
+  assert.ok(student);
+  if (!student) return;
+  assert.equal((await reportPayment(student.id, "UTR49KABIR1")).ok, true);
+  assert.equal((await reviewPayment({ actor: "staff", studentId: student.id, bookId: "ft-book-2", decision: "verified", note: "Matched the test credit." })).ok, true);
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-2", status: "published", reason: "Review one book for scoring." })).ok, true);
+  assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b2-mt01", status: "published", reason: "Review one test for scoring." })).ok, true);
+  const bookOne = await accessFor(student, "ft-book-1", "ft-b1-mt01");
+  assert.equal(bookOne.ok, false);
+  if (!bookOne.ok) assert.equal(bookOne.reason, "wrong_class");
+  const started = await startAttempt(student, "ft-b2-mt01");
+  assert.equal(started.ok, true);
+  if (!started.ok) return;
+  const test = loadCatalog().tests.find((item) => item.id === "ft-b2-mt01");
+  assert.ok(test);
+  const submitted = await submitAttempt(student, started.attemptId, { "1": "A", score: "25", correct: "A" });
+  assert.equal(submitted.ok, true);
+  if (!submitted.ok || !test) return;
+  assert.equal(submitted.score, test.questions[0].correct === "A" ? 1 : 0);
+  assert.notEqual(submitted.score, 25);
+  const again = await submitAttempt(student, started.attemptId, { "1": "B" });
+  assert.equal(again.ok, false);
 });

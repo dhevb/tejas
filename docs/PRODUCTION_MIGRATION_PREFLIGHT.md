@@ -1,7 +1,7 @@
 # TEJAS production migration preflight
 
 Preflight time: 13 November 2026, 6:57 PM IST.
-This check did not apply a migration, write production data, merge the pull request, deploy production, or publish content.
+The owner later authorised both files. The execution record is at the end of this document. Pull request 14 was not merged, and the portal was not deployed or published.
 
 The production session was a read-only transaction. It ended with `commit` of that read-only transaction. No row or schema object was changed.
 
@@ -335,3 +335,77 @@ A later instruction must name project `zapccpipwxduzlnvjdmy` and authorise both 
 Stopped here. Neither migration was applied.
 
 PRODUCTION PREFLIGHT ONLY. NO MIGRATION APPLIED. NO PRODUCTION DATA OR SCHEMA MODIFIED. NO PR MERGED. NO PRODUCTION DEPLOYMENT OR CONTENT PUBLICATION PERFORMED.
+
+## Production Execution Record — 13 November 2026
+
+The owner authorised both reviewed files on project `zapccpipwxduzlnvjdmy`. This section is the production result. Earlier sections are the preflight plan and the local tests.
+
+| Item | Result |
+| --- | --- |
+| Project | `zapccpipwxduzlnvjdmy` |
+| Connection | Production pooler `aws-0-ap-northeast-1.pooler.supabase.com`, database `postgres`. Server version 17.11. The local restore is 17.12 and was not used. |
+| Migration 1 | SUCCESS. Committed 13 November 2026, 7:16 PM IST. |
+| Migration 2 | SUCCESS. Committed 13 November 2026, 7:17 PM IST. |
+| File 1 checksum | `4d68d0578ee5c578115f8c03e42b3953b3054f3493c2188e7581b96cac71c628` |
+| File 2 checksum | `65f370b086e3f0a35fbfc58c41c3216fcb3262beba054f57529386f2e04916d5` |
+| Portal tables | 12 |
+| Students, entitlements, publication overrides, questions | 0 |
+
+Migration history, read back from production:
+
+| version | name |
+| --- | --- |
+| `20261031` | `tejas_registration` |
+| `20261113_tejas_learning_portal` | `tejas_learning_portal` |
+| `20261113_tejas_learning_portal_durable` | `tejas_learning_portal_durable` |
+
+Each new history row stores the SHA-256 of the applied file. The history rows were inserted only after that file's transaction committed and the read-only checks passed.
+
+### Functions
+
+All seven functions are owned by `postgres`, security definer, with `{search_path=pg_catalog}`. Function bodies have no unqualified portal table reference and no dynamic `EXECUTE`.
+
+| Function | anon | authenticated | public | service_role |
+| --- | --- | --- | --- | --- |
+| `tejas_staff_bump_session` | false | false | false | true |
+| `tejas_learn_rotate_session` | false | false | false | true |
+| `tejas_learn_register_student` | false | false | false | true |
+| `tejas_learn_correct_registration` | false | false | false | true |
+| `tejas_learn_report_payment` | false | false | false | true |
+| `tejas_learn_review_payment` | false | false | false | true |
+| `tejas_learn_set_publication` | false | false | false | true |
+
+### RLS, fee, and publication
+
+All 12 portal tables have row-level security enabled and zero policies. Owner is `postgres`.
+
+`tejas_learn_entitlements_fee_49` is present: amount must be 49, mock-test amount must be 0, and a reported, verified, or rejected row needs a reference of 6 to 80 characters. `tejas_learn_entitlements_one_reference` is present.
+
+| Item | Status |
+| --- | --- |
+| `ft-book-1` | technology, classes 6–8, `awaiting_approval`, fee 49, mock-test fee 0 |
+| `ft-book-2` | technology, classes 9–10, `awaiting_approval`, fee 49, mock-test fee 0 |
+| Tests | 10, all `awaiting_approval`, question count 25 |
+| Non-technology books | 0 |
+| Question rows | 0 |
+
+### Existing data
+
+| Table | Before | After |
+| --- | --- | --- |
+| `tejas_registrations` | 2 | 2 |
+| `tejas_payments` | 2 | 2 |
+| `tejas_schools` | 2 | 2 |
+| `tejas_book_orders` | 2 | 2 |
+| `tejas_audit_logs` | 11 | 11 |
+| `tejas_admin_users` | 0 | 0 |
+
+Both storage buckets remain private. Each still has 2 objects.
+
+### Warnings
+
+Supabase default privileges granted `anon`, `authenticated`, and `service_role` table privileges on the new portal tables. There are no policies. Row-level security still hides the rows from `anon` and `authenticated`. The function EXECUTE grants were not given to those roles. No grant was revoked, because that was not part of the authorised files.
+
+The portal application is not deployed to https://tejas.dhe.org.in. Pull request 14 remains open. No student account was created and no payment was submitted.
+
+BOTH AUTHORISED MIGRATIONS APPLIED AND VERIFIED. NO EXISTING REGISTRATION DATA MODIFIED. NO PR MERGED. NO PRODUCTION DEPLOYMENT OR CONTENT PUBLICATION PERFORMED.

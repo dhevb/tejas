@@ -11,9 +11,9 @@ interface CertificatePreviewProps {
 }
 
 export function CertificatePreview({
-  studentName = "Student Name",
-  olympiad = "Mathematics Olympiad",
-  rank = "National Top 100",
+  studentName = "Name not shown",
+  olympiad = "Olympiad",
+  rank = "No result is shown",
   edition = "TEJAS Olympiad 2026–27",
   className,
 }: CertificatePreviewProps) {
@@ -27,13 +27,14 @@ export function CertificatePreview({
       <div className="absolute inset-0 bg-mandala-accent opacity-50 pointer-events-none" aria-hidden />
       <div className="relative">
         <div className="flex items-start justify-between">
-          <Badge variant="gold">Official Certificate</Badge>
+          <Badge variant="gold">Layout preview</Badge>
           <Award className="h-10 w-10 text-tejas-gold-dark" aria-hidden />
         </div>
         <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-tejas-muted">
           Department of Holistic Education
         </p>
         <h3 className="mt-2 text-2xl font-bold text-tejas-blue">Certificate of Excellence</h3>
+        <p className="mt-2 text-sm text-tejas-muted">This is a layout preview, not an issued certificate.</p>
         <p className="mt-4 text-sm text-tejas-muted">This is to certify that</p>
         <p className="mt-1 text-xl font-bold text-tejas-ink">{studentName}</p>
         <p className="mt-4 text-sm text-tejas-muted leading-relaxed">
@@ -49,7 +50,7 @@ export function CertificatePreview({
           </div>
           <div className="flex flex-col items-center gap-1">
             <QrCode className="h-12 w-12 text-tejas-blue/60" aria-hidden />
-            <p className="text-[10px] text-tejas-muted">Verify: TEJAS-XXXX-XXXX</p>
+            <p className="text-[10px] text-tejas-muted">No verification code</p>
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ import * as XLSX from "xlsx";
 import { adminConfigured, createSessionValue, sessionIsValid, tokenMatches } from "@/lib/registration/auth";
 import { BOOK_PRICE, BOOK_SCHOOL_SHARE, BOOK_TEJAS, calculateFee, EBOOK_FEE, EBOOK_SALE_OPEN, FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, ONLINE_EXAM_APPROVED, presentFee, SCHOOL_SHARE_APPROVED } from "@/lib/registration/fee";
 import { currentCycle } from "@/content/current-cycle";
+import { formatDisplayDate } from "@/lib/format-date";
 import { maskPan, parseIndianMobile, parsePan, validateDob } from "@/lib/registration/fields";
 import { OFFICIAL_BANK, officialPublicPayment } from "@/lib/registration/official-bank";
 import { durableStorageConfigured, paymentProofsAccepted, serverKeyName } from "@/lib/registration/durable";
@@ -908,4 +909,68 @@ test("registration with proof upload open still saves a pending payment and igno
   } finally {
     restore();
   }
+});
+
+test("schema status requires a staff session and does not describe the database to visitors", async () => {
+  const { GET } = await import("@/app/api/register/schema-status/route");
+  const denied = await GET(new Request("http://127.0.0.1/api/register/schema-status"));
+  assert.equal(denied.status, 401);
+  const deniedBody = await denied.json() as { ok: boolean; openApiTables?: unknown };
+  assert.equal(deniedBody.ok, false);
+  assert.equal(deniedBody.openApiTables, undefined);
+  const forged = await GET(new Request("http://127.0.0.1/api/register/schema-status", {
+    headers: { cookie: "tejas_staff=v2.recovery.0.1.forged" },
+  }));
+  assert.equal(forged.status, 401);
+  process.env.TEJAS_ADMIN_TOKEN = "correct-horse-battery";
+  try {
+    const allowed = await GET(new Request("http://127.0.0.1/api/register/schema-status", {
+      headers: { cookie: `tejas_staff=${createSessionValue()}` },
+    }));
+    assert.equal(allowed.status, 200);
+    const body = await allowed.json() as { ok: boolean; reason: string; rowCounts: unknown[] };
+    assert.equal(body.ok, false);
+    assert.equal(body.reason, "missing");
+    assert.equal(body.rowCounts.length, 0);
+  } finally {
+    delete process.env.TEJAS_ADMIN_TOKEN;
+  }
+});
+
+test("public pages do not post feedback to a third party or keep a bare hash link", () => {
+  const hits: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === ".next") continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(ts|tsx)$/.test(entry.name)) {
+        const source = readFileSync(full, "utf8");
+        if (source.includes("formsubmit.co") || source.includes('href: "#"') || source.includes('href="#"') || source.includes("DHE Sanskriti")) hits.push(full);
+      }
+    }
+  };
+  for (const root of ["app", "components", "config", "content", "features"]) walk(root);
+  assert.deepEqual(hits, []);
+  const school = readFileSync("app/schools/register/school-registration-form.tsx", "utf8");
+  const learn = readFileSync("app/learn/page.tsx", "utf8");
+  const contact = readFileSync("app/contact/page.tsx", "utf8");
+  const search = readFileSync("components/shared/SearchBox.tsx", "utf8");
+  assert.equal(school.includes("student logins are not available"), false);
+  assert.equal(school.includes("not for sale"), false);
+  assert.equal(school.includes("does not charge the ₹49 e-book"), true);
+  assert.equal(readFileSync("app/about/page.tsx", "utf8").includes("This school form"), false);
+  assert.equal(readFileSync("features/home/HomeLanding.tsx", "utf8").includes("This school form"), false);
+  assert.equal(readFileSync("content/olympiads/coming-soon.ts", "utf8").includes("NCERT-aligned"), false);
+  assert.equal(readFileSync("content/olympiads/coming-soon.ts", "utf8").includes("Classes I–XII"), false);
+  assert.equal(readFileSync("app/research/page.tsx", "utf8").includes("Shiksha Mahakumbh link"), false);
+  assert.equal(learn.includes("stay unpublished"), false);
+  assert.equal(learn.includes("PublicationStatus"), true);
+  assert.equal(contact.includes("Phase 0"), false);
+  assert.equal(contact.includes("does not send a message"), true);
+  assert.match(search, /Search is not available/);
+  assert.match(readFileSync("next.config.ts", "utf8"), /\/olympiads\/future-tech/);
+  assert.equal(readFileSync("app/beta/page.tsx", "utf8").includes("does not send a form"), true);
+  assert.equal(formatDisplayDate("2026-12-10"), "10 December 2026");
+  assert.equal(formatDisplayDate("2025-10-13"), "13 October 2025");
 });

@@ -23,6 +23,7 @@ import {
   reviewPayment,
   rotateSession,
   setPublication,
+  publicBookPublication,
   staffOverview,
   startAttempt,
   submitAttempt,
@@ -34,6 +35,12 @@ import { EBOOK_SALE_OPEN } from "@/lib/registration/fee";
 process.env.TEJAS_PORTAL_DATA_DIR = mkdtempSync(path.join(tmpdir(), "tejas-portal-"));
 process.env.TEJAS_PORTAL_SECRET = "portal-test-secret-value";
 process.env.TEJAS_PORTAL_STORE = "file";
+
+/** Next.js types mark NODE_ENV readonly. The property remains writable at runtime. */
+function assignNodeEnv(value: string | undefined) {
+  if (value === undefined) Reflect.deleteProperty(process.env, "NODE_ENV");
+  else Reflect.set(process.env, "NODE_ENV", value);
+}
 
 const baseStudent = {
   fullName: "Asha Rao",
@@ -422,7 +429,7 @@ test("a hosted session uses one shared key and does not invent a file secret", a
     process.env.TEJAS_ADMIN_TOKEN = "another-staff-token-16";
     assert.equal(await openSession(sealed), null);
     delete process.env.TEJAS_ADMIN_TOKEN;
-    process.env.NODE_ENV = "production";
+    assignNodeEnv("production");
     process.env.VERCEL = "1";
     assert.equal(sessionKey(), null);
     await assert.rejects(() => sealSession(studentId, 1), /Student session secret is not configured/);
@@ -430,7 +437,7 @@ test("a hosted session uses one shared key and does not invent a file secret", a
     process.env.TEJAS_PORTAL_SECRET = previousSecret;
     if (previousAdmin === undefined) delete process.env.TEJAS_ADMIN_TOKEN;
     else process.env.TEJAS_ADMIN_TOKEN = previousAdmin;
-    process.env.NODE_ENV = previousNode;
+    assignNodeEnv(previousNode);
     if (previousVercel === undefined) delete process.env.VERCEL;
     else process.env.VERCEL = previousVercel;
   }
@@ -477,7 +484,7 @@ test("sign-up and sign-in set one session and surface failures", async () => {
   const previousNode = process.env.NODE_ENV;
   delete process.env.TEJAS_PORTAL_SECRET;
   delete process.env.TEJAS_ADMIN_TOKEN;
-  process.env.NODE_ENV = "production";
+  assignNodeEnv("production");
   try {
     const failed = await loginPost(learnRequest("/api/learn/login", { email: "nila@example.test", password: baseStudent.password }));
     assert.equal(failed.status, 503);
@@ -488,6 +495,25 @@ test("sign-up and sign-in set one session and surface failures", async () => {
     process.env.TEJAS_PORTAL_SECRET = previousSecret;
     if (previousAdmin === undefined) delete process.env.TEJAS_ADMIN_TOKEN;
     else process.env.TEJAS_ADMIN_TOKEN = previousAdmin;
-    process.env.NODE_ENV = previousNode;
+    assignNodeEnv(previousNode);
   }
+});
+
+test("the public e-book summary follows publication status and does not include student records", async () => {
+  const closed = await publicBookPublication();
+  assert.equal(closed.ok, true);
+  if (!closed.ok) return;
+  assert.equal(closed.books.length, 2);
+  assert.equal(JSON.stringify(closed).includes("@"), false);
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "published", reason: "Public summary check." })).ok, true);
+  assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "published", reason: "Public summary check." })).ok, true);
+  const open = await publicBookPublication();
+  assert.equal(open.ok, true);
+  if (!open.ok) return;
+  const book = open.books.find((item) => item.id === "ft-book-1");
+  assert.equal(book?.published, true);
+  assert.equal((book?.publishedTests ?? 0) >= 1, true);
+  assert.equal(book?.classes.join(","), "6,7,8");
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "awaiting_approval", reason: "Restore after the public summary check." })).ok, true);
+  assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "awaiting_approval", reason: "Restore after the public summary check." })).ok, true);
 });

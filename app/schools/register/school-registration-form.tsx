@@ -383,7 +383,7 @@ export function SchoolRegistrationForm() {
         </ul>
       </Section>
 
-      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy: the school retains ₹34 and remits ₹136. E-book access is not for sale, so it is not charged.">
+      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy: the school retains ₹34 and remits ₹136. This form does not charge the ₹49 e-book.">
         <label className="block text-sm">
           <span className="font-medium text-tejas-ink">Printed preparation books <span className="text-tejas-saffron">*</span></span>
           <select
@@ -417,7 +417,7 @@ export function SchoolRegistrationForm() {
           <input type="hidden" name="bookQuantity" value="0" />
         )}
         <input type="hidden" name="ebookAccess" value="no" />
-        <p className="text-sm text-tejas-muted">E-book files and student logins are not available. This form does not charge ₹49. Dispatch and delivery are not recorded here.</p>
+        <p className="text-sm text-tejas-muted">This form does not create a student login and does not charge ₹49. Future Tech e-books and mock tests are a separate student portal. English and Mathematics files have not been supplied. Printed-book dispatch is not recorded here. <Link href="/prepare/ebook" className="font-semibold text-tejas-blue underline">Current publication status</Link>.</p>
       </Section>
 
       <Section step="07 · Fee" title="Registration fee summary" icon={Receipt} hint="The school collects the gross amount, retains its share, and transfers the net amount to TEJAS. The server calculates that net amount. A figure typed in the browser is not used.">

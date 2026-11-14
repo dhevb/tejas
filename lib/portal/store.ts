@@ -585,6 +585,50 @@ function paidFor(db: Database, studentId: string, bookId: string): boolean {
   return db.entitlements.some((item) => item.studentId === studentId && item.bookId === bookId && item.status === "verified");
 }
 
+export async function publicBookPublication(): Promise<
+  | {
+      ok: true;
+      feeInr: number;
+      books: {
+        id: string;
+        number: number;
+        title: string;
+        classes: number[];
+        published: boolean;
+        publishedTests: number;
+        totalTests: number;
+      }[];
+    }
+  | { ok: false }
+> {
+  try {
+    const mode = portalPersistence();
+    if (mode === "unavailable") return { ok: false };
+    const catalog = loadCatalog();
+    const publication = mode === "remote"
+      ? await (await import("@/lib/portal/remote-store")).remotePublicationMap()
+      : (await readDb()).publication;
+    return {
+      ok: true,
+      feeInr: catalog.feeInr,
+      books: catalog.books.map((book) => {
+        const tests = testsForBook(catalog, book.id);
+        return {
+          id: book.id,
+          number: book.bookNumber,
+          title: book.title,
+          classes: [...book.assignedClasses],
+          published: publicationOf(book.publicationStatus, publication.books[book.id]) === "published",
+          publishedTests: tests.filter((test) => publicationOf(test.publicationStatus, publication.tests[test.id]) === "published").length,
+          totalTests: tests.length,
+        };
+      }),
+    };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export async function accessFor(student: PortalStudent, bookId: string, testId?: string | null) {
   if (portalPersistence() === "unavailable") {
     const catalog = loadCatalog();

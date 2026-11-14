@@ -41,7 +41,7 @@ Generated: 2026-07-04T20:29:44.767Z
 - [x] 200 https://tejas.dhe.org.in/olympiads/ai
 - [x] 200 https://tejas.dhe.org.in/olympiads/coding
 - [x] 200 https://tejas.dhe.org.in/olympiads/innovation
-- [x] 200 https://tejas.dhe.org.in/editions/apj-abdul-kalam
+- [x] 200 https://tejas.dhe.org.in/editions/apj-abdul-kalam (later changed: this URL now redirects to /editions/tejas-2026-27 and is not shown as an edition)
 - [x] 200 https://tejas.dhe.org.in/editions/savitribai-phule
 - [x] 200 https://tejas.dhe.org.in/editions/srinivasa-ramanujan
 - [x] 200 https://tejas.dhe.org.in/editions/kalpana-chawla

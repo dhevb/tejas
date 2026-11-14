@@ -63,7 +63,7 @@ export function createMetadata({
     robots: noIndex ? { index: false, follow: false } : { index: true, follow: true },
     keywords: [
       "TEJAS",
-      "DHE Olympiads",
+      "TEJAS Olympiad",
       "talent assessment Bharat",
       "national olympiad",
       "Department of Holistic Education",

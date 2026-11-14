@@ -36,11 +36,13 @@ function Unit({ value, label }: { value: number; label: string }) {
 }
 
 export function Countdown({ targetDate, label = "Registration closes in", className }: CountdownProps) {
-  const target = new Date(targetDate);
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calcTimeLeft(target));
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
-    const id = setInterval(() => setTimeLeft(calcTimeLeft(target)), 1000);
+    const target = new Date(targetDate);
+    const update = () => setTimeLeft(calcTimeLeft(target));
+    update();
+    const id = setInterval(update, 1000);
     return () => clearInterval(id);
   }, [targetDate]);
 
@@ -48,10 +50,16 @@ export function Countdown({ targetDate, label = "Registration closes in", classN
     <div className={cn("rounded-2xl border border-stone-200 bg-white p-6 shadow-tejas", className)}>
       <p className="text-sm font-medium text-tejas-muted">{label}</p>
       <div className="mt-4 flex flex-wrap gap-3" role="timer" aria-live="polite">
-        <Unit value={timeLeft.days} label="Days" />
-        <Unit value={timeLeft.hours} label="Hours" />
-        <Unit value={timeLeft.minutes} label="Min" />
-        <Unit value={timeLeft.seconds} label="Sec" />
+        {timeLeft ? (
+          <>
+            <Unit value={timeLeft.days} label="Days" />
+            <Unit value={timeLeft.hours} label="Hours" />
+            <Unit value={timeLeft.minutes} label="Min" />
+            <Unit value={timeLeft.seconds} label="Sec" />
+          </>
+        ) : (
+          <p className="text-sm text-tejas-muted">The countdown appears after this page loads.</p>
+        )}
       </div>
     </div>
   );

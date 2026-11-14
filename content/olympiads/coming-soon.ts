@@ -19,52 +19,28 @@ export function createComingSoonOlympiad(config: ComingSoonConfig): OlympiadPort
   return {
     ...config,
     status: "coming-soon",
-    duration: ls("60 minutes", "60 मिनट"),
-    questions: 50,
+    duration: ls("Not published", "प्रकाशित नहीं"),
+    questions: 0,
     registrationOpen: false,
     eligibility: [
-      ls("Students in recognised schools across Bharat", "भारत भर के मान्यता प्राप्त विद्यालयों के छात्र"),
-      ls(`Grade range: ${config.grades.en}`, `कक्षा सीमा: ${config.grades.hi}`),
-      ls("Launch planned under future TEJAS editions", "भविष्य TEJAS संस्करणों के तहत लॉन्च"),
+      ls("This stream is not part of TEJAS Olympiad 2026–27.", "यह TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं है।"),
+      ls("No class range has been published.", "कक्षा सीमा प्रकाशित नहीं हुई है।"),
     ],
-    examPattern: [
-      { section: ls("Objective MCQs", "वस्तुनिष्ठ MCQ"), questions: 40, marks: 40 },
-      { section: ls("Application & Analysis", "अनुप्रयोग एवं विश्लेषण"), questions: 10, marks: 10 },
-    ],
-    syllabus: [
-      {
-        level: ls("Grade-appropriate", "कक्षा-अनुकूल"),
-        classes: config.grades,
-        topics: [
-          ls("NCERT-aligned curriculum topics", "NCERT-अनुरूप पाठ्यक्रम"),
-          ls("Higher-order thinking questions", "उच्च स्तरीय सोच प्रश्न"),
-          ls("Detailed syllabus to be published before launch", "लॉन्च से पहले विस्तृत पाठ्यक्रम"),
-        ],
-      },
-    ],
-    preparationRoadmap: [
-      {
-        phase: ls("Foundation", "नींव"),
-        description: ls("Build strong fundamentals in the subject through NCERT and school curriculum.", "NCERT और school curriculum से मजबूत नींव।"),
-      },
-    ],
+    examPattern: [],
+    syllabus: [],
+    preparationRoadmap: [],
     books: [],
     mockTests: [],
     samplePapers: [],
     previousPapers: [],
     videoLectures: [],
-    awards: [
-      {
-        level: ls("National Recognition", "राष्ट्रीय मान्यता"),
-        description: ls("Medals, certificates, and Shiksha Mahakumbh felicitation", "पदक, प्रमाणपत्र और SMK सम्मान"),
-      },
-    ],
+    awards: [],
     faqs: [
       {
         question: ls(`When will the ${config.name.en} Olympiad launch?`, `${config.name.hi} ओलंपियाड कब लॉन्च होगा?`),
         answer: ls(
-          "This stream is part of TEJAS expansion roadmap. DHE Sanskriti Olympiad and additional subjects are planned after the current core streams (English, Maths, Technology).",
-          "यह TEJAS विस्तार roadmap का हिस्सा है। वर्तमान core streams के बाद अतिरिक्त विषय।"
+          "This stream is not part of TEJAS Olympiad 2026–27. No launch date has been published.",
+          "यह TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं है। लॉन्च की तारीख प्रकाशित नहीं हुई है।"
         ),
       },
     ],
@@ -73,16 +49,9 @@ export function createComingSoonOlympiad(config: ComingSoonConfig): OlympiadPort
     schoolGuide: [],
     calendar: [],
     hallOfFameHighlights: [],
-    skillsDeveloped: [
-      ls("Analytical thinking", "विश्लेषणात्मक सोच"),
-      ls("Problem-solving", "समस्या समाधान"),
-    ],
-    learningOutcomes: [
-      ls("Grade-appropriate competency mastery", "कक्षा-अनुकूल दक्षता"),
-    ],
-    careerPathways: [
-      ls("Details published before launch", "लॉन्च से पहले विवरण"),
-    ],
+    skillsDeveloped: [],
+    learningOutcomes: [],
+    careerPathways: [],
     sampleQuestions: [],
   };
 }
@@ -90,118 +59,118 @@ export function createComingSoonOlympiad(config: ComingSoonConfig): OlympiadPort
 export const scienceOlympiad = createComingSoonOlympiad({
   slug: "science",
   name: ls("Science", "विज्ञान"),
-  tagline: ls("Physics, chemistry, biology, and scientific inquiry", "भौतिकी, रसायन, जीव विज्ञान और वैज्ञानिक जिज्ञासा"),
+  tagline: ls("Not part of TEJAS Olympiad 2026–27", "TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं"),
   description: ls(
-    "Explore the wonders of science through objective assessment aligned with NCERT curriculum and NEP 2020 competencies.",
-    "NCERT पाठ्यक्रम और NEP 2020 competencies के अनुरूप वैज्ञानिक मूल्यांकन।"
+    "A Science Olympiad has not been announced. No class range, syllabus, or examination date has been published.",
+    "विज्ञान ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "Science drives innovation and national progress. From CV Raman to ISRO, Bharat's scientific heritage inspires the next generation of researchers.",
-    "विज्ञान नवाचार और राष्ट्रीय प्रगति को आगे बढ़ाता है।"
+    "This page does not describe a Science examination. The open streams are English, Mathematics, and Future Tech.",
+    "यह पृष्ठ विज्ञान परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "flask",
   color: "#047857",
-  grades: ls("Classes I–XII", "कक्षा I–XII"),
+  grades: ls("Not published", "प्रकाशित नहीं"),
 });
 
 export const hindiOlympiad = createComingSoonOlympiad({
   slug: "hindi",
   name: ls("Hindi", "हिंदी"),
-  tagline: ls("Language proficiency, literature, and cultural expression", "भाषा दक्षता, साहित्य और सांस्कृतिक अभिव्यक्ति"),
+  tagline: ls("Not part of TEJAS Olympiad 2026–27", "TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं"),
   description: ls(
-    "Celebrate Bharat's national language through grammar, comprehension, and literary appreciation.",
-    "व्याकरण, बोध और साहित्यिक appreciation के माध्यम से राष्ट्रभाषा का उत्सव।"
+    "A Hindi Olympiad has not been announced. No class range, syllabus, or examination date has been published.",
+    "हिंदी ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "Hindi connects students to Bharat's rich literary heritage and enables expression in our national language.",
-    "हिंदी छात्रों को भारत की साहित्यिक विरासत से जोड़ती है।"
+    "This page does not describe a Hindi examination. The open streams are English, Mathematics, and Future Tech.",
+    "यह पृष्ठ हिंदी परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "languages",
   color: "#A3531C",
-  grades: ls("Classes I–XII", "कक्षा I–XII"),
+  grades: ls("Not published", "प्रकाशित नहीं"),
 });
 
 export const sanskritOlympiad = createComingSoonOlympiad({
   slug: "sanskrit",
   name: ls("Sanskrit", "संस्कृत"),
-  tagline: ls("Classical language and Bharatiya knowledge traditions", "शास्त्रीय भाषा और भारतीय ज्ञान परंपराएँ"),
+  tagline: ls("Not part of TEJAS Olympiad 2026–27", "TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं"),
   description: ls(
-    "DHE Sanskriti Olympiad — connecting students to Sanskrit grammar, shlokas, and Indian Knowledge Systems.",
-    "DHE Sanskriti Olympiad — संस्कृत व्याकरण, श्लोक और IKS से जुड़ाव।"
+    "A Sanskrit Olympiad has not been announced. No class range, syllabus, or examination date has been published.",
+    "संस्कृत ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "Sanskrit is the gateway to Bharat's ancient wisdom. DHE plans Sanskriti Olympiad as part of TEJAS expansion.",
-    "संस्कृत प्राचीन ज्ञान का द्वार है। DHE Sanskriti Olympiad की योजना।"
+    "This page does not describe a Sanskrit examination. The open streams are English, Mathematics, and Future Tech.",
+    "यह पृष्ठ संस्कृत परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "scroll",
   color: "#8A5A10",
-  grades: ls("Classes V–XII", "कक्षा V–XII"),
+  grades: ls("Not published", "प्रकाशित नहीं"),
 });
 
 export const generalKnowledgeOlympiad = createComingSoonOlympiad({
   slug: "general-knowledge",
   name: ls("General Knowledge", "सामान्य ज्ञान"),
-  tagline: ls("Current affairs, geography, history, and civic awareness", "समसामयिक, भूगोल, इतिहास और नागरिक जागरूकता"),
+  tagline: ls("Not part of TEJAS Olympiad 2026–27", "TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं"),
   description: ls(
-    "Assess awareness of Bharat, the world, and responsible citizenship.",
-    "भारत, विश्व और जिम्मेदार नागरिकता की जागरूकता का मूल्यांकन।"
+    "A General Knowledge Olympiad has not been announced. No class range, syllabus, or examination date has been published.",
+    "सामान्य ज्ञान ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "Well-rounded citizens need awareness beyond textbooks — GK builds informed, engaged learners.",
-    "सुसज्जित नागरिकों को पाठ्यपुस्तकों से परे जागरूकता चाहिए।"
+    "This page does not describe a General Knowledge examination. The open streams are English, Mathematics, and Future Tech.",
+    "यह पृष्ठ सामान्य ज्ञान परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "globe",
   color: "#1A2B5D",
-  grades: ls("Classes III–XII", "कक्षा III–XII"),
+  grades: ls("Not published", "प्रकाशित नहीं"),
 });
 
 export const aiOlympiad = createComingSoonOlympiad({
   slug: "ai",
   name: ls("AI & Data Science", "कृत्रिम बुद्धिमत्ता"),
-  tagline: ls("Foundations of AI, ethics, and data-driven thinking", "AI की नींव, नैतिकता और डेटा-संचालित सोच"),
+  tagline: ls("Not part of TEJAS Olympiad 2026–27", "TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं"),
   description: ls(
-    "Responsible AI foundations for young learners — from data literacy to ethical technology use.",
-    "युवा शिक्षार्थियों के लिए जिम्मेदार AI नींव।"
+    "An AI and Data Science Olympiad has not been announced. No class range, syllabus, or examination date has been published.",
+    "कृत्रिम बुद्धिमत्ता ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "AI is reshaping every field. TEJAS will prepare students to be creators, not just consumers, of intelligent technology.",
-    "AI हर क्षेत्र को बदल रही है। TEJAS छात्रों को intelligent technology के creator बनाएगा।"
+    "This page does not describe an AI examination. The open streams are English, Mathematics, and Future Tech.",
+    "यह पृष्ठ कृत्रिम बुद्धिमत्ता परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "brain",
   color: "#101C40",
-  grades: ls("Classes VIII–XII", "कक्षा VIII–XII"),
+  grades: ls("Not published", "प्रकाशित नहीं"),
 });
 
 export const codingOlympiad = createComingSoonOlympiad({
   slug: "coding",
   name: ls("Coding", "कोडिंग"),
-  tagline: ls("Computational thinking, algorithms, and programming logic", "Computational thinking, algorithms और programming logic"),
+  tagline: ls("Not part of TEJAS Olympiad 2026–27", "TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं"),
   description: ls(
-    "Build algorithmic thinking and programming foundations through Olympiad-style assessment.",
-    "Olympiad-शैली मूल्यांकन से algorithmic thinking।"
+    "A Coding Olympiad has not been announced. No class range, syllabus, or examination date has been published.",
+    "कोडिंग ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "Coding literacy is essential for Viksit Bharat 2047. TEJAS Coding Olympiad will identify young computational thinkers.",
-    "Viksit Bharat 2047 के लिए coding literacy आवश्यक।"
+    "This page does not describe a Coding examination. The open streams are English, Mathematics, and Future Tech.",
+    "यह पृष्ठ कोडिंग परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "code",
   color: "#7C3A12",
-  grades: ls("Classes VI–XII", "कक्षा VI–XII"),
+  grades: ls("Not published", "प्रकाशित नहीं"),
 });
 
 export const innovationOlympiad = createComingSoonOlympiad({
   slug: "innovation",
   name: ls("Innovation", "नवाचार"),
-  tagline: ls("Design thinking, entrepreneurship, and creative problem-solving", "Design thinking, उद्यमिता और रचनात्मक समस्या समाधान"),
+  tagline: ls("Not part of TEJAS Olympiad 2026–27", "TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं"),
   description: ls(
-    "Assess creative problem-solving, design thinking, and entrepreneurial mindset.",
-    "रचनात्मक समस्या समाधान, design thinking और entrepreneurial mindset का मूल्यांकन।"
+    "An Innovation Olympiad has not been announced. No class range, syllabus, or examination date has been published.",
+    "नवाचार ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "Innovation drives Atmanirbhar Bharat. TEJAS Innovation Olympiad will nurture young entrepreneurs and inventors.",
-    "नवाचार आत्मनिर्भर भारत को आगे बढ़ाता है।"
+    "This page does not describe an Innovation examination. The open streams are English, Mathematics, and Future Tech.",
+    "यह पृष्ठ नवाचार परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "lightbulb",
   color: "#5C3D12",
-  grades: ls("Classes IX–XII", "कक्षा IX–XII"),
+  grades: ls("Not published", "प्रकाशित नहीं"),
 });

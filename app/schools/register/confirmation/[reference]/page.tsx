@@ -44,7 +44,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
           </dl>
           <p className="rounded-xl bg-tejas-blue px-4 py-3 text-base font-semibold text-white">Net amount payable to TEJAS: {inr.format(summary.amountDue)}</p>
           <p>The school retains the school share and transfers the net amount to the official account. The book amount is separate from the registration fee. This page does not mark books as dispatched or delivered.</p>
-          <p>E-book access is not for sale, so no e-book fee is included.</p>
+          <p>This registration does not include the ₹49 e-book. That fee is paid in the student portal when a published book is selected.</p>
           {summary.schoolShareApproved ? null : <p>These amounts are the figures saved with this registration. They have not been recalculated.</p>}
           <p className="font-semibold">{summary.paymentLabel}</p>
           <p>{summary.nextStep}</p>

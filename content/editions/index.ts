@@ -102,7 +102,8 @@ export const dheEnglish2025Edition: EditionFullContent = {
   ],
 };
 
-export const apjAbdulKalam2026Edition: EditionFullContent = {
+/** Current TEJAS Olympiad 2026–27. The old APJ Abdul Kalam slug redirects here and is not an edition. */
+export const tejas2026Edition: EditionFullContent = {
   slug: "tejas-2026-27",
   year: 2026,
   name: {
@@ -305,7 +306,7 @@ export const futureEditions: EditionFullContent[] = [
 ];
 
 export const editionRegistry: EditionFullContent[] = [
-  apjAbdulKalam2026Edition,
+  tejas2026Edition,
   dheEnglish2025Edition,
 ];
 
@@ -319,7 +320,7 @@ export function getAllEditionSlugs(): string[] {
 }
 
 export function getCurrentEditionContent() {
-  return apjAbdulKalam2026Edition;
+  return tejas2026Edition;
 }
 
 export function getPastEditions() {

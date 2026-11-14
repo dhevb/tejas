@@ -60,9 +60,9 @@ export function TejasNavbar() {
           className="flex shrink-0 items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-saffron rounded-lg"
         >
           <TejasEmblem size="md" />
-          <div className="min-w-0 leading-tight">
-            <span lang="hi" className="block font-hindi text-[1.65rem] font-bold leading-tight text-[#C6530A]">{brand.nameHi}</span>
-            <span className="text-xs text-tejas-muted xl:hidden 2xl:block">{brand.tagline}</span>
+          <div className="min-w-0 leading-none">
+            <span lang="hi" className="block font-hindi text-[1.65rem] font-bold leading-none text-[#C6530A]">{brand.nameHi}</span>
+            <span className="mt-0.5 block whitespace-nowrap font-sans text-[0.68rem] font-semibold leading-none tracking-[0.22em] text-tejas-blue">OLYMPIAD</span>
           </div>
         </Link>
 

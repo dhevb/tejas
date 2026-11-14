@@ -13,7 +13,7 @@ export function PrepareZoneSection() {
           <SectionHeader
             eyebrow="Prepare"
             title="Your Preparation Hub"
-            subtitle="Mock tests, practice sets, video learning, and more — everything you need to excel."
+            subtitle="Published Future Tech material opens from the student portal. This site does not show invented progress or resource counts."
             className="[&_h2]:text-white [&_p]:text-white/70"
           />
         </FadeIn>
@@ -28,7 +28,6 @@ export function PrepareZoneSection() {
                 <div className={cn("rounded-2xl bg-gradient-to-br p-6", cat.gradient)}>
                   <h3 className="text-xl font-bold">{cat.title}</h3>
                   <p className="mt-2 text-sm text-white/80">{cat.description}</p>
-                  <p className="mt-4 text-2xl font-bold">{cat.count}+</p>
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium opacity-0 transition group-hover:opacity-100">
                     Explore <ArrowRight className="h-4 w-4" aria-hidden />
                   </span>

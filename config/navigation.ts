@@ -42,10 +42,10 @@ export const mainNav: NavItem[] = [
         title: "All Subjects",
         titleHi: "सभी विषय",
         items: [
-          { label: "Science", href: "/olympiads/science", description: "Coming in future edition" },
-          { label: "Hindi", href: "/olympiads/hindi", description: "Language & literature" },
-          { label: "AI & Data Science", href: "/olympiads/ai", description: "Responsible AI" },
-          { label: "View All", href: "/olympiads", description: "10-subject ecosystem" },
+          { label: "Science", href: "/olympiads/science", description: "Not part of 2026–27" },
+          { label: "Hindi", href: "/olympiads/hindi", description: "Not part of 2026–27" },
+          { label: "AI & Data Science", href: "/olympiads/ai", description: "Not part of 2026–27" },
+          { label: "View All", href: "/olympiads", description: "Open streams and subjects still coming soon" },
         ],
       },
     ],
@@ -58,10 +58,10 @@ export const mainNav: NavItem[] = [
       {
         title: "Prepare",
         items: [
-          { label: "Prepare Hub", href: "/prepare", description: "Topic-wise drills & strategy" },
+          { label: "Prepare Hub", href: "/prepare", description: "Routes that are actually published" },
           { label: "E-book portal", href: "/learn", description: "Stream and class library" },
-          { label: "Mock Tests", href: "/prepare/mock-tests", description: "Included with the e-book" },
-          { label: "Resources", href: "/resources", description: "Books, videos, downloads" },
+          { label: "Mock Tests", href: "/prepare/mock-tests", description: "Future Tech tests in the student portal" },
+          { label: "Resources", href: "/resources", description: "Only pages and attached files" },
         ],
       },
     ],
@@ -99,12 +99,12 @@ export const mainNav: NavItem[] = [
 ];
 
 export const futureModules = [
-  { label: "AI Mentor", labelHi: "AI मेंटर", href: "#", comingSoon: true },
-  { label: "Student Dashboard", labelHi: "छात्र पोर्टल", href: "#", comingSoon: true },
+  { label: "AI Mentor", labelHi: "AI मेंटर", comingSoon: true },
+  { label: "Student portal", labelHi: "छात्र पोर्टल", href: "/learn", comingSoon: false },
   { label: "Scholarships", labelHi: "छात्रवृत्ति", href: "/scholarships", comingSoon: false },
   { label: "Rankings", labelHi: "रैंकिंग", href: "/rankings", comingSoon: false },
-  { label: "National Talent Index", labelHi: "राष्ट्रीय प्रतिभा सूचकांक", href: "#", comingSoon: true },
-  { label: "Mobile App", labelHi: "मोबाइल ऐप", href: "#", comingSoon: true },
+  { label: "National Talent Index", labelHi: "राष्ट्रीय प्रतिभा सूचकांक", comingSoon: true },
+  { label: "Mobile App", labelHi: "मोबाइल ऐप", comingSoon: true },
 ] as const;
 
 export const footerNav = {

@@ -9,7 +9,7 @@ import { hallOfFameCategories, getHallOfFameByCategory } from "@/data/hall-of-fa
 
 export const metadata = createMetadata({
   title: "Hall of Fame",
-  description: "Bharat's National Talent Gallery — national champions, school excellence, innovation and research awards. Permanent legacy archive of TEJAS.",
+  description: "Names published from the 1st DHE English Olympiad in 2025. TEJAS Olympiad 2026–27 has no Hall of Fame list yet.",
   path: "/hall-of-fame",
 });
 
@@ -22,12 +22,12 @@ export default function HallOfFamePage() {
       <PageHero
         eyebrow="Legacy Archive"
         title="Hall of Fame"
-        subtitle="Bharat's National Talent Gallery — permanent recognition for meritorious students, schools, and future innovators."
+        subtitle="These names are from the 1st DHE English Olympiad in 2025. They are not results for TEJAS Olympiad 2026–27."
       />
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <CertificatePreview studentName="Kanav Goyal" rank="Overall 1st — Level D, English Olympiad 2025" />
+            <CertificatePreview studentName="Kanav Goyal" olympiad="1st DHE English Olympiad" rank="Overall 1st — Level D" edition="2025" />
           </FadeIn>
 
           {populated.map((cat, catIndex) => {
@@ -65,7 +65,7 @@ export default function HallOfFamePage() {
                   className="mt-20"
                   eyebrow="Growing Archive"
                   title="Future Categories"
-                  subtitle="Populated as TEJAS Olympiad cycles expand nationwide."
+                  subtitle="These categories have no published names."
                 />
               </FadeIn>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -74,7 +74,7 @@ export default function HallOfFamePage() {
                     key={cat.id}
                     title={cat.label.en}
                     titleHi={cat.label.hi}
-                    description="Winners from upcoming TEJAS editions will be permanently archived here."
+                    description="No name is listed in this category."
                   />
                 ))}
               </div>

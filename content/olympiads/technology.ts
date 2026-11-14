@@ -1,20 +1,19 @@
 import type { OlympiadPortalContent } from "@/content/types";
-import { CURRENT_EDITION_LABEL } from "@/content/current-cycle";
 
 export const technologyOlympiad: OlympiadPortalContent = {
   slug: "technology",
   name: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" },
   tagline: {
-    en: "DHE Tech Olympiad — digital literacy, innovation, and emerging technologies",
-    hi: "DHE टेक ओलंपियाड — डिजिटल साक्षरता, नवाचार और उभरती प्रौद्योगिकियाँ",
+    en: "TEJAS Future Tech Olympiad — Classes VI–X",
+    hi: "TEJAS फ्यूचर टेक ओलंपियाड — कक्षा VI–X",
   },
   description: {
-    en: "TEJAS Future Tech is examined offline on 11 December 2026 for Classes VI–X. It assesses digital literacy, computational thinking, and awareness of emerging technologies.",
-    hi: "DHE टेक ओलंपियाड डिजिटल साक्षरता, computational thinking और उभरती प्रौद्योगिकियों की जागरूकता का मूल्यांकन करता है।",
+    en: "TEJAS Future Tech Olympiad is examined offline on 11 December 2026 for Classes VI–X. It assesses digital literacy, computational thinking, and awareness of emerging technologies.",
+    hi: "TEJAS फ्यूचर टेक ओलंपियाड कक्षा VI–X के लिए है। परीक्षा 11 दिसंबर 2026 को है।",
   },
   whySubject: {
-    en: "Technology-enabled education and innovation ecosystems are core to DHE's mission. The Tech Olympiad prepares students for a digital Bharat — from basic computer literacy to AI awareness and responsible technology use.",
-    hi: "प्रौद्योगिकी-सक्षम शिक्षा DHE के मिशन का मुख्य हिस्सा है। टेक ओलंपियाड डिजिटल भारत के लिए छात्रों को तैयार करता है।",
+    en: "Technology-enabled education is part of the work of the Department of Holistic Education. TEJAS Future Tech Olympiad is the current stream for Classes VI–X.",
+    hi: "TEJAS फ्यूचर टेक ओलंपियाड कक्षा VI–X के लिए है। आयोजक समग्र शिक्षा विभाग है।",
   },
   status: "active",
   icon: "cpu",
@@ -109,57 +108,26 @@ export const technologyOlympiad: OlympiadPortalContent = {
     {
       phase: { en: "Mock Tests (Weeks 5–6)", hi: "मॉक टेस्ट (सप्ताह 5–6)" },
       description: {
-        en: "Full-length Tech Olympiad mock with OMR practice.",
-        hi: "OMR अभ्यास के साथ पूर्ण टेक ओलंपियाड मॉक।",
+        en: "Published Future Tech mock tests open from the student portal after payment is verified. This page does not start a test.",
+        hi: "प्रकाशित फ्यूचर टेक मॉक टेस्ट छात्र पोर्टल में भुगतान सत्यापन के बाद खुलते हैं।",
       },
     },
   ],
   books: [
     {
-      title: { en: "DHE Tech Olympiad Guide", hi: "DHE टेक ओलंपियाड गाइड" },
-      author: { en: "Olympiad Cell, DHE", hi: "ओलंपियाड सेल, DHE" },
-      publisher: { en: "DHE Publications", hi: "DHE प्रकाशन" },
-    },
-    {
-      title: { en: "Digital Bharat — Young Innovator's Handbook", hi: "डिजिटल भारत — युवा नवप्रवर्तक पुस्तिका" },
-      author: { en: "TEJAS Editorial Board", hi: "TEJAS संपादकीय मंडल" },
-      publisher: { en: "TEJAS Publications", hi: "TEJAS प्रकाशन" },
-    },
-  ],
-  mockTests: [
-    {
-      id: "tech-mock-c",
-      title: { en: "Mock Test — Level C", hi: "मॉक टेस्ट — स्तर C" },
-      questions: 30,
-      duration: "40 min",
-      level: { en: "Level C", hi: "स्तर C" },
-    },
-    {
-      id: "tech-mock-e",
-      title: { en: "Mock Test — Level E", hi: "मॉक टेस्ट — स्तर E" },
-      questions: 40,
-      duration: "45 min",
-      level: { en: "Level E", hi: "स्तर E" },
+      title: { en: "TEJAS Future Tech e-books", hi: "TEJAS फ्यूचर टेक ई-पुस्तक" },
+      author: { en: "Department of Holistic Education", hi: "समग्र शिक्षा विभाग" },
+      publisher: { en: "Student portal", hi: "छात्र पोर्टल" },
+      description: {
+        en: "Book 1 is for Classes VI–VIII and Book 2 is for Classes IX–X. They open from the student portal when published and the payment is verified. This page does not open a file.",
+        hi: "पुस्तक 1 कक्षा VI–VIII और पुस्तक 2 कक्षा IX–X। छात्र पोर्टल से खुलती हैं।",
+      },
     },
   ],
-  samplePapers: [
-    {
-      id: "tech-sample-d",
-      title: { en: "Sample Paper — Level D", hi: "नमूना प्रश्नपत्र — स्तर D" },
-      year: 2026,
-      level: { en: "Level D", hi: "स्तर D" },
-      edition: CURRENT_EDITION_LABEL,
-    },
-  ],
+  mockTests: [],
+  samplePapers: [],
   previousPapers: [],
-  videoLectures: [
-    {
-      id: "tech-v1",
-      title: { en: "Introduction to AI for School Students", hi: "स्कूल छात्रों के लिए AI परिचय" },
-      duration: "35 min",
-      speaker: { en: "DHE Innovation Cell", hi: "DHE नवाचार सेल" },
-    },
-  ],
+  videoLectures: [],
   awards: [
     {
       level: { en: "National Top Achievers", hi: "राष्ट्रीय शीर्ष achievers" },
@@ -192,7 +160,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
       },
     },
     {
-      question: { en: "When is the DHE Tech Olympiad?", hi: "DHE टेक ओलंपियाड कब है?" },
+      question: { en: "When is TEJAS Future Tech Olympiad?", hi: "TEJAS फ्यूचर टेक ओलंपियाड कब है?" },
       answer: {
         en: "TEJAS Future Tech is on 11 December 2026. Schools register from 3 November 2026 to 20 November 2026.",
         hi: "TEJAS फ्यूचर टेक 11 दिसंबर 2026 को है। पंजीकरण 3–20 नवंबर 2026।",
@@ -228,19 +196,19 @@ export const technologyOlympiad: OlympiadPortalContent = {
   ],
   calendar: [
     {
-      label: { en: "Registration Opens", hi: "पंजीकरण प्रारंभ" },
-      date: "2026-07-01",
-      status: "tba",
+      label: { en: "TEJAS Future Tech — registration opens", hi: "पंजीकरण प्रारंभ" },
+      date: "2026-11-03",
+      status: "upcoming",
     },
     {
-      label: { en: "DHE Tech Olympiad — Examination", hi: "परीक्षा" },
-      date: "2026-09-01",
-      status: "tba",
+      label: { en: "TEJAS Future Tech — registration closes", hi: "पंजीकरण समाप्ति" },
+      date: "2026-11-20",
+      status: "upcoming",
     },
     {
-      label: { en: "Felicitation — TEJAS National Ceremony", hi: "TEJAS राष्ट्रीय सम्मान" },
-      date: "2026-10-01",
-      status: "tba",
+      label: { en: "TEJAS Future Tech Olympiad — examination", hi: "परीक्षा" },
+      date: "2026-12-11",
+      status: "upcoming",
     },
   ],
   hallOfFameHighlights: [],

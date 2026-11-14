@@ -7,25 +7,25 @@ import { Lightbulb, Rocket, Award } from "lucide-react";
 
 export const metadata = createMetadata({
   title: "Innovation",
-  description: "TEJAS Innovation — student projects, design thinking, and innovation awards under Olympiad Cell, DHE.",
+  description: "An Innovation Olympiad has not been announced for TEJAS Olympiad 2026–27. The open technology stream is TEJAS Future Tech.",
   path: "/innovation",
 });
 
 const pillars = [
   {
     icon: Lightbulb,
-    title: "Design Thinking",
-    description: "Problem identification, empathy mapping, and prototype development for school and community challenges.",
+    title: "Not announced",
+    description: "An Innovation Olympiad is not one of the three streams open for TEJAS Olympiad 2026–27.",
   },
   {
     icon: Rocket,
-    title: "Student Projects",
-    description: "Shiksha Mahakumbh Project Expo framework — Himachal-centric innovation with district pre-events and state finale.",
+    title: "TEJAS Future Tech",
+    description: "The open technology stream is TEJAS Future Tech, examined on 11 December 2026 for Classes VI–X.",
   },
   {
     icon: Award,
-    title: "Innovation Awards",
-    description: "TEJAS Hall of Fame Innovation category — recognising young innovators and deployable prototypes.",
+    title: "No innovation award list",
+    description: "The Hall of Fame does not yet list an innovation award. Names on that page are from the 1st DHE English Olympiad in 2025.",
   },
 ];
 
@@ -35,13 +35,13 @@ export default function InnovationPage() {
       <PageHero
         eyebrow="TEJAS Innovation"
         title="Innovation Ecosystem"
-        subtitle="From classroom ideas to national recognition — TEJAS nurtures Bharat's young innovators."
-        primaryCta={{ label: "Innovation Olympiad", href: "/olympiads/innovation" }}
+        subtitle="An Innovation Olympiad has not been announced. TEJAS Future Tech is the open technology stream."
+        primaryCta={{ label: "TEJAS Future Tech", href: "/olympiads/technology" }}
         secondaryCta={{ label: "Hall of Fame", href: "/hall-of-fame" }}
       />
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeader title="Innovation Pillars" subtitle="Aligned with Viksit Bharat 2047 and DHE Innovation Cell." />
+          <SectionHeader title="What this page can say" subtitle="No Innovation examination, syllabus, or award list has been published." />
           <div className="grid gap-8 md:grid-cols-3">
             {pillars.map((p, i) => {
               const Icon = p.icon;

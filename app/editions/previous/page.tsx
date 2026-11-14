@@ -25,19 +25,18 @@ export default function PreviousEditionsPage() {
           <div className="grid gap-8 md:grid-cols-2">
             {previousEditions.map((edition, i) => (
               <FadeIn key={edition.slug} delay={i * 0.1}>
-                <Link href={`/editions/${edition.slug}`} className="block">
-                  <article className="rounded-2xl border border-stone-200 bg-white p-8 shadow-tejas transition hover:-translate-y-1">
-                    <EditionCard
-                      year={edition.year}
-                      name={edition.name}
-                      subtitle={edition.subtitle}
-                      theme={edition.theme}
-                      status="past"
-                    />
-                    <p className="mt-6 text-tejas-muted">{edition.bio}</p>
-                    <span className="mt-4 inline-block text-sm font-semibold text-tejas-saffron">View edition →</span>
-                  </article>
-                </Link>
+                <article className="rounded-2xl border border-stone-200 bg-white p-8 shadow-tejas">
+                  <EditionCard
+                    year={edition.year}
+                    name={edition.name}
+                    subtitle={edition.subtitle}
+                    theme={edition.theme}
+                    status="past"
+                    href={`/editions/${edition.slug}`}
+                  />
+                  <p className="mt-6 text-tejas-muted">{edition.bio}</p>
+                  <Link href={`/editions/${edition.slug}`} className="mt-4 inline-block text-sm font-semibold text-tejas-saffron">View edition</Link>
+                </article>
               </FadeIn>
             ))}
           </div>

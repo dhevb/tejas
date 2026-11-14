@@ -12,7 +12,6 @@ import { siteConfig } from "@/config/seo";
 import { brand } from "@/design-system/tokens";
 import { brandContent } from "@/content/brand";
 import { BookOpen, Brain, Shield, Lightbulb, Users, FlaskConical } from "lucide-react";
-import Link from "next/link";
 
 export const metadata = createMetadata({
   title: "About TEJAS",
@@ -34,7 +33,7 @@ const pillars = [
   {
     icon: Shield,
     title: "Secure Technology-Enabled Exams",
-    description: "OMR and digital modes with transparent, fair, and credible examination standards.",
+    description: "The examinations are offline, at the participating schools. This website is not the examination hall. Online mock tests are a separate student portal.",
   },
   {
     icon: Lightbulb,
@@ -70,7 +69,7 @@ export default function AboutPage() {
         title={brand.name}
         subtitle={`${brand.fullName} — an independent initiative by the Olympiad Cell, ${brand.parentOrg}. Standalone. Long-term. National.`}
         primaryCta={{ label: "Explore Olympiads", href: "/olympiads" }}
-        secondaryCta={{ label: "Register Interest", href: "/#register" }}
+        secondaryCta={{ label: "School registration", href: "/schools/register" }}
       />
 
       <section className="tejas-section">
@@ -105,17 +104,9 @@ export default function AboutPage() {
       <section className="tejas-section">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <SectionHeader title="Product Roadmap" subtitle="Staged evolution from polished website to full national platform." />
+            <SectionHeader title="What is available" subtitle="This list describes the public website. It is not an internal delivery plan." />
           </FadeIn>
           <PhaseRoadmap />
-          <FadeIn delay={0.1}>
-            <p className="mt-6 text-sm text-tejas-muted">
-              Backend architecture planning:{" "}
-              <Link href="https://github.com/dheWeb/tejas/blob/main/docs/BACKEND_ARCHITECTURE.md" className="text-tejas-saffron hover:underline">
-                docs/BACKEND_ARCHITECTURE.md
-              </Link>
-            </p>
-          </FadeIn>
         </div>
       </section>
 
@@ -139,19 +130,18 @@ export default function AboutPage() {
             <FadeIn>
               <h2 className="text-2xl font-bold text-tejas-ink">For Outstanding Students</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>National & international recognition through prestigious platforms</li>
-                <li>Talent conclaves with scientists, innovators, and policymakers</li>
-                <li>Entrepreneurship and innovation orientation pathways</li>
-                <li>Scholarships and advanced learning opportunities</li>
+                <li>TEJAS English and TEJAS Mathematics for Classes III–X, and TEJAS Future Tech for Classes VI–X</li>
+                <li>Hall of Fame names are from the 1st DHE English Olympiad in 2025, not from TEJAS Olympiad 2026–27</li>
+                <li>Class prizes are listed on each Olympiad page. Scholarship amounts have not been announced.</li>
               </ul>
             </FadeIn>
             <FadeIn delay={0.1}>
               <h2 className="text-2xl font-bold text-tejas-ink">For Schools</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>National platform for school innovation and excellence</li>
-                <li>Project showcase and exhibition opportunities</li>
-                <li>Collaboration with IITs, NITs, and research institutions</li>
-                <li>Expert mentorship for educators and students</li>
+                <li>School registration is open on this website from 3 to 20 November 2026</li>
+                <li>The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120.</li>
+                <li>Printed books are optional at ₹170. The school retains ₹34 and remits ₹136.</li>
+                <li>The ₹49 e-book is a separate student portal. The school registration form does not charge it.</li>
               </ul>
             </FadeIn>
           </div>

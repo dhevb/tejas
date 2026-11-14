@@ -329,7 +329,7 @@ export function ReviewDashboard() {
           <p>Coordinator: {detail.school.coordinatorName}, {detail.school.coordinatorMobile}, {detail.school.coordinatorEmail}</p>
           <FeeLines fee={detail.fee} books={detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0} />
           <p>Book order: {detail.school.printedBooks === "yes" ? bookOrderLabel(detail.payment.status) : "No printed books ordered"}. Dispatch and delivery are not recorded here.</p>
-          <p>E-book access is not for sale and is not activated from this screen.</p>
+          <p>This screen does not charge or activate the ₹49 e-book.</p>
           <p>Payment: {detail.paymentLabel ?? paymentLabel(detail.payment.status)}. {detail.payment.mode ?? ""} {detail.payment.paidOn ?? ""} {detail.payment.payerName ?? ""} {detail.payment.transactionReference ?? ""}</p>
           {detail.receiptExt ? <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=receipt`}>Open payment proof</a> : <p>No payment proof is stored.</p>}
           <ul>

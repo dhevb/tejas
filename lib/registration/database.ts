@@ -203,8 +203,9 @@ export async function readRegistration(reference: string): Promise<RegistrationR
   assertOk(result.status, [200]);
   const snapshot = rows(result.json)[0]?.record_snapshot;
   const record = asRecord(snapshot);
-  if (!record || record.reference !== reference) return null;
-  return record;
+  if (record && record.reference === reference) return record;
+  const caseFile = await readCaseFile(reference);
+  return caseFile?.kind === "registration" ? asRecord(caseFile.record) : null;
 }
 
 export async function listRegistrations(): Promise<RegistrationRecord[]> {
@@ -450,4 +451,53 @@ export async function attachReceipt(reference: string, record: RegistrationRecor
   }
   const saved = await updatePayment(reference, record, "school");
   if (saved === "missing") throw new Error("Database request failed (missing)");
+}
+
+type CaseSnapshot = {
+  kind: string;
+  reference: string;
+  channel: string;
+  payment: { status: string; transactionReference?: string | null };
+  record?: RegistrationRecord;
+};
+
+export async function insertCaseFile(snapshot: CaseSnapshot, idempotency?: { key: string; hash: string }): Promise<void> {
+  await insert("tejas_case_files", {
+    reference: snapshot.reference,
+    channel: snapshot.channel,
+    status: snapshot.payment.status,
+    record_snapshot: snapshot,
+    idempotency_key: idempotency?.key ?? null,
+    payload_hash: idempotency?.hash ?? null,
+  }, "return=minimal");
+}
+
+export async function readCaseFile(reference: string): Promise<CaseSnapshot | null> {
+  const result = await request(`/rest/v1/tejas_case_files?reference=eq.${quote(reference)}&select=record_snapshot`, { method: "GET" });
+  if (result.status !== 200) return null;
+  const snapshot = rows(result.json)[0]?.record_snapshot;
+  if (!snapshot || typeof snapshot !== "object") return null;
+  const record = snapshot as CaseSnapshot;
+  return record.reference === reference ? record : null;
+}
+
+export async function updateCaseFile(snapshot: CaseSnapshot, proof: Buffer | null, proofExt: "jpg" | "png" | "webp" | null): Promise<void> {
+  if (proof && proofExt) {
+    const objectPath = `${snapshot.reference}/proof.${proofExt}`;
+    await uploadObject("tejas-payment-proofs", objectPath, proof, RECEIPT_TYPES[proofExt]);
+  }
+  await patch("tejas_case_files", `reference=eq.${quote(snapshot.reference)}`, {
+    status: snapshot.payment.status,
+    record_snapshot: snapshot,
+  });
+}
+
+export async function transactionSeenInCases(reference: string): Promise<boolean> {
+  const result = await request(`/rest/v1/tejas_case_files?select=reference&record_snapshot->payment->>transaction_reference=ilike.${quote(reference)}&limit=1`, { method: "GET" });
+  if (result.status !== 200) return false;
+  return rows(result.json).length > 0;
+}
+
+export async function storePrivateProof(objectPath: string, bytes: Buffer, contentType: string): Promise<void> {
+  await uploadObject("tejas-payment-proofs", objectPath, bytes, contentType);
 }

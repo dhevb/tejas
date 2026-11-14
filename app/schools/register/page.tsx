@@ -67,6 +67,23 @@ export default function SchoolRegisterPage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+        <div className="mb-6 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-tejas-blue bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-gold">Option 1</p>
+            <p className="mt-1 font-bold text-tejas-blue">School Registration</p>
+            <p className="mt-1 text-sm text-tejas-muted">The form below. ₹150 collected, ₹30 kept by the school, ₹120 to TEJAS for each student-stream.</p>
+          </div>
+          <Link href="/schools/register/individual" className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-gold">Option 2</p>
+            <p className="mt-1 font-bold text-tejas-blue">Individual Student Registration</p>
+            <p className="mt-1 text-sm text-tejas-muted">A student or parent registers without a school representative. The full ₹150 per stream is payable to TEJAS.</p>
+          </Link>
+          <Link href="/schools/books" className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-widest text-tejas-gold">Separate order</p>
+            <p className="mt-1 font-bold text-tejas-blue">Printed books</p>
+            <p className="mt-1 text-sm text-tejas-muted">₹170 per book, paid to the book account. This is not part of the registration fee.</p>
+          </Link>
+        </div>
         <SchoolRegistrationForm />
         <aside className="mt-8 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm">

@@ -22,8 +22,7 @@ export function PayForm() {
     try {
       const response = await fetch("/api/learn/pay", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionReference: form.get("transactionReference") }),
+        body: form,
         signal: controller.signal,
       });
       const text = await response.text();
@@ -37,7 +36,7 @@ export function PayForm() {
         setError(body?.error || "The reference could not be saved.");
         return;
       }
-      setMessage("Reference saved. The e-book stays locked until staff verify this payment.");
+      setMessage("Screenshot and UTR received. The e-book stays locked until the payment is verified.");
     } catch (error) {
       const timedOut = error instanceof DOMException && error.name === "AbortError";
       setError(timedOut ? "The request timed out. Try again. The e-book stays locked until staff verify a saved reference." : "The reference could not be confirmed. Check the connection and try again.");
@@ -49,8 +48,12 @@ export function PayForm() {
 
   return (
     <form onSubmit={onSubmit} className="mt-6 space-y-4">
-      <label className="block text-sm font-semibold">Transaction reference
+      <p className="text-sm font-semibold">Please upload your payment screenshot and enter the UTR number. Both are mandatory for payment verification.</p>
+      <label className="block text-sm font-semibold">UTR / transaction reference
         <input className={fieldClass} name="transactionReference" required minLength={6} />
+      </label>
+      <label className="block text-sm font-semibold">Payment screenshot
+        <input className={fieldClass} name="receipt" type="file" required accept="image/jpeg,image/png,image/webp" />
       </label>
       {error ? <p className="text-sm text-tejas-error" role="alert">{error}</p> : null}
       {message ? <p className="text-sm text-tejas-emerald" role="status">{message}</p> : null}

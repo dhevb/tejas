@@ -1,6 +1,10 @@
 import { clientKey, noStore, rateLimit, sameOrigin } from "@/lib/registration/http";
 import { readPaymentConfig } from "@/lib/registration/payment";
-import { detectReceipt } from "@/lib/registration/receipt";
+import { lookupTrustedTransaction } from "@/lib/registration/bank-reconciliation";
+import { bookTransactionSeen } from "@/lib/registration/cases";
+import { decidePayment, receivingAccount } from "@/lib/registration/payment-decision";
+import { detectScreenshot } from "@/lib/registration/receipt";
+import { extractUtr } from "@/lib/registration/screenshot-ocr";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { readPaymentSubmission } from "@/lib/registration/school";
 import { MAX_RECEIPT_BYTES } from "@/lib/registration/schema";
@@ -29,18 +33,36 @@ export async function POST(request: Request, context: { params: Promise<{ refere
   if (!paid.value || !(receiptFile instanceof File)) {
     return noStore({ ok: false, fieldErrors: paid.errors, formErrors: ["Enter the payment details and upload the proof. This does not by itself confirm payment."] }, 400);
   }
-  if (await transactionSeenBefore(paid.value.transactionReference)) {
+  if (await transactionSeenBefore(paid.value.transactionReference) || await bookTransactionSeen(paid.value.transactionReference)) {
     return noStore({ ok: false, formErrors: ["This transaction reference is already recorded."] }, 409);
   }
-  if (receiptFile.size > MAX_RECEIPT_BYTES) return noStore({ ok: false, formErrors: ["The receipt is larger than 5 MB."] }, 413);
+  if (receiptFile.size > MAX_RECEIPT_BYTES) return noStore({ ok: false, formErrors: ["The screenshot is larger than 5 MB."] }, 413);
   const bytes = Buffer.from(await receiptFile.arrayBuffer());
-  const ext = detectReceipt(bytes, receiptFile.name);
-  if (!ext) return noStore({ ok: false, formErrors: ["Upload the receipt as a JPG, PNG, or PDF."] }, 400);
+  const ext = detectScreenshot(bytes, receiptFile.name);
+  if (!ext) return noStore({ ok: false, formErrors: ["Upload the payment screenshot as a JPEG, PNG, or WebP image."] }, 400);
+  const extracted = extractUtr(bytes);
+  const category = record.channel === "individual" ? "individual-registration" : "school-registration";
+  const decision = decidePayment({
+    enteredUtr: paid.value.transactionReference,
+    extractedUtr: extracted.utr,
+    expectedAmount: amountDue,
+    expectedAccount: receivingAccount(category),
+    bank: lookupTrustedTransaction(paid.value.transactionReference),
+  });
   try {
     const updated = await attachReceipt(reference, paid.value.transactionReference, bytes, ext, {
       mode: paid.value.mode,
       paidOn: paid.value.paidOn,
       payerName: paid.value.payerName,
+      verification: {
+        enteredUtr: paid.value.transactionReference,
+        extractedUtr: extracted.utr,
+        reviewReason: decision.outcome === "automatic" ? null : decision.reason,
+        bankResult: decision.bankResult,
+        receivingAccount: receivingAccount(category),
+        approvalMethod: decision.approvalMethod,
+        category,
+      },
     });
     if (!updated) return noStore({ ok: false, formErrors: ["The receipt could not be saved."] }, 409);
     return noStore({ ok: true, registration: toPublicSummary(updated) });

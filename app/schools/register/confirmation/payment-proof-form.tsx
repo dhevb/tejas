@@ -53,7 +53,8 @@ export function PaymentProofForm({ reference, amountDue }: { reference: string; 
   return (
     <form onSubmit={submit} className="space-y-3 rounded-2xl border border-tejas-border bg-white p-5 shadow-tejas">
       <h2 className="border-l-4 border-tejas-saffron pl-3 text-lg font-bold text-tejas-blue">Upload payment proof</h2>
-      <p className="text-sm text-tejas-muted">Reference {reference}. Net amount payable to TEJAS {amountDue.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}. The school retains its share and does not include that share in this transfer. Use a JPG, PNG, or PDF of 5 MB or less. This does not mark the payment as verified.</p>
+      <p className="text-sm font-semibold text-tejas-ink">Please upload your payment screenshot and enter the UTR number. Both are mandatory for payment verification.</p>
+      <p className="text-sm text-tejas-muted">Reference {reference}. Net amount payable to TEJAS {amountDue.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}. Use a JPEG, PNG, or WebP screenshot of 5 MB or less. Uploading the screenshot does not by itself mark the payment as verified.</p>
       <label className="block text-sm">
         <span className="font-medium">Payment mode</span>
         <select name="paymentMode" value={mode} onChange={(event) => setMode(event.target.value as (typeof MODES)[number])} className={controlClass}>
@@ -78,7 +79,7 @@ export function PaymentProofForm({ reference, amountDue }: { reference: string; 
       </label>
       <label className="block text-sm">
         <span className="font-medium">Payment proof</span>
-        <input name="receipt" type="file" required accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" className="mt-1 block w-full text-sm text-tejas-ink file:mr-3 file:rounded-lg file:border-0 file:bg-tejas-saffron-soft file:px-3 file:py-2 file:text-sm file:font-semibold file:text-tejas-saffron-dark" />
+        <input name="receipt" type="file" required accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" className="mt-1 block w-full text-sm text-tejas-ink file:mr-3 file:rounded-lg file:border-0 file:bg-tejas-saffron-soft file:px-3 file:py-2 file:text-sm file:font-semibold file:text-tejas-saffron-dark" />
       </label>
       {message ? <p className="text-sm text-red-700">{message}</p> : null}
       <button type="submit" disabled={busy} className="rounded-xl bg-tejas-saffron px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-tejas-saffron-dark disabled:opacity-60">

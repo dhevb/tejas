@@ -36,7 +36,7 @@ type Preview = {
   ok: boolean;
   formErrors?: string[];
   rowErrors?: { row: number; messages: string[] }[];
-  students?: { fullName: string; className: string; streams: string[] }[];
+  students?: { fullName: string; className: string; streams: string[]; streamCount?: number }[];
   fee?: Fee;
 };
 
@@ -410,6 +410,15 @@ export function SchoolRegistrationForm() {
           </p>
         ) : sheetName && !busy && !preview ? (
           <p className="text-sm text-tejas-muted">Check the sheet before you rely on the fee summary.</p>
+        ) : null}
+        {preview?.students?.length ? (
+          <ul className="mt-3 space-y-1 text-sm text-tejas-ink">
+            {preview.students.map((student) => (
+              <li key={`${student.fullName}-${student.className}-${student.streams.join("-")}`}>
+                {student.fullName}, class {student.className}: {student.streamCount ?? student.streams.length} stream{(student.streamCount ?? student.streams.length) === 1 ? "" : "s"} × ₹150 collected, ₹30 school, ₹120 to TEJAS.
+              </li>
+            ))}
+          </ul>
         ) : null}
       </Section>
 

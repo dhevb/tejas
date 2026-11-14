@@ -20,7 +20,13 @@ import {
   type PublicQuestion,
 } from "@/lib/portal/model";
 import { hashPassword, passwordIsAcceptable, passwordMatches } from "@/lib/portal/session";
+import { lookupTrustedTransaction } from "@/lib/registration/bank-reconciliation";
+import { storePrivateProof } from "@/lib/registration/database";
 import { durableStorageConfigured } from "@/lib/registration/durable";
+import { BOOK_BANK } from "@/lib/registration/official-bank";
+import { decidePayment } from "@/lib/registration/payment-decision";
+import { detectScreenshot } from "@/lib/registration/receipt";
+import { extractUtr } from "@/lib/registration/screenshot-ocr";
 import { PortalUnavailable } from "@/lib/portal/supabase-rest";
 
 const DATABASE_UNAVAILABLE = "The student portal database is not available.";
@@ -515,6 +521,76 @@ export async function reportPayment(studentId: string, transactionReference: str
     db.audit.push(event("student", "report-payment", student.id, "Student reported a payment reference.", null, { bookId: quote.bookId, amountInr: quote.amountInr }));
     await writeDb(db);
     return { ok: true as const };
+  });
+}
+
+export async function submitEbookProof(studentId: string, transactionReference: string, proof: Buffer, filename: string): Promise<{ ok: true; verified: boolean } | { ok: false; error: string }> {
+  const reference = transactionReference.trim();
+  if (reference.length < 6 || reference.length > 40) return { ok: false, error: "Enter the UTR number." };
+  const ext = detectScreenshot(proof, filename);
+  if (!ext) return { ok: false, error: "Upload the payment screenshot as a JPEG, PNG, or WebP image." };
+  const mode = portalPersistence();
+  if (mode === "unavailable") return { ok: false, error: DATABASE_UNAVAILABLE };
+  const extracted = extractUtr(proof);
+  if (mode === "remote") {
+    const student = await readStudent(studentId);
+    if (!student) return { ok: false, error: "Account not found." };
+    const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
+    if (quote.status !== "payable") return { ok: false, error: "There is no approved e-book fee for this account." };
+    const decision = decidePayment({
+      enteredUtr: reference,
+      extractedUtr: extracted.utr,
+      expectedAmount: quote.amountInr,
+      expectedAccount: BOOK_BANK.accountNumber,
+      bank: lookupTrustedTransaction(reference),
+    });
+    try {
+      await storePrivateProof(`ebook/${studentId}/${quote.bookId}.${ext}`, proof, ext === "jpg" ? "image/jpeg" : `image/${ext}`);
+    } catch {
+      return { ok: false, error: "The screenshot could not be stored. The e-book was not unlocked." };
+    }
+    const { remoteReportPayment, remoteReviewPayment } = await import("@/lib/portal/remote-store");
+    const reported = await remoteReportPayment(studentId, quote.bookId, reference, quote.amountInr);
+    if (!reported.ok) return reported;
+    if (decision.outcome !== "automatic") return { ok: true, verified: false };
+    const reviewed = await remoteReviewPayment({ actor: "automatic", studentId, bookId: quote.bookId, decision: "verified", note: decision.reason });
+    return reviewed.ok ? { ok: true, verified: true } : { ok: true, verified: false };
+  }
+  return withLock(async () => {
+    const db = await readDb();
+    const student = db.students.find((item) => item.id === studentId);
+    if (!student) return { ok: false as const, error: "Account not found." };
+    const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
+    if (quote.status !== "payable") return { ok: false as const, error: "There is no approved e-book fee for this account." };
+    const used = db.entitlements.some((item) => item.transactionReference === reference && item.studentId !== studentId && item.status !== "rejected");
+    if (used) return { ok: false as const, error: "This UTR is already used for another payment." };
+    const entitlement = activeEntitlement(db, student.id, quote.bookId);
+    if (!entitlement) return { ok: false as const, error: "No entitlement record exists for this e-book." };
+    if (entitlement.status === "verified") return { ok: false as const, error: "Payment is already verified." };
+    const decision = decidePayment({
+      enteredUtr: reference,
+      extractedUtr: extracted.utr,
+      expectedAmount: quote.amountInr,
+      expectedAccount: BOOK_BANK.accountNumber,
+      bank: lookupTrustedTransaction(reference),
+    });
+    entitlement.transactionReference = reference;
+    entitlement.reportedAt = new Date().toISOString();
+    entitlement.note = decision.reason;
+    if (decision.outcome === "automatic") {
+      entitlement.status = "verified";
+      entitlement.verifiedAt = new Date().toISOString();
+      entitlement.verifiedBy = "automatic";
+    } else {
+      entitlement.status = "reported";
+      entitlement.verifiedAt = null;
+      entitlement.verifiedBy = null;
+    }
+    db.audit.push(event("student", "report-payment", student.id, decision.reason, null, { bookId: quote.bookId, amountInr: quote.amountInr, extracted: extracted.utr }));
+    await mkdir(path.join(portalDataDir(), "proofs"), { recursive: true });
+    await writeFile(path.join(portalDataDir(), "proofs", `${studentId}-${quote.bookId}.${ext}`), proof);
+    await writeDb(db);
+    return { ok: true as const, verified: decision.outcome === "automatic" };
   });
 }
 

@@ -6,5 +6,13 @@ export function detectReceipt(buf: Buffer, filename: string): ReceiptExt | null 
   if (buf.subarray(0, 4).toString("utf8") === "%PDF" && ext === "pdf") return "pdf";
   if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff && (ext === "jpg" || ext === "jpeg")) return "jpg";
   if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47 && ext === "png") return "png";
+  if (buf.subarray(0, 4).toString("ascii") === "RIFF" && buf.subarray(8, 12).toString("ascii") === "WEBP" && ext === "webp") return "webp";
+  return null;
+}
+
+/** A payment screenshot is an image. PDF and other documents are not screenshots. */
+export function detectScreenshot(buf: Buffer, filename: string): "jpg" | "png" | "webp" | null {
+  const kind = detectReceipt(buf, filename);
+  if (kind === "jpg" || kind === "png" || kind === "webp") return kind;
   return null;
 }

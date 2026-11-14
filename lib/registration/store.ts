@@ -11,6 +11,7 @@ import {
   attachReceipt as attachRemoteReceipt,
   configured as remoteConfigured,
   findIdempotent as findRemoteIdempotent,
+  insertCaseFile,
   insertRegistration,
   listRegistrations,
   panSeen,
@@ -19,6 +20,7 @@ import {
   readUpload as readRemoteUpload,
   storeIdempotency as storeRemoteIdempotency,
   transactionSeen,
+  updateCaseFile,
   updatePayment as updateRemotePayment,
 } from "@/lib/registration/database";
 import { dataDir } from "@/lib/registration/paths";
@@ -34,9 +36,20 @@ export type PaymentEvent = {
   actor?: string;
 };
 
+export type PaymentVerification = {
+  enteredUtr: string | null;
+  extractedUtr: string | null;
+  reviewReason: string | null;
+  bankResult: string | null;
+  receivingAccount: string | null;
+  approvalMethod: "automatic" | "pending" | "staff" | null;
+  category: "school-registration" | "individual-registration" | "school-book" | "individual-book" | "ebook";
+};
+
 export type RegistrationRecord = {
   reference: string;
   createdAt: string;
+  channel?: "school" | "individual";
   school: SchoolForm;
   students: StudentRecord[];
   fee: FeeBreakdown;
@@ -48,6 +61,7 @@ export type RegistrationRecord = {
     paidOn?: string | null;
     payerName?: string | null;
     history?: PaymentEvent[];
+    verification?: PaymentVerification;
   };
   uploadExt: "xlsx" | "xls" | "csv";
   receiptExt: "pdf" | "jpg" | "png" | "webp" | null;
@@ -74,6 +88,7 @@ export type PublicSummary = {
   paymentLabel: string;
   nextStep: string;
   emailSent: false;
+  channel: "school" | "individual";
 };
 
 const STATUS_LABEL: Record<PaymentStatus, string> = {
@@ -127,6 +142,7 @@ export function toPublicSummary(record: RegistrationRecord): PublicSummary {
     paymentLabel: STATUS_LABEL[record.payment.status],
     nextStep: nextStepFor(record),
     emailSent: false,
+    channel: record.channel ?? "school",
   };
 }
 
@@ -156,10 +172,12 @@ export async function saveRegistration(input: {
   receiptExt: RegistrationRecord["receiptExt"];
   idempotencyKey?: string;
   payloadHash?: string;
+  channel?: "school" | "individual";
 }): Promise<RegistrationRecord> {
   const record: RegistrationRecord = {
     reference: input.reference,
     createdAt: new Date().toISOString(),
+    channel: input.channel ?? "school",
     school: input.school,
     students: input.students,
     fee: input.fee,
@@ -176,11 +194,21 @@ export async function saveRegistration(input: {
     receiptExt: input.receipt ? input.receiptExt : null,
   };
   if (remoteConfigured()) {
-    await insertRegistration(
-      record,
-      { upload: input.upload, receipt: input.receipt },
-      input.idempotencyKey && input.payloadHash ? { key: input.idempotencyKey, hash: input.payloadHash } : undefined,
-    );
+    if (record.channel === "individual") {
+      await insertCaseFile({
+        kind: "registration",
+        reference: record.reference,
+        channel: "individual-registration",
+        payment: { status: record.payment.status, transactionReference: record.payment.transactionReference },
+        record,
+      }, input.idempotencyKey && input.payloadHash ? { key: input.idempotencyKey, hash: input.payloadHash } : undefined);
+    } else {
+      await insertRegistration(
+        record,
+        { upload: input.upload, receipt: input.receipt },
+        input.idempotencyKey && input.payloadHash ? { key: input.idempotencyKey, hash: input.payloadHash } : undefined,
+      );
+    }
     console.info(`registration stored ${input.reference} students=${input.students.length} streams=${input.fee.studentStreamRegistrations} durable=yes`);
     return record;
   }
@@ -275,21 +303,34 @@ export async function attachReceipt(
   transactionReference: string,
   receipt: Buffer,
   receiptExt: NonNullable<RegistrationRecord["receiptExt"]>,
-  meta: { mode: string; paidOn: string; payerName: string },
+  meta: { mode: string; paidOn: string; payerName: string; verification?: PaymentVerification },
 ): Promise<RegistrationRecord | null> {
   const record = await readRegistration(reference);
   if (!record) return null;
   if (record.payment.status === "confirmed" || record.payment.status === "reported" || record.payment.status === "refund_pending") return null;
-  record.payment.status = "reported";
+  const automatic = meta.verification?.approvalMethod === "automatic";
+  record.payment.status = automatic ? "confirmed" : "reported";
   record.payment.transactionReference = transactionReference;
   record.payment.mode = meta.mode;
   record.payment.paidOn = meta.paidOn;
   record.payment.payerName = meta.payerName;
+  record.payment.verification = meta.verification;
+  record.payment.reviewNote = meta.verification?.reviewReason ?? null;
   const purpose = record.fee.printedBooks > 0 ? "Registration fee and printed books" : "Registration fee";
-  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: "reported", note: purpose, actor: "school" }];
+  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: record.payment.status, note: purpose, actor: "school" }];
   record.receiptExt = receiptExt;
   if (remoteConfigured()) {
-    await attachRemoteReceipt(reference, record, receipt);
+    if (record.channel === "individual") {
+      await updateCaseFile({
+        kind: "registration",
+        reference,
+        channel: "individual-registration",
+        payment: { status: record.payment.status, transactionReference: record.payment.transactionReference },
+        record,
+      }, receipt, receiptExt === "pdf" ? null : receiptExt);
+    } else {
+      await attachRemoteReceipt(reference, record, receipt);
+    }
     console.info(`payment reported ${reference} durable=yes`);
     return record;
   }
@@ -343,6 +384,12 @@ export type StaffRow = PublicSummary & {
   ebookAccess: number;
   transactionReference: string | null;
   paymentMode: string | null;
+  category: string;
+  reviewReason: string | null;
+  bankResult: string | null;
+  approvalMethod: string | null;
+  extractedUtr: string | null;
+  enteredUtr: string | null;
 };
 
 export type StaffOverview = {
@@ -427,6 +474,12 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       ebookAccess: ebooks,
       transactionReference: record.payment.transactionReference,
       paymentMode: record.payment.mode ?? null,
+      category: record.payment.verification?.category ?? (record.channel === "individual" ? "individual-registration" : "school-registration"),
+      reviewReason: record.payment.verification?.reviewReason ?? record.payment.reviewNote,
+      bankResult: record.payment.verification?.bankResult ?? null,
+      approvalMethod: record.payment.verification?.approvalMethod ?? null,
+      extractedUtr: record.payment.verification?.extractedUtr ?? null,
+      enteredUtr: record.payment.verification?.enteredUtr ?? record.payment.transactionReference,
     });
   }
   registrations.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));

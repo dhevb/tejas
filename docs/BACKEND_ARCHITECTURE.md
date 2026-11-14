@@ -8,7 +8,7 @@
 ```
 Organization (DHE)
  └── OlympiadCell
-      ├── Edition (e.g. apj-abdul-kalam-2026)
+      ├── Edition (e.g. tejas-2026-27)
       │    ├── OlympiadStream (english | mathematics | technology)
       │    ├── ExamLevel (A–E)
       │    └── CalendarEvent

@@ -429,7 +429,7 @@ export function SchoolRegistrationForm() {
               <p className="font-semibold text-tejas-blue">{name}</p>
               <p className="mt-1 text-sm text-tejas-muted">{date}</p>
               <p className="mt-1 text-sm text-tejas-muted">{classes}</p>
-              <p className="mt-2 text-sm text-tejas-ink">₹150 collected · ₹120 to TEJAS</p>
+              <p className="mt-2 text-sm text-tejas-ink">₹150 collected · ₹30 kept by the school · ₹120 to TEJAS</p>
             </li>
           ))}
         </ul>

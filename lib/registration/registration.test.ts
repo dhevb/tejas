@@ -22,6 +22,7 @@ import { detectReceipt } from "@/lib/registration/receipt";
 import { readPaymentSubmission, readSchoolForm } from "@/lib/registration/school";
 import { GET as publicGet } from "@/app/api/register/[reference]/route";
 import { GET as paymentGet } from "@/app/api/register/payment/route";
+import { POST as previewPost } from "@/app/api/register/preview/route";
 import { POST as submitPost } from "@/app/api/register/submit/route";
 import { GET as staffFileGet } from "@/app/api/register/admin/registrations/[reference]/file/route";
 import { POST as receiptPost } from "@/app/api/register/[reference]/payment/route";
@@ -99,6 +100,134 @@ test("new registrations remit the school share split from the invitation", () =>
   assert.equal(mixed.schoolShare, 94);
   assert.equal(mixed.amountDue, 376);
   assert.equal(presentFee(mixed).amountDue, mixed.amountDue);
+});
+
+test("each student-stream is ₹150 total, ₹30 for the school, and ₹120 to TEJAS", async () => {
+  const split = (streams: number) => {
+    const fee = calculateFee(streams);
+    assert.equal(fee.totalStudentFees, streams * 150);
+    assert.equal(fee.registrationSchoolShare, streams * 30);
+    assert.equal(fee.registrationPayable, streams * 120);
+    assert.equal(fee.payableToTejas, streams * 120);
+    assert.equal(fee.amountDue, streams * 120);
+    assert.equal(fee.totalStudentFees, fee.registrationSchoolShare + fee.registrationPayable);
+    assert.equal(fee.ebookAmount, 0);
+    assert.equal(fee.printedBookAmount, 0);
+    assert.notEqual(fee.amountDue, fee.totalStudentFees);
+  };
+  split(1);
+  split(2);
+  split(20);
+
+  const names = ["Aarav", "Kavya", "Neel", "Ishaan", "Meera", "Rohan", "Anaya", "Vihaan", "Diya", "Kabir"];
+  const cases = [
+    { rows: [student()], streams: 1, total: 150, school: 30, tejas: 120 },
+    { rows: [student({ streams: "TEJAS English, TEJAS Mathematics" })], streams: 2, total: 300, school: 60, tejas: 240 },
+    {
+      rows: names.map((name, index) => student({
+        fullName: `${name} Sharma`,
+        parentName: `${name} Parent`,
+        dob: "15-08-2015",
+        rollNumber: String(index + 1),
+        streams: "TEJAS English, TEJAS Mathematics",
+      })),
+      streams: 20,
+      total: 3000,
+      school: 600,
+      tejas: 2400,
+    },
+    {
+      rows: [
+        student({ rollNumber: "41" }),
+        student({ fullName: "Kavya Iyer", parentName: "Arun Iyer", dob: "02-02-2014", rollNumber: "42", streams: "TEJAS English, TEJAS Mathematics" }),
+        student({ fullName: "Neel Kapoor", parentName: "Sonia Kapoor", dob: "09-09-2013", className: "VI", rollNumber: "43", streams: "TEJAS English, TEJAS Mathematics, TEJAS Future Tech" }),
+      ],
+      streams: 6,
+      total: 900,
+      school: 180,
+      tejas: 720,
+    },
+  ];
+
+  const previewAndSave = async (rows: string[][], streams: number, total: number, school: number, tejas: number, key: string, pan: string, save: boolean) => {
+    const body = () => {
+      const form = new FormData();
+      schoolFields(form, pan);
+      form.set("printedBooks", "yes");
+      form.set("bookQuantity", "5");
+      form.set("ebookAccess", "yes");
+      form.set("payableToTejas", "1");
+      form.set("amountDue", "1");
+      form.set("file", new File([new Uint8Array(sheet(rows))], "students.xlsx"));
+      return form;
+    };
+    const preview = await previewPost(new Request("http://localhost/api/register/preview", { method: "POST", body: body(), headers: { "x-forwarded-for": "fee-rule" } }));
+    const shown = await preview.json() as { ok: boolean; fee: { totalStudentFees: number; registrationSchoolShare: number; registrationPayable: number; amountDue: number; printedBookAmount: number; ebookAmount: number; studentStreamRegistrations: number } };
+    assert.equal(preview.status, 200);
+    assert.equal(shown.ok, true);
+    assert.equal(shown.fee.studentStreamRegistrations, streams);
+    assert.equal(shown.fee.totalStudentFees, total);
+    assert.equal(shown.fee.registrationSchoolShare, school);
+    assert.equal(shown.fee.registrationPayable, tejas);
+    assert.equal(shown.fee.amountDue, tejas);
+    assert.equal(shown.fee.printedBookAmount, 0);
+    assert.equal(shown.fee.ebookAmount, 0);
+    if (!save) return;
+    const first = await submitPost(new Request("http://localhost/api/register/submit", { method: "POST", body: body(), headers: { "x-idempotency-key": key, "x-forwarded-for": "fee-rule" } }));
+    const saved = await first.json() as { ok: boolean; registration: { reference: string; totalStudentFees: number; registrationSchoolShare: number; registrationPayable: number; payableToTejas: number; amountDue: number; printedBookAmount: number; ebookAmount: number } };
+    assert.equal(first.status, 201, JSON.stringify(saved));
+    assert.equal(saved.registration.totalStudentFees, shown.fee.totalStudentFees);
+    assert.equal(saved.registration.registrationSchoolShare, shown.fee.registrationSchoolShare);
+    assert.equal(saved.registration.amountDue, shown.fee.amountDue);
+    assert.equal(saved.registration.payableToTejas, tejas);
+    assert.equal(saved.registration.printedBookAmount, 0);
+    assert.equal(saved.registration.ebookAmount, 0);
+    const second = await submitPost(new Request("http://localhost/api/register/submit", { method: "POST", body: body(), headers: { "x-idempotency-key": key, "x-forwarded-for": "fee-rule" } }));
+    const repeated = await second.json() as { registration: { reference: string } };
+    assert.equal(second.status, 200);
+    assert.equal(repeated.registration.reference, saved.registration.reference);
+    const record = await readRegistration(saved.registration.reference);
+    assert.equal(record?.fee.amountDue, tejas);
+    assert.equal(record?.fee.totalStudentFees, total);
+    assert.equal(record?.school.printedBooks, "no");
+    assert.equal(record?.school.bookQuantity, 0);
+    assert.equal(record?.school.ebookAccess, "no");
+  };
+
+  await previewAndSave(cases[0].rows, cases[0].streams, cases[0].total, cases[0].school, cases[0].tejas, "fee-rule-one-stream", "BBBCB2468H", true);
+  await previewAndSave(cases[1].rows, cases[1].streams, cases[1].total, cases[1].school, cases[1].tejas, "fee-rule-two-streams", "CCCDB2468H", true);
+  await previewAndSave(cases[2].rows, cases[2].streams, cases[2].total, cases[2].school, cases[2].tejas, "fee-rule-ten-by-two", "DDDEB2468H", true);
+  await previewAndSave(cases[3].rows, cases[3].streams, cases[3].total, cases[3].school, cases[3].tejas, "fee-rule-mixed-count", "EEECB2468H", true);
+
+  const blank = new FormData();
+  schoolFields(blank, "FFFCB2468H");
+  blank.set("printedBooks", "yes");
+  blank.set("bookQuantity", "4");
+  blank.set("file", new File([new Uint8Array(sheet([student({ streams: " " })]))], "blank.xlsx"));
+  const blankPreview = await previewPost(new Request("http://localhost/api/register/preview", { method: "POST", body: blank, headers: { "x-forwarded-for": "fee-rule" } }));
+  const blankBody = await blankPreview.json() as { ok: boolean; fee: { amountDue: number; studentStreamRegistrations: number } | null };
+  assert.equal(blankBody.ok, false);
+  assert.equal(blankBody.fee?.studentStreamRegistrations ?? 0, 0);
+  assert.equal(blankBody.fee?.amountDue ?? 0, 0);
+  const blankSubmit = await submitPost(new Request("http://localhost/api/register/submit", {
+    method: "POST",
+    body: (() => {
+      const form = new FormData();
+      schoolFields(form, "GGGCB2468H");
+      form.set("file", new File([new Uint8Array(sheet([student({ streams: "Not a stream" })]))], "invalid.xlsx"));
+      return form;
+    })(),
+    headers: { "x-idempotency-key": "fee-rule-invalid-stream", "x-forwarded-for": "fee-rule" },
+  }));
+  assert.equal(blankSubmit.status, 400);
+
+  const formSource = readFileSync("app/schools/register/school-registration-form.tsx", "utf8");
+  assert.equal(formSource.includes("₹150 per student per stream"), true);
+  assert.equal(formSource.includes("₹30"), true);
+  assert.equal(formSource.includes("₹120"), true);
+  const review = readFileSync("app/schools/register/review/review-dashboard.tsx", "utf8");
+  assert.equal(review.includes("registrationSchoolShare"), true);
+  assert.equal(review.includes("registrationPayable"), true);
 });
 
 test("a previously recorded full remittance is not recalculated", () => {
@@ -406,11 +535,13 @@ test("submission stores a reference, ignores a repeated post, and hides student 
   assert.equal(saved.registration.payableToTejas, 360);
   assert.equal(saved.registration.amountDue, 360);
   assert.equal(saved.registration.emailSent, false);
+  const beforeRepeat = await readdir(path.join(dataDir, "registrations"));
+  assert.equal(beforeRepeat.includes(saved.registration.reference), true);
   const second = await send();
   const repeated = (await second.json()) as { registration: { reference: string } };
   assert.equal(repeated.registration.reference, saved.registration.reference);
-  const folders = await readdir(path.join(dataDir, "registrations"));
-  assert.equal(folders.length, 1);
+  const afterRepeat = await readdir(path.join(dataDir, "registrations"));
+  assert.equal(afterRepeat.length, beforeRepeat.length);
   const record = await readRegistration(saved.registration.reference);
   assert.equal(record?.students.length, 2);
   assert.equal(record?.school.previousReference, "DHE-2025-14");

@@ -17,10 +17,8 @@ export async function POST(request: Request) {
   if (file.size > MAX_UPLOAD_BYTES) return noStore({ ok: false, formErrors: ["The file is larger than 10 MB."] }, 413);
   const bytes = Buffer.from(await file.arrayBuffer());
   const parsed = parseStudentSheet(bytes, file.name, schoolName);
-  const bookQuantity = Number(String(form.get("bookQuantity") ?? "").trim());
-  const printedBooks = String(form.get("printedBooks") ?? "") === "yes" && Number.isInteger(bookQuantity) && bookQuantity > 0 ? bookQuantity : 0;
-  const ebookAccess = String(form.get("ebookAccess") ?? "") === "yes" ? parsed.students.length : 0;
-  const fee = parsed.fee ? calculateFee(parsed.fee.studentStreamRegistrations, { printedBooks, ebookAccess }) : null;
+  // School registration does not price printed books or the e-book. Those stay on their own payment account.
+  const fee = parsed.fee ? calculateFee(parsed.fee.studentStreamRegistrations, { printedBooks: 0, ebookAccess: 0 }) : null;
   return noStore({
     ok: parsed.formErrors.length === 0 && parsed.rowErrors.length === 0 && parsed.students.length > 0,
     formErrors: parsed.formErrors,

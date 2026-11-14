@@ -937,6 +937,84 @@ test("schema status requires a staff session and does not describe the database 
   }
 });
 
+test("storage status requires a staff session before any storage inspection", async () => {
+  const source = readFileSync("app/api/register/storage-status/route.ts", "utf8");
+  const handler = source.slice(source.indexOf("export async function GET"));
+  const authAt = handler.indexOf("staffRequestAuthorised");
+  const inspectAt = handler.indexOf("testSupabaseConnection");
+  const probeAt = handler.indexOf("probeNamedServerKey");
+  assert.ok(authAt > 0 && inspectAt > authAt && probeAt > authAt);
+
+  const previous = {
+    url: process.env.SUPABASE_URL,
+    role: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    secret: process.env.SUPABASE_SECRET_KEY,
+    token: process.env.TEJAS_ADMIN_TOKEN,
+  };
+  const restoreEnv = () => {
+    for (const [name, value] of Object.entries({
+      SUPABASE_URL: previous.url,
+      SUPABASE_SERVICE_ROLE_KEY: previous.role,
+      SUPABASE_SECRET_KEY: previous.secret,
+      TEJAS_ADMIN_TOKEN: previous.token,
+    })) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  };
+  const originalFetch = globalThis.fetch;
+  const calls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    calls.push(url);
+    if (url.includes("tejas_staff_sessions")) {
+      return new Response(JSON.stringify({ code: "PGRST205" }), { status: 404, headers: { "content-type": "application/json" } });
+    }
+    return new Response(null, { status: 200 });
+  }) as typeof fetch;
+  const hidden = ["connected", "keyName", "keyFormat", "urlPresent", "serviceRoleKeyPresent", "secretKeyPresent", "secretKey"];
+  try {
+    process.env.SUPABASE_URL = "https://exampleproject.supabase.co";
+    process.env.SUPABASE_SECRET_KEY = "s".repeat(24);
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.TEJAS_ADMIN_TOKEN = "correct-horse-battery";
+    const { GET } = await import("@/app/api/register/storage-status/route");
+    const denied = await GET(new Request("http://127.0.0.1/api/register/storage-status"));
+    assert.equal(denied.status, 401);
+    const deniedBody = await denied.json() as Record<string, unknown>;
+    assert.equal(deniedBody.ok, false);
+    assert.equal(deniedBody.error, "Staff sign-in is required.");
+    for (const key of hidden) assert.equal(deniedBody[key], undefined);
+    assert.equal(calls.length, 0);
+
+    const forged = await GET(new Request("http://127.0.0.1/api/register/storage-status", {
+      headers: { cookie: "tejas_staff=v2.recovery.0.1.forged" },
+    }));
+    assert.equal(forged.status, 401);
+    const forgedBody = await forged.json() as Record<string, unknown>;
+    for (const key of hidden) assert.equal(forgedBody[key], undefined);
+    assert.equal(calls.length, 0);
+
+    const allowed = await GET(new Request("http://127.0.0.1/api/register/storage-status", {
+      headers: { cookie: `tejas_staff=${createSessionValue()}` },
+    }));
+    assert.equal(allowed.status, 200);
+    const body = await allowed.json() as { connected: boolean; reason: string; keyName: string; secretKey: string };
+    assert.equal(body.connected, true);
+    assert.equal(body.reason, "ok");
+    assert.equal(body.keyName, "SUPABASE_SECRET_KEY");
+    assert.equal(body.secretKey, "accepted");
+    const text = JSON.stringify(body);
+    assert.equal(text.includes("s".repeat(24)), false);
+    assert.equal(text.includes("correct-horse-battery"), false);
+    assert.equal(text.includes("exampleproject"), false);
+    assert.ok(calls.some((url) => url.includes("/auth/v1/admin/users")));
+  } finally {
+    globalThis.fetch = originalFetch;
+    restoreEnv();
+  }
+});
+
 test("public pages do not post feedback to a third party or keep a bare hash link", () => {
   const hits: string[] = [];
   const walk = (dir: string) => {

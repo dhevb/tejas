@@ -19,6 +19,25 @@ create table if not exists tejas_case_files (
 
 alter table tejas_case_files enable row level security;
 
+create index if not exists tejas_case_files_created_idx on tejas_case_files (created_at desc);
+create index if not exists tejas_case_files_channel_idx on tejas_case_files (channel);
+
+revoke all on table tejas_case_files from public;
+
+do $case_grants$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    execute 'revoke all on table public.tejas_case_files from anon';
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    execute 'revoke all on table public.tejas_case_files from authenticated';
+  end if;
+end
+$case_grants$;
+
+comment on table tejas_case_files is
+  'Individual registrations and printed-book orders. Payment screenshots stay in the private tejas-payment-proofs bucket. No anonymous policy is defined.';
+
 alter table tejas_payments
   add column if not exists entered_utr text,
   add column if not exists extracted_utr text,

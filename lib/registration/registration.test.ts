@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -10,7 +10,8 @@ import { BOOK_PRICE, BOOK_SCHOOL_SHARE, BOOK_TEJAS, calculateFee, EBOOK_FEE, EBO
 import { currentCycle } from "@/content/current-cycle";
 import { formatDisplayDate } from "@/lib/format-date";
 import { maskPan, parseIndianMobile, parsePan, validateDob } from "@/lib/registration/fields";
-import { OFFICIAL_BANK, officialPublicPayment } from "@/lib/registration/official-bank";
+import { BOOK_BANK, REGISTRATION_BANK, bookPublicPayment, officialPublicPayment } from "@/lib/registration/official-bank";
+import { interpretRegistrationReply, registrationTransportMessage } from "@/lib/registration/submit-client";
 import { durableStorageConfigured, paymentProofsAccepted, serverKeyName } from "@/lib/registration/durable";
 import { testSupabaseConnection } from "@/lib/registration/supabase-status";
 import { writePaymentConfig } from "@/lib/registration/payment";
@@ -252,13 +253,22 @@ test("the authorised SBI account is published and proof upload stays closed", as
   const shown = officialPublicPayment(paymentProofsAccepted());
   assert.equal(shown.detailsPublished, true);
   assert.equal(shown.proofsAccepted, false);
-  assert.equal(shown.accountHolder, "Department of Holistic Education");
-  assert.equal(shown.accountNumber, OFFICIAL_BANK.accountNumber);
-  assert.equal(shown.accountNumber, "42529022841");
+  assert.equal(shown.purpose, "school-registration");
+  assert.equal(shown.accountHolder, "TEJAS OLYMPIAD");
+  assert.equal(shown.accountNumber, REGISTRATION_BANK.accountNumber);
+  assert.equal(shown.accountNumber, "45726198627");
   assert.equal(shown.bankName, "State Bank of India");
   assert.equal(shown.branch, "Chandigarh Main Branch");
   assert.equal(shown.ifsc, "SBIN0000628");
-  assert.equal(shown.upiId, "holisticeducation@sbi");
+  assert.equal("upiId" in shown, false);
+  const books = bookPublicPayment();
+  assert.equal(books.purpose, "book-payment");
+  assert.equal(books.accountHolder, "V.B. EDUCATIONAL TRUST");
+  assert.equal(books.accountNumber, BOOK_BANK.accountNumber);
+  assert.equal(books.accountNumber, "535402010016278");
+  assert.equal(books.ifsc, "UBIN0553549");
+  assert.equal(books.branch, "Gita Niketan");
+  assert.notEqual(books.accountNumber, shown.accountNumber);
   assert.match(shown.message, /Payment-proof submission will open/);
   const error = await writePaymentConfig({
     activated: true,
@@ -324,7 +334,7 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   assert.ok(missing.errors.principalMobile);
   assert.ok(missing.errors.coordinatorMobile);
   assert.ok(missing.errors.principalEmail);
-  assert.ok(missing.errors.printedBooks);
+  assert.equal(missing.errors.printedBooks, undefined);
   assert.equal(missing.errors.principalDesignation, undefined);
   assert.equal(missing.errors.representativeName, undefined);
   assert.equal(missing.errors.representativeDesignation, undefined);
@@ -361,7 +371,9 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   withBooks.set("printedBooks", "yes");
   withBooks.set("bookQuantity", "");
   const bookResult = readSchoolForm(withBooks);
-  assert.equal(bookResult.errors.bookQuantity, "Enter how many printed books are required.");
+  assert.equal(bookResult.value?.printedBooks, "no");
+  assert.equal(bookResult.value?.bookQuantity, 0);
+  assert.equal(bookResult.errors.bookQuantity, undefined);
   assert.equal(books.value, null);
   const paid = readPaymentSubmission(withBooks, 150);
   assert.equal(paid.value, null);
@@ -498,11 +510,12 @@ test("a second school with the same PAN is flagged, and listings mask it", async
 
 test("payment proof stays closed while the official account is public", async () => {
   const shown = await paymentGet();
-  const shownBody = await shown.json() as { proofsAccepted: boolean; accountNumber: string; ifsc: string; upiId: string; branch: string };
+  const shownBody = await shown.json() as { proofsAccepted: boolean; accountNumber: string; ifsc: string; upiId?: string; branch: string; purpose: string };
   assert.equal(shownBody.proofsAccepted, false);
-  assert.equal(shownBody.accountNumber, "42529022841");
+  assert.equal(shownBody.purpose, "school-registration");
+  assert.equal(shownBody.accountNumber, "45726198627");
   assert.equal(shownBody.ifsc, "SBIN0000628");
-  assert.equal(shownBody.upiId, "holisticeducation@sbi");
+  assert.equal(shownBody.upiId, undefined);
   assert.equal(shownBody.branch, "Chandigarh Main Branch");
   assert.equal(JSON.stringify(shownBody).includes("998877665544"), false);
 
@@ -874,8 +887,8 @@ test("registration with proof upload open still saves a pending payment and igno
     assert.equal(saved.ok, true);
     assert.equal(saved.registration.studentStreamRegistrations, 30);
     assert.equal(saved.registration.payableToTejas, 3600);
-    assert.equal(saved.registration.printedBookAmount, 850);
-    assert.equal(saved.registration.amountDue, 4280);
+    assert.equal(saved.registration.printedBookAmount, 0);
+    assert.equal(saved.registration.amountDue, 3600);
     assert.equal(saved.registration.paymentStatus, "pending_instructions");
     assert.equal(saved.registration.paymentLabel, "Payment Pending");
     assert.equal(JSON.stringify(saved).includes("Not Collected"), false);
@@ -884,10 +897,9 @@ test("registration with proof upload open still saves a pending payment and igno
     assert.equal(paymentPosts, 1);
     assert.equal(payment.registration_id, "reg-1");
     assert.equal(payment.status, "pending_instructions");
-    assert.equal(payment.amount_due, 4280);
+    assert.equal(payment.amount_due, 3600);
     assert.equal(payment.history[0]?.note, "Payment Pending");
-    assert.equal(bookBodies[0]?.includes('"quantity":5'), true);
-    assert.equal(bookBodies[0]?.includes('"amount":850'), true);
+    assert.equal(bookBodies.length, 0);
     assert.equal(state.snapshot?.school.representativeName, null);
     const second = await send();
     const repeated = await second.json() as { registration: { reference: string } };
@@ -1041,7 +1053,11 @@ test("public pages do not post feedback to a third party or keep a bare hash lin
   assert.equal(readFileSync("features/home/HomeLanding.tsx", "utf8").includes("This school form"), false);
   assert.equal(readFileSync("content/olympiads/coming-soon.ts", "utf8").includes("NCERT-aligned"), false);
   assert.equal(readFileSync("content/olympiads/coming-soon.ts", "utf8").includes("Classes I–XII"), false);
-  assert.equal(readFileSync("app/research/page.tsx", "utf8").includes("Shiksha Mahakumbh link"), false);
+  assert.equal(existsSync("app/research/page.tsx"), false);
+  assert.equal(existsSync("app/innovation/page.tsx"), false);
+  assert.equal(existsSync("app/editions/page.tsx"), false);
+  assert.equal(readFileSync("app/about/page.tsx", "utf8").includes("id=\"roadmap\""), false);
+  assert.equal(readFileSync("app/about/page.tsx", "utf8").includes("Bal Shodh"), false);
   assert.equal(learn.includes("stay unpublished"), false);
   assert.equal(learn.includes("PublicationStatus"), true);
   assert.equal(contact.includes("Phase 0"), false);
@@ -1051,4 +1067,44 @@ test("public pages do not post feedback to a third party or keep a bare hash lin
   assert.equal(readFileSync("app/beta/page.tsx", "utf8").includes("does not send a form"), true);
   assert.equal(formatDisplayDate("2026-12-10"), "10 December 2026");
   assert.equal(formatDisplayDate("2025-10-13"), "13 October 2025");
+});
+
+test("removed sections, payment accounts, and examination order stay separate", () => {
+  const nav = readFileSync("config/navigation.ts", "utf8");
+  const home = readFileSync("features/home/HomeLanding.tsx", "utf8");
+  const form = readFileSync("app/schools/register/school-registration-form.tsx", "utf8");
+  const ebook = readFileSync("app/learn/pay/page.tsx", "utf8");
+  const sitemap = readFileSync("app/sitemap.ts", "utf8");
+  for (const source of [nav, home, form, ebook, sitemap, readFileSync("app/about/page.tsx", "utf8")]) {
+    assert.equal(source.includes("/research"), false);
+    assert.equal(source.includes("/innovation"), false);
+    assert.equal(source.includes("/editions"), false);
+    assert.equal(source.includes("about#roadmap"), false);
+    assert.equal(source.includes("Bal Shodh"), false);
+    assert.equal(source.includes("42529022841"), false);
+    assert.equal(source.includes("holisticeducation@sbi"), false);
+  }
+  const banks = readFileSync("lib/registration/official-bank.ts", "utf8");
+  assert.equal(form.includes("06 · Printed books"), false);
+  assert.equal(form.includes("REGISTRATION_BANK"), true);
+  assert.equal(form.includes("BOOK_BANK"), false);
+  assert.equal(form.includes("UPI"), false);
+  assert.equal(ebook.includes("bookPublicPayment"), true);
+  assert.equal(ebook.includes("REGISTRATION_BANK"), false);
+  assert.equal(ebook.includes("UPI"), false);
+  assert.equal(banks.includes("45726198627"), true);
+  assert.equal(banks.includes("535402010016278"), true);
+  assert.equal(banks.includes("upiId"), false);
+  const math = home.indexOf('when: "9 December 2026"');
+  const english = home.indexOf('when: "10 December 2026"');
+  const future = home.indexOf('when: "11 December 2026"');
+  assert.ok(math >= 0 && math < english && english < future);
+  const confirmed = interpretRegistrationReply({ ok: true, registration: { reference: "TEJAS-2026-ABCDEFGHJKLMNPQRSTU2" } });
+  assert.equal(confirmed.state, "confirmed");
+  const rejected = interpretRegistrationReply({ ok: false, formErrors: ["Check the payment details."] });
+  assert.equal(rejected.state, "rejected");
+  if (rejected.state === "rejected") assert.equal(rejected.formErrors[0], "Check the payment details.");
+  const unreadable = interpretRegistrationReply(null);
+  assert.equal(unreadable.state, "rejected");
+  assert.match(registrationTransportMessage("timeout"), /does not create a second registration/);
 });

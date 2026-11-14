@@ -26,8 +26,8 @@ export const currentCycle = {
     hi: "गणित 9 दिसंबर 2026, अंग्रेज़ी 10 दिसंबर 2026, फ्यूचर टेक 11 दिसंबर 2026।",
   } satisfies LocalizedString,
   fee: {
-    en: "The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS. Printed books are optional at ₹170 per copy; the school retains ₹34 and remits ₹136.",
-    hi: "शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम है। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है। मुद्रित पुस्तक ₹170 प्रति प्रति, वैकल्पिक; विद्यालय ₹34 रखता है और ₹136 भेजता है।",
+    en: "The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS. Printed books and the ₹49 e-book are separate from this fee.",
+    hi: "शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम है। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है। मुद्रित पुस्तक और ₹49 ई-बुक इस शुल्क से अलग हैं।",
   } satisfies LocalizedString,
   felicitation: {
     en: "Results are placed in February 2027. A declaration date has not been fixed.",

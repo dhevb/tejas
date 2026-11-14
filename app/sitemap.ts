@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/seo";
 import { getAllOlympiadSlugs } from "@/content/olympiads";
-import { getAllEditionSlugs } from "@/content/editions";
 
 export const revalidate = 86400;
 
@@ -11,8 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "",
     "/about",
     "/olympiads",
-    "/editions",
-    "/editions/previous",
     "/prepare",
     "/prepare/mock-tests",
     "/prepare/ebook",
@@ -24,8 +21,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/schools/register",
     "/rankings",
     "/hall-of-fame",
-    "/research",
-    "/innovation",
     "/scholarships",
     "/faq",
     "/contact",
@@ -44,12 +39,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.7,
-    })),
-    ...getAllEditionSlugs().map((slug) => ({
-      url: `${base}/editions/${slug}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.75,
     })),
   ];
 }

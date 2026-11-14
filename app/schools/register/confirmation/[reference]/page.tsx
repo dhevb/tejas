@@ -36,14 +36,16 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
             <div><dt className="text-tejas-muted">Registration fee collected</dt><dd className="font-semibold">{inr.format(summary.totalStudentFees)}</dd></div>
             <div><dt className="text-tejas-muted">School registration share</dt><dd className="font-semibold">{inr.format(summary.registrationSchoolShare)}</dd></div>
             <div><dt className="text-tejas-muted">Registration payable to TEJAS</dt><dd className="font-semibold">{inr.format(summary.registrationPayable)}</dd></div>
-            <div><dt className="text-tejas-muted">Printed books collected</dt><dd className="font-semibold">{inr.format(summary.printedBookAmount)}</dd></div>
-            <div><dt className="text-tejas-muted">School book share</dt><dd className="font-semibold">{inr.format(summary.bookSchoolShare)}</dd></div>
-            <div><dt className="text-tejas-muted">Books payable to TEJAS</dt><dd className="font-semibold">{inr.format(summary.bookPayable)}</dd></div>
-            <div><dt className="text-tejas-muted">Combined gross amount</dt><dd className="font-semibold">{inr.format(summary.grossTotal)}</dd></div>
-            <div><dt className="text-tejas-muted">Combined school share</dt><dd className="font-semibold">{inr.format(summary.schoolShare)}</dd></div>
+            {summary.printedBookAmount > 0 ? (
+              <>
+                <div><dt className="text-tejas-muted">Printed books collected</dt><dd className="font-semibold">{inr.format(summary.printedBookAmount)}</dd></div>
+                <div><dt className="text-tejas-muted">School book share</dt><dd className="font-semibold">{inr.format(summary.bookSchoolShare)}</dd></div>
+                <div><dt className="text-tejas-muted">Books payable to TEJAS</dt><dd className="font-semibold">{inr.format(summary.bookPayable)}</dd></div>
+              </>
+            ) : null}
           </dl>
           <p className="rounded-xl bg-tejas-blue px-4 py-3 text-base font-semibold text-white">Net amount payable to TEJAS: {inr.format(summary.amountDue)}</p>
-          <p>The school retains the school share and transfers the net amount to the official account. The book amount is separate from the registration fee. This page does not mark books as dispatched or delivered.</p>
+          <p>The school retains the school share and transfers the registration amount to the school-registration account. {summary.printedBookAmount > 0 ? "This registration also recorded a printed-book amount. That amount is separate from the registration fee and is not marked as dispatched or delivered." : "This registration does not include a printed-book order."}</p>
           <p>This registration does not include the ₹49 e-book. That fee is paid in the student portal when a published book is selected.</p>
           {summary.schoolShareApproved ? null : <p>These amounts are the figures saved with this registration. They have not been recalculated.</p>}
           <p className="font-semibold">{summary.paymentLabel}</p>

@@ -44,7 +44,7 @@ export const prepareCategories: PrepareCategory[] = [
     id: "papers",
     title: "2025 English archive",
     description: "1st DHE English Olympiad, 13–16 October 2025. The paper files are not attached on this website.",
-    href: "/editions/dhe-english-2025",
+    href: "/hall-of-fame",
     gradient: "from-tejas-gold-dark to-tejas-saffron",
   },
 ];

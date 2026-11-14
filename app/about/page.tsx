@@ -4,14 +4,13 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { FeatureGrid } from "@/components/shared/FeatureGrid";
 import { QuoteCard } from "@/components/shared/QuoteCard";
-import { PhaseRoadmap } from "@/components/shared/PhaseRoadmap";
 import { TejasEmblem } from "@/components/brand/TejasEmblem";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { siteConfig } from "@/config/seo";
 import { brand } from "@/design-system/tokens";
 import { brandContent } from "@/content/brand";
-import { BookOpen, Brain, Shield, Lightbulb, Users, FlaskConical } from "lucide-react";
+import { BookOpen, Brain, Shield, Lightbulb, Users } from "lucide-react";
 
 export const metadata = createMetadata({
   title: "About TEJAS",
@@ -43,12 +42,7 @@ const pillars = [
   {
     icon: Users,
     title: "Opportunities for Schools",
-    description: "National platforms for innovation, mentorship, and collaboration with premier institutions.",
-  },
-  {
-    icon: FlaskConical,
-    title: "Bal Shodh Patrika",
-    description: "Children's research journal for Classes 9–12 — nurturing curiosity and scientific inquiry.",
+    description: "School registration for TEJAS Olympiad 2026–27, with Mathematics, English, and Future Tech.",
   },
 ];
 
@@ -101,15 +95,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="tejas-section">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <SectionHeader title="What is available" subtitle="This list describes the public website. It is not an internal delivery plan." />
-          </FadeIn>
-          <PhaseRoadmap />
-        </div>
-      </section>
-
       <section className="tejas-section bg-tejas-blue text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
@@ -130,7 +115,7 @@ export default function AboutPage() {
             <FadeIn>
               <h2 className="text-2xl font-bold text-tejas-ink">For Outstanding Students</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>TEJAS English and TEJAS Mathematics for Classes III–X, and TEJAS Future Tech for Classes VI–X</li>
+                <li>TEJAS Mathematics and TEJAS English for Classes III–X, and TEJAS Future Tech for Classes VI–X</li>
                 <li>Hall of Fame names are from the 1st DHE English Olympiad in 2025, not from TEJAS Olympiad 2026–27</li>
                 <li>Class prizes are listed on each Olympiad page. Scholarship amounts have not been announced.</li>
               </ul>
@@ -140,8 +125,7 @@ export default function AboutPage() {
               <ul className="mt-4 space-y-3 text-tejas-muted">
                 <li>School registration is open on this website from 3 to 20 November 2026</li>
                 <li>The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120.</li>
-                <li>Printed books are optional at ₹170. The school retains ₹34 and remits ₹136.</li>
-                <li>The ₹49 e-book is a separate student portal. The school registration form does not charge it.</li>
+                <li>The registration form collects the registration fee only. Printed books and the ₹49 e-book are separate payments.</li>
               </ul>
             </FadeIn>
           </div>

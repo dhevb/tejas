@@ -5,7 +5,7 @@ import { createMetadata } from "@/config/seo";
 import { currentStudent } from "@/lib/portal/current";
 import { loadCatalog } from "@/lib/portal/catalog.server";
 import { quoteFee } from "@/lib/portal/model";
-import { OFFICIAL_BANK } from "@/lib/registration/official-bank";
+import { bookPublicPayment } from "@/lib/registration/official-bank";
 import { formatInr } from "@/lib/registration/fee";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +21,7 @@ export default async function PayPage() {
   const student = await currentStudent();
   if (!student) redirect("/learn/login");
   const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
+  const bank = bookPublicPayment();
   return (
     <section className="py-12">
       <div className="mx-auto max-w-xl px-4 sm:px-6">
@@ -30,13 +31,14 @@ export default async function PayPage() {
           <p className="mt-3 text-sm text-tejas-muted">{quote.status === "fee_not_approved" ? quote.reason : "No e-book fee applies to this account."}</p>
         ) : (
           <article className="mt-6 rounded-3xl border border-tejas-border bg-white p-6 shadow-tejas">
-            <p className="text-sm leading-relaxed text-tejas-muted">Transfer {formatInr(quote.amountInr)} for the e-book and its {quote.includedMockTests} mock tests. The mock tests are included. This payment is separate from Olympiad registration and printed-book orders. Sending the reference does not open the material.</p>
+            <p className="text-sm leading-relaxed text-tejas-muted">Transfer {formatInr(quote.amountInr)} for the e-book and its {quote.includedMockTests} mock tests. The mock tests are included. {bank.message} Sending the reference does not open the material.</p>
+            <h2 className="mt-4 text-lg font-bold text-tejas-blue">{bank.heading}</h2>
             <dl className="mt-4 grid gap-2 text-sm">
-              <div><dt className="font-semibold">Account holder</dt><dd>{OFFICIAL_BANK.accountHolder}</dd></div>
-              <div><dt className="font-semibold">Account number</dt><dd>{OFFICIAL_BANK.accountNumber}</dd></div>
-              <div><dt className="font-semibold">IFSC</dt><dd>{OFFICIAL_BANK.ifsc}</dd></div>
-              <div><dt className="font-semibold">UPI</dt><dd>{OFFICIAL_BANK.upiId}</dd></div>
-              <div><dt className="font-semibold">Bank</dt><dd>{OFFICIAL_BANK.bankName}, {OFFICIAL_BANK.branch}</dd></div>
+              <div><dt className="font-semibold">{"Account holder's name"}</dt><dd>{bank.accountHolder}</dd></div>
+              <div><dt className="font-semibold">Account number</dt><dd>{bank.accountNumber}</dd></div>
+              <div><dt className="font-semibold">IFSC code</dt><dd>{bank.ifsc}</dd></div>
+              <div><dt className="font-semibold">Bank name</dt><dd>{bank.bankName}</dd></div>
+              <div><dt className="font-semibold">Branch</dt><dd>{bank.branch}</dd></div>
             </dl>
             <PayForm />
           </article>

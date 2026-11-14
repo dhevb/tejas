@@ -28,4 +28,4 @@ export function getOlympiadBySlug(slug: string) {
   return olympiads.find((o) => o.slug === slug);
 }
 
-export const activeOlympiadSlugs = ["english", "mathematics", "technology"] as const;
+export const activeOlympiadSlugs = ["mathematics", "english", "technology"] as const;

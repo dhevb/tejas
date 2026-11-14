@@ -12,22 +12,39 @@ export function PayForm() {
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) return;
     setPending(true);
     setError("");
     setMessage("");
     const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/learn/pay", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ transactionReference: form.get("transactionReference") }),
-    });
-    const body = (await response.json()) as { ok?: boolean; error?: string };
-    setPending(false);
-    if (!response.ok || !body.ok) {
-      setError(body.error || "The reference could not be saved.");
-      return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 25_000);
+    try {
+      const response = await fetch("/api/learn/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionReference: form.get("transactionReference") }),
+        signal: controller.signal,
+      });
+      const text = await response.text();
+      let body: { ok?: boolean; error?: string } | null = null;
+      try {
+        body = text ? JSON.parse(text) as { ok?: boolean; error?: string } : null;
+      } catch {
+        body = null;
+      }
+      if (!response.ok || !body?.ok) {
+        setError(body?.error || "The reference could not be saved.");
+        return;
+      }
+      setMessage("Reference saved. The e-book stays locked until staff verify this payment.");
+    } catch (error) {
+      const timedOut = error instanceof DOMException && error.name === "AbortError";
+      setError(timedOut ? "The request timed out. Try again. The e-book stays locked until staff verify a saved reference." : "The reference could not be confirmed. Check the connection and try again.");
+    } finally {
+      clearTimeout(timer);
+      setPending(false);
     }
-    setMessage("Reference saved. The e-book stays locked until staff verify this payment.");
   }
 
   return (

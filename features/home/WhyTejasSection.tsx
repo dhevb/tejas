@@ -1,4 +1,4 @@
-import { Brain, Lightbulb, Shield, BookOpen, Cpu, Users, Sparkles, Target } from "lucide-react";
+import { Brain, Lightbulb, Shield, BookOpen, Cpu, Users, Target } from "lucide-react";
 import { FeatureGrid } from "@/components/shared/FeatureGrid";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { FadeIn } from "@/components/shared/FadeIn";
@@ -45,12 +45,6 @@ const differentiators = [
     title: "Future-Ready Ecosystem",
     titleHi: "भविष्य-तैयार पारिस्थितिकी तंत्र",
     description: "AI learning, digital credentials, and research pathways — coming soon.",
-  },
-  {
-    icon: Sparkles,
-    title: "Bal Shodh Patrika",
-    titleHi: "बाल शोध पत्रिका",
-    description: "Children's research journal nurturing curiosity from Classes 1–12.",
   },
 ];
 

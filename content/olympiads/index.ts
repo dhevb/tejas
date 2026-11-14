@@ -13,8 +13,8 @@ import {
 } from "./coming-soon";
 
 export const olympiadRegistry: OlympiadPortalContent[] = [
-  englishOlympiad,
   mathematicsOlympiad,
+  englishOlympiad,
   technologyOlympiad,
   scienceOlympiad,
   hindiOlympiad,

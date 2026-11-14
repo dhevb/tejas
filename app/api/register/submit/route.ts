@@ -37,8 +37,10 @@ export async function POST(request: Request) {
     return noStore({ ok: false, formErrors: parsed.formErrors, rowErrors: parsed.rowErrors, fieldErrors: {} }, 400);
   }
   const streamCount = parsed.students.reduce((sum, student) => sum + student.streams.length, 0);
+  schoolResult.value.printedBooks = "no";
+  schoolResult.value.bookQuantity = 0;
   const fee = calculateFee(streamCount, {
-    printedBooks: schoolResult.value.printedBooks === "yes" ? schoolResult.value.bookQuantity : 0,
+    printedBooks: 0,
     ebookAccess: schoolResult.value.ebookAccess === "yes" ? parsed.students.length : 0,
   });
   const hash = payloadHash([bytes, Buffer.from(JSON.stringify(schoolResult.value))]);

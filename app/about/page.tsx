@@ -33,7 +33,7 @@ const pillars = [
   {
     icon: Shield,
     title: "Secure Technology-Enabled Exams",
-    description: "The 2025 English Olympiad used OMR sheets. This website does not state a 2026–27 examination mode. Online mock tests are a separate student portal.",
+    description: "The examinations are offline, at the participating schools. This website is not the examination hall. Online mock tests are a separate student portal.",
   },
   {
     icon: Lightbulb,
@@ -141,7 +141,7 @@ export default function AboutPage() {
                 <li>School registration is open on this website from 3 to 20 November 2026</li>
                 <li>The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120.</li>
                 <li>Printed books are optional at ₹170. The school retains ₹34 and remits ₹136.</li>
-                <li>The ₹49 e-book is a separate student portal. This school form does not charge it.</li>
+                <li>The ₹49 e-book is a separate student portal. The school registration form does not charge it.</li>
               </ul>
             </FadeIn>
           </div>

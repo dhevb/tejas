@@ -5,7 +5,7 @@ import { FadeIn } from "@/components/shared/FadeIn";
 
 export const metadata = createMetadata({
   title: "For Schools",
-  description: "Partner with TEJAS — school registration, dashboards, and recognition tiers.",
+  description: "Register a school for TEJAS Olympiad 2026–27. The fee is ₹150 per student per stream.",
   path: "/schools",
 });
 

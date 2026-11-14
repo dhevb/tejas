@@ -42,9 +42,9 @@ export const mainNav: NavItem[] = [
         title: "All Subjects",
         titleHi: "सभी विषय",
         items: [
-          { label: "Science", href: "/olympiads/science", description: "Coming in future edition" },
-          { label: "Hindi", href: "/olympiads/hindi", description: "Language & literature" },
-          { label: "AI & Data Science", href: "/olympiads/ai", description: "Responsible AI" },
+          { label: "Science", href: "/olympiads/science", description: "Not part of 2026–27" },
+          { label: "Hindi", href: "/olympiads/hindi", description: "Not part of 2026–27" },
+          { label: "AI & Data Science", href: "/olympiads/ai", description: "Not part of 2026–27" },
           { label: "View All", href: "/olympiads", description: "Open streams and subjects still coming soon" },
         ],
       },

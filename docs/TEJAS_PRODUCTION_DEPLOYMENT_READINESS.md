@@ -1,6 +1,6 @@
 # TEJAS production deployment readiness
 
-Recorded: 14 November 2026, 3:21 PM IST.
+Recorded: 14 November 2026, 3:38 PM IST.
 This record does not merge pull request #20 and does not deploy Production.
 
 ## 1. Pull request status
@@ -11,97 +11,61 @@ This record does not merge pull request #20 and does not deploy Production.
 | State | Open. `mergedAt` is null. There is no merge commit. |
 | Target | `main` |
 | Branch | `cursor/website-remediation-2878` |
-| Current HEAD | `aadc775788841a4668b7ef5871da7654b81024ce` |
-| Application commit | `11ce4e964daa3b9bcc2e4a83ccb2cf9d594f533b` |
-| Documentation after that commit | `aadc775` adds only `docs/TEJAS_PR20_FINAL_OWNER_REVIEW.md` |
 | `main` | `fb64ed3c910b0d582648d176523ed4407cee34ed` |
-| Merge state | MERGEABLE, CLEAN |
+| Earlier application commit | `11ce4e964daa3b9bcc2e4a83ccb2cf9d594f533b` |
+| This pass | Application copy corrections after that review. The commit SHA is the one that contains this file. |
 
-No commit has been added after the owner-review document. Owner approval and merge are still pending. The changes are not on `main` and are not in Production.
+Owner merge is still required. The changes are not on `main` and are not in Production.
 
-## 2. Merged commit
+## 2. What this pass changed
 
-Not applicable. Pull request #20 has not been merged.
+The earlier review left two wording notes and several pages that described unannounced subjects as if a syllabus and class range existed. Those are corrected on the feature branch.
 
-## 3. Application diff, not yet on main
+- The school form, its confirmation, the staff review screen, the homepage, and the about page say the school registration does not charge the ₹49 e-book. They no longer say the e-book is not for sale, and the about page no longer calls itself the school form.
+- Science, Hindi, Sanskrit, General Knowledge, AI, Coding, and Innovation pages say the stream has not been announced. They do not publish a class range, syllabus, award, or sample certificate.
+- Navigation labels for those subjects say they are not part of 2026–27.
+- `/innovation` points to TEJAS Future Tech and says an Innovation Olympiad has not been announced.
+- `/hall-of-fame` says the published names are from the 1st DHE English Olympiad in 2025.
+- `/research` links the words “Shiksha Mahakumbh” to https://www.shikshamahakumbh.com.
+- `/schools` no longer describes dashboards or recognition tiers in its page description.
+- The contact address is a mailto link. The form still does not send a message.
+- The about page matches the rest of the site: the examinations are offline, at the participating schools.
 
-Compared `origin/main` (`fb64ed3`) with the application commit `11ce4e9`. The later commit `aadc775` changes only the owner-review document.
+No fee, date, class range for the three open streams, or payment rule was changed. No database file was added.
 
-The application diff is 45 files outside `docs`. It covers branding, current-cycle copy, publication wording, the staff check on schema-status, and tests. It contains:
-
-- No `.env` file.
-- No SQL file.
-- No migration.
-- No grant, RLS policy, or permission change.
-- No student, registration, or payment data.
-
-## 4. GitHub checks on the open pull request
+## 3. Checks run on this machine
 
 | Check | Result |
 |---|---|
-| Vercel | Passed. Deployment `DxVoLQFNVaD3GSbtCwC3rbAB6khG` completed. |
-| Vercel Preview Comments | Passed |
-| Supabase Preview | Skipped. GitHub still reports the pull request as clean, so this skip is not a required failure. |
+| `npm test` | 50 passed, 0 failed, 0 skipped |
+| `npx tsc --noEmit` | Exit 0 |
+| `npx next lint` | Exit 0. The existing warning is `<img>` in `components/brand/TejasEmblem.tsx`. |
+| `npm run build` | Succeeded. Next.js 15.5.20. |
 
-The passing Vercel check is a Preview deployment of `aadc775`, created at 3:19 PM IST. It is not a Production deployment.
+A local production server of this build was read with GET only. `/olympiads/future-tech` returned 307 to `/olympiads/technology`. `/editions/apj-abdul-kalam` returned 307 to `/editions/tejas-2026-27`. `/api/register/schema-status` returned 401 without a staff cookie. `/learn` said the publication status could not be read, because this machine has no database connection.
 
-## 5. Vercel readiness
+Chrome at 390px, 768px, and 1440px reported no horizontal overflow on `/`, `/about`, `/prepare`, `/olympiads/english`, `/olympiads/science`, `/schools/register`, `/innovation`, `/hall-of-fame`, and `/contact`. The same browser session reported no console error on `/`, `/olympiads/english`, `/olympiads/science`, `/schools/register`, and `/innovation`.
 
-GitHub deployment records, read without starting a deployment:
+## 4. Production, still the previous release
 
-| Environment | Latest recorded commit | Created |
-|---|---|---|
-| Production | `fb64ed3c910b0d582648d176523ed4407cee34ed` | 1:27 PM IST, 14 November 2026 |
-| Preview | `aadc775788841a4668b7ef5871da7654b81024ce` | 3:19 PM IST, 14 November 2026 |
+The latest Production deployment recorded by GitHub remains `fb64ed3c910b0d582648d176523ed4407cee34ed`, created at 1:27 PM IST on 14 November 2026. A read-only check of https://tejas.dhe.org.in at 3:21 PM IST still showed the old prepare-page progress, the English “2.0” calendar, the unpublished Future Tech sentence, and a 404 for `/olympiads/future-tech`. That check was not repeated after this pass, and Production was not changed.
 
-Production is still the e-book reader merge, pull request #19. The remediation commit is not eligible for Production until it is on `main` and the owner asks for that deployment. Environment-variable values were not read and are not listed here. This pull request does not add a new secret name.
+Environment-variable values were not read. This pull request does not add a secret name.
 
-## 6. Production route checklist
+## 5. Supabase
 
-GET and HEAD only, against https://tejas.dhe.org.in at 3:21 PM IST. These are the pages now in Production, not the pull request.
+No migration, grant, RLS policy, student row, registration, payment, or publication row was read or written in this pass. The 12 Future Tech publication rows were not re-counted. That is not evidence that they changed, and it is not evidence that they are unchanged.
 
-| Route | Production now | After a future deploy of this pull request, check |
-|---|---|---|
-| `/` | 200. “10 December 2026” is present. “OLYMPIAD” is absent. | Header shows तेजस and OLYMPIAD. No overflow at 390px. |
-| `/about` | 200. The roadmap still says “Phase 0”. | Registration and the student portal are not described as only planned. |
-| `/learn` | 200. The page says the Future Tech books “stay unpublished”. | The sentence comes from the publication table, or says the status could not be read. It does not hard-code “unpublished”. |
-| `/prepare` | 200. “65%” is present. | “65%”, trending titles, and invented counts are absent. |
-| `/prepare/ebook` | 200. “awaiting organisational approval” is hard-coded for both books. | The same publication read as `/learn`. |
-| `/olympiads/english` | 200. “2.0” is present, and “10 December 2026” is also present. | “DHE English Olympiad 2.0” is absent. 3–20 November and 10 December 2026 remain. The 2025 name remains. |
-| `/olympiads/mathematics` | 200. The description still says “DHE Maths Olympiad”. | The title and description say TEJAS Mathematics, Classes III–X, 9 December 2026. |
-| `/olympiads/technology` | 200. | TEJAS Future Tech, Classes VI–X, 11 December 2026. |
-| `/olympiads/future-tech` | 404. | 307 to `/olympiads/technology`. |
-| `/schools/register` | 200. A “2.0” match is an SVG path, not programme copy. | The form says it does not create a student login and does not charge ₹49. Do not submit it. |
-| `/contact` | 200. “Form submission is disabled in Phase 0.” | The page says the form does not send a message. Do not submit it. |
-| `/beta` | 200. The heading is still “Help Shape”. | The page says it does not send a form. Do not submit it. |
-| `/editions` | 200. | TEJAS Olympiad 2026–27, with the approved dates and ₹150 fee. |
-| `/editions/apj-abdul-kalam` | 307 to `/editions/tejas-2026-27`. The followed page does not contain “Kalam”. | The same 307. The destination is not labelled as an APJ Abdul Kalam edition. |
+## 6. Still unresolved
 
-Fees and class ranges to confirm after deploy, without inventing new ones: English and Mathematics Classes III–X; Future Tech Classes VI–X; registration 3–20 November 2026; examinations 9, 10, and 11 December 2026; ₹150 registration; ₹170 printed book; ₹49 e-book portal.
+- Pull request #20 is open. Merge and Production deployment need separate owner instructions.
+- Contact and beta do not deliver mail. They say so.
+- Search is disabled. English and Mathematics book files are not on the website. Phule, Ramanujan, Chawla, and Tagore stay unlisted.
+- `features/home/HowTejasWorksSection.tsx`, `WhatIsTejasSection.tsx`, `ResearchInnovationSection.tsx`, `FutureVisionSection.tsx`, and `WhyTejasSection.tsx` are not mounted on the homepage. Their older marketing sentences are not public.
+- The public publication sentence on `/learn` and `/prepare/ebook` can be confirmed only after a later deploy that can read the database. Do not use the staff Save control for that check.
 
-## 7. Supabase safety
+## 7. Final status
 
-The pull request contains no migration and no privilege change. Production rows were not queried in this check. Student, registration, payment, and publication records were not read and were not changed. Whether the 12 Future Tech publication rows are still unchanged was not re-counted. That is not evidence that they changed, and it is not evidence that they are unchanged.
+`READY FOR MERGE`
 
-When this code is later deployed, `/learn` and `/prepare/ebook` only read publication status. They do not write it. Confirming the public sentence still requires a GET after deploy, not a staff save.
-
-## 8. Outstanding issues
-
-- The pull request is open.
-- Production still serves `fb64ed3`.
-- The Vercel preview hostname requires a Vercel login, so preview HTML was not read in this check.
-- Contact and beta will not deliver mail after deploy. That is intentional until a mail transport is approved.
-- Search will remain disabled.
-- The printed-book hint “E-book access is not for sale” and the about-page words “this school form” remain low wording notes from the owner review.
-
-## 9. Deployment risks
-
-- Deploying before merge is not possible from this branch without a separate production promotion. That promotion was not requested and was not started.
-- The first public check after a future deploy is the publication sentence on `/learn` and `/prepare/ebook`. If the database cannot be read, those pages should say so rather than claim the books are unpublished.
-- School registration, student login, and payment must not be used as the deployment test.
-
-## 10. Final status
-
-`WAITING FOR PR MERGE`
-
-Owner approval, merge, and Production deployment have not happened. Production deployment needs a separate, explicit owner instruction after the merge.
+The feature branch is ready for the owner to merge. It is not in Production. A merge is not a Production deployment. Production deployment needs a separate, explicit owner instruction after the merge.

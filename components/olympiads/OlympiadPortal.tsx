@@ -40,6 +40,17 @@ const portalNav = [
 export function OlympiadPortal({ olympiad }: Props) {
   const { t } = useI18n();
   const isComingSoon = olympiad.status === "coming-soon";
+  const visibleNav = portalNav.filter((item) => {
+    if (item.id === "skills") return olympiad.skillsDeveloped.length > 0;
+    if (item.id === "outcomes") return olympiad.learningOutcomes.length > 0;
+    if (item.id === "careers") return olympiad.careerPathways.length > 0;
+    if (item.id === "roadmap") return olympiad.preparationRoadmap.length > 0;
+    if (item.id === "books") return olympiad.books.length > 0;
+    if (item.id === "mock-tests") return olympiad.mockTests.length > 0;
+    if (item.id === "samples") return olympiad.sampleQuestions.length > 0;
+    if (item.id === "guides") return olympiad.teacherGuide.length + olympiad.parentGuide.length + olympiad.schoolGuide.length > 0;
+    return true;
+  });
   const faqItems: FAQItem[] = olympiad.faqs.map((f) => ({
     question: t(f.question),
     answer: t(f.answer),
@@ -95,7 +106,7 @@ export function OlympiadPortal({ olympiad }: Props) {
         </div>
       </section>
 
-      <StickySubNav items={portalNav} />
+      <StickySubNav items={visibleNav} />
 
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {isComingSoon && (
@@ -118,6 +129,7 @@ export function OlympiadPortal({ olympiad }: Props) {
           <p className="mt-4 max-w-3xl text-tejas-muted leading-relaxed">{t(olympiad.whySubject)}</p>
         </section>
 
+        {olympiad.skillsDeveloped.length > 0 && (
         <section id="skills" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Skills Developed</h2>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -126,7 +138,9 @@ export function OlympiadPortal({ olympiad }: Props) {
             ))}
           </ul>
         </section>
+        )}
 
+        {olympiad.learningOutcomes.length > 0 && (
         <section id="outcomes" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Learning Outcomes</h2>
           <ul className="mt-6 space-y-3">
@@ -138,7 +152,9 @@ export function OlympiadPortal({ olympiad }: Props) {
             ))}
           </ul>
         </section>
+        )}
 
+        {olympiad.careerPathways.length > 0 && (
         <section id="careers" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Career Pathways</h2>
           <p className="mt-2 text-sm text-tejas-muted">Subject excellence opens doors across disciplines:</p>
@@ -148,6 +164,7 @@ export function OlympiadPortal({ olympiad }: Props) {
             ))}
           </ul>
         </section>
+        )}
 
         <section id="eligibility" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Eligibility</h2>
@@ -172,6 +189,9 @@ export function OlympiadPortal({ olympiad }: Props) {
 
         <section id="syllabus" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Syllabus</h2>
+          {olympiad.syllabus.length === 0 ? (
+            <p className="mt-4 max-w-3xl text-tejas-muted">No syllabus has been published for this stream.</p>
+          ) : (
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             {olympiad.syllabus.map((level) => (
               <div key={level.level.en} className="rounded-2xl border border-stone-200 bg-white p-6">
@@ -187,6 +207,7 @@ export function OlympiadPortal({ olympiad }: Props) {
               </div>
             ))}
           </div>
+          )}
         </section>
 
         {olympiad.sampleQuestions.length > 0 && (
@@ -288,6 +309,9 @@ export function OlympiadPortal({ olympiad }: Props) {
           <div className="grid gap-10 lg:grid-cols-2">
             <div>
               <h2 className="text-2xl font-bold text-tejas-ink">Awards & Recognition</h2>
+              {olympiad.awards.length === 0 ? (
+                <p className="mt-4 text-tejas-muted">No award has been published for this stream.</p>
+              ) : (
               <ul className="mt-6 space-y-4">
                 {olympiad.awards.map((award) => (
                   <li key={award.level.en} className="rounded-xl border border-stone-200 p-4">
@@ -296,6 +320,7 @@ export function OlympiadPortal({ olympiad }: Props) {
                   </li>
                 ))}
               </ul>
+              )}
               {olympiad.hallOfFameHighlights.length > 0 && (
                 <div className="mt-8">
                   <h3 className="text-lg font-bold text-tejas-ink">Hall of Fame Highlights</h3>
@@ -312,7 +337,11 @@ export function OlympiadPortal({ olympiad }: Props) {
                 </div>
               )}
             </div>
-            <CertificatePreview olympiad={`${t(olympiad.name)} Olympiad`} />
+            {isComingSoon ? (
+              <p className="text-sm text-tejas-muted">No certificate is shown for a stream that has not been announced.</p>
+            ) : (
+              <CertificatePreview olympiad={`${t(olympiad.name)} Olympiad`} />
+            )}
           </div>
         </section>
 
@@ -370,8 +399,8 @@ export function OlympiadPortal({ olympiad }: Props) {
         </section>
 
         <section id="register" className="scroll-mt-32 border-t border-stone-200 py-16 text-center">
-          <h2 className="text-2xl font-bold text-tejas-ink">Ready to Participate?</h2>
-          <p className="mt-2 text-tejas-muted">Register through your school via Olympiad Cell, DHE.</p>
+          <h2 className="text-2xl font-bold text-tejas-ink">{isComingSoon ? "This stream is not open" : "Ready to Participate?"}</h2>
+          <p className="mt-2 text-tejas-muted">{isComingSoon ? "School registration for TEJAS Olympiad 2026–27 covers English, Mathematics, and Future Tech only." : "Register through your school via Olympiad Cell, DHE."}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             {isComingSoon ? <Button disabled>Coming Soon</Button> : (
               <Link href="/schools/register"><Button>Register a school</Button></Link>

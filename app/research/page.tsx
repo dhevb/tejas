@@ -4,7 +4,6 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { ResourceCard } from "@/components/shared/ResourceCard";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { getResourcesByCategory } from "@/content/resources";
-import Link from "next/link";
 
 export const metadata = createMetadata({
   title: "Research",
@@ -35,9 +34,9 @@ export default function ResearchPage() {
                 basic research and project documentation. Section 2 (Classes 11–12): advanced research and analytical
                 studies. A submission file is not hosted on this website.
               </p>
-              <Link href="/resources" className="mt-4 inline-block text-sm font-semibold text-tejas-saffron hover:underline">
-                Shiksha Mahakumbh link →
-              </Link>
+              <a href="https://www.shikshamahakumbh.com" target="_blank" rel="noopener noreferrer" className="mt-4 inline-block text-sm font-semibold text-tejas-saffron hover:underline">
+                Shiksha Mahakumbh
+              </a>
             </div>
           </FadeIn>
 

@@ -957,6 +957,13 @@ test("public pages do not post feedback to a third party or keep a bare hash lin
   const contact = readFileSync("app/contact/page.tsx", "utf8");
   const search = readFileSync("components/shared/SearchBox.tsx", "utf8");
   assert.equal(school.includes("student logins are not available"), false);
+  assert.equal(school.includes("not for sale"), false);
+  assert.equal(school.includes("does not charge the ₹49 e-book"), true);
+  assert.equal(readFileSync("app/about/page.tsx", "utf8").includes("This school form"), false);
+  assert.equal(readFileSync("features/home/HomeLanding.tsx", "utf8").includes("This school form"), false);
+  assert.equal(readFileSync("content/olympiads/coming-soon.ts", "utf8").includes("NCERT-aligned"), false);
+  assert.equal(readFileSync("content/olympiads/coming-soon.ts", "utf8").includes("Classes I–XII"), false);
+  assert.equal(readFileSync("app/research/page.tsx", "utf8").includes("Shiksha Mahakumbh link"), false);
   assert.equal(learn.includes("stay unpublished"), false);
   assert.equal(learn.includes("PublicationStatus"), true);
   assert.equal(contact.includes("Phase 0"), false);

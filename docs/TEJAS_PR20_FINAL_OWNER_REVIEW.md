@@ -1,5 +1,7 @@
 # TEJAS PR #20 final owner review
 
+Update, 14 November 2026, 3:38 PM IST: the wording notes in section 9, the unannounced-subject pages, and the mislabeled research link were corrected on the feature branch after this review. The review below still describes commit `11ce4e9`. The later application changes are recorded in `docs/TEJAS_PRODUCTION_DEPLOYMENT_READINESS.md`.
+
 Reviewed: 14 November 2026, 3:16 PM IST.
 Reviewer action: read-only. No application code was changed in this review. No merge, no push to `main`, and no Production write occurred.
 

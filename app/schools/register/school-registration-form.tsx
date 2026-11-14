@@ -383,7 +383,7 @@ export function SchoolRegistrationForm() {
         </ul>
       </Section>
 
-      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy: the school retains ₹34 and remits ₹136. E-book access is not for sale, so it is not charged.">
+      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy: the school retains ₹34 and remits ₹136. This form does not charge the ₹49 e-book.">
         <label className="block text-sm">
           <span className="font-medium text-tejas-ink">Printed preparation books <span className="text-tejas-saffron">*</span></span>
           <select

@@ -1,5 +1,8 @@
 # TEJAS website remediation report
 
+Later pass, 14 November 2026, 3:38 PM IST: school and about copy no longer says the e-book is not for sale or calls the about page “this school form”. Unannounced subject pages no longer publish a class range, syllabus, or award. `/research` no longer labels an internal link as Shiksha Mahakumbh. The checks for that pass are in `docs/TEJAS_PRODUCTION_DEPLOYMENT_READINESS.md`.
+
+
 Date: 14 November 2026 (Asia/Calcutta).
 Branch: `cursor/website-remediation-2878`.
 Base: `main` at `fb64ed3c910b`.

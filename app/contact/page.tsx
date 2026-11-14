@@ -28,7 +28,7 @@ export default function ContactPage() {
                   <Mail className="h-6 w-6 text-tejas-saffron shrink-0" aria-hidden />
                   <div>
                     <h3 className="font-bold text-tejas-ink">Email</h3>
-                    <p className="text-tejas-muted">{currentCycle.olympiadEmail}</p>
+                    <p className="text-tejas-muted"><a className="font-semibold text-tejas-blue underline" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a></p>
                   </div>
                 </div>
                 <div className="flex gap-4">

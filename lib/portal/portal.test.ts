@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { GET as bookFileGet } from "@/app/api/learn/books/[bookId]/file/route";
+import { bookFileResponse } from "@/lib/portal/book-file";
 import { POST as loginPost } from "@/app/api/learn/login/route";
 import { POST as registerPost } from "@/app/api/learn/register/route";
 import { POST as publicationPost } from "@/app/api/learn/staff/publication/route";
@@ -238,11 +239,74 @@ test("an unsigned publication request is refused and a local publication records
   assert.equal(stillClosed.ok, false);
 });
 
+function readerRequest(bookId: string, headers: Record<string, string> = {}) {
+  return new Request(`http://localhost/api/learn/books/${bookId}/file`, {
+    headers: {
+      host: "localhost",
+      origin: "http://localhost",
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-origin",
+      ...headers,
+    },
+  });
+}
+
 test("the e-book file route refuses an anonymous request", async () => {
   const response = await bookFileGet(new Request("http://localhost/api/learn/books/ft-book-1/file"), { params: Promise.resolve({ bookId: "ft-book-1" }) });
   assert.equal(response.status, 401);
   const body = await response.text();
   assert.equal(body.includes("%PDF"), false);
+});
+
+test("the e-book reader renders pages in the app and the file route checks the reader, the class and the fee", async () => {
+  const reader = readFileSync(path.join(process.cwd(), "app/learn/books/[bookId]/reader.tsx"), "utf8");
+  const page = readFileSync(path.join(process.cwd(), "app/learn/books/[bookId]/page.tsx"), "utf8");
+  assert.equal(reader.includes("<iframe"), false);
+  assert.equal(reader.includes("createObjectURL"), false);
+  assert.equal(reader.includes("drive.google"), false);
+  assert.equal(reader.includes("docs.google"), false);
+  assert.equal(page.includes("/content/portal"), false);
+  assert.equal(reader.includes("pdf.worker.min.mjs"), true);
+
+  const created = await registerStudent({ ...baseStudent, fullName: "Reader One", email: "reader-one@example.test", streamId: "technology", classLevel: 6 });
+  assert.equal(created.ok, true);
+  if (!created.ok) return;
+  const student = await readStudent(created.student.id);
+  assert.ok(student);
+  if (!student) return;
+
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "awaiting_approval", reason: "Local reader check returns one book to review." })).ok, true);
+  const closed = await bookFileResponse(readerRequest("ft-book-1"), student, "ft-book-1");
+  assert.equal(closed.status, 403);
+  assert.equal((await closed.json()).reason, "unpublished");
+
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "published", reason: "Local reader check for one book." })).ok, true);
+  const unpaid = await bookFileResponse(readerRequest("ft-book-1"), student, "ft-book-1");
+  assert.equal(unpaid.status, 403);
+  assert.equal((await unpaid.json()).reason, "unpaid");
+  const wrongClass = await bookFileResponse(readerRequest("ft-book-2"), student, "ft-book-2");
+  assert.equal(wrongClass.status, 403);
+  assert.equal((await wrongClass.json()).reason, "wrong_class");
+
+  assert.equal((await reportPayment(student.id, "UTR49READER")).ok, true);
+  assert.equal((await reviewPayment({ actor: "staff", studentId: student.id, bookId: "ft-book-1", decision: "verified", note: "Local reader fee check." })).ok, true);
+  const direct = await bookFileResponse(new Request("http://localhost/api/learn/books/ft-book-1/file", { headers: { host: "localhost" } }), student, "ft-book-1");
+  assert.equal(direct.status, 403);
+  assert.equal((await direct.text()).includes("%PDF"), false);
+  const foreign = await bookFileResponse(readerRequest("ft-book-1", { origin: "https://evil.test" }), student, "ft-book-1");
+  assert.equal(foreign.status, 403);
+  assert.equal((await foreign.text()).includes("%PDF"), false);
+
+  const opened = await bookFileResponse(readerRequest("ft-book-1"), student, "ft-book-1");
+  assert.equal(opened.status, 200);
+  assert.equal(opened.headers.get("content-type"), "application/pdf");
+  assert.equal(opened.headers.get("content-disposition"), "inline");
+  const bytes = Buffer.from(await opened.arrayBuffer());
+  assert.equal(bytes.subarray(0, 5).toString(), "%PDF-");
+  const missing = await bookFileResponse(readerRequest("not-a-book"), student, "not-a-book");
+  assert.equal(missing.status, 404);
+  assert.equal((await missing.text()).includes("%PDF"), false);
 });
 
 test("a second sign-in replaces the only active session", async () => {

@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props) {
   const olympiad = getOlympiadContent(slug);
   if (!olympiad) return {};
   return createMetadata({
-    title: `${olympiad.name.en} Olympiad — TEJAS`,
+    title: `${olympiad.name.en} Olympiad`,
     description: `${olympiad.tagline.en} ${olympiad.description.en.slice(0, 120)}…`,
     path: `/olympiads/${slug}`,
   });

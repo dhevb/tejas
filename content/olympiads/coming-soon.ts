@@ -19,18 +19,15 @@ export function createComingSoonOlympiad(config: ComingSoonConfig): OlympiadPort
   return {
     ...config,
     status: "coming-soon",
-    duration: ls("60 minutes", "60 मिनट"),
-    questions: 50,
+    duration: ls("Not published", "प्रकाशित नहीं"),
+    questions: 0,
     registrationOpen: false,
     eligibility: [
       ls("Students in recognised schools across Bharat", "भारत भर के मान्यता प्राप्त विद्यालयों के छात्र"),
       ls(`Grade range: ${config.grades.en}`, `कक्षा सीमा: ${config.grades.hi}`),
       ls("Launch planned under future TEJAS editions", "भविष्य TEJAS संस्करणों के तहत लॉन्च"),
     ],
-    examPattern: [
-      { section: ls("Objective MCQs", "वस्तुनिष्ठ MCQ"), questions: 40, marks: 40 },
-      { section: ls("Application & Analysis", "अनुप्रयोग एवं विश्लेषण"), questions: 10, marks: 10 },
-    ],
+    examPattern: [],
     syllabus: [
       {
         level: ls("Grade-appropriate", "कक्षा-अनुकूल"),
@@ -63,8 +60,8 @@ export function createComingSoonOlympiad(config: ComingSoonConfig): OlympiadPort
       {
         question: ls(`When will the ${config.name.en} Olympiad launch?`, `${config.name.hi} ओलंपियाड कब लॉन्च होगा?`),
         answer: ls(
-          "This stream is part of TEJAS expansion roadmap. DHE Sanskriti Olympiad and additional subjects are planned after the current core streams (English, Maths, Technology).",
-          "यह TEJAS विस्तार roadmap का हिस्सा है। वर्तमान core streams के बाद अतिरिक्त विषय।"
+          "This stream is not part of TEJAS Olympiad 2026–27. No launch date has been published.",
+          "यह TEJAS ओलंपियाड 2026–27 का हिस्सा नहीं है। लॉन्च की तारीख प्रकाशित नहीं हुई है।"
         ),
       },
     ],

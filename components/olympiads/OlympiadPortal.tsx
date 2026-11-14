@@ -64,9 +64,7 @@ export function OlympiadPortal({ olympiad }: Props) {
               <p className="mt-2 font-hindi text-lg text-white/70">{olympiad.name.hi}</p>
               <p className="mt-4 max-w-2xl text-white/80 leading-relaxed">{t(olympiad.description)}</p>
               <div className="mt-6 flex flex-wrap gap-4 text-sm">
-                <span>{t(olympiad.duration)}</span>
-                <span>·</span>
-                <span>{olympiad.questions} questions</span>
+                <span>{t(olympiad.grades)}</span>
                 {olympiad.partner && (
                   <>
                     <span>·</span>
@@ -164,26 +162,11 @@ export function OlympiadPortal({ olympiad }: Props) {
 
         <section id="pattern" className="scroll-mt-32 border-t border-stone-200 py-16">
           <h2 className="text-2xl font-bold text-tejas-ink">Exam Pattern</h2>
-          <div className="mt-6 overflow-x-auto rounded-2xl border border-stone-200">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="bg-tejas-ivory">
-                  <th className="px-6 py-4 font-semibold">Section</th>
-                  <th className="px-6 py-4 font-semibold">Questions</th>
-                  <th className="px-6 py-4 font-semibold">Marks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {olympiad.examPattern.map((row) => (
-                  <tr key={row.section.en} className="border-t border-stone-100">
-                    <td className="px-6 py-4">{t(row.section)}</td>
-                    <td className="px-6 py-4">{row.questions}</td>
-                    <td className="px-6 py-4">{row.marks}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <p className="mt-4 max-w-3xl text-tejas-muted leading-relaxed">
+            {isComingSoon
+              ? "This stream is not open. No examination pattern, duration, or question count has been published."
+              : "The question-paper pattern, duration, and number of questions have not been published in the TEJAS Olympiad 2026–27 notes on this website. The examination date and class range above are the published schedule."}
+          </p>
         </section>
 
         <section id="syllabus" className="scroll-mt-32 border-t border-stone-200 py-16">
@@ -274,6 +257,7 @@ export function OlympiadPortal({ olympiad }: Props) {
         {(olympiad.samplePapers.length > 0 || olympiad.previousPapers.length > 0) && (
           <section id="papers" className="scroll-mt-32 border-t border-stone-200 py-16">
             <h2 className="text-2xl font-bold text-tejas-ink">Sample & Previous Papers</h2>
+            <p className="mt-2 max-w-3xl text-sm text-tejas-muted">Listed for identification. The paper file is not attached on this website.</p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {[...olympiad.samplePapers, ...olympiad.previousPapers].map((paper) => (
                 <div key={paper.id} className="rounded-xl border border-stone-200 p-5">

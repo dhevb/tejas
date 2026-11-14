@@ -99,7 +99,6 @@ export interface PrepareCategory {
   id: string;
   title: string;
   description: string;
-  count: number;
   href: string;
   gradient: string;
 }

@@ -1,16 +1,16 @@
 import type { OlympiadPortalContent } from "@/content/types";
-import { currentCycle, pastEnglishOlympiad2025, CURRENT_EDITION_LABEL } from "@/content/current-cycle";
+import { currentCycle, pastEnglishOlympiad2025 } from "@/content/current-cycle";
 
 export const englishOlympiad: OlympiadPortalContent = {
   slug: "english",
   name: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" },
   tagline: {
-    en: "DHE English Olympiad — strengthening language fundamentals from an early age",
-    hi: "DHE अंग्रेज़ी ओलंपियाड — प्रारंभिक आयु से भाषा की मजबूत नींव",
+    en: "TEJAS English Olympiad — language for Classes III–X",
+    hi: "TEJAS अंग्रेज़ी ओलंपियाड — कक्षा III–X",
   },
   description: {
-    en: "Language is not merely a medium of communication; it is the foundation of expression, creativity, and confidence. The DHE English Olympiad strengthens vocabulary, grammar, reading comprehension, and creative language usage while building competitive spirit.",
-    hi: "भाषा केवल संचार का माध्यम नहीं; यह अभिव्यक्ति, रचनात्मकता और आत्मविश्वास की नींव है। DHE अंग्रेज़ी ओलंपियाड शब्दावली, व्याकरण, पठन बोध और रचनात्मक भाषा उपयोग को मजबूत करता है।",
+    en: "Language is not merely a medium of communication; it is the foundation of expression, creativity, and confidence. TEJAS English Olympiad is for Classes III–X and is examined on 10 December 2026.",
+    hi: "TEJAS अंग्रेज़ी ओलंपियाड कक्षा III–X के लिए है। परीक्षा 10 दिसंबर 2026 को है।",
   },
   whySubject: {
     en: "TEJAS English is examined on 10 December 2026 for Classes III–X. It follows the 1st DHE English Olympiad (10,040+ students, 25 schools) held on 13–16 October 2025.",
@@ -129,19 +129,19 @@ export const englishOlympiad: OlympiadPortalContent = {
     {
       phase: { en: "Mock & OMR Practice (Weeks 5–6)", hi: "मॉक एवं OMR अभ्यास (सप्ताह 5–6)" },
       description: {
-        en: "Take full-length mock tests using OMR sheets. Practice time management — 50 questions in 60 minutes.",
-        hi: "OMR शीट का उपयोग कर पूर्ण लंबाई मॉक टेस्ट। समय प्रबंधन — 60 मिनट में 50 प्रश्न।",
+        en: "Practise reading and OMR marking with material the school provides. This website has not published an English mock test.",
+        hi: "विद्यालय की सामग्री से पठन और OMR अभ्यास करें। इस वेबसाइट पर अंग्रेज़ी मॉक टेस्ट प्रकाशित नहीं है।",
       },
     },
   ],
   books: [
     {
-      title: { en: "DHE English Olympiad Workbook — Level-wise", hi: "DHE अंग्रेज़ी ओलंपियाड कार्यपुस्तिका — स्तरवार" },
-      author: { en: "Olympiad Cell, DHE", hi: "ओलंपियाड सेल, DHE" },
-      publisher: { en: "DHE Publications", hi: "DHE प्रकाशन" },
+      title: { en: "TEJAS English Olympiad workbook", hi: "TEJAS अंग्रेज़ी ओलंपियाड कार्यपुस्तिका" },
+      author: { en: "Department of Holistic Education", hi: "समग्र शिक्षा विभाग" },
+      publisher: { en: "Not supplied", hi: "उपलब्ध नहीं" },
       description: {
-        en: "Official preparation workbook aligned with five examination levels (A–E).",
-        hi: "पाँच परीक्षा स्तरों (A–E) के अनुरूप आधिकारिक तैयारी कार्यपुस्तिका।",
+        en: "A workbook file has not been published on this website.",
+        hi: "कार्यपुस्तिका की फाइल इस वेबसाइट पर प्रकाशित नहीं है।",
       },
     },
     {
@@ -149,8 +149,8 @@ export const englishOlympiad: OlympiadPortalContent = {
       author: { en: "English Connection", hi: "English Connection" },
       publisher: { en: "Collaborating Partner", hi: "सहयोगी भागीदार" },
       description: {
-        en: "Partner resource for the 1st DHE English Olympiad — vocabulary and comprehension modules.",
-        hi: "प्रथम DHE अंग्रेज़ी ओलंपियाड के लिए साझेदार संसाधन।",
+        en: "Partner series named for the 1st DHE English Olympiad. The file is not attached on this website.",
+        hi: "प्रथम DHE अंग्रेज़ी ओलंपियाड का साझेदार श्रृंखला। फाइल यहाँ संलग्न नहीं है।",
       },
     },
     {
@@ -159,45 +159,8 @@ export const englishOlympiad: OlympiadPortalContent = {
       publisher: { en: "TEJAS Publications", hi: "TEJAS प्रकाशन" },
     },
   ],
-  mockTests: [
-    {
-      id: "eng-mock-a",
-      title: { en: "Mock Test — Level A (Classes I–II)", hi: "मॉक टेस्ट — स्तर A" },
-      questions: 30,
-      duration: "45 min",
-      level: { en: "Level A", hi: "स्तर A" },
-    },
-    {
-      id: "eng-mock-c",
-      title: { en: "Mock Test — Level C (Classes V–VI)", hi: "मॉक टेस्ट — स्तर C" },
-      questions: 40,
-      duration: "50 min",
-      level: { en: "Level C", hi: "स्तर C" },
-    },
-    {
-      id: "eng-mock-e",
-      title: { en: "Mock Test — Level E (Classes IX–X)", hi: "मॉक टेस्ट — स्तर E" },
-      questions: 50,
-      duration: "60 min",
-      level: { en: "Level E", hi: "स्तर E" },
-    },
-  ],
-  samplePapers: [
-    {
-      id: "eng-sample-b",
-      title: { en: "Sample Paper — Level B", hi: "नमूना प्रश्नपत्र — स्तर B" },
-      year: 2026,
-      level: { en: "Level B — Classes III–IV", hi: "स्तर B" },
-      edition: CURRENT_EDITION_LABEL,
-    },
-    {
-      id: "eng-sample-d",
-      title: { en: "Sample Paper — Level D", hi: "नमूना प्रश्नपत्र — स्तर D" },
-      year: 2026,
-      level: { en: "Level D — Classes VII–VIII", hi: "स्तर D" },
-      edition: CURRENT_EDITION_LABEL,
-    },
-  ],
+  mockTests: [],
+  samplePapers: [],
   previousPapers: [
     {
       id: "eng-2025-all",
@@ -207,20 +170,7 @@ export const englishOlympiad: OlympiadPortalContent = {
       edition: "SMK 5.0",
     },
   ],
-  videoLectures: [
-    {
-      id: "eng-v1",
-      title: { en: "English Olympiad Strategy — Olympiad Cell", hi: "अंग्रेज़ी ओलंपियाड रणनीति" },
-      duration: "45 min",
-      speaker: { en: "Olympiad Cell, DHE", hi: "ओलंपियाड सेल, DHE" },
-    },
-    {
-      id: "eng-v2",
-      title: { en: "Reading Comprehension Masterclass", hi: "पठन बोध मास्टरक्लास" },
-      duration: "30 min",
-      speaker: { en: "English Connection", hi: "English Connection" },
-    },
-  ],
+  videoLectures: [],
   awards: [
     {
       level: { en: "Overall Top 3 (Each Level)", hi: "समग्र शीर्ष 3 (प्रत्येक स्तर)" },
@@ -264,8 +214,8 @@ export const englishOlympiad: OlympiadPortalContent = {
     },
     {
       question: {
-        en: "When is the next DHE English Olympiad?",
-        hi: "अगला DHE अंग्रेज़ी ओलंपियाड कब है?",
+        en: "When is TEJAS English Olympiad?",
+        hi: "TEJAS अंग्रेज़ी ओलंपियाड कब है?",
       },
       answer: {
         en: "TEJAS English is on 10 December 2026. Schools register from 3 November 2026 to 20 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
@@ -275,8 +225,8 @@ export const englishOlympiad: OlympiadPortalContent = {
     {
       question: { en: "Is there negative marking?", hi: "क्या नegative marking है?" },
       answer: {
-        en: "No negative marking. The examination uses MCQ format with OMR sheets for transparency and fairness.",
-        hi: "कोई negative marking नहीं। OMR शीट के साथ MCQ प्रारूप।",
+        en: "The 1st DHE English Olympiad (2025) used MCQ papers on OMR sheets, and its published description says there was no negative marking. TEJAS Olympiad 2026–27 notes on this website do not state a negative-marking rule.",
+        hi: "प्रथम DHE अंग्रेज़ी ओलंपियाड (2025) में OMR पर MCQ थे। 2026–27 के नोट्स में नेगेटिव मार्किंग का नियम नहीं लिखा है।",
       },
     },
     {
@@ -358,19 +308,19 @@ export const englishOlympiad: OlympiadPortalContent = {
       status: "completed",
     },
     {
-      label: { en: "DHE English Olympiad 2.0 — Registration Opens", hi: "पंजीकरण प्रारंभ" },
-      date: "2026-07-01",
-      status: "tba",
+      label: { en: "TEJAS English — registration opens", hi: "पंजीकरण प्रारंभ" },
+      date: "2026-11-03",
+      status: "upcoming",
     },
     {
-      label: { en: "DHE English Olympiad 2.0 — Examination", hi: "परीक्षा" },
-      date: "2026-09-01",
-      status: "tba",
+      label: { en: "TEJAS English — registration closes", hi: "पंजीकरण समाप्ति" },
+      date: "2026-11-20",
+      status: "upcoming",
     },
     {
-      label: { en: "Top Achievers Felicitation — TEJAS National Ceremony", hi: "TEJAS राष्ट्रीय सम्मान" },
-      date: "2026-10-01",
-      status: "tba",
+      label: { en: "TEJAS English Olympiad — examination", hi: "परीक्षा" },
+      date: "2026-12-10",
+      status: "upcoming",
     },
   ],
   hallOfFameHighlights: [

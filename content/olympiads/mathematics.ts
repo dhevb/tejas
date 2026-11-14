@@ -1,20 +1,20 @@
 import type { OlympiadPortalContent } from "@/content/types";
-import { currentCycle, CURRENT_EDITION_LABEL } from "@/content/current-cycle";
+import { currentCycle } from "@/content/current-cycle";
 
 export const mathematicsOlympiad: OlympiadPortalContent = {
   slug: "mathematics",
   name: { en: "TEJAS Mathematics", hi: "TEJAS गणित" },
   tagline: {
-    en: "DHE Maths Olympiad — logical reasoning, problem-solving, and mathematical excellence",
-    hi: "DHE गणित ओलंपियाड — तार्किक तर्क, समस्या समाधान और गणितीय उत्कृष्टता",
+    en: "TEJAS Mathematics Olympiad — Classes III–X",
+    hi: "TEJAS गणित ओलंपियाड — कक्षा III–X",
   },
   description: {
-    en: "TEJAS Mathematics is examined on 9 December 2026 for Classes III–X. It strengthens conceptual clarity, analytical thinking, and problem-solving.",
-    hi: "DHE गणित ओलंपियाड अवधारणात्मक स्पष्टता, विश्लेषणात्मक सोच और समस्या समाधान कौशल को मजबूत करता है।",
+    en: "TEJAS Mathematics Olympiad is examined on 9 December 2026 for Classes III–X. It strengthens conceptual clarity, analytical thinking, and problem-solving.",
+    hi: "TEJAS गणित ओलंपियाड कक्षा III–X के लिए है। परीक्षा 9 दिसंबर 2026 को है।",
   },
   whySubject: {
-    en: "Mathematics is the language of science and innovation. From Srinivasa Ramanujan to modern data science, mathematical thinking drives Bharat's knowledge economy. The DHE Maths Olympiad identifies and nurtures young mathematical talent nationwide.",
-    hi: "गणित विज्ञान और नवाचार की भाषा है। DHE गणित ओलंपियाड युवा गणितीय प्रतिभा की पहचान और पोषण करता है।",
+    en: "Mathematics is the language of science and innovation. From Srinivasa Ramanujan to modern data science, mathematical thinking drives Bharat's knowledge economy. TEJAS Mathematics Olympiad is the current stream for Classes III–X.",
+    hi: "गणित विज्ञान और नवाचार की भाषा है। TEJAS गणित ओलंपियाड कक्षा III–X के लिए है।",
   },
   status: "active",
   icon: "calculator",
@@ -113,8 +113,8 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       phase: { en: "Practice (Weeks 3–4)", hi: "अभ्यास (सप्ताह 3–4)" },
       description: {
-        en: "Solve 20 MCQs daily from sample papers. Track weak topics and revisit concepts.",
-        hi: "नमूना प्रश्नपत्रों से प्रतिदिन 20 MCQ हल करें।",
+        en: "Revise the school mathematics course. This website has not published a Mathematics sample paper.",
+        hi: "विद्यालय का गणित पाठ्यक्रम दोहराएँ। इस वेबसाइट पर गणित का नमूना प्रश्नपत्र प्रकाशित नहीं है।",
       },
     },
     {
@@ -127,55 +127,20 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
   ],
   books: [
     {
-      title: { en: "DHE Maths Olympiad Workbook", hi: "DHE गणित ओलंपियाड कार्यपुस्तिका" },
-      author: { en: "Olympiad Cell, DHE", hi: "ओलंपियाड सेल, DHE" },
-      publisher: { en: "DHE Publications", hi: "DHE प्रकाशन" },
+      title: { en: "TEJAS Mathematics Olympiad workbook", hi: "TEJAS गणित ओलंपियाड कार्यपुस्तिका" },
+      author: { en: "Department of Holistic Education", hi: "समग्र शिक्षा विभाग" },
+      publisher: { en: "Not supplied", hi: "उपलब्ध नहीं" },
     },
     {
       title: { en: "NCERT Mathematics — Grade-wise Revision", hi: "NCERT गणित — कक्षावार संशोधन" },
       author: { en: "NCERT", hi: "NCERT" },
       publisher: { en: "NCERT", hi: "NCERT" },
     },
-    {
-      title: { en: "Logical Reasoning for Young Mathematicians", hi: "युवा गणितज्ञों के लिए तार्किक तर्क" },
-      author: { en: "TEJAS Editorial Board", hi: "TEJAS संपादकीय मंडल" },
-      publisher: { en: "TEJAS Publications", hi: "TEJAS प्रकाशन" },
-    },
   ],
-  mockTests: [
-    {
-      id: "math-mock-c",
-      title: { en: "Mock Test — Level C", hi: "मॉक टेस्ट — स्तर C" },
-      questions: 40,
-      duration: "50 min",
-      level: { en: "Level C", hi: "स्तर C" },
-    },
-    {
-      id: "math-mock-e",
-      title: { en: "Mock Test — Level E", hi: "मॉक टेस्ट — स्तर E" },
-      questions: 50,
-      duration: "60 min",
-      level: { en: "Level E", hi: "स्तर E" },
-    },
-  ],
-  samplePapers: [
-    {
-      id: "math-sample-d",
-      title: { en: "Sample Paper — Level D", hi: "नमूना प्रश्नपत्र — स्तर D" },
-      year: 2026,
-      level: { en: "Level D", hi: "स्तर D" },
-      edition: CURRENT_EDITION_LABEL,
-    },
-  ],
+  mockTests: [],
+  samplePapers: [],
   previousPapers: [],
-  videoLectures: [
-    {
-      id: "math-v1",
-      title: { en: "Problem-Solving Strategies for Maths Olympiad", hi: "गणित ओलंपियाड समस्या समाधान रणनीति" },
-      duration: "40 min",
-      speaker: { en: "Olympiad Cell, DHE", hi: "ओलंपियाड सेल, DHE" },
-    },
-  ],
+  videoLectures: [],
   awards: [
     {
       level: { en: "National Top Achievers", hi: "राष्ट्रीय शीर्ष achievers" },
@@ -201,7 +166,7 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
   ],
   faqs: [
     {
-      question: { en: "When is the DHE Maths Olympiad?", hi: "DHE गणित ओलंपियाड कब है?" },
+      question: { en: "When is TEJAS Mathematics Olympiad?", hi: "TEJAS गणित ओलंपियाड कब है?" },
       answer: {
         en: "TEJAS Mathematics is on 9 December 2026. Schools register from 3 November 2026 to 20 November 2026.",
         hi: "TEJAS गणित 9 दिसंबर 2026 को है। पंजीकरण 3–20 नवंबर 2026।",
@@ -252,19 +217,19 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
   ],
   calendar: [
     {
-      label: { en: "Registration Opens", hi: "पंजीकरण प्रारंभ" },
-      date: "2026-07-01",
-      status: "tba",
+      label: { en: "TEJAS Mathematics — registration opens", hi: "पंजीकरण प्रारंभ" },
+      date: "2026-11-03",
+      status: "upcoming",
     },
     {
-      label: { en: "DHE Maths Olympiad — Examination", hi: "परीक्षा" },
-      date: "2026-09-01",
-      status: "tba",
+      label: { en: "TEJAS Mathematics — registration closes", hi: "पंजीकरण समाप्ति" },
+      date: "2026-11-20",
+      status: "upcoming",
     },
     {
-      label: { en: "Felicitation — TEJAS National Ceremony", hi: "TEJAS राष्ट्रीय सम्मान" },
-      date: "2026-10-01",
-      status: "tba",
+      label: { en: "TEJAS Mathematics Olympiad — examination", hi: "परीक्षा" },
+      date: "2026-12-09",
+      status: "upcoming",
     },
   ],
   hallOfFameHighlights: [],

@@ -35,7 +35,7 @@ export const faqItems: FAQItem[] = [
     category: "Exams",
     question: "What is the exam format?",
     answer:
-      "MCQ format using OMR sheets — ensuring transparency, objectivity, and fairness. Five examination levels (A–E) based on class groups. No negative marking in DHE English Olympiad.",
+      "The 1st DHE English Olympiad (2025) used MCQ papers on OMR sheets, in five levels (A–E), and its published description says there was no negative marking. TEJAS Olympiad 2026–27 notes on this website state the dates and class ranges. They do not state a negative-marking rule.",
   },
   {
     category: "Exams",
@@ -53,12 +53,12 @@ export const faqItems: FAQItem[] = [
     category: "Preparation",
     question: "Are mock tests and resources free?",
     answer:
-      "Yes. TEJAS provides sample papers, mock test previews, preparation roadmaps, teacher/parent/school guides, and books through the Prepare Hub and Resources section.",
+      "No public download library is published on this website. Future Tech e-books and their mock tests open from the student portal after the payment is verified and the item is published. English and Mathematics files have not been supplied.",
   },
   {
     category: "Future",
     question: "What Olympiads are planned next?",
     answer:
-      "After the current core streams, DHE plans DHE Sanskriti Olympiad and expansion to Science, Hindi, Sanskrit, GK, AI, Coding, and Innovation under the TEJAS ecosystem.",
+      "Science, Hindi, Sanskrit, General Knowledge, AI, Coding, and Innovation are listed as coming soon. They are not open for TEJAS Olympiad 2026–27, and no launch date has been published.",
   },
 ];

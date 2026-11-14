@@ -11,8 +11,16 @@ async function openedSession() {
   }
 }
 
-export async function staffAuthorised(): Promise<boolean> {
-  const session = await openedSession();
+function cookieValue(request: Request, name: string): string | undefined {
+  const header = request.headers.get("cookie") ?? "";
+  for (const part of header.split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === name) return decodeURIComponent(rest.join("="));
+  }
+  return undefined;
+}
+
+async function sessionAllowed(session: ReturnType<typeof openStaffSession>): Promise<boolean> {
   if (!session) return false;
   if (session.version === 0) {
     if (session.subject !== STAFF_RECOVERY_SUBJECT) return false;
@@ -22,6 +30,15 @@ export async function staffAuthorised(): Promise<boolean> {
   const current = await staffSessionVersion(session.subject);
   if (current === "missing" || current === "down") return session.subject === STAFF_RECOVERY_SUBJECT;
   return current === session.version;
+}
+
+export async function staffAuthorised(): Promise<boolean> {
+  return sessionAllowed(await openedSession());
+}
+
+/** Same staff rule as `staffAuthorised`, using the cookie on this request. */
+export async function staffRequestAuthorised(request: Request): Promise<boolean> {
+  return sessionAllowed(openStaffSession(cookieValue(request, STAFF_COOKIE)));
 }
 
 export async function staffSubject(): Promise<string | null> {

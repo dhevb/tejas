@@ -232,7 +232,7 @@ export async function remoteSetPublication(input: { actor: string; kind: "book" 
   }
 }
 
-async function publicationMap(): Promise<{ books: Record<string, PublicationStatus>; tests: Record<string, PublicationStatus> }> {
+export async function remotePublicationMap(): Promise<{ books: Record<string, PublicationStatus>; tests: Record<string, PublicationStatus> }> {
   const result = await supabaseRest("/rest/v1/tejas_learn_publication?select=kind,item_id,publication_status", { method: "GET" });
   if (schemaMissing(result.status, result.json)) return { books: {}, tests: {} };
   if (result.status !== 200) throw new PortalUnavailable();
@@ -254,7 +254,7 @@ async function verified(studentId: string, bookId: string): Promise<boolean> {
 
 export async function remoteAccessFor(student: PortalStudent, bookId: string, testId?: string | null) {
   const catalog = loadCatalog();
-  const publication = await publicationMap();
+  const publication = await remotePublicationMap();
   const bookPublished = publicationOf(catalog.books.find((book) => book.id === bookId)?.publicationStatus ?? "awaiting_approval", publication.books[bookId]) === "published";
   const testPublished = testId
     ? publicationOf(catalog.tests.find((test) => test.id === testId)?.publicationStatus ?? "awaiting_approval", publication.tests[testId]) === "published"
@@ -307,7 +307,7 @@ function attemptFrom(row: Record<string, unknown>): AttemptRow | null {
 
 export async function remoteDashboard(student: PortalStudent) {
   const catalog = loadCatalog();
-  const publication = await publicationMap();
+  const publication = await remotePublicationMap();
   const entitlements = await supabaseRest(`/rest/v1/tejas_learn_entitlements?student_id=eq.${encodeURIComponent(student.id)}&select=book_id,status,amount_inr`, { method: "GET" });
   const attempts = await supabaseRest(`/rest/v1/tejas_learn_attempts?student_id=eq.${encodeURIComponent(student.id)}&select=id,test_id,status,score,max_score,submitted_at`, { method: "GET" });
   if (entitlements.status !== 200 || attempts.status !== 200) throw new PortalUnavailable();
@@ -453,7 +453,7 @@ export async function remoteReadOwnAttempt(studentId: string, attemptId: string)
 
 export async function remoteStaffOverview() {
   const catalog = loadCatalog();
-  const publication = await publicationMap();
+  const publication = await remotePublicationMap();
   const students = await supabaseRest("/rest/v1/tejas_learn_students?select=id,full_name,parent_name,mobile,email,school_name,stream_id,class_level,session_version,created_at", { method: "GET" });
   const entitlements = await supabaseRest("/rest/v1/tejas_learn_entitlements?select=student_id,book_id,status,amount_inr", { method: "GET" });
   const audit = await supabaseRest("/rest/v1/tejas_learn_audit?select=id,created_at,actor,action_name,student_id,reason,before_state,after_state&order=created_at.desc&limit=100", { method: "GET" });

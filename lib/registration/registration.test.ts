@@ -909,3 +909,29 @@ test("registration with proof upload open still saves a pending payment and igno
     restore();
   }
 });
+
+test("schema status requires a staff session and does not describe the database to visitors", async () => {
+  const { GET } = await import("@/app/api/register/schema-status/route");
+  const denied = await GET(new Request("http://127.0.0.1/api/register/schema-status"));
+  assert.equal(denied.status, 401);
+  const deniedBody = await denied.json() as { ok: boolean; openApiTables?: unknown };
+  assert.equal(deniedBody.ok, false);
+  assert.equal(deniedBody.openApiTables, undefined);
+  const forged = await GET(new Request("http://127.0.0.1/api/register/schema-status", {
+    headers: { cookie: "tejas_staff=v2.recovery.0.1.forged" },
+  }));
+  assert.equal(forged.status, 401);
+  process.env.TEJAS_ADMIN_TOKEN = "correct-horse-battery";
+  try {
+    const allowed = await GET(new Request("http://127.0.0.1/api/register/schema-status", {
+      headers: { cookie: `tejas_staff=${createSessionValue()}` },
+    }));
+    assert.equal(allowed.status, 200);
+    const body = await allowed.json() as { ok: boolean; reason: string; rowCounts: unknown[] };
+    assert.equal(body.ok, false);
+    assert.equal(body.reason, "missing");
+    assert.equal(body.rowCounts.length, 0);
+  } finally {
+    delete process.env.TEJAS_ADMIN_TOKEN;
+  }
+});

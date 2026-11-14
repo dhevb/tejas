@@ -6,7 +6,7 @@ interface TrustBannerProps {
 }
 
 const items = [
-  { icon: Shield, label: "DHE Olympiad Cell", desc: "Official platform" },
+  { icon: Shield, label: "Department of Holistic Education", desc: "Organising institution" },
   { icon: Lock, label: "Secure Assessments", desc: "Technology-enabled integrity" },
   { icon: Eye, label: "Transparent Process", desc: "Fair & credible evaluation" },
   { icon: Award, label: "National Recognition", desc: "Verified credentials" },

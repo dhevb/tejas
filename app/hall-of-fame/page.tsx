@@ -27,7 +27,7 @@ export default function HallOfFamePage() {
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <CertificatePreview studentName="Kanav Goyal" rank="Overall 1st — Level D, English Olympiad 2025" />
+            <CertificatePreview studentName="Kanav Goyal" olympiad="1st DHE English Olympiad" rank="Overall 1st — Level D" edition="2025" />
           </FadeIn>
 
           {populated.map((cat, catIndex) => {

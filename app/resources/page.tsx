@@ -7,7 +7,7 @@ import { resources, resourceCategories, getResourcesByCategory } from "@/data/re
 
 export const metadata = createMetadata({
   title: "Resources",
-  description: "Books, question banks, practice sets, videos, teacher guides, school resources, downloads, and Bal Shodh Patrika.",
+  description: "Links that open a real TEJAS page or the Shiksha Mahakumbh website. Files that are not hosted here are not listed as downloads.",
   path: "/resources",
 });
 
@@ -17,7 +17,7 @@ export default function ResourcesPage() {
       <PageHero
         eyebrow="Resources"
         title="Learning Resources Hub"
-        subtitle="Books, question banks, mock tests, videos, teacher toolkit, parent guide, school resources, research, and Bal Shodh Patrika."
+        subtitle="Only pages and sites that exist are linked. Workbooks, question banks, videos, and certificates are not listed until a file is published."
         primaryCta={{ label: "Prepare Hub", href: "/prepare" }}
         secondaryCta={{ label: "Olympiads", href: "/olympiads" }}
       />

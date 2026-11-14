@@ -23,6 +23,7 @@ import {
   reviewPayment,
   rotateSession,
   setPublication,
+  publicBookPublication,
   staffOverview,
   startAttempt,
   submitAttempt,
@@ -490,4 +491,23 @@ test("sign-up and sign-in set one session and surface failures", async () => {
     else process.env.TEJAS_ADMIN_TOKEN = previousAdmin;
     process.env.NODE_ENV = previousNode;
   }
+});
+
+test("the public e-book summary follows publication status and does not include student records", async () => {
+  const closed = await publicBookPublication();
+  assert.equal(closed.ok, true);
+  if (!closed.ok) return;
+  assert.equal(closed.books.length, 2);
+  assert.equal(JSON.stringify(closed).includes("@"), false);
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "published", reason: "Public summary check." })).ok, true);
+  assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "published", reason: "Public summary check." })).ok, true);
+  const open = await publicBookPublication();
+  assert.equal(open.ok, true);
+  if (!open.ok) return;
+  const book = open.books.find((item) => item.id === "ft-book-1");
+  assert.equal(book?.published, true);
+  assert.equal((book?.publishedTests ?? 0) >= 1, true);
+  assert.equal(book?.classes.join(","), "6,7,8");
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "awaiting_approval", reason: "Restore after the public summary check." })).ok, true);
+  assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "awaiting_approval", reason: "Restore after the public summary check." })).ok, true);
 });

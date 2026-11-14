@@ -22,7 +22,7 @@ export default function ResearchPage() {
         eyebrow="TEJAS Research"
         title="Research & Inquiry"
         subtitle="Bal Shodh Patrika and student research pathways — nurturing young investigators from Classes 9–12."
-        primaryCta={{ label: "Bal Shodh Patrika Guide", href: "https://www.shikshamahakumbh.com" }}
+        primaryCta={{ label: "Shiksha Mahakumbh", href: "https://www.shikshamahakumbh.com" }}
         secondaryCta={{ label: "All Resources", href: "/resources" }}
       />
       <section className="py-16 md:py-24">
@@ -33,10 +33,10 @@ export default function ResearchPage() {
               <p className="mt-3 text-tejas-muted leading-relaxed">
                 National student research journal by Department of Holistic Education. Section 1 (Classes 9–10):
                 basic research and project documentation. Section 2 (Classes 11–12): advanced research and analytical
-                studies. Submissions via Shiksha Mahakumbh registration hub.
+                studies. A submission file is not hosted on this website.
               </p>
               <Link href="/resources" className="mt-4 inline-block text-sm font-semibold text-tejas-saffron hover:underline">
-                View submission resources →
+                Shiksha Mahakumbh link →
               </Link>
             </div>
           </FadeIn>

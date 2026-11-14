@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
+import path from "node:path";
 import test from "node:test";
 import { DATABASE_ACCESS_NAMES, EXPECTED_BUCKET, EXPECTED_TABLES, compareExpected, namesFromSql, parseBuckets, parseOpenApiDocument, presenceMap } from "@/lib/registration/supabase-inspect";
 
@@ -75,6 +77,20 @@ test("comparison flags missing columns and accepts the private proof bucket", ()
   assert.equal(comparison.bucket.mimeOk, true);
   assert.equal(comparison.schemaSource, "sql");
   assert.equal(comparison.backupVerified, false);
+});
+
+test("supabase migration files have unique versions and keep the recorded registration migration", () => {
+  const names = readdirSync(path.join(process.cwd(), "supabase", "migrations")).filter((name) => name.endsWith(".sql"));
+  const versions = names.map((name) => {
+    const match = /^([0-9]+)_/.exec(name);
+    assert.ok(match, `${name} has no numeric version`);
+    return match[1];
+  });
+  assert.equal(new Set(versions).size, versions.length);
+  assert.equal(versions.filter((version) => version === "20261031").length, 1);
+  assert.equal(names.includes("20261031_tejas_registration.sql"), true);
+  const recordedFirst = [...names].sort((left, right) => left.localeCompare(right))[0];
+  assert.equal(recordedFirst, "20261031_tejas_registration.sql");
 });
 
 test("credential presence returns booleans and never the secret text", () => {

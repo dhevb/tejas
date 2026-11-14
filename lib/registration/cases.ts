@@ -1,7 +1,7 @@
 import { chmod, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { BookLine } from "@/lib/registration/book-order";
-import { configured as remoteConfigured, insertCaseFile, readCaseFile, transactionSeenInCases, updateCaseFile } from "@/lib/registration/database";
+import { configured as remoteConfigured, insertCaseFile, listRemoteCaseSnapshots, readCaseFile, readPrivateProof, transactionSeenInCases, updateCaseFile } from "@/lib/registration/database";
 import type { Charge } from "@/lib/registration/fee";
 import { dataDir } from "@/lib/registration/paths";
 import type { PaymentDecision } from "@/lib/registration/payment-decision";
@@ -101,8 +101,12 @@ export async function readBookOrder(reference: string): Promise<BookOrder | null
   }
 }
 
-export async function listBookOrders(): Promise<BookOrder[]> {
-  if (remoteConfigured()) return [];
+export async function listBookOrders(): Promise<BookOrder[] | null> {
+  if (remoteConfigured()) {
+    const snapshots = await listRemoteCaseSnapshots();
+    if (!snapshots) return null;
+    return snapshots.filter((item): item is BookOrder => item.kind === "book");
+  }
   const root = path.join(dataDir(), "cases");
   let names: string[] = [];
   try {
@@ -123,7 +127,23 @@ export async function bookTransactionSeen(utr: string): Promise<boolean> {
   if (!needle) return false;
   if (remoteConfigured()) return transactionSeenInCases(needle);
   const orders = await listBookOrders();
-  return orders.some((order) => (order.payment.transactionReference ?? "").replace(/\s+/g, "").toUpperCase() === needle);
+  return (orders ?? []).some((order) => (order.payment.transactionReference ?? "").replace(/\s+/g, "").toUpperCase() === needle);
+}
+
+export async function readBookProof(reference: string): Promise<{ bytes: Buffer; filename: string; contentType: string } | null> {
+  const order = await readBookOrder(reference);
+  if (!order?.proofExt) return null;
+  const types = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" } as const;
+  if (remoteConfigured()) {
+    const bytes = await readPrivateProof(`${reference}/proof.${order.proofExt}`);
+    return bytes ? { bytes, filename: `tejas-book-proof-${reference}.${order.proofExt}`, contentType: types[order.proofExt] } : null;
+  }
+  try {
+    const bytes = openBytes(await readFile(path.join(caseDir(reference), `proof.${order.proofExt}`)));
+    return { bytes, filename: `tejas-book-proof-${reference}.${order.proofExt}`, contentType: types[order.proofExt] };
+  } catch {
+    return null;
+  }
 }
 
 export async function attachBookProof(reference: string, order: BookOrder, proof: Buffer, ext: NonNullable<BookOrder["proofExt"]>, decision: PaymentDecision, enteredUtr: string, extractedUtr: string | null): Promise<BookOrder | null> {

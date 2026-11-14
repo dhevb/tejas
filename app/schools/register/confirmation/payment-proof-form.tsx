@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MAX_RECEIPT_BYTES } from "@/lib/registration/schema";
 
 const MODES = ["NEFT", "IMPS", "RTGS", "Bank Transfer", "Cheque", "Other"] as const;
 const REQUEST_MS = 25_000;
@@ -19,7 +20,14 @@ export function PaymentProofForm({ reference, amountDue }: { reference: string; 
     if (busy) return;
     setBusy(true);
     setMessage("");
-    const body = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const file = form.querySelector<HTMLInputElement>("input[name=receipt]")?.files?.[0];
+    if (file && file.size > MAX_RECEIPT_BYTES) {
+      setMessage("The screenshot is larger than 5 MB.");
+      setBusy(false);
+      return;
+    }
+    const body = new FormData(form);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_MS);
     try {

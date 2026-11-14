@@ -1,14 +1,15 @@
 import { listBookOrders } from "@/lib/registration/cases";
 import { noStore } from "@/lib/registration/http";
 import { maskPan } from "@/lib/registration/fields";
-import { staffAuthorised } from "@/lib/registration/staff";
+import { staffRequestAuthorised } from "@/lib/registration/staff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  if (!(await staffAuthorised())) return noStore({ ok: false }, 401);
+export async function GET(request: Request) {
+  if (!(await staffRequestAuthorised(request))) return noStore({ ok: false, error: "Staff sign-in is required." }, 401);
   const orders = await listBookOrders();
+  if (!orders) return noStore({ ok: false, error: "Hosted book orders could not be listed." }, 503);
   return noStore({
     ok: true,
     orders: orders.map((order) => ({
@@ -19,6 +20,7 @@ export async function GET() {
       expectedAmount: order.charge.payableToTejas,
       total: order.charge.total,
       schoolShare: order.charge.schoolShare,
+      lines: order.lines,
       enteredUtr: order.payment.enteredUtr,
       extractedUtr: order.payment.extractedUtr,
       bankResult: order.payment.bankResult,

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { BOOK_BANK } from "@/lib/registration/official-bank";
-import { STREAMS } from "@/lib/registration/schema";
+import { MAX_RECEIPT_BYTES, STREAMS } from "@/lib/registration/schema";
 
 const field = "mt-1 w-full rounded-xl border border-tejas-border px-3 py-2 text-sm";
 
@@ -40,10 +40,11 @@ export function SchoolBookOrderForm() {
     return (
       <div className="space-y-3 rounded-3xl border border-tejas-border bg-white p-6">
         <h2 className="text-xl font-bold text-tejas-blue">Book order {order.reference}</h2>
-        <p>Total ₹{order.total.toLocaleString("en-IN")}. School share ₹{order.schoolShare.toLocaleString("en-IN")}. Payable to the book account ₹{order.payableToTejas.toLocaleString("en-IN")}.</p>
+        <p>Gross book price ₹170 per book. School share ₹34 per book. Amount payable to TEJAS ₹136 per book.</p>
+        <p>This order, calculated on the server: gross ₹{order.total.toLocaleString("en-IN")}, school share ₹{order.schoolShare.toLocaleString("en-IN")}, pay ₹{order.payableToTejas.toLocaleString("en-IN")} to the book account. Do not transfer the gross price when the remittance is the lower amount.</p>
         <p>Pay {BOOK_BANK.accountHolder}, account {BOOK_BANK.accountNumber}, {BOOK_BANK.bankName}, {BOOK_BANK.branch}, IFSC {BOOK_BANK.ifsc}.</p>
         <p>Please upload your payment screenshot and enter the UTR number. Both are mandatory for payment verification.</p>
-        <BookProof reference={order.reference} />
+        <BookProof reference={order.reference} amount={order.payableToTejas} />
       </div>
     );
   }
@@ -127,9 +128,9 @@ export function IndividualBookOrderForm() {
     return (
       <div className="space-y-3 rounded-3xl border border-tejas-border bg-white p-6">
         <h2 className="text-xl font-bold text-tejas-blue">Book order {order.reference}</h2>
-        <p>Payable to the book account ₹{order.payableToTejas.toLocaleString("en-IN")}. There is no school share.</p>
+        <p>₹170 per book. There is no school share. Pay the server-calculated amount of ₹{order.payableToTejas.toLocaleString("en-IN")} to the book account.</p>
         <p>Please upload your payment screenshot and enter the UTR number. Both are mandatory for payment verification.</p>
-        <BookProof reference={order.reference} />
+        <BookProof reference={order.reference} amount={order.payableToTejas} />
       </div>
     );
   }
@@ -164,11 +165,17 @@ export function IndividualBookOrderForm() {
   );
 }
 
-function BookProof({ reference }: { reference: string }) {
+function BookProof({ reference, amount }: { reference: string; amount: number }) {
   const [message, setMessage] = useState("");
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const response = await fetch(`/api/books/${reference}/payment`, { method: "POST", body: new FormData(event.currentTarget) });
+    const form = event.currentTarget;
+    const file = form.querySelector<HTMLInputElement>("input[name=receipt]")?.files?.[0];
+    if (file && file.size > MAX_RECEIPT_BYTES) {
+      setMessage("The screenshot is larger than 5 MB.");
+      return;
+    }
+    const response = await fetch(`/api/books/${reference}/payment`, { method: "POST", body: new FormData(form) });
     const payload = await response.json() as { ok?: boolean; formErrors?: string[]; verified?: boolean };
     setMessage(payload.ok ? (payload.verified ? "Payment verified." : "Proof received. It is pending staff verification and is not marked paid.") : payload.formErrors?.join(" ") || "The proof was not accepted.");
   }
@@ -177,7 +184,7 @@ function BookProof({ reference }: { reference: string }) {
       <p className="text-sm font-semibold">Please upload your payment screenshot and enter the UTR number. Both are mandatory for payment verification.</p>
       <label className="block text-sm">Payment mode<select name="paymentMode" className={field} defaultValue="NEFT"><option>NEFT</option><option>IMPS</option><option>RTGS</option><option>Bank Transfer</option></select></label>
       <label className="block text-sm">Payment date<input name="paymentDate" type="date" required className={field} /></label>
-      <label className="block text-sm">Amount paid<input name="amountPaid" type="number" required className={field} /></label>
+      <label className="block text-sm">Amount payable to the book account, calculated on the server<input name="amountPaid" type="number" readOnly value={amount} className={field} /></label>
       <label className="block text-sm">Payer name<input name="payerName" required className={field} /></label>
       <label className="block text-sm">UTR<input name="transactionReference" required className={field} /></label>
       <label className="block text-sm">Payment screenshot<input name="receipt" type="file" required accept="image/jpeg,image/png,image/webp" className={field} /></label>

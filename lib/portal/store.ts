@@ -21,9 +21,11 @@ import {
 } from "@/lib/portal/model";
 import { hashPassword, passwordIsAcceptable, passwordMatches } from "@/lib/portal/session";
 import { lookupTrustedTransaction } from "@/lib/registration/bank-reconciliation";
-import { storePrivateProof } from "@/lib/registration/database";
+import { readPrivateProof, storePrivateProof } from "@/lib/registration/database";
 import { durableStorageConfigured } from "@/lib/registration/durable";
 import { BOOK_BANK } from "@/lib/registration/official-bank";
+import { claimUtr, noteUtr, releaseUtr, utrKey, utrOwner } from "@/lib/registration/utr-claim";
+import { transactionSeenBefore } from "@/lib/registration/store";
 import { decidePayment } from "@/lib/registration/payment-decision";
 import { detectScreenshot } from "@/lib/registration/receipt";
 import { extractUtr } from "@/lib/registration/screenshot-ocr";
@@ -490,6 +492,7 @@ function activeEntitlement(db: Database, studentId: string, bookId: string): Ent
 }
 
 export async function reportPayment(studentId: string, transactionReference: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (process.env.VERCEL === "1") return { ok: false, error: "Please upload your payment screenshot and enter the UTR number. Both are mandatory for payment verification." };
   const reference = transactionReference.trim();
   if (reference.length < 6 || reference.length > 80) return { ok: false, error: "Enter the transaction reference." };
   const mode = portalPersistence();
@@ -537,6 +540,11 @@ export async function submitEbookProof(studentId: string, transactionReference: 
     if (!student) return { ok: false, error: "Account not found." };
     const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
     if (quote.status !== "payable") return { ok: false, error: "There is no approved e-book fee for this account." };
+    const owner = utrOwner("ebook", `${studentId}:${quote.bookId}`);
+    const claim = await claimUtr(reference, "ebook", owner);
+    if (!claim.ok && claim.error === "duplicate") return { ok: false, error: "This UTR is already used for another payment." };
+    if (!claim.ok && claim.error === "invalid") return { ok: false, error: "Enter the UTR number." };
+    if (!claim.ok && await transactionSeenBefore(reference)) return { ok: false, error: "This UTR is already used for another payment." };
     const decision = decidePayment({
       enteredUtr: reference,
       extractedUtr: extracted.utr,
@@ -547,11 +555,23 @@ export async function submitEbookProof(studentId: string, transactionReference: 
     try {
       await storePrivateProof(`ebook/${studentId}/${quote.bookId}.${ext}`, proof, ext === "jpg" ? "image/jpeg" : `image/${ext}`);
     } catch {
+      if (claim.ok && !claim.reused) await releaseUtr(reference, owner).catch(() => undefined);
       return { ok: false, error: "The screenshot could not be stored. The e-book was not unlocked." };
     }
     const { remoteReportPayment, remoteReviewPayment } = await import("@/lib/portal/remote-store");
     const reported = await remoteReportPayment(studentId, quote.bookId, reference, quote.amountInr);
-    if (!reported.ok) return reported;
+    if (!reported.ok) {
+      if (claim.ok && !claim.reused) await releaseUtr(reference, owner).catch(() => undefined);
+      return reported;
+    }
+    await noteUtr(reference, owner, {
+      extractedUtr: extracted.utr,
+      bankResult: decision.bankResult,
+      reviewReason: decision.reason,
+      proofExt: ext,
+      amountDue: quote.amountInr,
+      paymentStatus: decision.outcome === "automatic" ? "confirmed" : "reported",
+    }).catch(() => undefined);
     if (decision.outcome !== "automatic") return { ok: true, verified: false };
     const reviewed = await remoteReviewPayment({ actor: "automatic", studentId, bookId: quote.bookId, decision: "verified", note: decision.reason });
     return reviewed.ok ? { ok: true, verified: true } : { ok: true, verified: false };
@@ -562,11 +582,16 @@ export async function submitEbookProof(studentId: string, transactionReference: 
     if (!student) return { ok: false as const, error: "Account not found." };
     const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
     if (quote.status !== "payable") return { ok: false as const, error: "There is no approved e-book fee for this account." };
-    const used = db.entitlements.some((item) => item.transactionReference === reference && item.studentId !== studentId && item.status !== "rejected");
+    const needle = utrKey(reference);
+    const used = db.entitlements.some((item) => item.transactionReference && utrKey(item.transactionReference) === needle && item.studentId !== studentId && item.status !== "rejected");
     if (used) return { ok: false as const, error: "This UTR is already used for another payment." };
     const entitlement = activeEntitlement(db, student.id, quote.bookId);
     if (!entitlement) return { ok: false as const, error: "No entitlement record exists for this e-book." };
     if (entitlement.status === "verified") return { ok: false as const, error: "Payment is already verified." };
+    const owner = utrOwner("ebook", `${student.id}:${quote.bookId}`);
+    const claim = await claimUtr(reference, "ebook", owner);
+    if (!claim.ok) return { ok: false as const, error: claim.error === "invalid" ? "Enter the UTR number." : "This UTR is already used for another payment." };
+    const previous = entitlement.transactionReference;
     const decision = decidePayment({
       enteredUtr: reference,
       extractedUtr: extracted.utr,
@@ -586,10 +611,31 @@ export async function submitEbookProof(studentId: string, transactionReference: 
       entitlement.verifiedAt = null;
       entitlement.verifiedBy = null;
     }
-    db.audit.push(event("student", "report-payment", student.id, decision.reason, null, { bookId: quote.bookId, amountInr: quote.amountInr, extracted: extracted.utr }));
-    await mkdir(path.join(portalDataDir(), "proofs"), { recursive: true });
-    await writeFile(path.join(portalDataDir(), "proofs", `${studentId}-${quote.bookId}.${ext}`), proof);
+    db.audit.push(event("student", "report-payment", student.id, decision.reason, null, { bookId: quote.bookId, amountInr: quote.amountInr, extracted: extracted.utr, bankResult: decision.bankResult }));
+    const proofDir = path.join(portalDataDir(), "proofs");
+    await mkdir(proofDir, { recursive: true, mode: 0o700 });
+    await writeFile(path.join(proofDir, `${studentId}-${quote.bookId}.${ext}`), proof, { mode: 0o600 });
+    await writeFile(path.join(proofDir, `${studentId}-${quote.bookId}.json`), JSON.stringify({
+      enteredUtr: reference,
+      extractedUtr: extracted.utr,
+      bankResult: decision.bankResult,
+      reviewReason: decision.reason,
+      approvalMethod: decision.approvalMethod,
+      amountInr: quote.amountInr,
+      reportedAt: entitlement.reportedAt,
+      ext,
+      status: entitlement.status,
+    }), { mode: 0o600 });
     await writeDb(db);
+    if (previous && utrKey(previous) !== needle) await releaseUtr(previous, owner).catch(() => undefined);
+    await noteUtr(reference, owner, {
+      extractedUtr: extracted.utr,
+      bankResult: decision.bankResult,
+      reviewReason: decision.reason,
+      proofExt: ext,
+      amountDue: quote.amountInr,
+      paymentStatus: entitlement.status === "verified" ? "confirmed" : "reported",
+    }).catch(() => undefined);
     return { ok: true as const, verified: decision.outcome === "automatic" };
   });
 }
@@ -928,10 +974,53 @@ export type InventoryRow = {
   publicationStatus: PublicationStatus;
 };
 
+export type EbookPaymentReview = {
+  bookId: string;
+  status: PaymentState;
+  amountInr: number;
+  enteredUtr?: string | null;
+  extractedUtr?: string | null;
+  bankResult?: string | null;
+  reviewReason?: string | null;
+  reportedAt?: string | null;
+  approvalMethod?: string | null;
+  proof?: boolean;
+};
+
+async function ebookReviewFile(studentId: string, bookId: string): Promise<EbookPaymentReview | null> {
+  try {
+    const parsed = JSON.parse(await readFile(path.join(portalDataDir(), "proofs", `${studentId}-${bookId}.json`), "utf8")) as EbookPaymentReview;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export async function readEbookProof(studentId: string, bookId: string): Promise<{ bytes: Buffer; filename: string; contentType: string } | null> {
+  if (!/^[A-Za-z0-9-]{8,80}$/.test(studentId) || !/^[a-z0-9-]{3,40}$/.test(bookId)) return null;
+  const types = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" } as const;
+  if (portalPersistence() === "remote") {
+    for (const ext of ["jpg", "png", "webp"] as const) {
+      const bytes = await readPrivateProof(`ebook/${studentId}/${bookId}.${ext}`);
+      if (bytes) return { bytes, filename: `tejas-ebook-proof-${bookId}.${ext}`, contentType: types[ext] };
+    }
+    return null;
+  }
+  for (const candidate of ["jpg", "png", "webp"] as const) {
+    try {
+      const bytes = await readFile(path.join(portalDataDir(), "proofs", `${studentId}-${bookId}.${candidate}`));
+      return { bytes, filename: `tejas-ebook-proof-${bookId}.${candidate}`, contentType: types[candidate] };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 export async function staffOverview(): Promise<{
   rows: InventoryRow[];
   flags: PortalCatalog["flags"];
-  students: (PublicStudent & { payment: { bookId: string; status: PaymentState; amountInr: number }[] })[];
+  students: (PublicStudent & { payment: EbookPaymentReview[] })[];
   audit: AuditEvent[];
 }> {
   if (portalPersistence() === "remote") {
@@ -974,10 +1063,24 @@ export async function staffOverview(): Promise<{
   return {
     rows,
     flags: catalog.flags,
-    students: db.students.map((student) => ({
+    students: await Promise.all(db.students.map(async (student) => ({
       ...toPublicStudent(student),
-      payment: db.entitlements.filter((item) => item.studentId === student.id).map((item) => ({ bookId: item.bookId, status: item.status, amountInr: item.amountInr })),
-    })),
+      payment: await Promise.all(db.entitlements.filter((item) => item.studentId === student.id).map(async (item) => {
+        const review = await ebookReviewFile(student.id, item.bookId);
+        return {
+          bookId: item.bookId,
+          status: item.status,
+          amountInr: item.amountInr,
+          enteredUtr: review?.enteredUtr ?? item.transactionReference,
+          extractedUtr: review?.extractedUtr ?? null,
+          bankResult: review?.bankResult ?? (item.transactionReference ? "unavailable" : null),
+          reviewReason: review?.reviewReason ?? item.note,
+          reportedAt: review?.reportedAt ?? item.reportedAt,
+          approvalMethod: review?.approvalMethod ?? null,
+          proof: Boolean(review),
+        };
+      })),
+    }))),
     audit: db.audit.slice().reverse(),
   };
 }

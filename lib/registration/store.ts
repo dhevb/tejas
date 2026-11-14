@@ -114,6 +114,9 @@ const NEXT_STEP: Record<PaymentStatus, string> = {
 
 function nextStepFor(record: RegistrationRecord): string {
   if ((record.payment.status === "pending_instructions" || record.payment.status === "awaiting_payment") && paymentProofsAccepted()) {
+    if (record.channel === "individual") {
+      return "This registration is saved. It is not a payment receipt. Transfer the full registration amount to the TEJAS Olympiad registration account, then upload the proof on this page. There is no school share. Uploading the proof does not confirm the payment. No confirmation email has been sent.";
+    }
     return "This registration is saved. It is not a payment receipt. Transfer the net amount payable to TEJAS to the official account, then upload the proof on this page. The school retains its share. Uploading the proof does not confirm the payment. No confirmation email has been sent.";
   }
   return NEXT_STEP[record.payment.status];

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { MAX_RECEIPT_BYTES } from "@/lib/registration/schema";
 
 const fieldClass = "mt-1 w-full rounded-xl border border-tejas-border bg-white px-3 py-2 text-sm";
 
@@ -16,7 +17,14 @@ export function PayForm() {
     setPending(true);
     setError("");
     setMessage("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const file = formElement.querySelector<HTMLInputElement>("input[name=receipt]")?.files?.[0];
+    if (file && file.size > MAX_RECEIPT_BYTES) {
+      setError("The screenshot is larger than 5 MB.");
+      setPending(false);
+      return;
+    }
+    const form = new FormData(formElement);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 25_000);
     try {

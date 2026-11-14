@@ -167,4 +167,14 @@ Documentation:
 
 ## Recommended next step
 
-Review this pull request. Do not treat it as live until it is deployed, and then read `/prepare/ebook` on Production to confirm the two Future Tech books are described as published. Sign in with an existing student only after that deploy if a reading check is required. This change set does not do that sign-in.
+Review this pull request. Do not treat it as live until it is deployed, and then read `/prepare/ebook` and `/learn` on Production to confirm the two Future Tech books are described as published. Sign in with an existing student only after that deploy if a reading check is required. This change set does not do that sign-in.
+
+## Second pass — 14 November 2026, afternoon IST
+
+The first pass left the beta form on formsubmit.co, a stale “unpublished” sentence on `/learn`, a school-form sentence saying student logins were unavailable, a public roadmap that still called registration “planned”, and four TypeScript errors. Those are corrected on this same branch. `docs/TEJAS_WEBSITE_QA_REPORT.md` records the rendered checks.
+
+`npm test`: 50 passed, 0 failed. `npx tsc --noEmit` exits 0. `npx next lint` and `npm run build` succeed, with the existing image warning in `TejasEmblem.tsx`. The countdown hook warning is gone.
+
+A local production server, after the rebuild, returned 200 for the public routes that were opened, 307 from `/olympiads/future-tech` to `/olympiads/technology` and from `/editions/apj-abdul-kalam` to `/editions/tejas-2026-27`, and 401 from `/api/register/schema-status` with no cookie. Chrome recorded no page errors on those routes. At 1440, 768, and 390 pixels, the homepage, English page, school form, student portal, and about page did not scroll horizontally. The header showed तेजस and OLYMPIAD.
+
+`/learn` and `/prepare/ebook` said the publication status could not be read, because this server has no Supabase connection. That is the intended fail-closed sentence. Production, read with GET only, still showed the pre-change pages. No form was submitted and no database row was written.

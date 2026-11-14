@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { PageHero } from "@/components/shared/PageHero";
+import { PublicationStatus } from "@/components/portal/PublicationStatus";
 import { createMetadata } from "@/config/seo";
 import { PORTAL_EBOOK_FEE_INR } from "@/lib/portal/model";
 import { formatInr } from "@/lib/registration/fee";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = createMetadata({
   title: "E-book and mock tests",
@@ -32,7 +35,10 @@ export default function LearnHomePage() {
           </article>
           <article className="rounded-3xl border border-tejas-border bg-white p-6 shadow-tejas">
             <h2 className="text-lg font-bold text-tejas-blue">Publication</h2>
-            <p className="mt-2 text-sm leading-relaxed text-tejas-muted">Future Tech Book 1 and Book 2 are loaded for review. They stay unpublished until the organisation approves them. English and Mathematics files have not been supplied.</p>
+            <div className="mt-2 text-sm leading-relaxed text-tejas-muted">
+              <PublicationStatus />
+              <p className="mt-3">English and Mathematics e-book files have not been supplied.</p>
+            </div>
           </article>
         </div>
         <p className="mx-auto mt-8 max-w-5xl px-4 text-sm text-tejas-muted sm:px-6">

@@ -123,12 +123,12 @@ export const sanskritOlympiad = createComingSoonOlympiad({
   name: ls("Sanskrit", "संस्कृत"),
   tagline: ls("Classical language and Bharatiya knowledge traditions", "शास्त्रीय भाषा और भारतीय ज्ञान परंपराएँ"),
   description: ls(
-    "DHE Sanskriti Olympiad — connecting students to Sanskrit grammar, shlokas, and Indian Knowledge Systems.",
-    "DHE Sanskriti Olympiad — संस्कृत व्याकरण, श्लोक और IKS से जुड़ाव।"
+    "Sanskrit is listed as coming soon. No launch date has been published, and it is not open for TEJAS Olympiad 2026–27.",
+    "संस्कृत अभी आने वाली है। आरम्भ की तारीख प्रकाशित नहीं है और यह TEJAS ओलंपियाड 2026–27 में खुला नहीं है।"
   ),
   whySubject: ls(
-    "Sanskrit is the gateway to Bharat's ancient wisdom. DHE plans Sanskriti Olympiad as part of TEJAS expansion.",
-    "संस्कृत प्राचीन ज्ञान का द्वार है। DHE Sanskriti Olympiad की योजना।"
+    "A Sanskrit Olympiad is not part of the current TEJAS examination cycle.",
+    "संस्कृत ओलंपियाड वर्तमान TEJAS परीक्षा चक्र का भाग नहीं है।"
   ),
   icon: "scroll",
   color: "#8A5A10",

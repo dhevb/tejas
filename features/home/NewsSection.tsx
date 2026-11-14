@@ -1,6 +1,7 @@
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { newsItems } from "@/data/news";
+import { formatDisplayDate } from "@/lib/format-date";
 import { Badge } from "@/components/ui/badge";
 
 export function NewsSection() {
@@ -21,11 +22,7 @@ export function NewsSection() {
                 <div className="flex items-center justify-between gap-4">
                   <Badge variant="outline">{item.category}</Badge>
                   <time dateTime={item.date} className="text-xs text-tejas-muted">
-                    {new Date(item.date).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {formatDisplayDate(item.date)}
                   </time>
                 </div>
                 <h3 className="mt-4 text-lg font-bold text-tejas-ink">{item.title}</h3>

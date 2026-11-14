@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     return [
       // Old bookmarks only. The APJ Abdul Kalam label is not an edition and is not rendered.
       { source: "/editions/apj-abdul-kalam", destination: "/editions/tejas-2026-27", permanent: false },
+      { source: "/olympiads/future-tech", destination: "/olympiads/technology", permanent: false },
       { source: "/editions/savitribai-phule", destination: "/editions", permanent: false },
       { source: "/editions/srinivasa-ramanujan", destination: "/editions", permanent: false },
       { source: "/editions/kalpana-chawla", destination: "/editions", permanent: false },

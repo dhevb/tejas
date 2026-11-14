@@ -36,6 +36,12 @@ process.env.TEJAS_PORTAL_DATA_DIR = mkdtempSync(path.join(tmpdir(), "tejas-porta
 process.env.TEJAS_PORTAL_SECRET = "portal-test-secret-value";
 process.env.TEJAS_PORTAL_STORE = "file";
 
+/** Next.js types mark NODE_ENV readonly. The property remains writable at runtime. */
+function assignNodeEnv(value: string | undefined) {
+  if (value === undefined) Reflect.deleteProperty(process.env, "NODE_ENV");
+  else Reflect.set(process.env, "NODE_ENV", value);
+}
+
 const baseStudent = {
   fullName: "Asha Rao",
   parentName: "Meera Rao",
@@ -423,7 +429,7 @@ test("a hosted session uses one shared key and does not invent a file secret", a
     process.env.TEJAS_ADMIN_TOKEN = "another-staff-token-16";
     assert.equal(await openSession(sealed), null);
     delete process.env.TEJAS_ADMIN_TOKEN;
-    process.env.NODE_ENV = "production";
+    assignNodeEnv("production");
     process.env.VERCEL = "1";
     assert.equal(sessionKey(), null);
     await assert.rejects(() => sealSession(studentId, 1), /Student session secret is not configured/);
@@ -431,7 +437,7 @@ test("a hosted session uses one shared key and does not invent a file secret", a
     process.env.TEJAS_PORTAL_SECRET = previousSecret;
     if (previousAdmin === undefined) delete process.env.TEJAS_ADMIN_TOKEN;
     else process.env.TEJAS_ADMIN_TOKEN = previousAdmin;
-    process.env.NODE_ENV = previousNode;
+    assignNodeEnv(previousNode);
     if (previousVercel === undefined) delete process.env.VERCEL;
     else process.env.VERCEL = previousVercel;
   }
@@ -478,7 +484,7 @@ test("sign-up and sign-in set one session and surface failures", async () => {
   const previousNode = process.env.NODE_ENV;
   delete process.env.TEJAS_PORTAL_SECRET;
   delete process.env.TEJAS_ADMIN_TOKEN;
-  process.env.NODE_ENV = "production";
+  assignNodeEnv("production");
   try {
     const failed = await loginPost(learnRequest("/api/learn/login", { email: "nila@example.test", password: baseStudent.password }));
     assert.equal(failed.status, 503);
@@ -489,7 +495,7 @@ test("sign-up and sign-in set one session and surface failures", async () => {
     process.env.TEJAS_PORTAL_SECRET = previousSecret;
     if (previousAdmin === undefined) delete process.env.TEJAS_ADMIN_TOKEN;
     else process.env.TEJAS_ADMIN_TOKEN = previousAdmin;
-    process.env.NODE_ENV = previousNode;
+    assignNodeEnv(previousNode);
   }
 });
 

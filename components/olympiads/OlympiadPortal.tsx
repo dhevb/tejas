@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n/context";
 import type { OlympiadPortalContent } from "@/content/types";
 import { StickySubNav } from "@/components/shared/StickySubNav";
 import { Countdown } from "@/components/shared/Countdown";
+import { formatDisplayDate } from "@/lib/format-date";
 import { CertificatePreview } from "@/components/shared/CertificatePreview";
 import { ResourceCard } from "@/components/shared/ResourceCard";
 import { FAQAccordion } from "@/components/ui/accordion";
@@ -324,7 +325,7 @@ export function OlympiadPortal({ olympiad }: Props) {
                   <div>
                     <p className="font-medium text-tejas-ink">{t(event.label)}</p>
                     <p className="text-sm text-tejas-muted">
-                      {new Date(event.date).toLocaleDateString("en-IN", { dateStyle: "long" })}
+                      {formatDisplayDate(event.date)}
                     </p>
                   </div>
                   <Badge variant={event.status === "completed" ? "outline" : event.status === "upcoming" ? "success" : "gold"}>

@@ -652,3 +652,29 @@ Still unresolved, and not marked as working:
 - A phone-width check was completed for the header at 390px. Every other route was not opened at mobile width.
 - `features/home/FutureModulesSection.tsx` is still unused and its data still contains `href: "#"`. It is not mounted.
 - Numeric exam-pattern objects remain in the Olympiad content files and are not rendered.
+
+## Further correction — 14 November 2026, afternoon IST
+
+A second pass on the same branch corrected the items that were still safe to change. The evidence is in `docs/TEJAS_WEBSITE_QA_REPORT.md`. Production was still serving the earlier pages at the time of a read-only comparison: `/prepare` contained “65%”, `/olympiads/english` contained “2.0”, and `/learn` said the Future Tech books stay unpublished. This branch was not deployed.
+
+Corrected and checked on a local production server:
+
+- `/learn` reads the same publication summary as `/prepare/ebook`. With no database configured, both say the status could not be read.
+- `/beta` no longer posts to formsubmit.co. It tells the visitor to write to tejas@dhe.org.in.
+- `/contact` no longer says “Phase 0” or “Coming Soon” on the send button. The form still does not send mail.
+- Search is disabled and its label says “Search is not available”.
+- The unused roadmap data no longer uses `href: "#"`. The section stays unmounted.
+- `/about` no longer lists authentication and registration as planned, and it no longer links to a GitHub document in another account.
+- `/olympiads/future-tech` redirects to `/olympiads/technology`.
+- The Sanskrit page no longer uses the name “DHE Sanskriti Olympiad”.
+- Olympiad pages no longer hydrate a countdown or a locale-dependent date. The previous-editions page no longer nests one link inside another.
+- `npx tsc --noEmit` completes with no errors. The four `NODE_ENV` assignments use `Reflect.set`, which matches the writable runtime property.
+
+Still not a working feature, and not marked fixed:
+
+- The contact form and the beta page do not deliver a message. A mail transport has not been supplied.
+- Search has no index.
+- English and Mathematics files, videos, and the 2025 brief-report PDF are still not attached.
+- Future named editions stay unlisted.
+- Empty galleries stay empty.
+- The 12 Production publication rows were not counted again in this pass. No Production row was written.

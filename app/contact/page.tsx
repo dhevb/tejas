@@ -56,7 +56,7 @@ export default function ContactPage() {
             <FadeIn delay={0.1}>
               <form className="rounded-2xl border border-stone-200 bg-white p-8 shadow-tejas space-y-4">
                 <h2 className="text-xl font-bold text-tejas-ink">Send a Message</h2>
-                <p className="text-sm text-tejas-muted">Form submission is disabled in Phase 0.</p>
+                <p className="text-sm text-tejas-muted">This form does not send a message. Write to <a className="font-semibold text-tejas-blue underline" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a>.</p>
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-tejas-ink">Name</label>
                   <input id="name" type="text" disabled className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2 opacity-60" />
@@ -70,7 +70,7 @@ export default function ContactPage() {
                   <textarea id="message" rows={4} disabled className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2 opacity-60" />
                 </div>
                 <button type="button" disabled className="w-full rounded-xl bg-tejas-saffron/50 py-3 text-white font-medium cursor-not-allowed">
-                  Send Message — Coming Soon
+                  Send is unavailable
                 </button>
               </form>
             </FadeIn>

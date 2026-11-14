@@ -8,6 +8,7 @@ import * as XLSX from "xlsx";
 import { adminConfigured, createSessionValue, sessionIsValid, tokenMatches } from "@/lib/registration/auth";
 import { BOOK_PRICE, BOOK_SCHOOL_SHARE, BOOK_TEJAS, calculateFee, EBOOK_FEE, EBOOK_SALE_OPEN, FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, ONLINE_EXAM_APPROVED, presentFee, SCHOOL_SHARE_APPROVED } from "@/lib/registration/fee";
 import { currentCycle } from "@/content/current-cycle";
+import { formatDisplayDate } from "@/lib/format-date";
 import { maskPan, parseIndianMobile, parsePan, validateDob } from "@/lib/registration/fields";
 import { OFFICIAL_BANK, officialPublicPayment } from "@/lib/registration/official-bank";
 import { durableStorageConfigured, paymentProofsAccepted, serverKeyName } from "@/lib/registration/durable";
@@ -934,4 +935,35 @@ test("schema status requires a staff session and does not describe the database 
   } finally {
     delete process.env.TEJAS_ADMIN_TOKEN;
   }
+});
+
+test("public pages do not post feedback to a third party or keep a bare hash link", () => {
+  const hits: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === ".next") continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(ts|tsx)$/.test(entry.name)) {
+        const source = readFileSync(full, "utf8");
+        if (source.includes("formsubmit.co") || source.includes('href: "#"') || source.includes('href="#"') || source.includes("DHE Sanskriti")) hits.push(full);
+      }
+    }
+  };
+  for (const root of ["app", "components", "config", "content", "features"]) walk(root);
+  assert.deepEqual(hits, []);
+  const school = readFileSync("app/schools/register/school-registration-form.tsx", "utf8");
+  const learn = readFileSync("app/learn/page.tsx", "utf8");
+  const contact = readFileSync("app/contact/page.tsx", "utf8");
+  const search = readFileSync("components/shared/SearchBox.tsx", "utf8");
+  assert.equal(school.includes("student logins are not available"), false);
+  assert.equal(learn.includes("stay unpublished"), false);
+  assert.equal(learn.includes("PublicationStatus"), true);
+  assert.equal(contact.includes("Phase 0"), false);
+  assert.equal(contact.includes("does not send a message"), true);
+  assert.match(search, /Search is not available/);
+  assert.match(readFileSync("next.config.ts", "utf8"), /\/olympiads\/future-tech/);
+  assert.equal(readFileSync("app/beta/page.tsx", "utf8").includes("does not send a form"), true);
+  assert.equal(formatDisplayDate("2026-12-10"), "10 December 2026");
+  assert.equal(formatDisplayDate("2025-10-13"), "13 October 2025");
 });

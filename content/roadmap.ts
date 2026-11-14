@@ -6,14 +6,11 @@ export interface RoadmapPhase {
   status: PhaseStatus;
 }
 
+/** Public status of this website. These rows are not an internal delivery plan. */
 export const tejasRoadmap: RoadmapPhase[] = [
-  { phase: "Phase 0", focus: "Foundation & Branding", status: "complete" },
-  { phase: "Phase 1", focus: "Premium UI/UX", status: "complete" },
-  { phase: "Phase 2", focus: "Content & Information Architecture", status: "complete" },
-  { phase: "Phase 2.5", focus: "Launch Readiness & Product Polish", status: "current" },
-  { phase: "Phase 3", focus: "Authentication & User Management", status: "planned" },
-  { phase: "Phase 4", focus: "Registration, Payments & Exam Engine", status: "planned" },
-  { phase: "Phase 5", focus: "Results, Certificates & Rankings", status: "planned" },
-  { phase: "Phase 6", focus: "AI Mentor & Analytics", status: "planned" },
-  { phase: "Phase 7", focus: "Mobile Apps & National Expansion", status: "planned" },
+  { phase: "School registration", focus: "Open on this website for TEJAS Olympiad 2026–27.", status: "complete" },
+  { phase: "Student portal", focus: "Accounts, and Future Tech e-books with their mock tests after publication and a verified ₹49 payment.", status: "complete" },
+  { phase: "Olympiad examination", focus: "Offline examinations on 9, 10 and 11 December 2026. This website is not the examination hall.", status: "current" },
+  { phase: "2026–27 results", focus: "A declaration date has not been fixed.", status: "planned" },
+  { phase: "Search, contact form, and mobile app", focus: "Not built. They are not offered as working features.", status: "planned" },
 ];

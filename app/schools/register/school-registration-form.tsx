@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Building2, FileSpreadsheet, Layers, Receipt, Send, UserRound, Users } from "lucide-react";
-import { OFFICIAL_BANK } from "@/lib/registration/official-bank";
+import { Building2, FileSpreadsheet, Layers, Receipt, Send, UserRound, Users } from "lucide-react";
+import { REGISTRATION_BANK } from "@/lib/registration/official-bank";
 import { STUDENT_COLUMNS } from "@/lib/registration/schema";
+import { interpretRegistrationReply, readRegistrationReply, registrationTransportMessage, REGISTRATION_REQUEST_MS } from "@/lib/registration/submit-client";
 
 type Fee = {
   studentStreamRegistrations: number;
@@ -107,13 +108,8 @@ function Section({
 export function SchoolRegistrationForm() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const idempotencyKey = useMemo(() => {
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-  }, []);
+  const idempotencyKey = useRef<string | null>(null);
   const [previous, setPrevious] = useState("no");
-  const [books, setBooks] = useState("no");
   const [sheetName, setSheetName] = useState("");
   const [feeStale, setFeeStale] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -122,6 +118,29 @@ export function SchoolRegistrationForm() {
   const [busy, setBusy] = useState<"preview" | "submit" | null>(null);
   const [payment, setPayment] = useState<PublicPayment | null>(null);
   const [copied, setCopied] = useState("");
+  const [confirmed, setConfirmed] = useState("");
+
+  function submissionKey(): string {
+    if (idempotencyKey.current) return idempotencyKey.current;
+    const fresh = () => {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    };
+    let key = "";
+    try {
+      const saved = sessionStorage.getItem("tejas-school-registration-idempotency");
+      if (saved && /^[a-f0-9]{32}$/.test(saved)) key = saved;
+      else {
+        key = fresh();
+        sessionStorage.setItem("tejas-school-registration-idempotency", key);
+      }
+    } catch {
+      key = fresh();
+    }
+    idempotencyKey.current = key;
+    return key;
+  }
 
   useEffect(() => {
     let active = true;
@@ -147,56 +166,89 @@ export function SchoolRegistrationForm() {
     }
   }
 
-  function markFeeStale() {
-    setFeeStale(true);
-  }
-
   async function checkSheet(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     setBusy("preview");
     setFormErrors([]);
     setFieldErrors({});
-    const response = await fetch("/api/register/preview", { method: "POST", body: data });
-    const body = (await response.json()) as Preview;
-    setPreview(body);
-    setFormErrors(body.formErrors ?? []);
-    setFeeStale(false);
-    setBusy(null);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REGISTRATION_REQUEST_MS);
+    try {
+      const response = await fetch("/api/register/preview", { method: "POST", body: data, signal: controller.signal });
+      const body = await readRegistrationReply(response) as Preview | null;
+      if (!body) {
+        setFormErrors([registrationTransportMessage("unreachable")]);
+        return;
+      }
+      setPreview(body);
+      setFormErrors(body.formErrors ?? []);
+      setFeeStale(false);
+    } catch (error) {
+      const timedOut = error instanceof DOMException && error.name === "AbortError";
+      setFormErrors([registrationTransportMessage(timedOut ? "timeout" : "unreachable")]);
+    } finally {
+      clearTimeout(timer);
+      setBusy(null);
+    }
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
+    if (confirmed) {
+      router.push(`/schools/register/confirmation/${confirmed}`);
+      return;
+    }
     const form = event.currentTarget;
     const data = new FormData(form);
     setBusy("submit");
     setFormErrors([]);
     setFieldErrors({});
-    const response = await fetch("/api/register/submit", {
-      method: "POST",
-      body: data,
-      headers: { "x-idempotency-key": idempotencyKey },
-    });
-    const body = (await response.json()) as {
-      ok?: boolean;
-      formErrors?: string[];
-      fieldErrors?: Record<string, string>;
-      rowErrors?: { row: number; messages: string[] }[];
-      registration?: { reference: string };
-    };
-    setBusy(null);
-    if (body.ok && body.registration) {
-      router.push(`/schools/register/confirmation/${body.registration.reference}`);
-      return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REGISTRATION_REQUEST_MS);
+    try {
+      const response = await fetch("/api/register/submit", {
+        method: "POST",
+        body: data,
+        headers: { "x-idempotency-key": submissionKey() },
+        signal: controller.signal,
+      });
+      const outcome = interpretRegistrationReply(await readRegistrationReply(response));
+      if (outcome.state === "confirmed") {
+        setConfirmed(outcome.reference);
+        router.push(`/schools/register/confirmation/${outcome.reference}`);
+        return;
+      }
+      setFormErrors(outcome.formErrors);
+      setFieldErrors(outcome.fieldErrors);
+      if (outcome.rowErrors.length) setPreview((current) => ({ ...(current ?? { ok: false }), rowErrors: outcome.rowErrors }));
+    } catch (error) {
+      const timedOut = error instanceof DOMException && error.name === "AbortError";
+      setFormErrors([registrationTransportMessage(timedOut ? "timeout" : "unreachable")]);
+    } finally {
+      clearTimeout(timer);
+      setBusy(null);
     }
-    setFormErrors(body.formErrors ?? []);
-    setFieldErrors(body.fieldErrors ?? {});
-    if (body.rowErrors?.length) setPreview((current) => ({ ...(current ?? { ok: false }), rowErrors: body.rowErrors }));
   }
 
   const fee = feeStale ? undefined : preview?.fee;
   const sheetReady = Boolean(preview?.students?.length) && !preview?.rowErrors?.length && !preview?.formErrors?.length;
+
+  if (confirmed) {
+    return (
+      <section className="rounded-3xl border border-tejas-border bg-white px-5 py-6 shadow-sm sm:px-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-tejas-saffron">Registration received</p>
+        <h2 className="mt-2 break-all text-2xl font-bold text-tejas-blue">{confirmed}</h2>
+        <p className="mt-3 text-sm leading-relaxed text-tejas-ink">The server saved this school registration. Keep the reference. Opening the confirmation again does not create a second registration.</p>
+        <Link href={`/schools/register/confirmation/${confirmed}`} className="mt-5 inline-flex min-h-11 items-center font-semibold text-tejas-blue underline">
+          Open the confirmation
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <form className="space-y-6" onSubmit={submit}>
@@ -377,50 +429,13 @@ export function SchoolRegistrationForm() {
               <p className="font-semibold text-tejas-blue">{name}</p>
               <p className="mt-1 text-sm text-tejas-muted">{date}</p>
               <p className="mt-1 text-sm text-tejas-muted">{classes}</p>
-              <p className="mt-2 text-sm text-tejas-ink">₹150 collected · ₹120 to TEJAS</p>
+              <p className="mt-2 text-sm text-tejas-ink">₹150 collected · ₹30 kept by the school · ₹120 to TEJAS</p>
             </li>
           ))}
         </ul>
       </Section>
 
-      <Section step="06 · Printed books" title="Printed preparation books" icon={BookOpen} hint="Optional. A school can take part without ordering books. ₹170 per printed copy: the school retains ₹34 and remits ₹136. This form does not charge the ₹49 e-book.">
-        <label className="block text-sm">
-          <span className="font-medium text-tejas-ink">Printed preparation books <span className="text-tejas-saffron">*</span></span>
-          <select
-            name="printedBooks"
-            value={books}
-            onChange={(event) => {
-              setBooks(event.target.value);
-              markFeeStale();
-            }}
-            className={controlClass}
-          >
-            <option value="no">No, the school does not want printed books</option>
-            <option value="yes">Yes, the school wants printed books</option>
-          </select>
-        </label>
-        {books === "yes" ? (
-          <label className="block text-sm">
-            <span className="font-medium text-tejas-ink">Number of printed books <span className="text-tejas-saffron">*</span></span>
-            <span className="mt-0.5 block text-xs text-tejas-muted">There is no class-wise book list. Enter the number of copies the school wants.</span>
-            <input
-              name="bookQuantity"
-              type="number"
-              required
-              min={1}
-              className={controlClass}
-              onChange={markFeeStale}
-            />
-            {fieldErrors.bookQuantity ? <span className="mt-1 block text-sm text-red-700">{fieldErrors.bookQuantity}</span> : null}
-          </label>
-        ) : (
-          <input type="hidden" name="bookQuantity" value="0" />
-        )}
-        <input type="hidden" name="ebookAccess" value="no" />
-        <p className="text-sm text-tejas-muted">This form does not create a student login and does not charge ₹49. Future Tech e-books and mock tests are a separate student portal. English and Mathematics files have not been supplied. Printed-book dispatch is not recorded here. <Link href="/prepare/ebook" className="font-semibold text-tejas-blue underline">Current publication status</Link>.</p>
-      </Section>
-
-      <Section step="07 · Fee" title="Registration fee summary" icon={Receipt} hint="The school collects the gross amount, retains its share, and transfers the net amount to TEJAS. The server calculates that net amount. A figure typed in the browser is not used.">
+      <Section step="06 · Fee" title="Registration fee summary" icon={Receipt} hint="The school collects ₹150 for each student-stream, retains ₹30, and transfers ₹120 to TEJAS. The server calculates that amount. This form does not order printed books or charge the ₹49 e-book.">
         <div className="overflow-x-auto rounded-xl border border-tejas-border">
           <table className="min-w-full text-left text-sm">
             <caption className="sr-only">Published fee shares</caption>
@@ -439,12 +454,6 @@ export function SchoolRegistrationForm() {
                 <td className="px-4 py-3">₹30</td>
                 <td className="px-4 py-3 font-semibold">₹120</td>
               </tr>
-              <tr className="border-t border-tejas-border">
-                <th className="px-4 py-3 font-medium text-tejas-ink">Printed book</th>
-                <td className="px-4 py-3">₹170 per copy</td>
-                <td className="px-4 py-3">₹34</td>
-                <td className="px-4 py-3 font-semibold">₹136</td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -455,11 +464,6 @@ export function SchoolRegistrationForm() {
               ["Total registration fee collected", inr.format(fee.totalStudentFees)],
               ["School's registration share", inr.format(fee.registrationSchoolShare ?? 0)],
               ["Registration amount payable to TEJAS", inr.format(fee.registrationPayable ?? fee.payableToTejas)],
-              ["Total printed book amount", inr.format(fee.printedBookAmount ?? 0)],
-              ["School's book share", inr.format(fee.bookSchoolShare ?? 0)],
-              ["Book amount payable to TEJAS", inr.format(fee.bookPayable ?? 0)],
-              ["Combined gross amount", inr.format(fee.grossTotal ?? 0)],
-              ["Combined school share", inr.format(fee.schoolShare)],
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
                 <dt>{label}</dt>
@@ -473,23 +477,20 @@ export function SchoolRegistrationForm() {
           </dl>
         ) : (
           <p className="rounded-xl border border-dashed border-tejas-border px-4 py-3 text-sm text-tejas-muted">
-            {feeStale
-              ? "The book choice changed. Check the sheet again so the server can recalculate the amount payable to TEJAS."
-              : "Check the student sheet to see this school's fee calculated on the server."}
+            {"Check the student sheet to see this school's registration fee calculated on the server."}
           </p>
         )}
-        <p className="text-sm text-tejas-muted">The school collects ₹150 for each student-stream and ₹170 for each printed book, retains ₹30 per student-stream and ₹34 per book, and transfers the remaining ₹120 per student-stream and ₹136 per book to the official TEJAS account. The school share stays with the school. It is not an additional payment. This form does not charge ₹49 for an e-book.</p>
+        <p className="text-sm text-tejas-muted">The school collects ₹150 for each student-stream, retains ₹30, and transfers ₹120 to the school-registration account. The school share stays with the school. It is not an additional payment. This form does not charge the ₹49 e-book and does not order printed books. <Link href="/prepare/ebook" className="font-semibold text-tejas-blue underline">E-book publication status</Link>.</p>
         <div className="rounded-xl border border-tejas-warning/30 bg-tejas-warning/10 p-4">
           <h3 className="text-base font-bold text-tejas-blue">{payment?.heading ?? "Official payment account"}</h3>
           <p className="mt-2 text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             {([
-              ["Account name", OFFICIAL_BANK.accountHolder, false],
-              ["Account number", OFFICIAL_BANK.accountNumber, true],
-              ["Bank", OFFICIAL_BANK.bankName, false],
-              ["Branch", OFFICIAL_BANK.branch, false],
-              ["IFSC", OFFICIAL_BANK.ifsc, true],
-              ["UPI ID", OFFICIAL_BANK.upiId, true],
+              ["Account holder's name", REGISTRATION_BANK.accountHolder, false],
+              ["Account number", REGISTRATION_BANK.accountNumber, true],
+              ["Bank", REGISTRATION_BANK.bankName, false],
+              ["Branch", REGISTRATION_BANK.branch, false],
+              ["IFSC code", REGISTRATION_BANK.ifsc, true],
             ] as const).map(([label, value, canCopy]) => (
               <div key={label} className="rounded-xl bg-white p-3">
                 <dt className="text-xs text-tejas-muted">{label}</dt>
@@ -504,13 +505,13 @@ export function SchoolRegistrationForm() {
           </dl>
           <p className="mt-3 text-sm text-tejas-muted">
             {payment?.proofsAccepted
-              ? "Submit the registration first. The confirmation page then accepts a JPG, PNG, or PDF proof for this reference. Uploading the proof does not verify the payment. There is no payment link and no QR code."
-              : "Do not attach a receipt on this form. There is no payment link and no QR code."}
+              ? "Submit the registration first. The confirmation page then accepts a JPG, PNG, or PDF proof for this reference. Uploading the proof does not verify the payment."
+              : "Do not attach a receipt on this form."}
           </p>
         </div>
       </Section>
 
-      <Section step="08 · Submit" title="Final submission" icon={Send} hint="Submit once. A repeated submission with the same browser session does not create a second registration.">
+      <Section step="07 · Submit" title="Final submission" icon={Send} hint="Submit once. If the request times out, stay on this page and try again. A repeat uses the same submission and does not create a second registration.">
         {formErrors.map((error) => (
           <p key={error} className="text-sm text-red-700">{error}</p>
         ))}

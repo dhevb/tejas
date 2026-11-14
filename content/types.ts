@@ -174,9 +174,7 @@ export type ResourceCategory =
   | "teacher"
   | "parent"
   | "school"
-  | "downloads"
-  | "research"
-  | "bal-shodh";
+  | "downloads";
 
 export interface ResourceItem {
   id: string;

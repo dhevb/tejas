@@ -37,19 +37,11 @@ export const resourceRegistry: ResourceItem[] = [
   {
     id: "dl-eng-2025",
     title: ls("1st DHE English Olympiad — edition archive", "प्रथम DHE English Olympiad संग्रह"),
-    description: ls("Historical record of the 13–16 October 2025 examination. The brief-report PDF is not attached on this website.", "13–16 अक्टूबर 2025 का ऐतिहासिक रिकॉर्ड। रिपोर्ट की PDF यहाँ संलग्न नहीं है।"),
+    description: ls("Historical names from the 13–16 October 2025 examination. The brief-report PDF is not attached on this website.", "13–16 अक्टूबर 2025 के ऐतिहासिक नाम। रिपोर्ट की PDF यहाँ संलग्न नहीं है।"),
     category: "downloads",
     subject: "English",
     type: "article",
-    href: "/editions/dhe-english-2025",
-  },
-  {
-    id: "bsp-guide",
-    title: ls("Shiksha Mahakumbh", "शिक्षा महाकुंभ"),
-    description: ls("The Shiksha Mahakumbh website. A Bal Shodh Patrika submission file is not hosted here.", "शिक्षा महाकुंभ की वेबसाइट। बाल शोध पत्रिका की फाइल यहाँ नहीं है।"),
-    category: "bal-shodh",
-    type: "article",
-    href: "https://www.shikshamahakumbh.com",
+    href: "/hall-of-fame",
   },
 ];
 
@@ -64,8 +56,6 @@ export const resourceCategories = [
   { id: "parent", label: ls("Parent Guide", "अभिभावक गाइड"), icon: "users" },
   { id: "school", label: ls("School Resources", "विद्यालय संसाधन"), icon: "school" },
   { id: "downloads", label: ls("Downloads", "डाउनलोड"), icon: "download" },
-  { id: "research", label: ls("Research Papers", "शोध पत्र"), icon: "microscope" },
-  { id: "bal-shodh", label: ls("Bal Shodh Patrika", "बाल शोध पत्रिका"), icon: "book-open" },
 ] as const;
 
 export function getResourcesByCategory(category: string) {

@@ -382,11 +382,13 @@ export async function insertRegistration(record: RegistrationRecord, files: {
       history: record.payment.history ?? [],
     });
     created.paymentId = requiredId(paymentJson);
-    await insert("tejas_book_orders", {
-      registration_id: created.registrationId,
-      quantity: record.fee.printedBooks,
-      amount: record.fee.printedBookAmount,
-    }, "return=minimal");
+    if (record.fee.printedBooks > 0) {
+      await insert("tejas_book_orders", {
+        registration_id: created.registrationId,
+        quantity: record.fee.printedBooks,
+        amount: record.fee.printedBookAmount,
+      }, "return=minimal");
+    }
     await insert("tejas_ebook_access", {
       registration_id: created.registrationId,
       student_count: record.fee.ebookAccess,

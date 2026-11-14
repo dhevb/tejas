@@ -112,7 +112,7 @@ export function OlympiadPortal({ olympiad }: Props) {
         {isComingSoon && (
           <ComingSoonCard
             title={`${t(olympiad.name)} Olympiad`}
-            description="This stream is not part of TEJAS Olympiad 2026–27. The active streams are TEJAS English, TEJAS Mathematics, and TEJAS Future Tech."
+            description="This stream is not part of TEJAS Olympiad 2026–27. The active streams are TEJAS Mathematics, TEJAS English, and TEJAS Future Tech."
           />
         )}
 
@@ -400,7 +400,7 @@ export function OlympiadPortal({ olympiad }: Props) {
 
         <section id="register" className="scroll-mt-32 border-t border-stone-200 py-16 text-center">
           <h2 className="text-2xl font-bold text-tejas-ink">{isComingSoon ? "This stream is not open" : "Ready to Participate?"}</h2>
-          <p className="mt-2 text-tejas-muted">{isComingSoon ? "School registration for TEJAS Olympiad 2026–27 covers English, Mathematics, and Future Tech only." : "Register through your school via Olympiad Cell, DHE."}</p>
+          <p className="mt-2 text-tejas-muted">{isComingSoon ? "School registration for TEJAS Olympiad 2026–27 covers Mathematics, English, and Future Tech only." : "Register through your school via Olympiad Cell, DHE."}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             {isComingSoon ? <Button disabled>Coming Soon</Button> : (
               <Link href="/schools/register"><Button>Register a school</Button></Link>

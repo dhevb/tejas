@@ -65,7 +65,7 @@ export const scienceOlympiad = createComingSoonOlympiad({
     "विज्ञान ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "This page does not describe a Science examination. The open streams are English, Mathematics, and Future Tech.",
+    "This page does not describe a Science examination. The open streams are Mathematics, English, and Future Tech.",
     "यह पृष्ठ विज्ञान परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "flask",
@@ -82,7 +82,7 @@ export const hindiOlympiad = createComingSoonOlympiad({
     "हिंदी ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "This page does not describe a Hindi examination. The open streams are English, Mathematics, and Future Tech.",
+    "This page does not describe a Hindi examination. The open streams are Mathematics, English, and Future Tech.",
     "यह पृष्ठ हिंदी परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "languages",
@@ -99,7 +99,7 @@ export const sanskritOlympiad = createComingSoonOlympiad({
     "संस्कृत ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "This page does not describe a Sanskrit examination. The open streams are English, Mathematics, and Future Tech.",
+    "This page does not describe a Sanskrit examination. The open streams are Mathematics, English, and Future Tech.",
     "यह पृष्ठ संस्कृत परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "scroll",
@@ -116,7 +116,7 @@ export const generalKnowledgeOlympiad = createComingSoonOlympiad({
     "सामान्य ज्ञान ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "This page does not describe a General Knowledge examination. The open streams are English, Mathematics, and Future Tech.",
+    "This page does not describe a General Knowledge examination. The open streams are Mathematics, English, and Future Tech.",
     "यह पृष्ठ सामान्य ज्ञान परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "globe",
@@ -133,7 +133,7 @@ export const aiOlympiad = createComingSoonOlympiad({
     "कृत्रिम बुद्धिमत्ता ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "This page does not describe an AI examination. The open streams are English, Mathematics, and Future Tech.",
+    "This page does not describe an AI examination. The open streams are Mathematics, English, and Future Tech.",
     "यह पृष्ठ कृत्रिम बुद्धिमत्ता परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "brain",
@@ -150,7 +150,7 @@ export const codingOlympiad = createComingSoonOlympiad({
     "कोडिंग ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "This page does not describe a Coding examination. The open streams are English, Mathematics, and Future Tech.",
+    "This page does not describe a Coding examination. The open streams are Mathematics, English, and Future Tech.",
     "यह पृष्ठ कोडिंग परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "code",
@@ -167,7 +167,7 @@ export const innovationOlympiad = createComingSoonOlympiad({
     "नवाचार ओलंपियाड की घोषणा नहीं हुई है। कक्षा सीमा, पाठ्यक्रम या परीक्षा तिथि प्रकाशित नहीं हुई है।"
   ),
   whySubject: ls(
-    "This page does not describe an Innovation examination. The open streams are English, Mathematics, and Future Tech.",
+    "This page does not describe an Innovation examination. The open streams are Mathematics, English, and Future Tech.",
     "यह पृष्ठ नवाचार परीक्षा का विवरण नहीं है। खुली स्ट्रीम अंग्रेज़ी, गणित और फ्यूचर टेक हैं।"
   ),
   icon: "lightbulb",

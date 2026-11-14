@@ -33,8 +33,8 @@ export const mainNav: NavItem[] = [
         title: "Active Streams",
         titleHi: "सक्रिय streams",
         items: [
-          { label: "TEJAS English", labelHi: "अंग्रेज़ी", href: "/olympiads/english", description: "10 December 2026", badge: "Active" },
           { label: "TEJAS Mathematics", labelHi: "गणित", href: "/olympiads/mathematics", description: "9 December 2026", badge: "Active" },
+          { label: "TEJAS English", labelHi: "अंग्रेज़ी", href: "/olympiads/english", description: "10 December 2026", badge: "Active" },
           { label: "TEJAS Future Tech", labelHi: "फ्यूचर टेक", href: "/olympiads/technology", description: "11 December 2026", badge: "Active" },
         ],
       },
@@ -65,16 +65,6 @@ export const mainNav: NavItem[] = [
         ],
       },
     ],
-  },
-  {
-    label: "Research",
-    labelHi: "अनुसंधान",
-    href: "/research",
-  },
-  {
-    label: "Innovation",
-    labelHi: "नवाचार",
-    href: "/innovation",
   },
   {
     label: "Resources",
@@ -110,14 +100,13 @@ export const futureModules = [
 export const footerNav = {
   platform: [
     { label: "About TEJAS", href: "/about" },
-    { label: "Editions", href: "/editions" },
-    { label: "Roadmap", href: "/about#roadmap" },
-    { label: "Research", href: "/research" },
-    { label: "Innovation", href: "/innovation" },
+    { label: "Olympiads", href: "/olympiads" },
+    { label: "Schools", href: "/schools" },
+    { label: "Contact", href: "/contact" },
   ],
   olympiads: [
-    { label: "English", href: "/olympiads/english" },
     { label: "Mathematics", href: "/olympiads/mathematics" },
+    { label: "English", href: "/olympiads/english" },
     { label: "Future Tech", href: "/olympiads/technology" },
     { label: "School registration", href: "/schools/register" },
     { label: "All Olympiads", href: "/olympiads" },

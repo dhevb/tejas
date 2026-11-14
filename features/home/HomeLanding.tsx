@@ -19,21 +19,21 @@ import { faqItems } from "@/data/faq";
 
 const streams = [
   {
-    href: "/olympiads/english",
-    title: "TEJAS English",
-    image: "/home/stream-english.jpg",
-    alt: "Illustration of a student reading a book in an Indian classroom",
-    text: "Reading, vocabulary, grammar, and the confidence to express an idea clearly.",
-    when: "10 December 2026",
-    classes: "Classes III–X",
-  },
-  {
     href: "/olympiads/mathematics",
     title: "TEJAS Mathematics",
     image: "/home/stream-maths.jpg",
     alt: "Illustration of a student drawing a circle and triangle with a compass",
     text: "Number sense, geometry, patterns, and reasoning through a problem.",
     when: "9 December 2026",
+    classes: "Classes III–X",
+  },
+  {
+    href: "/olympiads/english",
+    title: "TEJAS English",
+    image: "/home/stream-english.jpg",
+    alt: "Illustration of a student reading a book in an Indian classroom",
+    text: "Reading, vocabulary, grammar, and the confidence to express an idea clearly.",
+    when: "10 December 2026",
     classes: "Classes III–X",
   },
   {
@@ -94,7 +94,7 @@ export function HomeLanding() {
               Discover your talent. Explore your potential. Build your future.
             </p>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-tejas-muted">
-              Talent Exploration for Junior Aspiring Scholars. English and Mathematics for Classes III–X, and Future Tech for Classes VI–X, organised by the Department of Holistic Education (DHE), VBITR, Kurukshetra.
+              Talent Exploration for Junior Aspiring Scholars. Mathematics and English for Classes III–X, and Future Tech for Classes VI–X, organised by the Department of Holistic Education (DHE), VBITR, Kurukshetra.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/olympiads">
@@ -133,8 +133,8 @@ export function HomeLanding() {
           <p className="mt-3 max-w-2xl text-tejas-muted">These figures are the published programme facts for 2026–27. A count of schools or students for this cycle has not been published.</p>
           <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              ["3", "Olympiad streams", "English, Mathematics, Future Tech"],
-              ["III–X", "English and Mathematics", "Future Tech is Classes VI–X"],
+              ["3", "Olympiad streams", "Mathematics, English, Future Tech"],
+              ["III–X", "Mathematics and English", "Future Tech is Classes VI–X"],
               ["₹150", "Registration fee", "School retains ₹30; ₹120 to TEJAS"],
               ["20 Nov", "Last registration day", "Opens 3 November 2026"],
             ].map(([value, label, note]) => (
@@ -280,7 +280,7 @@ export function HomeLanding() {
             <School className="h-7 w-7 text-tejas-saffron" aria-hidden />
             <h2 id="schools-heading" className="mt-3 text-3xl font-bold tracking-tight text-tejas-ink md:text-4xl">Schools register their students</h2>
             <p className="mt-4 text-tejas-muted leading-relaxed">
-              TEJAS is organised through schools. The coordinator uploads one student sheet and selects the streams. The school collects ₹150 for each student-stream, retains ₹30, and remits ₹120 to the published account. Printed books, when requested, are ₹170 each; the school retains ₹34 and remits ₹136. The school registration form does not charge the ₹49 e-book. That fee is paid in the student portal when a published book is selected.
+              TEJAS is organised through schools. The coordinator uploads one student sheet and selects the streams. The school collects ₹150 for each student-stream, retains ₹30, and remits ₹120 to the school-registration account. Printed books and the ₹49 e-book are separate payments. The school registration form does not charge either of them.
             </p>
             <p className="mt-3 text-sm text-tejas-muted">{currentCycle.administeredBy.en}.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -325,9 +325,8 @@ export function HomeLanding() {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 text-sm text-tejas-muted sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <p className="inline-flex items-center gap-2"><GraduationCap className="h-4 w-4 text-tejas-saffron" aria-hidden /> Also on TEJAS</p>
           <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="More TEJAS pages">
-            <Link href="/research" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Research</Link>
-            <Link href="/innovation" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Innovation</Link>
-            <Link href="/editions/tejas-2026-27" className="font-semibold text-tejas-blue hover:text-tejas-saffron">This edition</Link>
+            <Link href="/olympiads" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Olympiads</Link>
+            <Link href="/schools" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Schools</Link>
             <Link href="/about" className="font-semibold text-tejas-blue hover:text-tejas-saffron">About</Link>
             <Link href="/contact" className="font-semibold text-tejas-blue hover:text-tejas-saffron">Contact</Link>
           </nav>

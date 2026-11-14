@@ -2,31 +2,50 @@
 
 import { useState } from "react";
 
-const MODES = ["UPI", "NEFT", "IMPS", "RTGS", "Bank Transfer", "Cheque", "Other"] as const;
+const MODES = ["NEFT", "IMPS", "RTGS", "Bank Transfer", "Cheque", "Other"] as const;
+const REQUEST_MS = 25_000;
 
 const controlClass =
   "mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-base text-tejas-ink shadow-sm focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30";
 
 export function PaymentProofForm({ reference, amountDue }: { reference: string; amountDue: number }) {
-  const [mode, setMode] = useState<(typeof MODES)[number]>("UPI");
+  const [mode, setMode] = useState<(typeof MODES)[number]>("NEFT");
   const [message, setMessage] = useState("");
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
     setBusy(true);
     setMessage("");
     const body = new FormData(event.currentTarget);
-    const response = await fetch(`/api/register/${reference}/payment`, { method: "POST", body });
-    const payload = (await response.json()) as { ok?: boolean; formErrors?: string[]; registration?: { paymentLabel?: string } };
-    setBusy(false);
-    if (!response.ok || !payload.ok) {
-      setMessage(payload.formErrors?.join(" ") || "The payment proof was not saved. The payment was not verified.");
-      return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_MS);
+    try {
+      const response = await fetch(`/api/register/${reference}/payment`, { method: "POST", body, signal: controller.signal });
+      const text = await response.text();
+      let payload: { ok?: boolean; formErrors?: string[]; registration?: { paymentLabel?: string } } | null = null;
+      try {
+        payload = text ? JSON.parse(text) as { ok?: boolean; formErrors?: string[]; registration?: { paymentLabel?: string } } : null;
+      } catch {
+        payload = null;
+      }
+      if (!response.ok || !payload?.ok) {
+        setMessage(payload?.formErrors?.join(" ") || "The payment proof was not saved. The payment was not verified.");
+        return;
+      }
+      setDone(true);
+      setMessage(`${payload.registration?.paymentLabel ?? "Payment Submitted / Verification Pending"}. The file is private. It does not verify the payment.`);
+    } catch (error) {
+      const timedOut = error instanceof DOMException && error.name === "AbortError";
+      setMessage(timedOut
+        ? "The upload timed out. It may still be processing. Wait, then try again with the same reference. A second proof is not accepted once one is on file."
+        : "The payment proof could not be confirmed. Check the connection and try again. The payment was not marked as verified.");
+    } finally {
+      clearTimeout(timer);
+      setBusy(false);
     }
-    setDone(true);
-    setMessage(`${payload.registration?.paymentLabel ?? "Payment Submitted / Verification Pending"}. The file is private. It does not verify the payment.`);
   }
 
   if (done) return <p className="text-sm text-tejas-ink">{message}</p>;
@@ -54,7 +73,7 @@ export function PaymentProofForm({ reference, amountDue }: { reference: string; 
         <input name="payerName" required className={controlClass} />
       </label>
       <label className="block text-sm">
-        <span className="font-medium">{mode === "Cheque" ? "Cheque number" : mode === "UPI" ? "UPI transaction reference" : "UTR or bank reference"}</span>
+        <span className="font-medium">{mode === "Cheque" ? "Cheque number" : "UTR or bank reference"}</span>
         <input name="transactionReference" required className={controlClass} />
       </label>
       <label className="block text-sm">

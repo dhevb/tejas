@@ -31,8 +31,8 @@ export function WhatIsTejasSection() {
             <ul className="mt-6 space-y-2 text-sm text-tejas-muted">
               <li>• Olympiads &amp; national assessments</li>
               <li>• Learning resources &amp; mock tests</li>
-              <li>• Research &amp; Bal Shodh Patrika</li>
               <li>• Hall of Fame &amp; scholarships</li>
+              <li>• School registration</li>
             </ul>
             <Link href="/about" className="mt-8 inline-flex items-center gap-2 font-semibold text-tejas-saffron hover:underline">
               Learn the full story

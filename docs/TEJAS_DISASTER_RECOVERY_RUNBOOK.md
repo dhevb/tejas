@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Section AD, 18 November 2026, 5:22 AM IST, records the expected `supabase_vault` 0.3.1 relation inventory and closes P-04 only. P-12, P-14, P-15, P-18, and P-19 remain open.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. When this paragraph was written, the real TEJAS backup files remained **NOT TESTED**. Section T records the later checks. Read section W before running a command. Do not restore again into the database section T already filled.
 
@@ -2971,3 +2971,43 @@ P-03, P-08, P-21, and P-22 stay as recorded in sections Y and AA. They are not r
 - Vercel reported a completed deployment of merge commit `1d290e7dc344195ffb2690ab36148681fed0c25d`. That report is not proof that Supabase executed migrations.
 
 Full disaster recovery is not complete.
+
+## AD. Expected `supabase_vault` 0.3.1 relation inventory, 18 November 2026, 5:22 AM IST
+
+This subsection closes P-04 only. It does not rewrite sections A through AC. Sentences in those sections that leave P-04 open describe the state when they were written. P-12, P-14, P-15, P-18, and P-19 remain **OPEN**. P-03, P-08, P-21, and P-22 stay as recorded in sections Y and AA. Full disaster recovery is not complete.
+
+Writing this subsection did not connect to Production, change Supabase, change Storage, change Google Drive, execute migration SQL, or deploy.
+
+### Comparison with section U
+
+Section U records these observed relations and states that `vault.secrets` had 0 rows:
+
+| Kind | Name |
+| --- | --- |
+| Table | `vault.secrets` |
+| Index | `vault.secrets_pkey` |
+| Index | `vault.secrets_name_idx` |
+| View | `vault.decrypted_secrets` |
+
+Section U also records five `vault` functions, all members of `supabase_vault`: `_crypto_aead_det_decrypt`, `_crypto_aead_det_encrypt`, `_crypto_aead_det_noncegen`, `create_secret`, and `update_secret`. The installed extension version in that section is `0.3.1`.
+
+The later isolated check produced the same four relation names, the same zero row count, and the same five function names. No relation in section U is absent from the new check, and the new check adds no relation. There is no contradiction. P-04 is **CLOSED** on that match.
+
+### Expected inventory
+
+The expected `supabase_vault` 0.3.1 relation inventory is:
+
+| Kind | Name |
+| --- | --- |
+| Table | `vault.secrets` |
+| Index | `vault.secrets_pkey` |
+| Index | `vault.secrets_name_idx` |
+| View | `vault.decrypted_secrets` |
+
+The source is upstream tag `v0.3.1`, commit `6e0cd916242d922a646e4d611cc215e09dd429f4`. The installed SQL files match that commit byte for byte. The update from v0.3.0 to v0.3.1 contains no SQL change.
+
+A disposable PostgreSQL 17.12 server ran `CREATE EXTENSION supabase_vault` and returned exactly these four relations. `vault.secrets` had 0 rows. The five functions matched the section U record. The disposable server was then removed.
+
+This inventory comes from that isolated verification. No Production write was made, and no Production object was modified.
+
+P-04 does not close P-12, P-14, P-15, P-18, or P-19. Database recovery is not fully complete, and full disaster recovery is not complete.

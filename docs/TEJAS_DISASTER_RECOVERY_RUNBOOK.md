@@ -1,8 +1,8 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the current status.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status. Section W is the rule for the next operator.
 
-This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. The real TEJAS backup files remain **NOT TESTED**.
+This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. When this paragraph was written, the real TEJAS backup files remained **NOT TESTED**. Section T records the later checks. Read section W before running a command. Do not restore again into the database section T already filled.
 
 Read every step by its evidence label:
 
@@ -75,6 +75,8 @@ The 17 November 2026 audit found only this root folder in the authorized Drive l
 | Drive checksum status | Current verified inventory, 17 November 2026 |
 | Isolated restore | Passed on 15 November 2026, 6:23 AM IST. Not repeated on 17 November 2026. |
 
+Section T later measured a plaintext copy of 476,793 bytes, recomputed SHA-256 `408b10c3ef0e18bd4cde728afe529a780c7d2af7f83042c16c5faf9fe327e4b8`, and restored it into local database `tejas_restore_full_20261115` on port `5432`. The cells above that say the size was not retained, or that the plaintext digest and restore were not repeated, describe the inventory before that execution. Do not run `pg_restore` into that existing database.
+
 The verified Drive folder contains this one database file. The backup session also encrypted local companion files whose names ended in `.globals.sql.enc` and `.metadata.json.enc`, using the same passphrase variable. Those companions were not in the Drive folder on 17 November 2026. **OWNER/ADMIN CONFIRMATION REQUIRED** before relying on them: their full filenames and whether any copy still exists outside Drive were not in the verified inventory.
 
 ### Storage backup
@@ -90,6 +92,8 @@ The verified Drive folder contains this one database file. The backup session al
 | Encryption | age v1.3.2 (`filippo.io/age`), using the Age identity file, not a passphrase |
 | Drive checksum status | Current verified inventory, 17 November 2026 |
 | Inner file hash status | Historical verified procedure, 16 November 2026. Not repeated on 17 November 2026. |
+
+Section T later repeated the four file hashes on extracted copies and then removed those copies. The status cell above describes the inventory before that check. The check was not a Supabase Storage upload.
 
 The four files inside the archive, as hashed on 16 November 2026:
 
@@ -1063,11 +1067,11 @@ tar --no-wildcards --no-overwrite-dir \
   "tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx"
 ```
 
-GNU tar 1.35 rejected `--no-absolute-names` as an unrecognized option, so that option is not part of this command. Do not add `--absolute-names` or `-P`. On the clean disposable archive, the command used `--no-wildcards` and `--no-overwrite-dir` and wrote only inside the new destination. Those options were not what stopped an absolute path, a traversal name, a symlink, a hard link, or a duplicate member. Those members were stopped by the checker before `tar` ran. Their extraction behavior remains **UNTESTED**.
+GNU tar 1.35 rejected `--no-absolute-names` as an unrecognized option, so that option is not part of this command. Do not add `--absolute-names` or `-P`. On the clean disposable archive, the command used `--no-wildcards` and `--no-overwrite-dir` and wrote only inside the new destination. Those options were not what stopped an absolute path, a traversal name, a symlink, a hard link, or a duplicate member. Those members were stopped by the checker before `tar` ran. When this paragraph was written, their extraction behavior remained **UNTESTED**. Section T later recorded GNU tar 1.35 behavior on disposable archives. Those results do not change this command, and they do not authorize extraction of an unsafe member from the TEJAS archive.
 
 ### File-type inventory before any hash
 
-**Synthetic inventory behavior passed. See section N. A real TEJAS extract remains NOT TESTED.** This sequence is not authorized until extraction itself has been approved. `sha256sum` follows symbolic links. A hash is not a file-type check, and it must not be used to decide whether a path is a regular file. A symlink can make `sha256sum` read a file outside the extract directory.
+**Synthetic inventory behavior passed. See section N. When this paragraph was written, a real TEJAS extract remained NOT TESTED.** Section T later extracted the four named files, checked their digests, and removed the copies. Do not extract them again from this paragraph. This sequence is not a Supabase Storage upload. `sha256sum` follows symbolic links. A hash is not a file-type check, and it must not be used to decide whether a path is a regular file. A symlink can make `sha256sum` read a file outside the extract directory.
 
 After a future approved extraction, use this order and stop at the first failure:
 
@@ -1338,6 +1342,8 @@ require_restore_preconditions() {
 
 The historical target is host `/var/run/postgresql`, port `5433`, and disposable database `tejas_restore_full_20261115`. A later test may change `-d`, `-p`, and `-h` only after `require_restore_preconditions` exits 0. Keep `--exit-on-error` and `--no-password`. Do not change `-h` to a remote host.
 
+Do not execute the future block below against database `tejas_restore_full_20261115`. Section T already restored into that name on this computer's port `5432`. The block still names port `5433` and passes that same port, host, and database as the server-confirmed arguments. Those arguments are literals in the call. They are not the result of `current_database()`, `inet_server_addr()`, or `current_setting('port')`. A zero exit from `require_restore_preconditions` in this block is not server confirmation. A later restore needs a new empty database name. Read the server with the queries above, and stop if the target is not empty. The command text below is unchanged.
+
 The separate line `pg_restore_exit=$?` is not used. Pasted alone, it would capture the previous command rather than `pg_restore`. Earlier blocks may also have left `set -e` on, which would skip a following capture after a failure. A future restore uses this block. It turns `set -e` off, checks the pinned client and the server identity, runs the same arguments as the historical command, and then captures that command's exit status. Phase 3E did not execute it.
 
 ```bash
@@ -1480,7 +1486,7 @@ The administrator:
 - [ ] Downloads only the required files into a mode `700` directory.
 - [ ] Matches every filename, size, and SHA-256 in section B before decryption.
 - [ ] Decrypts one identity file and matches the identity SHA-256.
-- [ ] Decrypts the Storage archive with the pinned age binary and the historical arguments. Does not run `age` from `PATH` and does not extract it. Section M records the synthetic listing test. Extraction of the real archive remains **NOT TESTED** and waits for a separate owner/admin approval. A checker exit of 0 is not that approval.
+- [ ] Decrypts the Storage archive with the pinned age binary and the historical arguments. Does not run `age` from `PATH` and does not extract it. Section M records the synthetic listing test. When this checklist was written, extraction of the real archive remained **NOT TESTED** and waited for a separate owner/admin approval. A checker exit of 0 is not that approval. Section T later records one named-file extraction. That record is not an instruction to extract again, and it is not a Supabase upload.
 - [ ] Does not hash extracted files until the section F file-type inventory has passed. `sha256sum` is not a file-type check.
 - [ ] Decrypts the database archive with the historical OpenSSL command and matches the historical plaintext SHA-256.
 - [ ] Records the configured host, port, and database name, then compares them with the server-confirmed details in section G. The target is a local socket or loopback only. No remote connection is authorized.
@@ -1746,7 +1752,7 @@ Shared completion:
 - [ ] The passphrase variables and `SUPABASE_BACKUP_DB_URL` were unset. Their values were not displayed. Unsetting `SUPABASE_BACKUP_DB_URL` did not revoke a credential.
 - [ ] Shell history and scrollback were checked for accidental secrets.
 - [ ] Production was not contacted, or a separate owner approval names exactly what was changed.
-- [ ] Pull request #25 was not applied as part of this recovery. Its 17 November status was not reverified.
+- [ ] Pull request #25 was not applied as part of this recovery. When this checklist was written, its 17 November status had not been reverified. Section T later recorded it as open and not merged. Do not merge it as recovery.
 - [ ] Full recovery is complete only when both the database items and the Storage items above are complete.
 
 ## L. Known limitations and items requiring owner confirmation
@@ -1774,6 +1780,7 @@ Sections M, N, and O record synthetic tests. They do not change the historical f
 19. Section R is the consolidated register for the open prerequisites in this section. It does not close any of them.
 20. Phase 3G corrected the gate wording that made P-09, the checker, and the extracted hashes look like permission to begin. The prerequisites remain unresolved. Section S records the disposable logic tests.
 21. Section T is later execution evidence. It does not rewrite the historical commands, checksums, or the Phase 3G register.
+22. Section W is the operator rule for statements in this section that say a real check had not yet been run. Items 1, 5, 14, and 17 describe the document before section T. They are not an instruction to decrypt, extract, or restore again.
 
 ## M. Phase 2A synthetic archive listing tests
 
@@ -1981,7 +1988,7 @@ Phase 3F, 17 November 2026, IST. This section collects every unresolved prerequi
 
 Missing evidence is **OPEN**. A test that was not run is **NOT TESTED**. A step that cannot be performed in the recorded environment is **BLOCKED**. A choice that only the owner or administrator can make is **OWNER DECISION REQUIRED**. None of these words means that a test failed.
 
-On this computer, `/home/ubuntu/tejas-backups/bin/age` and `/usr/lib/postgresql/17/bin/pg_restore` are absent. Their version output was not read. No external service was contacted to refresh a status.
+When this register was written, `/home/ubuntu/tejas-backups/bin/age` and `/usr/lib/postgresql/17/bin/pg_restore` were absent. Their version output had not been read. No external service was contacted to refresh a status in that phase. Section T later records both version checks. Do not replace those pinned binaries to repeat the check.
 
 ### Register index
 
@@ -2012,7 +2019,7 @@ On this computer, `/home/ubuntu/tejas-backups/bin/age` and `/usr/lib/postgresql/
 
 ### What each item requires
 
-P-01. Section B records the plaintext checksum and says the size was not retained. This is missing evidence, not a failed measurement. The owner may supply a size from a retained record. Do not decrypt the archive to discover the size, and do not invent one. Until a size is recorded, do not decrypt the database archive. A ciphertext checksum does not use this size.
+P-01. Section B records the plaintext checksum and says the size was not retained. This is missing evidence, not a failed measurement. The owner may supply a size from a retained record. Do not decrypt the archive to discover the size, and do not invent one. Until a size is recorded, do not decrypt the database archive. A ciphertext checksum does not use this size. Section T later recorded 476,793 bytes. Do not decrypt the archive again to rediscover that size.
 
 P-02. Section B requires a free-space comparison against the P-01 size. The operator measures free space on the recovery work filesystem at execution time. That measurement does not need the backup file. It cannot be completed while P-01 is open. Do not invent the figure.
 
@@ -2195,7 +2202,7 @@ The tests used string identifiers `tejas-database-dump.enc`, `tejas-storage.tar.
 
 ## T. Execution evidence, 17 November 2026
 
-Current verified evidence, recorded 17 November 2026, 12:49 IST. The computer was Ubuntu 24.04.5, hostname `cursor`. The work filesystem had 263,068,471,296 bytes free. This section does not replace sections A through S.
+Current verified evidence, recorded 17 November 2026, 12:49 IST. The computer was Ubuntu 24.04.5, hostname `cursor`. The work filesystem had 263,068,471,296 bytes free. This section does not replace the historical commands or checksums in sections A through S. It does replace statements that the 17 November execution had not yet happened. Section W is the operator rule.
 
 The owner authorization in the execution request covered pending recovery work. It did not name a Production database other than the injected remote URLs, and those URLs use database name `postgres`. No statement in this section is a Production change.
 
@@ -2518,3 +2525,23 @@ Keep `tejas_restore_full_20261115` on this local cluster. Disposal requires a la
 4. A Storage destination restore only after the owner supplies the bucket and object paths.
 5. A Production repair only after a separate plan names a target other than database `postgres` and records a tested rollback.
 6. Disposal of the local database only after a separate approval names that database and the method.
+
+## W. Operator rule after the independent review, 17 November 2026, 3:00 PM IST
+
+This review compared the live pull request with the runbook. It did not decrypt an archive, restore a database, upload Storage, query Production, or drop `tejas_restore_full_20261115`. A read-only catalog check confirmed that local database still exists.
+
+### What an operator must not repeat
+
+- Do not run `pg_restore` into `tejas_restore_full_20261115`. That database holds the 17 November restore on port `5432`.
+- Do not treat the future block in section G as server confirmation. Its `require_restore_preconditions` call repeats the expected host, port `5433`, and database name as the server arguments. A later restore needs a new empty name and a result read from the server.
+- Do not decrypt the database archive again to discover its plaintext size. Section T measured 476,793 bytes.
+- Do not extract the four Storage files again from section F. Section T already checked them and removed the copies.
+- Do not upload those files, and do not write to Production.
+- Do not replace the pinned age binary or the pinned `pg_restore` merely because section R, as first written, said they were absent.
+- Do not drop the local database. Section V states the disposal decision.
+
+Sections A through S remain the audit trail and the historical procedure. Where they say a real check was **NOT TESTED**, that was true when written. Section V is the recovery status after the execution. The nine historical checksums and the command blocks were not rewritten by this review.
+
+### Review result
+
+No passphrase, connection URL, Age identity, plaintext dump, or payment row was found in the committed runbook. The four `rclone copyto` blocks copy from `tejasdrive:` into the work directory. No authorized command uploads to Supabase Storage or restores Production. Schema 9 versus 10 and functions 116 versus 117 stay unresolved. Full disaster recovery is not complete.

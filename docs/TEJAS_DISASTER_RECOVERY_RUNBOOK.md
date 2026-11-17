@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. When this paragraph was written, the real TEJAS backup files remained **NOT TESTED**. Section T records the later checks. Read section W before running a command. Do not restore again into the database section T already filled.
 
@@ -2859,3 +2859,96 @@ This is an approved deferral. It is not Production recovery.
 This table records the nine owner items in sections Y, AA, and AB. It is not the full prerequisite register. P-15 remains **OPEN**. Sections T and V record that the historical tar command was not found. The named-file extraction in section F is not that command. No owner decision has been made for P-15, and the command must not be reconstructed. Sections T and V remain the status record for every other ID. Section V's disposal note for `tejas_restore_full_20261115` is unchanged.
 
 Database recovery is not complete. Storage archive validation is complete. Storage destination restoration was not performed. Production recovery was not performed. Full disaster recovery is not complete.
+
+## AC. Later alignment, history-version repair, and 17 November backup, 18 November 2026, 12:01 AM IST
+
+This section records evidence gathered on 17 November 2026 after section AB. It does not rewrite sections A through AB. Sentences in those sections that describe an earlier state remain the record of that state. This section does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Full disaster recovery is not complete.
+
+Writing this section did not connect to Production, create a backup, change Google Drive, change Supabase, merge a pull request, or deploy.
+
+### Repository alignment
+
+These values were verified on GitHub and in the workspace during the 17 November audit. `main` was `1d290e7dc344195ffb2690ab36148681fed0c25d`. No newer commit was present. The worktree had no uncommitted change.
+
+| Item | Evidence |
+| --- | --- |
+| Pull request #29 | Merged. https://github.com/dhevb/tejas/pull/29. Merge time 17 November 2026, 11:54:30 PM IST |
+| Merge commit | `1d290e7dc344195ffb2690ab36148681fed0c25d` |
+| Diff | Five renames, 0 insertions, 0 deletions. File bytes were unchanged |
+| Pull request #25 | Open and unmerged. Head `fff8cd20cd78ecca7d0c8beeef83f25cd4eb805c`. https://github.com/dhevb/tejas/pull/25 |
+
+Active migrations after that merge:
+
+- `supabase/migrations/20261031_tejas_registration.sql`
+- `supabase/migrations/20261118000100_tejas_learning_portal.sql`
+- `supabase/migrations/20261118000200_tejas_learning_portal_durable.sql`
+
+The portal checksums remain `4d68d0578ee5c578115f8c03e42b3953b3054f3493c2188e7581b96cac71c628` and `65f370b086e3f0a35fbfc58c41c3216fcb3262beba054f57529386f2e04916d5`.
+
+Unconfirmed SQL files, not active migrations:
+
+- `supabase/held-migrations/20261031_tejas_registration_additive.sql`
+- `supabase/held-migrations/20261031_tejas_storage.sql`
+- `supabase/held-migrations/20261103_optional_school_place.sql`
+
+Pull request #25 must stay unmerged until its migration order is reviewed against history that now ends at `20261118000200`. Its migration filenames use earlier version prefixes. This section does not merge it.
+
+### Production history-version repair
+
+A later owner authorization changed only the `version` column of two rows in `supabase_migrations.schema_migrations`. No migration SQL was executed. `name` and `statements` were not modified. No application table was written.
+
+| Old version | New version | Required name |
+| --- | --- | --- |
+| `20261113_tejas_learning_portal` | `20261118000100` | `tejas_learning_portal` |
+| `20261113_tejas_learning_portal_durable` | `20261118000200` | `tejas_learning_portal_durable` |
+
+Each update affected one row. The transaction committed only after the checks inside that transaction passed.
+
+An independent read-only transaction at 17 November 2026, 11:56:08 PM IST, and a later read-only transaction at 17 November 2026, 11:59:58 PM IST, each returned exactly three rows. The server was PostgreSQL 17.11. `transaction_read_only` was `on` in those read-only transactions. Statement text was not printed.
+
+| version | name | statements SHA-256 |
+| --- | --- | --- |
+| `20261031` | `tejas_registration` | `463de3694b3292df227aa73b3694e15797e4495c6326cb24478d38d39e3ad83d` |
+| `20261118000100` | `tejas_learning_portal` | `fadc39ce0ef039b9c56fcd8f60a588fa57f1b88612b88980ff2c9820d4844702` |
+| `20261118000200` | `tejas_learning_portal_durable` | `bbbf00d930aabe45bd699ac9324af21edf3beba2082e33aacb31f869de92cf24` |
+
+These digests match the values recorded before the version change and the values measured from the isolated restore of the 17 November archive. The registration digest is unchanged.
+
+This version change is not the Production repair plan required by P-19. P-19 stays **OPEN**.
+
+### 17 November database backup
+
+The authorized Drive folder `TEJAS_PRODUCTION_SECURE_BACKUPS/DATABASE_BACKUPS` was listed at 17 November 2026, 11:59:53 PM IST. The 15 November archive in section B was still present, with the same size, SHA-256, and file ID. Two additional objects were present. This section does not replace section B. Section B remains the inventory of the 15 November archive.
+
+| File | Bytes | SHA-256 | Drive file ID |
+| --- | --- | --- | --- |
+| `tejas-zapccpipwxduzlnvjdmy-20261117T175954Z.dump.enc` | 479,856 | `536b6e17b42b20d1c42f487e57052f04b0b64b8e8fd2e2cb24fa53a00312b630` | `1wdjoZnwozxZ7zGn0Ke-v1DAw5rLflPvb` |
+| `tejas-zapccpipwxduzlnvjdmy-20261117T175954Z.manifest.txt` | 856 | `2a0d1b613c8942eac4523c74a87fff4d485d2a822d09e895568946688bfe76a3` | `1Mo_HagJ4JTqTNSFVtbGj4-_VudaYEPm1` |
+
+The archive header says it was created at 2026-11-17 17:59:55 UTC, which is 17 November 2026, 11:29:55 PM IST. It is custom format, database `postgres`, dumped from PostgreSQL 17.11 by pg_dump 17.12. The plaintext was 479,831 bytes and its SHA-256 was `7512a40f3743b4fe3f9764587d5efca32740c94987e2b2a9aac86f33e7ffe80d`. The archive listing includes `TABLE supabase_migrations schema_migrations` and `TABLE DATA supabase_migrations schema_migrations`.
+
+An isolated restore used PostgreSQL 17.12 on `127.0.0.1` port `55432` and database `tejas_phase2d_20261117`. `pg_restore --exit-on-error` exited 0. The disposable database was then removed. The restore listing and log remain local evidence. This section does not authorize another restore into `tejas_restore_full_20261115`.
+
+The archive predates the version repair. Its history rows are the pre-repair versions. **No post-repair Production backup currently exists.**
+
+### Open and closed items after this record
+
+P-03, P-08, P-21, and P-22 stay as recorded in sections Y and AA. They are not reopened. The missing portable checksum, the historical version strings, and a successful device-node result were not recovered.
+
+| Item | Status | What remains |
+| --- | --- | --- |
+| P-04 | **OPEN** | An owner-approved expected `supabase_vault` 0.3.1 relation list |
+| P-12 | **OPEN** | A decision on the missing `.globals.sql.enc` and `.metadata.json.enc` companions |
+| P-14 | **OPEN** | The original 68-table counting script, or a further owner-accepted limitation |
+| P-15 | **OPEN** | The original tar command, or an owner-accepted limitation. Do not reconstruct it |
+| P-18 | **OPEN** | Storage destination and upload approval |
+| P-19 | **OPEN** | A separate Production repair plan and a tested rollback |
+
+### Operational cautions
+
+- Supabase Deploy to production remains **OFF** according to the owner's confirmation. This section does not independently verify that dashboard control, and it does not enable it.
+- Pull request #25 must remain unmerged pending migration-order review.
+- rclone reports that its shared Google client is scheduled to stop working during 2026. Replacing that client needs a separate approval. This section does not replace it.
+- Vercel reported a completed deployment of merge commit `1d290e7dc344195ffb2690ab36148681fed0c25d`. That report is not proof that Supabase executed migrations.
+
+Full disaster recovery is not complete.

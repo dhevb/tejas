@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status. Section W is the rule for the next operator.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the current documentation status.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. When this paragraph was written, the real TEJAS backup files remained **NOT TESTED**. Section T records the later checks. Read section W before running a command. Do not restore again into the database section T already filled.
 
@@ -2519,7 +2519,7 @@ Keep `tejas_restore_full_20261115` on this local cluster. Disposal requires a la
 
 ### Completion roadmap
 
-1. Human review of pull request #26. Do not merge it from this phase.
+1. Human review of pull request #26. Do not merge it from this phase. This item described the state before that pull request was merged. Section X records the merge. Item 1 is not a current task.
 2. Owner decisions in the table above, starting with P-04, P-14, and P-18.
 3. If the owner supplies the original counting queries, compare them read-only. Do not change objects to force a match.
 4. A Storage destination restore only after the owner supplies the bucket and object paths.
@@ -2545,3 +2545,31 @@ Sections A through S remain the audit trail and the historical procedure. Where 
 ### Review result
 
 No passphrase, connection URL, Age identity, plaintext dump, or payment row was found in the committed runbook. The four `rclone copyto` blocks copy from `tejasdrive:` into the work directory. No authorized command uploads to Supabase Storage or restores Production. Schema 9 versus 10 and functions 116 versus 117 stay unresolved. Full disaster recovery is not complete.
+
+## X. Post-merge documentation status, 17 November 2026, 3:52 PM IST
+
+This section records the GitHub state after pull request #26. It does not decrypt an archive, query Production, change Supabase, upload Storage, or drop `tejas_restore_full_20261115`.
+
+shiksha-mahakumbh approved pull request #26 at 3:45 PM IST on commit `2c85ed099e12ce6de4d80e568bab30abce810fa1`. dheWeb merged it into `main` at 3:49 PM IST. The merge commit is `fd215a92396c8d422443bc46fdfadff28228d7bb`. `docs/TEJAS_DISASTER_RECOVERY_RUNBOOK.md` is present on `main` at that commit.
+
+Pull request #25 remains open and unmerged. Its head is `fff8cd20cd78ecca7d0c8beeef83f25cd4eb805c`. It is a separate software change. This section does not merge it and does not apply its migration.
+
+The Vercel status for merge commit `fd215a92396c8d422443bc46fdfadff28228d7bb` was success at 3:51 PM IST, with the description "Deployment has completed". That status is not an independent verification of the Production website. This section does not claim a Production deployment.
+
+The human-review step in the section V roadmap is historical. It is not a current pending task.
+
+The remaining owner decisions are unchanged:
+
+| Item | Status | Current action |
+| --- | --- | --- |
+| P-03 | Open | Portable PostgreSQL checksum was not found. Do not invent it |
+| P-04 | Owner decision | Observed `supabase_vault` relations are not an approved expected list |
+| P-08 | Open | Offline custody beyond this computer and Drive is not verified |
+| P-12 | Open | Companion files were not found |
+| P-14 | Open | The original 68-table counting script was not found |
+| P-18 | Open | Storage destination restoration and upload were not performed |
+| P-19 | Open | Production recovery target and tested rollback were not recorded |
+| P-21 | Open | Historical OpenSSL version string remains unknown |
+| P-22 | Blocked | The device-node test returned `EPERM` |
+
+Full disaster recovery is not complete.

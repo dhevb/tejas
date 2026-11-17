@@ -2864,7 +2864,7 @@ Database recovery is not complete. Storage archive validation is complete. Stora
 
 This section records evidence gathered on 17 November 2026 after section AB. It does not rewrite sections A through AB. Sentences in those sections that describe an earlier state remain the record of that state. This section does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Full disaster recovery is not complete.
 
-Writing this section did not connect to Production, create a backup, change Google Drive, change Supabase, merge a pull request, or deploy.
+Writing this section did not connect to Production, create a backup, change Google Drive, change Supabase, merge a pull request, or deploy. The post-repair backup recorded below was created under a separate owner authorization. This correction does not create another backup.
 
 ### Repository alignment
 
@@ -2929,7 +2929,26 @@ The archive header says it was created at 2026-11-17 17:59:55 UTC, which is 17 N
 
 An isolated restore used PostgreSQL 17.12 on `127.0.0.1` port `55432` and database `tejas_phase2d_20261117`. `pg_restore --exit-on-error` exited 0. The disposable database was then removed. The restore listing and log remain local evidence. This section does not authorize another restore into `tejas_restore_full_20261115`.
 
-The archive predates the version repair. Its history rows are the pre-repair versions. **No post-repair Production backup currently exists.**
+The archive predates the version repair. Its history rows are the pre-repair versions. The sentence that no post-repair backup existed was true at 12:01 AM IST. It is superseded by the next subsection. The pre-repair archive and the post-repair archive are different files. Neither replaces the 15 November archive in section B.
+
+### Post-repair database backup, 18 November 2026, 12:17 AM IST
+
+A later owner authorization created one logical backup after the version repair. The archive header says it was created at 2026-11-17 18:42:10 UTC, which is 18 November 2026, 12:12:10 AM IST. This documentation records that completed backup. It did not connect to Production, create another backup, change Google Drive, change Supabase Storage, execute migration SQL, or deploy.
+
+The read-only Production preflight found exactly the three approved history rows in the table above. Their statement digests matched that table. The server was PostgreSQL 17.11 and the database was `postgres`. `transaction_read_only` was `on`. pg_dump 17.12 used a read-only dump transaction. No Production row was written, and no migration SQL was executed.
+
+The archive is custom format. Its listing includes `TABLE supabase_migrations schema_migrations` and `TABLE DATA supabase_migrations schema_migrations`. The plaintext was 479,830 bytes and its SHA-256 was `b7d804738410f77f4aedfcf9e9b5e8c2fe925792d34d32e2bd33ab7ed213446c`. The plaintext was not uploaded.
+
+| File | Bytes | SHA-256 | Drive file ID |
+| --- | --- | --- | --- |
+| `tejas-zapccpipwxduzlnvjdmy-20261117T184209Z.dump.enc` | 479,856 | `1dd023171475ebf2386918ad7be4ba9634b02dc4145f1e643b820ece148d0cd5` | `1cX-l4R8APlrXb_FtrYX23FhxYOK750hB` |
+| `tejas-zapccpipwxduzlnvjdmy-20261117T184209Z.manifest.txt` | 1,645 | `cdf86ab281851665f3d64a66df7a5b3025693e4f25d5844f3ac089e301587411` | `1nQqKs4KSablpyXr_jRcEwx1y2WEMMSGW` |
+
+The encrypted archive and manifest were uploaded to `TEJAS_PRODUCTION_SECURE_BACKUPS/DATABASE_BACKUPS` without overwriting an existing object. The 15 November archive and the pre-repair 17 November archive remained in that folder. Both new objects were downloaded separately. The downloaded sizes and SHA-256 values matched the uploaded files. Decrypting the downloaded archive reproduced the plaintext checksum above. `pg_restore --list` on that decrypted copy confirmed the migration-history table and its data.
+
+An isolated restore used PostgreSQL 17.12 on `127.0.0.1` port `55433` and database `tejas_postrepair`. `pg_restore --exit-on-error` exited 0. The restored history contained exactly `20261031`, `20261118000100`, and `20261118000200`, and all three statement digests matched the Production preflight. The disposable server, its data directory, and the plaintext temporary files were removed. Only the encrypted archive and the manifest were retained locally.
+
+This backup does not close P-04, P-12, P-14, P-15, P-18, or P-19. It is not a Production repair and it is not full disaster recovery.
 
 ### Open and closed items after this record
 

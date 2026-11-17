@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section U is the current status.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the current status.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. The real TEJAS backup files remain **NOT TESTED**.
 
@@ -2070,7 +2070,7 @@ Limited validation does not authorize a restore, extraction, an upload, or a Pro
 
 ### Database recovery gate
 
-This gate covers a named database-archive validation, isolated `pg_restore`, and the section H comparison. It does not authorize Storage extraction or a Storage upload. Its current state is **CLOSED**.
+This gate covers a named database-archive validation, isolated `pg_restore`, and the section H comparison. It does not authorize Storage extraction or a Storage upload. When this paragraph was written, its state was **CLOSED**. Section V is the later state.
 
 **AUTHORIZED FOR LIMITED VALIDATION** may name a ciphertext checksum while P-01 remains open. It may name decryption only after P-01 and P-02 are recorded figures and the owner has confirmed P-07 and P-08 for `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`. The confirmation names the secret and does not include its bytes. It may name `pg_restore --list` only after P-10 shows that `/usr/lib/postgresql/17/bin/pg_restore` is PostgreSQL 17. The writing names the section B database archive, the work target, and the stop conditions. P-09 remains **NOT TESTED** when that writing is made. This runbook is not that writing.
 
@@ -2078,11 +2078,11 @@ This gate covers a named database-archive validation, isolated `pg_restore`, and
 
 **RECOVERY AUTHORIZED** is a second writing. It names the disposable database, the host, and the port. The host is `/var/run/postgresql`, `127.0.0.1`, or `::1`. The database is not `postgres` and it is not Production. It requires decrypt-validation evidence and the pinned PostgreSQL 17 client. It does not follow from the validation authorization.
 
-**RECOVERY COMPLETE** requires a captured `pg_restore` exit of 0, a server-confirmed target match, the section H comparison, and P-04. P-04 is required before a new restore is called fully checked. The database P-09 evidence is part of this completion. P-06, P-11, and P-18 do not move this gate. P-05 does not move it.
+**RECOVERY COMPLETE** requires a captured `pg_restore` exit of 0, a server-confirmed target match, the section H comparison, and P-04. P-04 is required before a new restore is called fully checked. The database P-09 evidence is part of this completion. P-06, P-11, and P-18 do not move this gate. P-05 does not move it. Section V records that the isolated restore exited 0 and that the schema and function comparison remains pending, so this gate is not complete.
 
 ### Storage recovery gate
 
-This gate covers a named Storage-archive validation and extraction after P-06. It does not authorize `pg_restore`, a database restore, or an upload. Its current state is **CLOSED**.
+This gate covers a named Storage-archive validation and extraction after P-06. It does not authorize `pg_restore`, a database restore, or an upload. When this paragraph was written, its state was **CLOSED**. Section V is the later state.
 
 **AUTHORIZED FOR LIMITED VALIDATION** may name a ciphertext checksum, age decryption, or the section F checker. Decryption and the checker require P-07 and P-08 for the named identity file, without its bytes, and P-10 output `v1.3.2` from `/home/ubuntu/tejas-backups/bin/age`. The writing names the section B Storage archive, the work target, and the stop conditions. P-06 is not required to start the checker. P-09 remains **NOT TESTED** when that writing is made. P-11 remains **NOT TESTED** and is disclosed in any later extraction decision.
 
@@ -2090,7 +2090,7 @@ This gate covers a named Storage-archive validation and extraction after P-06. I
 
 **RECOVERY AUTHORIZED** is the extraction decision. It requires P-06, the owner's acceptance of the P-11 limit, and a checker result that has already passed. The writing names the archive and the extract target. Withholding P-06 or P-11 leaves extraction unauthorized and leaves a completed checker at **VALIDATION PASSED**.
 
-**RECOVERY COMPLETE** requires that authorized extraction and a match of the four section B file hashes. The Storage P-09 evidence is part of this completion. P-18 remains a separate upload decision.
+**RECOVERY COMPLETE** requires that authorized extraction and a match of the four section B file hashes. The Storage P-09 evidence is part of this completion. P-18 remains a separate upload decision. That gate name covers the archive check and the four hashes. It does not mean a Supabase Storage destination was restored. Section V uses **ARCHIVE VALIDATION COMPLETE**, **RESTORATION NOT PERFORMED**, and **UPLOAD NOT PERFORMED**.
 
 ### Full recovery gate
 
@@ -2431,3 +2431,90 @@ Retention recommendation: keep `tejas_restore_full_20261115` until the owner nam
 ### Prerequisite confirmation
 
 P-03, P-08, P-12, P-14, P-15, P-18, P-19, the historical OpenSSL version string, and P-22 stay unresolved. No checksum, companion file, historical script, historical tar command, upload destination, or Production plan was invented. P-04 stays an owner decision. P-18 stays open: archive validation is not an upload.
+
+## V. Phase 5 independent audit, 17 November 2026, 12:58 IST
+
+Read-only reconfirm of local database `tejas_restore_full_20261115` on the local socket. PostgreSQL `17.12 (Ubuntu 17.12-1.pgdg24.04+1)`. No decryption, no restore, no object change, and no Production connection.
+
+### Reconfirmed state
+
+| Component | State |
+| --- | --- |
+| Database ciphertext validation | Complete |
+| Database plaintext digest validation | Complete |
+| Database isolated restore | Complete |
+| Database historical object-count reconciliation | Pending |
+| Storage archive validation | Complete |
+| Four named Storage files | Verified, then the extracted copies were removed |
+| Storage destination restoration | Not performed |
+| Supabase Storage upload | Not performed |
+| Production recovery | Not performed |
+| Full disaster recovery | Not complete |
+
+The eight application-area counts were read again and still match section H. Non-system schemas remain the ten names in section U. Their ordered-name SHA-256 is `cccfa37fb6a5c1675aac23399f54bc0b5738bec01e5c36e80785270ca0531de1`. Non-system function OIDs remain 117. The ordered signature listing, schema, name, identity arguments, and extension owner, has SHA-256 `3429e65b3e9344ee6b8de5ebaf7bf878a5761f0448c05541e2a7121fe63bf4dd`. These two digests are a 17 November catalog reading. They are not historical checksums.
+
+Extensions and the four observed `vault` relations match section U. `vault.secrets` still has 0 rows. Invalid indexes: 0. Non-internal triggers: 12. The only unvalidated constraint is still `realtime.messages_payload_exclusive`, unchanged and not validated. The two sequences and their owners match section U. `public.tejas_case_files` and `public.tejas_payment_utrs` remain absent.
+
+`listen_addresses` is still `localhost`. The socket is still mode `777`. Local peer authentication and loopback scram-sha-256 are unchanged. `postgres` can log in and is a superuser. `supabase_admin` is a superuser and cannot log in. No other local recovery role is a superuser or can log in. Role memberships are only the default `pg_monitor` memberships. No Production grant was copied. The data directory remains mode `700`, owned by `postgres`. `start.conf` remains `auto`. The database was not dropped. This is not secure erasure.
+
+### Historical script search
+
+Searched every local commit and remote-tracking branch, the tag list (empty), GitHub code search on `dhevb/tejas` for the function total and for `pg_namespace` counts, and the repository documents `docs/PRODUCTION_MIGRATION_PREFLIGHT.md` and `docs/PORTAL_POST_MIGRATION_PRIVILEGE_AUDIT.md`.
+
+The totals 9, 116, and 68 appear as recorded results in section H. They were introduced in commit `9245d0c613eb8c694d3ecf90b536bbc340ea2b32`. No schema-count query, function-count query, or 68-table script was found with a verified source. The portal documents count `public` relations and `tejas_%` functions. They are not the 15 November scripts. P-14 and the schema and function reconciliations stay unresolved. No replacement query was labeled historical.
+
+### Prerequisite status
+
+| ID | Status |
+| --- | --- |
+| P-01 | Closed for the measured plaintext size |
+| P-02 | Closed for the measured free space |
+| P-03 | Open. Portable PostgreSQL checksum was not found |
+| P-04 | Owner decision. Observed relations are listed. The expected list is not approved |
+| P-05 | Open pull request #25, not merged, and not part of recovery |
+| P-06 | Used for the checker and the four named files |
+| P-07 | Closed for the encryption passphrase. The owner passphrase was not used |
+| P-08 | Open. Offline custody beyond this computer and Drive is not verified |
+| P-09 | Closed for the checks that were run |
+| P-10 | Closed for pinned age `v1.3.2` and pinned PostgreSQL 17.12 |
+| P-11 | Tested on disposable archives. Not a historical tar command |
+| P-12 | Open. Companion files were not found |
+| P-13 | Closed on this cluster. Production installation is separate |
+| P-14 | Open. The 68-table script was not found |
+| P-15 | Open. The historical tar command was not found |
+| P-16 | Documented. No history was deleted |
+| P-17 | Closed for this download. Nothing was copied back to Drive |
+| P-18 | Open. Upload was not performed |
+| P-19 | Open. Production repair was not performed |
+| P-20 | Local roles only. Production roles were not changed |
+| P-21 | Partial. Historical OpenSSL version string remains unknown |
+| P-22 | Blocked. `mknod` returned `EPERM` |
+
+### Owner decisions still required
+
+| Item | Owner decision | Evidence still needed | Blocks archive validation | Blocks full recovery | Safe next action |
+| --- | --- | --- | --- | --- | --- |
+| P-03 | Accept the missing portable PostgreSQL checksum, or supply one | A checksum whose source can be verified | No | Yes, until accepted or supplied | Do not invent a checksum |
+| P-04 | Approve or reject a fuller expected `supabase_vault` relation list | An independent expected list | No | Yes | Keep the observed list unlabeled as expected |
+| P-08 | Confirm or reject offline custody beyond this computer and Drive | A custody location the owner can verify | No | Yes | Do not treat Drive as offline custody |
+| P-12 | Decide whether companion files are required | The files, if the owner says they exist | No | Yes, if the owner requires them | Do not invent files |
+| P-14 | Supply the original 68-table script, or accept the area counts without it | The original query text | No | Yes, for a row-by-row recount | Do not label a new query as historical |
+| P-15 | Supply the original tar command, or accept section F | The original command text | No | No for the completed archive check | Do not label a new command as historical |
+| P-18 | Decide whether a Storage destination restore or upload is required | Owner-supplied or verified bucket and object paths | No | Yes, if a destination restore is required | Do not upload and do not invent a path |
+| P-19 | Decide whether Production repair is required | A named target other than database `postgres`, plus a tested rollback | No | Yes, for Production | Do not connect to Production |
+| P-21 | Supply the historical OpenSSL version, or accept it as unknown | A version string with a source | No | No | Do not invent a version |
+| P-22 | Accept the blocked device-node test, or authorize a later privileged test | A result that is not `EPERM`, if a later test is authorized | No | No | Do not raise privileges |
+| Local disposal | Name `tejas_restore_full_20261115` and approve a disposal method | That named approval | No | No | Keep the database. Do not drop it |
+
+### Retention decision note
+
+Keep `tejas_restore_full_20261115` on this local cluster. Disposal requires a later owner decision that names this database and the method. This section does not authorize disposal and does not claim secure erasure.
+
+### Completion roadmap
+
+1. Human review of pull request #26. Do not merge it from this phase.
+2. Owner decisions in the table above, starting with P-04, P-14, and P-18.
+3. If the owner supplies the original counting queries, compare them read-only. Do not change objects to force a match.
+4. A Storage destination restore only after the owner supplies the bucket and object paths.
+5. A Production repair only after a separate plan names a target other than database `postgres` and records a tested rollback.
+6. Disposal of the local database only after a separate approval names that database and the method.

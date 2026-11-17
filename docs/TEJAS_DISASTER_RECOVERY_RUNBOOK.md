@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Statements above that say the real backups were **NOT TESTED** were true when written. Section T is the current evidence.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section U is the current status.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. The real TEJAS backup files remain **NOT TESTED**.
 
@@ -2028,7 +2028,7 @@ P-07. Sections C and N say the real passphrase bytes, including any trailing new
 
 P-08. Section C and section J say offline custody was not verified. The owner confirms custody for the secret named in the authorization. Confirmation of the database passphrase does not confirm an identity file, and the reverse is also unresolved until the owner confirms it. Confirmation does not include sending either value. Do not decrypt with a passphrase whose custody the owner has not confirmed.
 
-P-09. Sections B, F, and G identify the real archives and say they remain **NOT TESTED**. No phase failed a real decrypt, extract, or restore, because none was run. P-09 is the evidence produced by an authorized limited validation. It is required before VALIDATION PASSED and before RECOVERY COMPLETE for that archive. It is not required before the written authorization that names the first validation. Database evidence does not satisfy the Storage archive, and Storage evidence does not satisfy the database archive. Do not declare either of those two states without a recorded result. This runbook does not record one.
+P-09. Sections B, F, and G identify the real archives and say they remain **NOT TESTED**. No phase failed a real decrypt, extract, or restore, because none was run. P-09 is the evidence produced by an authorized limited validation. It is required before VALIDATION PASSED and before RECOVERY COMPLETE for that archive. It is not required before the written authorization that names the first validation. Database evidence does not satisfy the Storage archive, and Storage evidence does not satisfy the database archive. Do not declare either of those two states without a recorded result. Section T later records the 17 November checks. This paragraph described the register before that execution.
 
 P-10. Section F pins age at `/home/ubuntu/tejas-backups/bin/age` and expects output `v1.3.2`. Section G pins `pg_restore` at `/usr/lib/postgresql/17/bin/pg_restore` and expects PostgreSQL 17. Both paths are absent on this computer, and neither program was executed. On the recovery computer, the operator may run only `--version`, with no archive or dump argument. Do not accept a binary from `PATH`. Do not run age decryption before the age result is `v1.3.2`. Do not run `pg_restore`, including `--list`, before the client result starts with PostgreSQL 17. A ciphertext checksum does not use either binary.
 
@@ -2257,7 +2257,7 @@ Application counts, with no row contents recorded:
 | Payment proofs | `public.tejas_payment_proofs` | 2 |
 | Idempotency | `public.tejas_idempotency` | 2 |
 
-The schema count and the function count do not equal the unlabeled historical totals. Database recovery is therefore not declared complete.
+The schema count and the function count do not equal the unlabeled historical totals. Section U records the read-only reconciliation. Database historical object-count reconciliation stays pending.
 
 ### Storage validation
 
@@ -2265,7 +2265,7 @@ Age v1.3.2 was downloaded from the official v1.3.2 release and checked with `sig
 
 The original identity file decrypted with the encryption passphrase file. GnuPG exited 0. The plaintext identity SHA-256 was `86ac6f159d6a53449622fa1ba4dccad08dd019ec19b855aa5d79e02ea05996e8`. The identity and the passphrase file were then unlinked. The owner passphrase was present, had no trailing newline, and was not used, because the matching identity file had already decrypted. Offline custody beyond this computer and Drive was not verified.
 
-Pinned age decrypted the Storage copy. The section F checker exited 0 on 10 members. The four named files were extracted into a new mode `700` directory. Their sizes and SHA-256 values matched section B. Those extracted files were then removed from the workspace. The encrypted `.tar.age` copy remains. Nothing was uploaded to Supabase Storage.
+Pinned age decrypted the Storage copy. The section F checker exited 0 on 10 members. The four named files were extracted into a new mode `700` directory. Their sizes and SHA-256 values matched section B. Those extracted files were then removed from the workspace. The encrypted `.tar.age` copy remains. The status of that work is **ARCHIVE VALIDATION COMPLETE**. Supabase Storage **UPLOAD NOT PERFORMED**. Destination restoration was **RESTORATION NOT PERFORMED**.
 
 ### GNU tar 1.35 disposable results
 
@@ -2315,12 +2315,119 @@ These used archives created for the test. They did not use a TEJAS archive.
 
 ### Gate result
 
-Database gate: ciphertext and plaintext validation passed. An isolated restore exited 0 and the application counts matched. Schema and function totals did not match the unlabeled historical figures, so the database gate is not **RECOVERY COMPLETE**.
+Database archive validation is complete. The isolated restore exited 0 and the application counts matched. Historical schema and function reconciliation is pending, so full database recovery is not declared complete.
 
-Storage gate: decryption, the checker, extraction, and the four hashes passed. The extracted files were removed after that check. Nothing was uploaded. Isolated Storage verification is complete. Upload remains **CLOSED**.
+Storage archive validation is complete. Supabase Storage upload was not performed, and Storage objects were not restored to a Supabase destination.
 
-Full recovery is not complete. Production was not changed. Pull request #25 was not merged.
+Full recovery is not complete. Production recovery was not performed. Pull request #25 was not merged.
 
 ### Cleanup
 
 The passphrase file, plaintext identity, plaintext database dump, and extracted Storage files were unlinked inside the marked workspace. Ordinary unlink is not secure erasure. The encrypted copies in the workspace and the Drive originals remain. Unsetting `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`, `TEJAS_BACKUP_OWNER_PASSPHRASE`, and `SUPABASE_BACKUP_DB_URL` in the shell does not revoke those credentials. No secret value was written into this runbook.
+
+## U. Phase 4 reconciliation, 17 November 2026, 12:54 IST
+
+Read-only inspection of local database `tejas_restore_full_20261115`. No Production connection. No rows were changed. No function was dropped or altered. The plaintext dump was already gone, so this phase did not re-read the dump SQL.
+
+### Current recovery states
+
+| Component | State |
+| --- | --- |
+| Database archive validation | Complete |
+| Database isolated restore | Complete. Exit 0 into an empty local database |
+| Database historical object-count reconciliation | Pending |
+| Storage archive validation | Complete |
+| Storage destination restoration | Not performed |
+| Storage upload | Not performed |
+| Production recovery | Not performed |
+| Full disaster recovery | Not complete |
+
+### Schema reconciliation
+
+System schemas present: `pg_catalog`, `information_schema`, `pg_toast`.
+
+Non-system schemas, 10:
+
+| Schema | Notes |
+| --- | --- |
+| `auth` | Present in the restored catalogs |
+| `extensions` | Install schema for `pgcrypto`, `pg_stat_statements`, and `uuid-ossp` |
+| `graphql` | Present |
+| `graphql_public` | Present |
+| `pgbouncer` | Name begins with `pg_`, but it is not one of the three system schemas above |
+| `public` | Present |
+| `realtime` | Present |
+| `storage` | Present |
+| `supabase_migrations` | Present |
+| `vault` | Install schema of `supabase_vault` 0.3.1 |
+
+`pg_depend` does not mark any of these schemas as an extension-owned namespace. `supabase_vault` is installed in `vault`.
+
+Counting rules:
+
+| Rule | Count |
+| --- | --- |
+| System schemas named above | 3 |
+| Non-system schemas | 10 |
+| Non-system schemas except `vault` | 9 |
+| Non-system schemas except `pgbouncer` | 9 |
+
+The historical total is 9. Excluding `vault` yields 9, and excluding `pgbouncer` also yields 9. The original counting query was not preserved, so the difference of one is not uniquely explained. Schema reconciliation stays pending.
+
+### Function reconciliation
+
+Every non-system function has `prokind` `f`. The count is by function OID.
+
+| Rule | Count |
+| --- | --- |
+| Non-system function OIDs | 117 |
+| Distinct schema and name | 102 |
+| Non-system OIDs except the five `vault` functions | 112 |
+| Non-system OIDs that are not extension members | 63 |
+
+By schema: `auth` 4, `extensions` 55 of which 49 are extension members, `graphql_public` 1, `pgbouncer` 1, `public` 8, `realtime` 19, `storage` 24, `vault` 5. All five `vault` functions are members of `supabase_vault`: `_crypto_aead_det_decrypt`, `_crypto_aead_det_encrypt`, `_crypto_aead_det_noncegen`, `create_secret`, and `update_secret`.
+
+The historical total is 116. None of the documented filters above equals 116. Distinct names equal 102, not 116. The extra OID cannot be identified as one specific function. The historical counting script was not found. Function reconciliation stays pending. No function was changed to force a match.
+
+### Vault and extensions
+
+| Extension | Version | Install schema |
+| --- | --- | --- |
+| `pg_stat_statements` | 1.11 | `extensions` |
+| `pgcrypto` | 1.3 | `extensions` |
+| `plpgsql` | 1.0 | `pg_catalog` |
+| `supabase_vault` | 0.3.1 | `vault` |
+| `uuid-ossp` | 1.1 | `extensions` |
+
+Observed `vault` relations, from `pg_class`:
+
+| Kind | Name |
+| --- | --- |
+| Table | `vault.secrets` |
+| Index | `vault.secrets_pkey` |
+| Index | `vault.secrets_name_idx` |
+| View | `vault.decrypted_secrets` |
+
+`vault.secrets` has 0 rows. This is the observed list. It is not an owner-approved expected inventory. P-04 stays **OWNER DECISION REQUIRED**.
+
+### Integrity
+
+The eight application-area counts in section T were read again and are unchanged. Invalid indexes: 0. Non-internal triggers: 12. Sequences: `auth.refresh_tokens_id_seq`, owned by `supabase_auth_admin` and attached to `auth.refresh_tokens.id`; `realtime.subscription_id_seq`, owned by `supabase_realtime_admin`, with no column dependency recorded. Unvalidated foreign keys: 0.
+
+One check constraint is not validated: `realtime.messages_payload_exclusive`, defined as `CHECK (((payload IS NULL) OR (binary_payload IS NULL))) NOT VALID`. This phase did not run `VALIDATE CONSTRAINT`. The plaintext dump was already removed, so the dump text was not re-read. The constraint is in the restored catalog in the `NOT VALID` state the restore left behind. It was not altered.
+
+`public.tejas_case_files` and `public.tejas_payment_utrs` are absent. They were not created.
+
+### Local database retention
+
+The database owner is `postgres`. `listen_addresses` is `localhost`. Port `5432` accepts a connection on `127.0.0.1`. `pg_hba.conf` allows local peer authentication and scram-sha-256 for `127.0.0.1/32` and `::1/128`. It does not allow a non-local address. The data directory `/var/lib/postgresql/17/main` is mode `700` and owned by `postgres`. The socket directory is mode `755`. The socket itself is mode `777`, which lets a local user attempt a connection. Authentication still applies.
+
+`postgres` is a superuser and can log in. `supabase_admin` is a local superuser and cannot log in. The other local recovery roles cannot log in and are not superusers. Those grants were not copied to Production.
+
+`/etc/postgresql/17/main/start.conf` says `auto`, and `postgresql.service` is enabled. The restored database is stored in the cluster data directory and is expected to remain across a restart if that service starts. This phase did not drop the database.
+
+Retention recommendation: keep `tejas_restore_full_20261115` until the owner names that database and approves a disposal method. Disposal is not authorized by this section. A later disposal would need to drop that named database and account for copies in the data directory. Ordinary deletion is not secure erasure.
+
+### Prerequisite confirmation
+
+P-03, P-08, P-12, P-14, P-15, P-18, P-19, the historical OpenSSL version string, and P-22 stay unresolved. No checksum, companion file, historical script, historical tar command, upload destination, or Production plan was invented. P-04 stays an owner decision. P-18 stays open: archive validation is not an upload.

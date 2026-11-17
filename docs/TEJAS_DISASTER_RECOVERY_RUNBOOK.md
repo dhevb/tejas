@@ -1,0 +1,2326 @@
+# TEJAS disaster recovery runbook
+
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Statements above that say the real backups were **NOT TESTED** were true when written. Section T is the current evidence.
+
+This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. The real TEJAS backup files remain **NOT TESTED**.
+
+Read every step by its evidence label:
+
+| Label | Meaning |
+| --- | --- |
+| Current verified inventory | A read-only audit on 17 November 2026 downloaded the Drive object and matched its size and SHA-256. That audit did not decrypt the object and did not repeat the database restore. |
+| Historical verified procedure | The recovery session on 15–16 November 2026 actually ran the step. It was not repeated on 17 November 2026. |
+| Synthetic test passed | A disposable test passed on data created for that test. It is not a test of a TEJAS backup, and it does not authorize decryption, extraction, or restore of the real files. |
+| Proposed, untested | A safer handling step that has not been run against these backups. Do not describe it as verified. A synthetic result, where one exists, does not change this label for the real backup. |
+| OWNER/ADMIN CONFIRMATION REQUIRED | The evidence does not establish the step. Stop and ask the owner before relying on it. |
+
+## A. Purpose and scope
+
+This runbook lets an owner and a technical administrator recover four things:
+
+1. The encrypted Production database backup.
+2. The encrypted Production Storage backup.
+3. The Age identity needed to decrypt the Storage backup.
+4. The four original Storage files inside that archive.
+
+Reading those four Storage files requires extraction. Extraction is not part of the authorization given by this runbook. It requires a separate owner authorization after the section F checker. A checker exit of 0 is not that authorization. Database recovery and Storage recovery are separate. Database recovery can finish without extraction. Storage recovery is not complete until that separate authorization exists and the four files have been verified. This runbook is not a full recovery until both parts are complete. Section R is the decision register. It does not authorize decryption, extraction, restore, or any external service.
+
+The owner decides whether a recovery may proceed and holds the passphrases. The administrator runs the commands on an isolated computer, checks the results, and removes plaintext when the check is finished.
+
+This runbook does not:
+
+- Restore over the live Production database.
+- Upload the four Storage files back into Supabase Storage. No such upload command was part of the historical verified procedure.
+- Apply pull request #25 or any later migration.
+- Replace, delete, or share the original Google Drive backups.
+- Store a passphrase, token, or plaintext Age identity in this repository or in Google Drive.
+
+These actions need a separate owner approval even after an isolated recovery succeeds:
+
+- Any write to the Production database, including `pg_restore` against Production.
+- Any upload of the four Storage files into Supabase Storage.
+- Applying pull request #25 or its migration package.
+- Replacing the shared rclone Google OAuth client.
+
+## B. Backup inventory
+
+These values are the current verified inventory from 17 November 2026, except where a row is explicitly marked historical.
+
+Root folder: `TEJAS_PRODUCTION_SECURE_BACKUPS`
+
+Root folder ID: `1O1afC89m69bKA3oOITls6CnCno7s_geR`
+
+The 17 November 2026 audit found only this root folder in the authorized Drive listing, and only the three child folders and four files below. Do not delete anything else that appears later. Confirm it with the owner first.
+
+### Database backup
+
+| Item | Value |
+| --- | --- |
+| Folder | `TEJAS_PRODUCTION_SECURE_BACKUPS/DATABASE_BACKUPS` |
+| Folder ID | `1oJoH0AGnTPjAosDwk9G2FQSLIkOeN8Wx` |
+| Filename | `tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc` |
+| Drive file ID | `1wgnwJmZgJYOBJ68YDJsohl6Fi08EfJdJ` |
+| Size | 476,816 bytes |
+| SHA-256 | `49d69874bc494c2c353a903906045ece4ad37c989a69ddaf0ae7195314fcdde1` |
+| Encryption | OpenSSL `enc`, AES-256-CBC, with `-pbkdf2` and `-salt` |
+| Passphrase variable | `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` |
+| Plaintext checksum | `408b10c3ef0e18bd4cde728afe529a780c7d2af7f83042c16c5faf9fe327e4b8` |
+| Plaintext checksum status | Historical verified procedure, 15 November 2026. Not recomputed on 17 November 2026. |
+| Plaintext size | Not retained. **UNAVAILABLE**. Do not invent it. |
+| Free space required before decryption | Not retained. **OWNER/ADMIN CONFIRMATION REQUIRED**. Stop until the operator has compared free space on the work filesystem with a known plaintext size. Do not invent either figure. |
+| Dump format | PostgreSQL custom format |
+| Source server | PostgreSQL 17.11 |
+| Dump program | pg_dump 17.12 (Ubuntu 17.12-1.pgdg24.04+1) |
+| Dump created | 2026-11-15 00:44:17 UTC |
+| Drive checksum status | Current verified inventory, 17 November 2026 |
+| Isolated restore | Passed on 15 November 2026, 6:23 AM IST. Not repeated on 17 November 2026. |
+
+The verified Drive folder contains this one database file. The backup session also encrypted local companion files whose names ended in `.globals.sql.enc` and `.metadata.json.enc`, using the same passphrase variable. Those companions were not in the Drive folder on 17 November 2026. **OWNER/ADMIN CONFIRMATION REQUIRED** before relying on them: their full filenames and whether any copy still exists outside Drive were not in the verified inventory.
+
+### Storage backup
+
+| Item | Value |
+| --- | --- |
+| Folder | `TEJAS_PRODUCTION_SECURE_BACKUPS/STORAGE_FILE_BACKUPS` |
+| Folder ID | `13ghwE4a6oe153Px38G72V1pJBuHXtAGv` |
+| Filename | `tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age` |
+| Drive file ID | `1uV_h-jhFRKOV9AAXGBa2OouPvvPzL59H` |
+| Size | 555,336 bytes |
+| SHA-256 | `ac76e4f8895284f098e0f674d58d8a901702f7b219809a0d51f64b358d7e72c4` |
+| Encryption | age v1.3.2 (`filippo.io/age`), using the Age identity file, not a passphrase |
+| Drive checksum status | Current verified inventory, 17 November 2026 |
+| Inner file hash status | Historical verified procedure, 16 November 2026. Not repeated on 17 November 2026. |
+
+The four files inside the archive, as hashed on 16 November 2026:
+
+| Path inside the archive | Bytes | SHA-256 |
+| --- | --- | --- |
+| `tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/receipt.pdf` | 205,575 | `26977633c8fa8c2b3c241a9b0e86113deaf6850718ca14af2ddbedc7ba264b07` |
+| `tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/receipt.jpg` | 320,492 | `171fd8bbc7f14342103ac8589fb5b9f91058178b561a9854b8988d899ee47486` |
+| `tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/upload.xlsx` | 11,160 | `762695a34046feb8e58e364d77b562545d960aec6dc658736c83e020dcff06ad` |
+| `tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx` | 11,160 | `762695a34046feb8e58e364d77b562545d960aec6dc658736c83e020dcff06ad` |
+
+The two spreadsheets are separate files with the same bytes and the same SHA-256. That match was an observed result, not a missing file.
+
+### Age identity recovery files
+
+Folder: `TEJAS_PRODUCTION_SECURE_BACKUPS/AGE_KEY_RECOVERY`
+
+Folder ID: `1yOrQCpLvf_RNMgV7l_1-Zv8LqYt2ei2_`
+
+| File | Drive file ID | Bytes | SHA-256 | Passphrase variable |
+| --- | --- | --- | --- | --- |
+| `tejas-storage-backup.identity.gpg` | `1ehDBTPcEqWFpM1M7ij1kXDKsMvUQB8hB` | 273 | `fd2df7cdfd3041cf33c1bce947af0b90213e449642c58b4d7de1ce1f3fb1ab5b` | `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` |
+| `tejas-storage-backup.identity.owner.gpg` | `1L1u80JBY0qD0PzgTLJW3THfrsw7My_v4` | 248 | `e6f86e98fb5203cf75daa7f8dfa13e6d608f1b71fe8c8f0987eb6d4c5a0945cf` | `TEJAS_BACKUP_OWNER_PASSPHRASE` |
+
+These are different files. Either one, after decryption with its own passphrase, is expected to produce the same Age identity. The historical SHA-256 of that plaintext identity is:
+
+`86ac6f159d6a53449622fa1ba4dccad08dd019ec19b855aa5d79e02ea05996e8`
+
+The original GPG file was created and decrypted on 15–16 November 2026 with GnuPG symmetric AES-256. The owner GPG file was created and decrypted in a later verified session with GnuPG 2.4.4, AES-256, S2K mode 3, SHA-512, and S2K count 65011712. The 17 November audit checked both ciphertext files and did not decrypt them again.
+
+Keep the plaintext identity only on the recovery computer, in a mode `600` file, and delete it when the Storage check is finished. Do not upload it to Google Drive. Deletion limits are in section K. Removing the file does not promise that an SSD or a cloud disk has forgotten it.
+
+## C. Prerequisites and required tools
+
+The owner provides:
+
+- The two passphrases, through a secure channel that is not ChatGPT, Cursor chat, email, GitHub, or a Google Drive document. The passphrase values are never written into this runbook.
+- Approval before any step that would write to Production.
+- Confirmation that the passphrases are also stored offline. That offline custody was not verified on 17 November 2026.
+
+The administrator provides an isolated computer with:
+
+| Tool | Version used in the verified procedure | Purpose |
+| --- | --- | --- |
+| OpenSSL | The `enc` command in section G. A separate version string was not recorded. | Decrypt the database archive |
+| GnuPG | 2.4.4 for the owner file. The original file reported AES-256 CFB. | Decrypt one Age identity file |
+| age | v1.3.2, `filippo.io/age`. The tested program was `/home/ubuntu/tejas-backups/bin/age`. A future run must use that path after the section F version check. Do not accept another `age` from `PATH`. | Decrypt the Storage archive |
+| PostgreSQL 17 client | pg_dump 17.12. Restore tools from `/usr/lib/postgresql/17/bin`. | Inspect and restore the custom dump |
+| Isolated PostgreSQL 17 server | The successful test used a local socket on port 5433. Its `version()` string was not recorded. | Receive the restore. This is not Production. |
+| `supabase_vault` | 0.3.1, in schema `vault` | Required before the full restore. The first restore failed until this extension existed. |
+| rclone | Remote name `tejasdrive` | Download the private Drive copies |
+| GNU tar | Used during the historical Storage restore. The exact argument list was not preserved. | Section M records a synthetic GNU tar 1.35 listing test. Extraction of the real archive remains unauthorized. |
+| `sha256sum` | Used to check every download | Compare with section B |
+
+`age` and `pg_restore` were not installed on the 17 November audit computer. They must be installed on the recovery computer before those sections are attempted. Phase 3D did not execute the pinned age binary or any `pg_restore` client. Installation remains a recovery-computer prerequisite, not a step performed by this revision.
+
+Phase 2C recorded OpenSSL 3.0.13 for a dummy file-descriptor round trip, and portable PostgreSQL 17.12 for an empty disposable database. Those versions belong to section O. They are not the recorded versions of the 15 November decryption or the historical restore. The historical OpenSSL command remains the `env:` command in section G.
+
+These extensions were recorded for the Production database that matched the successful restore:
+
+| Extension | Version |
+| --- | --- |
+| `pg_stat_statements` | 1.11 |
+| `pgcrypto` | 1.3 |
+| `plpgsql` | 1.0 |
+| `supabase_vault` | 0.3.1 |
+| `uuid-ossp` | 1.1 |
+
+The 15 November comparison result was 5 production extensions and 5 restored extensions, with none missing. The exact package-install commands for the four extensions other than `supabase_vault` were not shown. **OWNER/ADMIN CONFIRMATION REQUIRED** if the isolated server cannot create one of them: stop and install the matching extension rather than skipping objects from the dump.
+
+The verified vault setup that allowed the full restore was:
+
+```sql
+CREATE SCHEMA vault;
+CREATE EXTENSION supabase_vault WITH SCHEMA vault;
+```
+
+The intended disposable database for that historical SQL was `tejas_restore_full_20261115`. A later attempt must name a new empty database before any SQL. `postgres` is not a disposable restore target. Before this SQL, `current_database()` must equal the named disposable database and the psql session must have `ON_ERROR_STOP` on. The historical SQL text above is unchanged. Phase 3D did not execute it.
+
+```bash
+require_sql_session() {
+  on_error_stop=$1
+  expected_db=$2
+  actual_db=$3
+  if [ "$on_error_stop" != "1" ]; then
+    echo "ON_ERROR_STOP is not on; stop"
+    exit 1
+  fi
+  if [ -z "$expected_db" ] || [ -z "$actual_db" ]; then
+    echo "database identity is missing; stop"
+    exit 1
+  fi
+  if [ "$expected_db" = "postgres" ] || [ "$actual_db" = "postgres" ]; then
+    echo "database postgres is not the disposable restore target; stop"
+    exit 1
+  fi
+  if [ "$actual_db" != "$expected_db" ]; then
+    echo "database identity mismatch; stop"
+    exit 1
+  fi
+}
+```
+
+The psql invocation that carries `ON_ERROR_STOP` is proposed and was not executed:
+
+```bash
+psql -v ON_ERROR_STOP=1 -h /var/run/postgresql -p 5433 -d tejas_restore_full_20261115
+```
+
+Change `-d` only to the new empty database that passed `require_sql_session`. Do not point it at Production.
+
+The source used for that extension was tag `v0.3.1`. The compile flags used to build it were not preserved. **OWNER/ADMIN CONFIRMATION REQUIRED** for the build commands if a packaged `supabase_vault` 0.3.1 is not already available.
+
+### Passphrase handling
+
+Three mechanisms appear in the historical verified procedures. A fourth form was tested on dummy data only. They are not interchangeable without a test.
+
+| Mechanism | What it is | Where it was used | Exposure to avoid |
+| --- | --- | --- | --- |
+| Environment variable | The secret is the value of a named shell variable. | Historical OpenSSL decryption of the database archive, using `-pass env:TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`. | Do not type the value in the command. The value can still be visible to process inspection on the same machine. This method is not completely secret. |
+| Protected passphrase file | A mode `600` file that contains the passphrase. | Historical GnuPG decryption of `tejas-storage-backup.identity.gpg`, using `--passphrase-file`. | The file must not be copied into the repository, Drive, a screenshot, or a log. |
+| File descriptor | GnuPG reads the passphrase from an open descriptor, not from an argument. | Historical GnuPG decryption of `tejas-storage-backup.identity.owner.gpg`, using `--passphrase-fd`. | Do not put the passphrase after `--passphrase`. |
+| OpenSSL file descriptor | OpenSSL reads a passphrase file through `-pass fd:3`. | Phase 2C dummy encrypt and decrypt only. It was not used on this backup. It is not approved for the real archive. | Do not use it for the first recovery of this archive. The historical command remains `-pass env:TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`. |
+
+Rules for every mechanism:
+
+- A secret must never appear in a command-line argument, a log, a screenshot, shell history, or chat.
+- The owner must not provide a passphrase through ChatGPT. This runbook never asks for the passphrase value, and the administrator must not print, retrieve, or inspect one.
+- An environment variable is not completely secret. While a process is running, its environment can be visible to a sufficiently privileged user or to another process on the same machine. Preserving the historical OpenSSL `env:` command does not mean that method hides the passphrase from local process inspection.
+- `set +o history` is a Bash setting. It is proposed practice, and it was not part of the recorded historical commands. It stops Bash from recording later commands in that shell. It does not erase history that was already written, it does not apply to other shells, and it does not guarantee that no history exists. Section N records a synthetic Bash test of that limit. Dash rejected the same option.
+- Remove every passphrase file after the command that needed it. See section K. `rm` removes a directory entry. It does not guarantee erasure from an SSD, a cloud disk, a snapshot, or a backup.
+- At the end of the session, unset `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`, `TEJAS_BACKUP_OWNER_PASSPHRASE`, `PGPASSWORD`, and `SUPABASE_BACKUP_DB_URL` if any of them is set. Unsetting `SUPABASE_BACKUP_DB_URL` does not revoke a credential or invalidate the URL. Do not print the value.
+- Before finishing, check the shell's history list and the terminal scrollback for an accidental secret. Do not paste that check into chat. If a secret was recorded, tell the owner that exposure may have occurred. **OWNER/ADMIN CONFIRMATION REQUIRED** for how that history is cleared on the particular shell, because no tested cleanup command was recorded.
+
+### Proposed passphrase entry
+
+**OWNER/ADMIN CONFIRMATION REQUIRED.** Section N tested a Bash silent-read shape on dummy variable `DUMMY_PHASE2B_ENTRY`. The tested steps were `set +o history`, `stty -echo`, `IFS= read -r -s`, `export` of that name only, a non-empty check that did not print the value, and `unset`. S03 found no history file. The test did not use a TEJAS passphrase variable, did not save a file from an editor, and did not establish the real passphrase bytes or a trailing newline. No real passphrase was used. The real TEJAS passphrases remain **NOT TESTED**.
+
+This method is a way to type a passphrase without putting the secret in a shell command, a command argument, a log, or shell history. Do not use `echo` or `printf`. Do not run `export NAME=value` with the value typed in the command. Do not print the variable afterward.
+
+The real passphrase bytes remain unknown. That includes whether a trailing newline is present. A normal editor save may append a newline. Do not edit, normalize, trim, or reconstruct the real passphrase, and do not use an editor save to decide its bytes. The empty mode `600` file below is preparation only. The commented editor command is not a byte-exact method.
+
+```bash
+umask 077
+install -m 600 /dev/null "$work/encryption-passphrase"
+# Not a byte-exact method. Do not use an editor save to decide the passphrase bytes.
+# nano "$work/encryption-passphrase"
+```
+
+Do not run that block until section D has created `work` and defined `require_private_work`. The guarded form is in section D.
+
+Use the same empty-file preparation for `"$work/owner-passphrase"` when that file is the one required. An editor swap or backup file is unexpected. Do not remove it with an unguarded `rm`, and do not add it to the cleanup allow-list. Identify the exact regular-file path inside the private work directory and remove only that explicit path with the section E guard. If its purpose is unclear, stop. The section K inventory still stops while any unexpected file remains. If decryption fails, stop. Do not rewrite the passphrase to guess whether a newline belongs in it.
+
+The historical OpenSSL command needs the environment variable. The proposed Bash entry below reads it silently from the terminal. The secret is not part of the command text. The value is still placed in the process environment, where process inspection on the same machine can reveal it:
+
+```bash
+IFS= read -r -s TEJAS_BACKUP_ENCRYPTION_PASSPHRASE < /dev/tty
+export TEJAS_BACKUP_ENCRYPTION_PASSPHRASE
+```
+
+`read -s` is Bash. It is not a method for other shells. `export` in this form names the variable and does not include the secret. Do not confirm the entry by printing it.
+
+The historical OpenSSL command uses the environment variable's exact value. Do not add a newline to that variable. The historical GnuPG `--passphrase-file` command reads the first line of the file. The recorded evidence does not say whether a trailing newline was part of the stored passphrase. **OWNER/ADMIN CONFIRMATION REQUIRED** if a decryption fails for that reason. Do not guess by rewriting the passphrase. The Phase 2C file-descriptor test used a dummy passphrase and does not authorize `-pass fd:3` for the real archive. The historical `-pass env:TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` command was not run in Phase 3C.
+
+Environment variable names, and nothing else:
+
+| Variable | Used for |
+| --- | --- |
+| `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` | Database archive and `tejas-storage-backup.identity.gpg` |
+| `TEJAS_BACKUP_OWNER_PASSPHRASE` | `tejas-storage-backup.identity.owner.gpg` only |
+| `SUPABASE_BACKUP_DB_URL` | Historical source connection used when the dump was created. It is not a restore target. Section K unsets the name. Unsetting it does not revoke a credential or invalidate the URL. Do not print it, inspect it, copy it, export it, or connect to it. |
+
+Do not print these variables. Do not pass a passphrase as a visible command argument.
+
+## D. Google Drive access and download verification
+
+The verified downloads used the private rclone remote `tejasdrive`. The 17 November configuration of that remote used Google Drive scope `drive.file`. If `tejasdrive` is not available on the recovery computer, stop. **OWNER/ADMIN CONFIRMATION REQUIRED** to authorize rclone again to the same private Google account. Do not create a public link, and do not change sharing on the existing files. Replacing rclone's shared Google client is a separate approval and is not part of this recovery.
+
+On 17 November 2026 every verified folder and file had `shared=false`, was owned by the signed-in account, was not in the trash, and had one permission grant: the owner. There was no anyone, domain, or group grant.
+
+Create a private working directory and download one object at a time:
+
+```bash
+umask 077
+# Bash only. Not part of the historical download.
+# Section N records the synthetic limit: it does not erase history already written.
+set +o history
+work=$(mktemp -d)
+chmod 700 "$work"
+install -m 600 /dev/null "$work/.tejas-recovery-workspace"
+printf '%s\n' 'tejas-isolated-recovery-workspace' > "$work/.tejas-recovery-workspace"
+chmod 600 "$work/.tejas-recovery-workspace"
+cd "$work"
+```
+
+`set +o history` is proposed Bash practice. It was not part of the historical download commands. It does not erase history that Bash or another shell has already written, it does nothing for a shell that does not implement this option, and it is not a guarantee that the session is absent from history.
+
+The `.tejas-recovery-workspace` file is a fixed marker, not a secret. Section K refuses to delete anything when that marker is missing or when `work` is not a private real directory. Removing a file does not securely erase its bytes.
+
+Every later block that writes under `$work` calls `require_private_work` first. A missing function, an unset or empty `work`, a relative path, `/`, a symlink, a mode other than `700`, or a bad marker stops the block before it writes. Pasting a later block alone fails closed because the function is not defined.
+
+```bash
+require_private_work() {
+  python3 - << 'PY'
+import os, stat, sys
+FORBIDDEN = {"/tmp", "/var", "/var/tmp", "/home", "/usr", "/opt", "/dev", "/dev/shm", "/root"}
+MARKER = b"tejas-isolated-recovery-workspace\n"
+path = os.environ.get("work", "")
+
+def fail(message):
+    print(message, file=sys.stderr)
+    raise SystemExit(1)
+
+if "work" not in os.environ or path == "":
+    fail("work directory is unset or empty")
+if not path.startswith("/"):
+    fail("work directory is relative")
+if path == "/":
+    fail("work directory is root")
+current = ""
+for part in path.split("/"):
+    if part == "":
+        continue
+    if part in (".", ".."):
+        fail("work directory has an unexpected path component")
+    current += "/" + part
+    try:
+        st = os.lstat(current)
+    except OSError:
+        fail("work directory is not an existing real directory")
+    if stat.S_ISLNK(st.st_mode):
+        fail("work directory path contains a symlink")
+    if not stat.S_ISDIR(st.st_mode):
+        fail("work directory is not a real directory")
+if current in FORBIDDEN or current.count("/") < 2:
+    fail("work directory is not a private workspace")
+st = os.lstat(current)
+if st.st_uid != os.getuid() or stat.S_IMODE(st.st_mode) != 0o700:
+    fail("work directory is not a private mode 700 directory")
+marker = current + "/.tejas-recovery-workspace"
+try:
+    marker_stat = os.lstat(marker)
+except OSError:
+    fail("workspace marker is missing")
+if stat.S_ISLNK(marker_stat.st_mode) or not stat.S_ISREG(marker_stat.st_mode):
+    fail("workspace marker is not a regular file")
+if stat.S_IMODE(marker_stat.st_mode) != 0o600:
+    fail("workspace marker mode is not 600")
+with open(marker, "rb") as handle:
+    if handle.read() != MARKER:
+        fail("workspace marker content is unexpected")
+PY
+}
+require_rclone_download() {
+  source_path=$1
+  dest_path=$2
+  if [ -z "${work:-}" ] || [ "$work" = "/" ]; then
+    echo "work directory is unset, empty, or root; stop"
+    exit 1
+  fi
+  case "$dest_path" in
+    tejasdrive:*) echo "rclone destination is Drive; reversed arguments can upload; stop"; exit 1 ;;
+  esac
+  case "$source_path" in
+    tejasdrive:*) ;;
+    *) echo "rclone source is not the Drive remote; stop"; exit 1 ;;
+  esac
+  case "$dest_path" in
+    *"/../"*|*"/.."|".."* ) echo "rclone destination has an unexpected path component; stop"; exit 1 ;;
+  esac
+  case "$dest_path" in
+    "$work"/*) ;;
+    *) echo "rclone destination is outside the work directory; stop"; exit 1 ;;
+  esac
+}
+```
+
+Create a passphrase file only after `work` exists:
+
+```bash
+set -euo pipefail
+require_private_work
+umask 077
+install -m 600 /dev/null "$work/encryption-passphrase"
+install -m 600 /dev/null "$work/owner-passphrase"
+```
+
+This comparison is a proposed fail-closed gate. A zero exit from `sha256sum` is not acceptance. The expected value is the fixed section B checksum, not a value taken from the download. Define this function in the same shell before each verification block below. Each verification block also includes it, so a pasted block does not depend on an earlier shell.
+
+```bash
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+```
+
+Database archive. This download shape is the historical verified procedure:
+
+```bash
+set -euo pipefail
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+require_rclone_download \
+  "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/DATABASE_BACKUPS/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc" \
+  "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc"
+rclone copyto \
+  "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/DATABASE_BACKUPS/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc" \
+  "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc"
+sha256sum "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc"
+require_sha256 \
+  "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc" \
+  "49d69874bc494c2c353a903906045ece4ad37c989a69ddaf0ae7195314fcdde1"
+```
+
+Storage archive:
+
+```bash
+set -euo pipefail
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+require_rclone_download \
+  "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/STORAGE_FILE_BACKUPS/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age" \
+  "$work/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age"
+rclone copyto \
+  "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/STORAGE_FILE_BACKUPS/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age" \
+  "$work/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age"
+sha256sum "$work/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age"
+require_sha256 \
+  "$work/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age" \
+  "ac76e4f8895284f098e0f674d58d8a901702f7b219809a0d51f64b358d7e72c4"
+```
+
+Original identity file:
+
+```bash
+set -euo pipefail
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+require_rclone_download \
+  "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/AGE_KEY_RECOVERY/tejas-storage-backup.identity.gpg" \
+  "$work/tejas-storage-backup.identity.gpg"
+rclone copyto \
+  "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/AGE_KEY_RECOVERY/tejas-storage-backup.identity.gpg" \
+  "$work/tejas-storage-backup.identity.gpg"
+sha256sum "$work/tejas-storage-backup.identity.gpg"
+require_sha256 \
+  "$work/tejas-storage-backup.identity.gpg" \
+  "fd2df7cdfd3041cf33c1bce947af0b90213e449642c58b4d7de1ce1f3fb1ab5b"
+```
+
+Owner identity file, if the original identity passphrase is unavailable:
+
+```bash
+set -euo pipefail
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+require_rclone_download \
+  "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/AGE_KEY_RECOVERY/tejas-storage-backup.identity.owner.gpg" \
+  "$work/tejas-storage-backup.identity.owner.gpg"
+rclone copyto \
+  "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/AGE_KEY_RECOVERY/tejas-storage-backup.identity.owner.gpg" \
+  "$work/tejas-storage-backup.identity.owner.gpg"
+sha256sum "$work/tejas-storage-backup.identity.owner.gpg"
+require_sha256 \
+  "$work/tejas-storage-backup.identity.owner.gpg" \
+  "e6f86e98fb5203cf75daa7f8dfa13e6d608f1b71fe8c8f0987eb6d4c5a0945cf"
+```
+
+`require_sha256` exits non-zero on a missing, unreadable, empty, or mismatched file. Do not start the next block after a non-zero exit. `set -e` remains in effect in that shell. The `rclone copyto` form above is the download shape that was used. In that form the first path is the source and the second path is the destination. Reversing them can upload a local file to Drive and can overwrite a Drive object. `rclone copy` and `rclone sync` toward `tejasdrive:` can do the same. This phase did not run rclone and did not contact Google Drive.
+
+Each download block above calls `require_private_work` and `require_rclone_download` before `rclone copyto`. The source must begin with `tejasdrive:`. The destination must be inside the marked work directory, must not begin with `tejasdrive:`, and must not contain `..`. An empty `work` must not make the destination a path at `/`. A later read-only listing, if the owner authorizes one, uses the remote path as the only object argument. It is not a substitute for the section B checksum, and it is not authorized by this phase.
+
+Keep the encrypted downloads until the owner accepts the result. Section K checks that they are still intact after plaintext is removed.
+
+## E. GPG recovery of the Age identity
+
+Recover the identity before decrypting the Storage archive. Use only one of the two GPG files. They require different passphrases.
+
+The owner supplies the chosen passphrase on the recovery computer, not through ChatGPT or any other chat. Section C records what the dummy silent-read tested and what it did not test. Use that silent-read shape only for a passphrase the owner supplies on this computer. Do not use the commented editor command to decide passphrase bytes. The administrator does not echo it, hash it, screenshot it, print it, or put it after a command flag as text.
+
+### Original recovery file
+
+This is the historical verified procedure for the file created and decrypted on 15–16 November 2026. It uses `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` through `--passphrase-file` and a mode `600` file:
+
+```bash
+set -euo pipefail
+umask 077
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+gpg --batch --yes --pinentry-mode loopback \
+  --passphrase-file "$work/encryption-passphrase" \
+  --output "$work/tejas-storage-backup.identity" \
+  --decrypt "$work/tejas-storage-backup.identity.gpg"
+chmod 600 "$work/tejas-storage-backup.identity"
+sha256sum "$work/tejas-storage-backup.identity"
+require_sha256 \
+  "$work/tejas-storage-backup.identity" \
+  "86ac6f159d6a53449622fa1ba4dccad08dd019ec19b855aa5d79e02ea05996e8"
+```
+
+The creation command also included `--cipher-algo AES256` and `--symmetric`. Those flags are for creating the file. Decryption does not need them. `--s2k-mode`, `--s2k-digest-algo`, and `--s2k-count` were not shown for this original file.
+
+### Owner recovery file
+
+Use this file when the owner supplies `TEJAS_BACKUP_OWNER_PASSPHRASE` instead. This is the historical verified procedure. The passphrase is passed on file descriptor 3, not as a command argument. The verified file uses AES-256 and S2K mode 3 with SHA-512 and count 65011712. Those S2K settings are already inside the file. The decrypt command does not repeat them:
+
+```bash
+set -euo pipefail
+umask 077
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+gpg --batch --yes --pinentry-mode loopback \
+  --passphrase-fd 3 \
+  --output "$work/tejas-storage-backup.identity" \
+  --decrypt "$work/tejas-storage-backup.identity.owner.gpg" \
+  3< "$work/owner-passphrase"
+chmod 600 "$work/tejas-storage-backup.identity"
+sha256sum "$work/tejas-storage-backup.identity"
+require_sha256 \
+  "$work/tejas-storage-backup.identity" \
+  "86ac6f159d6a53449622fa1ba4dccad08dd019ec19b855aa5d79e02ea05996e8"
+```
+
+For either file, continue only when the SHA-256 is exactly:
+
+`86ac6f159d6a53449622fa1ba4dccad08dd019ec19b855aa5d79e02ea05996e8`
+
+If GnuPG reports a bad passphrase, stop and ask the owner to check which passphrase was supplied. Do not try the other passphrase by guessing. The owner may choose the other GPG file and its matching passphrase.
+
+Remove the passphrase file as soon as decryption succeeds. Keep the identity file only until section F is finished. Unlinking does not guarantee secure erasure. The old unguarded `rm -f "$work/encryption-passphrase" "$work/owner-passphrase"` is withdrawn. With an empty `work` it named `/encryption-passphrase` and `/owner-passphrase`. It also followed a symlinked work directory. It did not name an encrypted original, but it had no workspace check.
+
+The replacement unlinks only those two names when they are regular files inside the private work directory. It does not remove a `.dump.enc`, `.tar.age`, or `.gpg` original. A symlink, a relative path, an unset `work`, or a target outside the workspace stops it before any unlink.
+
+```bash
+set -euo pipefail
+python3 - << 'PY'
+import os, stat, sys
+FILES = ["encryption-passphrase", "owner-passphrase"]
+FORBIDDEN = {"/tmp", "/var", "/var/tmp", "/home", "/usr", "/opt", "/dev", "/dev/shm", "/root"}
+MARKER = b"tejas-isolated-recovery-workspace\n"
+
+def fail(message):
+    print(message, file=sys.stderr)
+    raise SystemExit(1)
+
+def private_work(path):
+    if "work" not in os.environ or path == "":
+        fail("work directory is unset or empty")
+    if not path.startswith("/") or path == "/":
+        fail("work directory is relative or root")
+    current = ""
+    for part in path.split("/"):
+        if part == "":
+            continue
+        if part in (".", ".."):
+            fail("work directory has an unexpected path component")
+        current += "/" + part
+        try:
+            st = os.lstat(current)
+        except OSError:
+            fail("work directory is not an existing real directory")
+        if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+            fail("work directory path contains a symlink or a non-directory")
+    if current in FORBIDDEN or current.count("/") < 2:
+        fail("work directory is not a private workspace")
+    st = os.lstat(current)
+    if st.st_uid != os.getuid() or stat.S_IMODE(st.st_mode) != 0o700:
+        fail("work directory is not a private mode 700 directory")
+    marker = current + "/.tejas-recovery-workspace"
+    try:
+        marker_stat = os.lstat(marker)
+    except OSError:
+        fail("workspace marker is missing")
+    if stat.S_ISLNK(marker_stat.st_mode) or not stat.S_ISREG(marker_stat.st_mode):
+        fail("workspace marker is not a regular file")
+    if stat.S_IMODE(marker_stat.st_mode) != 0o600:
+        fail("workspace marker mode is not 600")
+    with open(marker, "rb") as handle:
+        if handle.read() != MARKER:
+            fail("workspace marker content is unexpected")
+    return current
+
+def inside(work, rel):
+    if rel.startswith("/") or rel in ("", ".", "..") or "\\" in rel:
+        fail("deletion target is not an explicit relative path")
+    path = work + "/" + rel
+    if not path.startswith(work + "/"):
+        fail("deletion target is outside the work directory")
+    return path
+
+work = private_work(os.environ.get("work", ""))
+planned = []
+for rel in FILES:
+    path = inside(work, rel)
+    if not os.path.lexists(path):
+        continue
+    st = os.lstat(path)
+    if stat.S_ISLNK(st.st_mode) or not stat.S_ISREG(st.st_mode):
+        fail("passphrase path is a symlink or not a regular file")
+    if st.st_nlink != 1:
+        fail("passphrase path has another hard link; stop")
+    if path in (work + "/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc",
+                work + "/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age",
+                work + "/tejas-storage-backup.identity.gpg",
+                work + "/tejas-storage-backup.identity.owner.gpg"):
+        fail("refusing to unlink an encrypted original")
+    planned.append(path)
+for path in planned:
+    os.unlink(path)
+PY
+```
+
+Section K is the full cleanup. It also unsets the shell variables.
+
+## F. Age decryption of the Storage archive
+
+The historical verified decryption used the identity file and did not use an age passphrase. The tested program was age v1.3.2 at `/home/ubuntu/tejas-backups/bin/age`. This is the historical command. Its arguments are unchanged. Do not run the name `age` from `PATH`.
+
+```bash
+age -d \
+  -i "$work/tejas-storage-backup.identity" \
+  -o "$work/archive.tar" \
+  "$work/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age"
+```
+
+Before a future decryption, require that exact path and version. Phase 3D tested this guard with disposable programs. It did not execute the pinned binary and did not decrypt a TEJAS archive. Accepted version output is exactly `v1.3.2`, with or without one trailing newline. Any other output stops the procedure.
+
+```bash
+require_exact_age_version() {
+  bin=$1
+  if [ -L "$bin" ] || [ ! -f "$bin" ] || [ ! -x "$bin" ]; then
+    echo "age binary is missing, not a regular executable, or is a symlink; stop"
+    exit 1
+  fi
+  age_version=$("$bin" --version 2>&1) || {
+    echo "age version check failed; stop"
+    exit 1
+  }
+  age_version=${age_version%$'\n'}
+  if [ "$age_version" != "v1.3.2" ]; then
+    echo "age version is not v1.3.2; stop"
+    exit 1
+  fi
+}
+require_pinned_age() {
+  if [ "$1" != "/home/ubuntu/tejas-backups/bin/age" ]; then
+    echo "age path is not the pinned binary; stop"
+    exit 1
+  fi
+  require_exact_age_version "$1"
+}
+```
+
+A future decryption uses the pinned binary and the same arguments. The version check is in the same block, so a mismatch stops before decryption. This form was not run in Phase 3D:
+
+```bash
+set -euo pipefail
+require_private_work
+age_bin=/home/ubuntu/tejas-backups/bin/age
+require_pinned_age "$age_bin"
+"$age_bin" -d \
+  -i "$work/tejas-storage-backup.identity" \
+  -o "$work/archive.tar" \
+  "$work/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age"
+```
+
+The historical session then extracted the tar and hashed the four members. The exact `tar` argument list was not preserved. That historical extraction is not a tested safe-member inspection. Matching the four hashes shows that those four files were present. It does not show that the archive was checked for dangerous members.
+
+### Proposed inspection before extraction
+
+**Synthetic listing test passed. See section M. The real Storage archive remains NOT TESTED. OWNER/ADMIN CONFIRMATION REQUIRED before extraction.**
+
+Reading `tar -tf` or `tar -tvf` by eye is not mechanical validation. A visual reading can miss an absolute path, a `..` segment, a duplicate name, a symbolic link, a hard link, a device, a FIFO, or an extra member. Do not treat a visual reading as a pass, and do not extract on the basis of one.
+
+The procedure below has not been run against `tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age`. It is not a historical verified procedure. A zero exit from it is not approval to extract. Section M records the disposable-archive test. Do not extract this archive until the owner/admin records a separate approval after that test. The real archive remains **NOT TESTED**.
+
+If GNU tar rejects `--quoting-style=escape`, stop. Do not drop the option and extract. Do not pipe `tar` into another program. A pipe can hide a non-zero exit status.
+
+The proposed checker fails closed. It must exit non-zero, and extraction must not begin, when any of these is true:
+
+- Either listing command exits non-zero, produces no members, or omits a final newline.
+- The name listing and the verbose listing do not have the same count.
+- A name is absolute, including a leading `/`, a leading `\`, or a drive-style `:` prefix.
+- A name contains an empty segment, a `.` segment, or a `..` segment.
+- The same name appears more than once.
+- A name is not one of the four expected regular files and is not one of their expected parent directories.
+- One of the four expected regular files is missing.
+- A verbose line does not end with the matching member name.
+- A verbose line begins with any type other than `-` for a required regular file or `d` for an allowed parent directory. That rejects a symbolic link, a hard link shown with another type letter, a device, a FIFO, a socket, and any other special file.
+- A verbose line contains ` -> ` or ` link to `.
+
+The only acceptable names are:
+
+| Kind | Acceptable name |
+| --- | --- |
+| Directory | `tejas-payment-proofs` or `tejas-payment-proofs/` |
+| Directory | `tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3` or the same path with a trailing slash |
+| Directory | `tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ` or the same path with a trailing slash |
+| Directory | `tejas-registration-files` or `tejas-registration-files/` |
+| Directory | `tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3` or the same path with a trailing slash |
+| Directory | `tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ` or the same path with a trailing slash |
+| Regular file | `tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/receipt.pdf` |
+| Regular file | `tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/receipt.jpg` |
+| Regular file | `tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/upload.xlsx` |
+| Regular file | `tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx` |
+
+Directory entries are optional. Each of the four regular files is mandatory and may appear only once. The historical archive listing was not preserved member by member, so this allow-list is derived from the four verified file paths. **OWNER/ADMIN CONFIRMATION REQUIRED** if the real archive contains an extra directory name that this table does not list. Do not extract it while that confirmation is missing.
+
+This proposed script lists members and checks those conditions. It does not extract. Section M ran it with GNU tar 1.35 on synthetic archives. GNU tar showed the hard-link member with type `h` and the text ` link to `, and the checker rejected it. A successful exit is not proof that the real archive is safe, and it is not approval to extract:
+
+```bash
+tar --quoting-style=escape -tf "$work/archive.tar" > "$work/tar-names.txt"
+tar_names_exit=$?
+tar --quoting-style=escape -tvf "$work/archive.tar" > "$work/tar-verbose.txt"
+tar_verbose_exit=$?
+if [ "$tar_names_exit" -ne 0 ] || [ "$tar_verbose_exit" -ne 0 ]; then
+  echo "tar listing failed; fail closed; do not extract"
+  exit 1
+fi
+python3 - "$work/tar-names.txt" "$work/tar-verbose.txt" << 'PY'
+import sys
+from pathlib import Path
+
+def fail(message):
+    print(message, file=sys.stderr)
+    raise SystemExit(1)
+
+def lines(path):
+    data = Path(path).read_bytes()
+    if not data.endswith(b"\n"):
+        fail("listing has no final newline")
+    parts = data.split(b"\n")[:-1]
+    if any(part == b"" for part in parts):
+        fail("empty listing line")
+    return parts
+
+names = lines(sys.argv[1])
+verbose = lines(sys.argv[2])
+if len(names) != len(verbose):
+    fail("name count does not match verbose count")
+if not names:
+    fail("empty archive listing")
+
+files = {
+    b"tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/receipt.pdf",
+    b"tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/receipt.jpg",
+    b"tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/upload.xlsx",
+    b"tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx",
+}
+directories = {
+    b"tejas-payment-proofs",
+    b"tejas-payment-proofs/",
+    b"tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3",
+    b"tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/",
+    b"tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ",
+    b"tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/",
+    b"tejas-registration-files",
+    b"tejas-registration-files/",
+    b"tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3",
+    b"tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/",
+    b"tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ",
+    b"tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/",
+}
+allowed = files.union(directories)
+seen = set()
+for name in names:
+    if name in seen:
+        fail("duplicate name")
+    seen.add(name)
+    if name not in allowed or name.startswith((b"/", b"\\")) or b":" in name or b"\x00" in name:
+        fail("unexpected or unsafe member name")
+    parts = [part for part in name.split(b"/") if part != b""]
+    if any(part in (b"..", b".") for part in parts):
+        fail("path traversal")
+if any(name not in seen for name in files):
+    fail("required regular file missing")
+
+for name, line in zip(names, verbose):
+    if b" -> " in line or b" link to " in line:
+        fail("link member")
+    if not line.endswith(b" " + name):
+        fail("verbose line does not end with the member name")
+    kind = line[:1]
+    if name in files and kind != b"-":
+        fail("required path is not a regular file")
+    if name in directories and kind != b"d":
+        fail("directory path has an unexpected type")
+    if kind not in (b"-", b"d"):
+        fail("unexpected member type")
+print("proposed check exited 0; this is not approval to extract")
+PY
+checker_exit=$?
+if [ "$checker_exit" -ne 0 ]; then
+  echo "archive checker failed; stop; do not extract"
+  exit "$checker_exit"
+fi
+python3 - "$work/archive.tar" "$work/checker-archive-id" << 'PY'
+import os, stat, sys
+archive, record = sys.argv[1], sys.argv[2]
+if os.path.islink(archive) or not os.path.isfile(archive):
+    print("checker archive is missing or not a regular file; stop", file=sys.stderr)
+    raise SystemExit(1)
+st = os.lstat(archive)
+if not stat.S_ISREG(st.st_mode):
+    print("checker archive is not a regular file; stop", file=sys.stderr)
+    raise SystemExit(1)
+with open(record, "w", encoding="ascii") as handle:
+    handle.write(f"{st.st_dev} {st.st_ino}\n")
+PY
+```
+
+### Extraction is not authorized
+
+Do not run `tar -x` on the real TEJAS archive. The historical extraction command was not preserved. Section M did not extract any archive. Phase 3C tested the guard below on disposable synthetic archives only. Those tests stopped absolute-path, traversal, symlink, hard-link, and duplicate members before `tar` ran. GNU tar's behavior on those members remains **UNTESTED**. A checker exit of 0 is not approval to extract the real archive. The real archive remains **NOT TESTED**. This block is not authorized for it.
+
+```bash
+set -euo pipefail
+require_private_work
+if [ "${checker_exit:-}" != "0" ]; then
+  echo "archive checker exit is not exactly 0; stop"
+  exit 1
+fi
+dest="$work/extracted"
+if [ "$dest" = "/" ] || [ "$dest" = "$work" ]; then
+  echo "extraction destination is not allowed; stop"
+  exit 1
+fi
+python3 - "$work" "$work/archive.tar" "$work/checker-archive-id" "$dest" << 'PY'
+import os, stat, sys
+work, archive, record, dest = sys.argv[1:]
+
+def fail(message):
+    print(message, file=sys.stderr)
+    raise SystemExit(1)
+
+def real_directory(path):
+    if not path.startswith("/") or path == "/":
+        fail("path is not an absolute private directory")
+    current = ""
+    for part in path.split("/"):
+        if part == "":
+            continue
+        if part in (".", ".."):
+            fail("path has an unexpected component")
+        current += "/" + part
+        try:
+            st = os.lstat(current)
+        except OSError:
+            fail("path is not an existing real directory")
+        if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+            fail("path contains a symlink or a non-directory")
+    return current
+
+work = real_directory(work)
+marker = work + "/.tejas-recovery-workspace"
+try:
+    marker_stat = os.lstat(marker)
+except OSError:
+    fail("workspace marker is missing")
+if stat.S_ISLNK(marker_stat.st_mode) or not stat.S_ISREG(marker_stat.st_mode):
+    fail("workspace marker is not a regular file")
+if os.lstat(work).st_uid != os.getuid() or stat.S_IMODE(os.lstat(work).st_mode) != 0o700:
+    fail("work directory is not a private mode 700 directory")
+with open(marker, "rb") as handle:
+    if handle.read() != b"tejas-isolated-recovery-workspace\n":
+        fail("workspace marker content is unexpected")
+if os.path.islink(archive) or not os.path.isfile(archive):
+    fail("archive is missing or not a regular file")
+archive_stat = os.lstat(archive)
+if not stat.S_ISREG(archive_stat.st_mode):
+    fail("archive is not a regular file")
+if not archive.startswith(work + "/"):
+    fail("archive is outside the work directory")
+try:
+    recorded = open(record, "r", encoding="ascii").read()
+except OSError:
+    fail("checker archive identity is missing")
+if recorded != f"{archive_stat.st_dev} {archive_stat.st_ino}\n":
+    fail("extraction archive is not the archive that passed the checker")
+if os.path.lexists(dest):
+    fail("destination already exists; stop before extraction")
+parent = dest.rsplit("/", 1)[0]
+if parent != work:
+    fail("destination is not directly inside the work directory")
+if os.path.islink(parent):
+    fail("destination parent is a symlink")
+PY
+if ! mkdir -m 700 "$dest"; then
+  echo "mkdir failed; stop"
+  exit 1
+fi
+if [ -L "$dest" ] || [ ! -d "$dest" ]; then
+  echo "destination is not a real directory; stop"
+  exit 1
+fi
+if [ -n "$(find "$dest" -mindepth 1 -print -quit)" ]; then
+  echo "destination is not empty; stop"
+  exit 1
+fi
+tar --no-wildcards --no-overwrite-dir \
+  -x -f "$work/archive.tar" \
+  -C "$dest" \
+  -- \
+  "tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/receipt.pdf" \
+  "tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/receipt.jpg" \
+  "tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/upload.xlsx" \
+  "tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx"
+```
+
+GNU tar 1.35 rejected `--no-absolute-names` as an unrecognized option, so that option is not part of this command. Do not add `--absolute-names` or `-P`. On the clean disposable archive, the command used `--no-wildcards` and `--no-overwrite-dir` and wrote only inside the new destination. Those options were not what stopped an absolute path, a traversal name, a symlink, a hard link, or a duplicate member. Those members were stopped by the checker before `tar` ran. Their extraction behavior remains **UNTESTED**.
+
+### File-type inventory before any hash
+
+**Synthetic inventory behavior passed. See section N. A real TEJAS extract remains NOT TESTED.** This sequence is not authorized until extraction itself has been approved. `sha256sum` follows symbolic links. A hash is not a file-type check, and it must not be used to decide whether a path is a regular file. A symlink can make `sha256sum` read a file outside the extract directory.
+
+After a future approved extraction, use this order and stop at the first failure:
+
+1. Inventory every object under `$work/extracted` without following symlinks. GNU `find -printf` passed on the synthetic fixtures in section N. If it is unavailable, stop. Do not substitute `sha256sum`.
+2. Stop if any object is a symlink, FIFO, socket, device, or any type other than a directory or a regular file.
+3. Stop if any path is not one of the two Storage directories, `tejas-payment-proofs` and `tejas-registration-files`, their expected parent directories, or the four regular files in section B. An unexpected object of any type is a stop.
+4. Only after that inventory matches, calculate the four SHA-256 values and compare them with section B.
+
+```bash
+find "$work/extracted" -mindepth 1 -printf '%y %p\n'
+```
+
+The type letter is `f` for a regular file, `d` for a directory, and `l` for a symlink. Any `l`, `p`, `s`, `b`, `c`, or other letter is a stop. Do not continue to the hash command.
+
+```bash
+set -euo pipefail
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+sha256sum \
+  "$work/extracted/tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/receipt.pdf" \
+  "$work/extracted/tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/receipt.jpg" \
+  "$work/extracted/tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/upload.xlsx" \
+  "$work/extracted/tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx"
+require_sha256 \
+  "$work/extracted/tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/receipt.pdf" \
+  "26977633c8fa8c2b3c241a9b0e86113deaf6850718ca14af2ddbedc7ba264b07"
+require_sha256 \
+  "$work/extracted/tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/receipt.jpg" \
+  "171fd8bbc7f14342103ac8589fb5b9f91058178b561a9854b8988d899ee47486"
+require_sha256 \
+  "$work/extracted/tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/upload.xlsx" \
+  "762695a34046feb8e58e364d77b562545d960aec6dc658736c83e020dcff06ad"
+require_sha256 \
+  "$work/extracted/tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx" \
+  "762695a34046feb8e58e364d77b562545d960aec6dc658736c83e020dcff06ad"
+```
+
+`require_sha256` exits non-zero when a hash differs from section B. Do not start the next block after that exit. Also stop if any size differs from section B. The historical verified procedure stopped after its own hash comparison. It did not upload the four files to Supabase Storage. This later hash command is not that historical extraction, and it is not authorized now.
+
+**OWNER/ADMIN CONFIRMATION REQUIRED** before any Supabase Storage upload. No verified command, bucket API call, or service-role step was recorded for putting these four objects back. A future upload needs a separate owner approval, confirmation that the buckets are still private, and a check that an existing object will not be overwritten by accident.
+
+Section K is the cleanup. Do not delete the downloaded `.tar.age` until the owner accepts the result. Do not delete the Drive original. Cleanup must still remove `tejas-payment-proofs` and `tejas-registration-files` if either name exists in the work directory.
+
+## G. Database archive decryption and isolated restore
+
+Restore first into an empty local database. The commands in this section are not commands against Production.
+
+### Historical decryption
+
+This is the historical verified procedure. The passphrase is taken from the environment variable. Do not place the passphrase text after `-pass`. An earlier round-trip test omitted `-salt` on decrypt. The restore decryption that was actually used included `-salt`, and that is the historical command:
+
+```bash
+set -euo pipefail
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+openssl enc -d -aes-256-cbc -pbkdf2 -salt \
+  -pass env:TEJAS_BACKUP_ENCRYPTION_PASSPHRASE \
+  -in "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc" \
+  -out "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump"
+chmod 600 "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump"
+sha256sum "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump"
+require_sha256 \
+  "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump" \
+  "408b10c3ef0e18bd4cde728afe529a780c7d2af7f83042c16c5faf9fe327e4b8"
+```
+
+This historical command reads the passphrase from the environment. That is not completely secret. A sufficiently privileged user, or another process on the same machine, can inspect the environment of the `openssl` process while it is running. The command is preserved because it is the historical verified procedure, not because the environment hides the passphrase. Do not place the passphrase text after `-pass` or anywhere else in the command.
+
+### Proposed OpenSSL file-descriptor method
+
+**Synthetic test passed on dummy data. See section O. The real archive remains NOT TESTED. Do not use this form for the first recovery of this archive.**
+
+This is not a replacement for the historical command above. OpenSSL can read a passphrase from a file descriptor with `-pass fd:3`. That form was not used on this backup. Section O records a dummy encrypt and decrypt with OpenSSL 3.0.13. It did not execute the historical `env:` command, and it did not compare the two forms on a copy of this encrypted file. The command below remains the proposed form:
+
+```bash
+openssl enc -d -aes-256-cbc -pbkdf2 -salt \
+  -pass fd:3 \
+  -in "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc" \
+  -out "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump" \
+  3< "$work/encryption-passphrase"
+```
+
+That comparison on a copy of this encrypted archive remains **NOT TESTED**. For this archive, use the historical `env:` command.
+
+The historical plaintext SHA-256 is:
+
+`408b10c3ef0e18bd4cde728afe529a780c7d2af7f83042c16c5faf9fe327e4b8`
+
+That value was recorded on 15 November 2026. It was not recomputed on 17 November 2026. Stop if the new digest is different.
+
+### Inspect the dump without hiding errors
+
+The historical archive header came from `pg_restore --list`. It identified database `postgres`, PostgreSQL 17.11, pg_dump 17.12, and custom format.
+
+Do not pipe `pg_restore --list` into `head`. A pipe can report success from `head` when `pg_restore` failed. Save the list and check the exit status separately. Saving the list this way is a **PROPOSED, UNTESTED** safeguard around the historical listing operation:
+
+```bash
+set -euo pipefail
+require_private_work
+pg_restore_client=/usr/lib/postgresql/17/bin/pg_restore
+require_pinned_pg_restore "$pg_restore_client"
+set +e
+"$pg_restore_client" --list \
+  "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump" \
+  > "$work/dump.list"
+pg_restore_list_exit=$?
+set -e
+if [ "$pg_restore_list_exit" -ne 0 ]; then
+  echo "pg_restore --list failed; stop"
+  exit "$pg_restore_list_exit"
+fi
+```
+
+Stop if `pg_restore_list_exit` is not 0. Read the start of `$work/dump.list` and confirm the header before restoring. The expected header contents are historical: database `postgres`, dumped from PostgreSQL 17.11 by pg_dump 17.12, custom format, created 2026-11-15 00:44:17 UTC.
+
+### Prove the target is isolated before restore
+
+The historical full restore used database name `tejas_restore_full_20261115`, host `/var/run/postgresql`, and port `5433`. Those values identified a local test server. They are not a Production address.
+
+No remote database connection is authorized. The restore target must be the local socket `/var/run/postgresql`, the address `127.0.0.1`, or the address `::1`. The guard does not accept another address in `127.0.0.0/8`. A remote hostname, a remote IP address, and the Production host inside `SUPABASE_BACKUP_DB_URL` are not authorized, even if the owner names one of them as a convenience.
+
+The host, port, and database name typed into the client are configured connection parameters. They are not proof of where the session connected. Server-confirmed details are the values the connected server returns. Compare the two. Do not restore when they disagree.
+
+These confirmation queries passed on the empty disposable database in section O. They were not preserved as the historical pre-check script, and they were not run against a restored TEJAS database. The real restore target remains **NOT TESTED**. **OWNER/ADMIN CONFIRMATION REQUIRED** before treating them as the approved pre-check:
+
+```sql
+SELECT current_database() AS server_confirmed_database;
+SELECT version();
+SELECT inet_server_addr() AS server_confirmed_addr;
+SELECT current_setting('port') AS server_port_setting;
+
+SELECT n.nspname, c.relkind, c.relname
+FROM pg_namespace n
+JOIN pg_class c ON c.relnamespace = n.oid
+WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+  AND c.relkind IN ('r', 'p', 'v', 'm', 'S', 'f')
+ORDER BY 1, 2, 3;
+```
+
+Read the result as follows:
+
+- `version()` must report PostgreSQL 17.
+- `current_database()` must be the new empty local database, not a database that already holds TEJAS data.
+- `inet_server_addr()` is server-confirmed. Null means the session is not a confirmed TCP connection. It does not prove which local socket path was used. The configured host must still be the local socket path.
+- If `inet_server_addr()` is not null, it must be a loopback address. Any other address is a remote connection. Stop. Remote access is not authorized.
+- `current_setting('port')` is the server's port setting. The historical test used port `5433`. A different local port is acceptable only when the owner has named it and this server setting is that same port. The port typed into the client is not, by itself, the server-confirmed port.
+- A check limited to schema `public` does not establish that other schemas contain no application tables. The query excludes only `pg_catalog` and `information_schema`. It does not exclude `pg_toast` by name. It also selects only relation kinds `r`, `p`, `v`, `m`, `S`, and `f`, so a toast table, whose kind is `t`, is outside this result. Do not describe `pg_toast` as excluded by the SQL.
+- The exact relation names created by `supabase_vault` 0.3.1 were not retained, apart from the historical result that `vault.secrets` had count 0. Do not invent the other names. The 15 November restore remains the historical verified result. Before any new restore, the owner/admin must approve an expected-object list. Until that list exists, a new restore cannot be fully checked. Any application table outside that approved list is a stop.
+
+The database name in the historical command was the test name `tejas_restore_full_20261115`. For a new test, create a new empty name and use that name only in the `-d` position. Do not reuse a Production database name. Do not add `--no-owner` or `--no-acl`.
+
+Install `supabase_vault` 0.3.1 before the restore. The first test, which commented the vault entries out of the restore list, was explicitly not accepted. The accepted test restored the whole dump, including vault, and exited 0.
+
+### Historical restore command
+
+This is the accepted command from 15 November 2026. It is not a Production command. Its arguments are unchanged. Phase 3D did not execute it. Do not paste this record as the command to run. It uses `pg_restore` from `PATH` and does not capture the exit status. Use the future block below.
+
+```bash
+pg_restore -h /var/run/postgresql -p 5433 \
+  -d tejas_restore_full_20261115 \
+  --exit-on-error --no-password \
+  "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump"
+```
+
+Before a future restore, the client must be the regular executable `/usr/lib/postgresql/17/bin/pg_restore`, and its `--version` text must start with `pg_restore (PostgreSQL) 17.`. Do not accept a client from `PATH`. Do not install or run `pg_restore` as part of this revision.
+
+```bash
+require_pg_restore_version() {
+  bin=$1
+  if [ -L "$bin" ] || [ ! -f "$bin" ] || [ ! -x "$bin" ]; then
+    echo "pg_restore client is missing, not a regular executable, or is a symlink; stop"
+    exit 1
+  fi
+  version=$("$bin" --version 2>&1) || {
+    echo "pg_restore version check failed; stop"
+    exit 1
+  }
+  case "$version" in
+    "pg_restore (PostgreSQL) 17."*) ;;
+    *) echo "pg_restore client is not PostgreSQL 17; stop"; exit 1 ;;
+  esac
+}
+require_pinned_pg_restore() {
+  if [ "$1" != "/usr/lib/postgresql/17/bin/pg_restore" ]; then
+    echo "pg_restore path is not the PostgreSQL 17 client; stop"
+    exit 1
+  fi
+  require_pg_restore_version "$1"
+}
+require_restore_preconditions() {
+  host=$1
+  port=$2
+  database=$3
+  server_addr=$4
+  server_port=$5
+  server_database=$6
+  if [ "$database" != "$server_database" ] || [ "$port" != "$server_port" ]; then
+    echo "restore target does not match server identity; stop"
+    exit 1
+  fi
+  case "$host" in
+    /var/run/postgresql|127.0.0.1|::1) ;;
+    *) echo "restore host is not a local socket or loopback; stop"; exit 1 ;;
+  esac
+  if [ "$host" = "/var/run/postgresql" ]; then
+    if [ -n "$server_addr" ]; then
+      echo "local socket session returned a TCP address; stop"
+      exit 1
+    fi
+  elif [ "$server_addr" != "$host" ]; then
+    echo "server address does not match the configured loopback host; stop"
+    exit 1
+  fi
+  if [ -z "$database" ] || [ "$database" = "postgres" ]; then
+    echo "database postgres is not the disposable restore target; stop"
+    exit 1
+  fi
+}
+```
+
+The historical target is host `/var/run/postgresql`, port `5433`, and disposable database `tejas_restore_full_20261115`. A later test may change `-d`, `-p`, and `-h` only after `require_restore_preconditions` exits 0. Keep `--exit-on-error` and `--no-password`. Do not change `-h` to a remote host.
+
+The separate line `pg_restore_exit=$?` is not used. Pasted alone, it would capture the previous command rather than `pg_restore`. Earlier blocks may also have left `set -e` on, which would skip a following capture after a failure. A future restore uses this block. It turns `set -e` off, checks the pinned client and the server identity, runs the same arguments as the historical command, and then captures that command's exit status. Phase 3E did not execute it.
+
+```bash
+set -euo pipefail
+require_private_work
+pg_restore_client=/usr/lib/postgresql/17/bin/pg_restore
+require_pinned_pg_restore "$pg_restore_client"
+require_restore_preconditions \
+  /var/run/postgresql 5433 tejas_restore_full_20261115 \
+  "" 5433 tejas_restore_full_20261115
+set +e
+"$pg_restore_client" -h /var/run/postgresql -p 5433 \
+  -d tejas_restore_full_20261115 \
+  --exit-on-error --no-password \
+  "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump"
+pg_restore_exit=$?
+set -e
+if [ "$pg_restore_exit" -ne 0 ]; then
+  echo "pg_restore failed; stop"
+  exit "$pg_restore_exit"
+fi
+```
+
+`--no-owner` and `--no-acl` were not used. If the restore stops because a Production role does not exist on the isolated server, stop and record the error. Do not add a flag to skip ownership. The globals backup that might contain roles was not in the verified Drive inventory. **OWNER/ADMIN CONFIRMATION REQUIRED** to decide how to handle a missing role.
+
+After the restore exits 0, section K removes the plaintext dump. Keep the encrypted `.dump.enc` and the Drive original until the owner accepts the result.
+
+## H. Post-restore validation
+
+Run this against the named disposable database only, in a read-only transaction. The historical disposable database was `tejas_restore_full_20261115`. Before this SQL, `require_sql_session` must exit 0 for that name, or for the new empty name chosen for a later test, with `ON_ERROR_STOP` set to `1`. This is the comparison that was run on 15 November 2026. The expected vault result was `supabase_vault` version `0.3.1` and `vault.secrets` count 0. The other vault relation names were not retained. Do not invent them. Phase 3D did not execute this SQL.
+
+```sql
+BEGIN READ ONLY;
+SELECT extname, extversion
+FROM pg_extension
+ORDER BY extname;
+
+SELECT 'vault|' || (
+  SELECT extversion FROM pg_extension WHERE extname = 'supabase_vault'
+);
+SELECT 'secrets|' || (
+  SELECT count(*)::text FROM vault.secrets
+);
+COMMIT;
+```
+
+Compare the isolated database with the baseline recorded on 15 November 2026:
+
+| Object | Expected result |
+| --- | --- |
+| Schemas | 9 |
+| Tables | 68 of 68, none missing and none extra |
+| Indexes | 189 |
+| Constraints | 238 |
+| Sequences | 2 |
+| Functions | 116 |
+| Triggers | 12 |
+| Extensions | 5, none missing |
+
+TEJAS row counts that matched:
+
+| Area | Rows |
+| --- | --- |
+| Payments | 2 |
+| Registrations | 2 |
+| Entitlements | 3 |
+| E-book audit | 20 |
+| Book orders | 2 |
+| E-book access | 2 |
+| Payment proofs | 2 |
+| Idempotency | 2 |
+
+`tejas_case_files` and `tejas_payment_utrs` were absent on both the source and the restore. Their absence was a match, not a restore failure. One payment status was `confirmed` and one was `reported`. The entitlement status was `verified`.
+
+The exact SQL used to count every one of the 68 tables was not preserved as a single script. **OWNER/ADMIN CONFIRMATION REQUIRED** only for the listing query text. The counts above are the recorded results. Compare the same areas in a read-only transaction. Do not update rows to make the counts match.
+
+These counts describe the backup taken at 2026-11-15 00:44:17 UTC. They are not a new reading of Production. Production may have changed since that time. A difference from these counts does not by itself prove that the restore command failed. It proves that the restored data is not the same as this baseline.
+
+## I. Production recovery precautions and owner approval boundaries
+
+The isolated restore is the end of the verified procedure. It is not permission to repair Production.
+
+The owner must give a separate, explicit approval before anyone writes to Production. Until that approval exists:
+
+- Do not run `pg_restore` against the Production database.
+- Do not drop, truncate, or overwrite a Production table.
+- Do not apply pull request #25, its migration package, or any other pending SQL as part of recovering this backup.
+- Do not upload or replace the four Storage objects in Supabase.
+- Do not delete, rename, overwrite, or share the original Drive files.
+- Do not delete the local encrypted downloads until the owner has accepted the isolated result.
+- Do not rotate or replace either passphrase.
+- Do not replace the rclone Google OAuth client as part of this recovery.
+
+No command in this runbook is an approved Production action. The `pg_restore` command in section G is an isolated local test only.
+
+A Production repair, if the owner later approves one, is a new plan. It must name the target database, the backup file, the expected baseline time, and the rollback method before it starts. This runbook does not contain that plan.
+
+On 17 November 2026 the recorded status was that pull request #25 was open and unmerged. That status was not reverified in Phase 3D. Do not treat it as the current GitHub status. No GitHub lookup was performed in this phase. Its changes are not inside the 15 November database backup. Applying it during recovery would change the restored database into something the backup test did not verify. The prohibition does not depend on a fresh status check.
+
+## J. Offline passphrase custody
+
+Offline custody has not been verified. This section is the required practice. It is not a statement that the practice has already been completed.
+
+The owner keeps two distinct passphrases:
+
+| Passphrase variable | Decrypts |
+| --- | --- |
+| `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` | The database archive and `tejas-storage-backup.identity.gpg` |
+| `TEJAS_BACKUP_OWNER_PASSPHRASE` | `tejas-storage-backup.identity.owner.gpg` only |
+
+The owner stores each passphrase outside Cursor, outside ChatGPT, outside GitHub, and outside Google Drive. A password manager or a sealed paper copy held by the owner is appropriate. An administrator may receive a passphrase for one recovery and must discard every copy, including shell history and passphrase files, when that recovery ends.
+
+The owner does not send a passphrase in ChatGPT, Cursor chat, email, a repository file, or a shared document. The administrator does not write a passphrase into this runbook, a screenshot, or a log.
+
+During a recovery, the administrator keeps the secret only in one of the three historical mechanisms in section C. The OpenSSL file-descriptor row is dummy-only and is not approved for this archive. The environment-variable mechanism remains visible to process inspection on that machine. `set +o history` is Bash-only and does not erase history already written. After the commands that need it:
+
+- Remove the passphrase file. `rm` removes the directory entry. It does not guarantee that an SSD, a cloud disk, a snapshot, or a backup has erased the bytes.
+- Unset `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` and `TEJAS_BACKUP_OWNER_PASSPHRASE`.
+- Check the shell history and the terminal scrollback. Do not copy them into the recovery report. If a secret was captured, tell the owner and clear that local history. The exact clear command depends on the shell and is **OWNER/ADMIN CONFIRMATION REQUIRED**.
+
+Losing `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` makes the database archive and the original identity file unusable. The owner file remains usable only when `TEJAS_BACKUP_OWNER_PASSPHRASE` is still available. Losing both passphrases makes the Age identity and the Storage archive unrecoverable. The Storage archive has no separate age passphrase. It requires the identity file.
+
+The plaintext Age identity is not a backup to be stored on Drive. The two GPG files are the backups of that identity.
+
+## K. Incident checklist, cleanup, and completion
+
+### Incident checklist
+
+The owner:
+
+- [ ] Names the incident and approves an isolated recovery.
+- [ ] Chooses which identity passphrase will be used.
+- [ ] Supplies that passphrase on the recovery computer, not through ChatGPT or any other chat.
+- [ ] States that Production must not be changed unless a later written approval says so.
+
+The administrator:
+
+- [ ] In Bash only, runs `set +o history` before a passphrase is supplied. Does not treat that as erasure of old history or as protection for any other shell.
+- [ ] Confirms `tejasdrive` still reaches the private folder and that sharing is unchanged.
+- [ ] Downloads only the required files into a mode `700` directory.
+- [ ] Matches every filename, size, and SHA-256 in section B before decryption.
+- [ ] Decrypts one identity file and matches the identity SHA-256.
+- [ ] Decrypts the Storage archive with the pinned age binary and the historical arguments. Does not run `age` from `PATH` and does not extract it. Section M records the synthetic listing test. Extraction of the real archive remains **NOT TESTED** and waits for a separate owner/admin approval. A checker exit of 0 is not that approval.
+- [ ] Does not hash extracted files until the section F file-type inventory has passed. `sha256sum` is not a file-type check.
+- [ ] Decrypts the database archive with the historical OpenSSL command and matches the historical plaintext SHA-256.
+- [ ] Records the configured host, port, and database name, then compares them with the server-confirmed details in section G. The target is a local socket or loopback only. No remote connection is authorized.
+- [ ] Does not treat a `public` schema check as proof that other schemas are empty.
+- [ ] Installs `supabase_vault` 0.3.1 before restore.
+- [ ] Runs the historical `pg_restore` flags only against that isolated local database.
+- [ ] Compares the isolated counts with section H.
+- [ ] Completes the cleanup below.
+- [ ] Reports the result to the owner without including secret values.
+
+### Plaintext cleanup
+
+Do this after the checks the owner asked for have been recorded.
+
+`rm` removes a directory entry. It does not guarantee that the data blocks are erased. On an SSD, wear leveling can leave the old data in storage the filesystem no longer names. A cloud disk, a snapshot, and a backup can retain another copy outside the work directory. `shred` was not part of the verified procedure, and it is not a guarantee on those media. This runbook does not promise forensic secure deletion.
+
+Remove the plaintext database dump, the plaintext Age identity, the decrypted tar, the listing files, and both passphrase files. Also remove both original Storage directories wherever they were created: `tejas-payment-proofs` and `tejas-registration-files`. Those two names must not remain at the top of the work directory or inside `$work/extracted`.
+
+If either Storage path is a symlink, stop. Do not remove it until the owner confirms what it points at. Section N stopped cleanup when a synthetic `tejas-payment-proofs` path or a synthetic `tejas-registration-files` path was a symlink. The guard below was tested on disposable directories in Phase 3C. It was not run in a real TEJAS recovery directory. `rm` is not used. Unlinking a directory entry does not securely erase the bytes.
+
+```bash
+set -euo pipefail
+python3 - << 'PY'
+import os, stat, sys
+
+FILES = [
+    "tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump",
+    "tejas-storage-backup.identity",
+    "archive.tar",
+    "tar-names.txt",
+    "tar-verbose.txt",
+    "dump.list",
+    "encryption-passphrase",
+    "owner-passphrase",
+]
+DIRS = [
+    "tejas-payment-proofs",
+    "tejas-registration-files",
+    "extracted/tejas-payment-proofs",
+    "extracted/tejas-registration-files",
+    "extracted",
+]
+FORBIDDEN = {"/tmp", "/var", "/var/tmp", "/home", "/usr", "/opt", "/dev", "/dev/shm", "/root"}
+MARKER = b"tejas-isolated-recovery-workspace\n"
+
+def fail(message):
+    print(message, file=sys.stderr)
+    raise SystemExit(1)
+
+def private_work(path):
+    if "work" not in os.environ or path == "":
+        fail("work directory is unset or empty")
+    if not path.startswith("/"):
+        fail("work directory is relative")
+    if path == "/":
+        fail("work directory is root")
+    current = ""
+    for part in path.split("/"):
+        if part == "":
+            continue
+        if part in (".", ".."):
+            fail("work directory has an unexpected path component")
+        current += "/" + part
+        try:
+            st = os.lstat(current)
+        except OSError:
+            fail("work directory is not an existing real directory")
+        if stat.S_ISLNK(st.st_mode):
+            fail("work directory path contains a symlink")
+        if not stat.S_ISDIR(st.st_mode):
+            fail("work directory is not a real directory")
+    if current in FORBIDDEN or current.count("/") < 2:
+        fail("work directory is not a private workspace")
+    st = os.lstat(current)
+    if st.st_uid != os.getuid() or stat.S_IMODE(st.st_mode) != 0o700:
+        fail("work directory is not a private mode 700 directory")
+    marker = current + "/.tejas-recovery-workspace"
+    try:
+        marker_stat = os.lstat(marker)
+    except OSError:
+        fail("workspace marker is missing")
+    if stat.S_ISLNK(marker_stat.st_mode) or not stat.S_ISREG(marker_stat.st_mode):
+        fail("workspace marker is not a regular file")
+    if stat.S_IMODE(marker_stat.st_mode) != 0o600:
+        fail("workspace marker mode is not 600")
+    with open(marker, "rb") as handle:
+        if handle.read() != MARKER:
+            fail("workspace marker content is unexpected")
+    return current
+
+def inside(work, rel):
+    if rel.startswith("/") or "\\" in rel or rel == "":
+        fail("deletion target is not an explicit relative path")
+    current = work
+    for part in rel.split("/"):
+        if part in ("", ".", ".."):
+            fail("deletion target has an unexpected path component")
+        current += "/" + part
+        if not (current == work or current.startswith(work + "/")):
+            fail("deletion target is outside the work directory")
+    return current
+
+def collect(path):
+    files, dirs = [], []
+    stack = [path]
+    while stack:
+        current = stack.pop()
+        st = os.lstat(current)
+        if stat.S_ISLNK(st.st_mode):
+            fail("deletion target is a symlink")
+        if stat.S_ISREG(st.st_mode):
+            if st.st_nlink != 1:
+                fail("deletion target has another hard link; stop")
+            files.append(current)
+            continue
+        if not stat.S_ISDIR(st.st_mode):
+            fail("deletion target has an unexpected file type")
+        dirs.append(current)
+        with os.scandir(current) as entries:
+            for entry in entries:
+                stack.append(entry.path)
+    return files, dirs
+
+work = private_work(os.environ.get("work", ""))
+planned_files, planned_dirs = [], []
+for rel in FILES:
+    path = inside(work, rel)
+    if not os.path.lexists(path):
+        continue
+    st = os.lstat(path)
+    if stat.S_ISLNK(st.st_mode) or not stat.S_ISREG(st.st_mode):
+        fail("deletion target is a symlink or not a regular file")
+    if st.st_nlink != 1:
+        fail("deletion target has another hard link; stop")
+    planned_files.append(path)
+for rel in DIRS:
+    path = inside(work, rel)
+    if not os.path.lexists(path):
+        continue
+    files, dirs = collect(path)
+    planned_files.extend(files)
+    planned_dirs.extend(dirs)
+unique_files = []
+seen_files = set()
+for path in planned_files:
+    if path not in seen_files:
+        seen_files.add(path)
+        unique_files.append(path)
+for path in unique_files + planned_dirs:
+    if not path.startswith(work + "/"):
+        fail("deletion target is outside the work directory")
+for path in unique_files:
+    os.unlink(path)
+for path in sorted(set(planned_dirs), key=lambda item: item.count("/"), reverse=True):
+    os.rmdir(path)
+PY
+unset TEJAS_BACKUP_ENCRYPTION_PASSPHRASE
+unset TEJAS_BACKUP_OWNER_PASSPHRASE
+unset PGPASSWORD
+unset SUPABASE_BACKUP_DB_URL
+if [ -n "${TEJAS_BACKUP_ENCRYPTION_PASSPHRASE+x}" ] \
+  || [ -n "${TEJAS_BACKUP_OWNER_PASSPHRASE+x}" ] \
+  || [ -n "${PGPASSWORD+x}" ] \
+  || [ -n "${SUPABASE_BACKUP_DB_URL+x}" ]; then
+  echo "a cleanup variable is still set; stop"
+  exit 1
+fi
+echo "cleanup variables are unset"
+```
+
+`SUPABASE_BACKUP_DB_URL` is the historical source connection, not the isolated restore target. The unset command removes the name from this shell. It does not print the value, revoke a credential, or invalidate the URL. The following test checks that the name is absent without displaying a value. Unsetting a variable does not securely erase a passphrase that was stored anywhere else.
+
+Then inventory every remaining object. `find -type f` is not a complete inventory: it skips directories, symlinks, FIFOs, sockets, and devices. Section N used this GNU `find -printf` form on synthetic fixtures. It does not follow symlinks. The command below was not run in a real recovery directory. If it is unavailable, stop. Do not replace it with a regular-file-only listing, and do not run `sha256sum` yet:
+
+```bash
+set -euo pipefail
+require_private_work
+find "$work" -mindepth 1 -printf '%y %p\n'
+```
+
+Every line must be type `f`, a regular file. Any `d`, `l`, `p`, `s`, `b`, `c`, or other type is a stop. Any unexpected path is a stop, including a directory named `tejas-payment-proofs` or `tejas-registration-files`. The only objects that may remain, and only until the owner accepts the result, are:
+
+| Type | File that may remain | Why it may remain |
+| --- | --- | --- |
+| Regular file | `tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc` | Encrypted database download |
+| Regular file | `tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age` | Encrypted Storage download |
+| Regular file | `tejas-storage-backup.identity.gpg` | Encrypted identity download |
+| Regular file | `tejas-storage-backup.identity.owner.gpg` | Encrypted identity download |
+| Regular file | `.tejas-recovery-workspace` | Private-workspace marker required by the cleanup guard |
+
+If an object is unexpected and its purpose is unclear, stop and ask the owner before deleting it.
+
+Only after that inventory shows regular files and no symlink, re-hash the encrypted downloads with `require_sha256` and the fixed section B values. `sha256sum` follows symlinks, so it must not be used in place of the type inventory. A zero exit from `sha256sum` alone is not acceptance. Do not delete those encrypted downloads, and do not delete the Drive originals, until the owner accepts the result.
+
+```bash
+set -euo pipefail
+require_sha256() {
+  file=$1
+  expected=$2
+  if [ -z "$file" ] || [ -z "$expected" ]; then
+    echo "checksum comparison is missing a file or an expected value; stop"
+    exit 1
+  fi
+  if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+    echo "expected checksum is not 64 lowercase hexadecimal digits; stop"
+    exit 1
+  fi
+  if [ -L "$file" ] || [ ! -f "$file" ] || [ ! -r "$file" ] || [ ! -s "$file" ]; then
+    echo "checksum file missing, unreadable, empty, or not a regular file; stop"
+    exit 1
+  fi
+  actual=$(sha256sum -- "$file") || {
+    echo "checksum command failed; stop"
+    exit 1
+  }
+  actual=${actual%% *}
+  if [ "$actual" != "$expected" ]; then
+    echo "checksum mismatch; stop"
+    exit 1
+  fi
+}
+require_private_work
+require_sha256 \
+  "$work/tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc" \
+  "49d69874bc494c2c353a903906045ece4ad37c989a69ddaf0ae7195314fcdde1"
+require_sha256 \
+  "$work/tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age" \
+  "ac76e4f8895284f098e0f674d58d8a901702f7b219809a0d51f64b358d7e72c4"
+require_sha256 \
+  "$work/tejas-storage-backup.identity.gpg" \
+  "fd2df7cdfd3041cf33c1bce947af0b90213e449642c58b4d7de1ce1f3fb1ab5b"
+require_sha256 \
+  "$work/tejas-storage-backup.identity.owner.gpg" \
+  "e6f86e98fb5203cf75daa7f8dfa13e6d608f1b71fe8c8f0987eb6d4c5a0945cf"
+```
+
+Check the shell history and the terminal scrollback for a passphrase or a connection string. Do not paste either one into the report. If one was captured, tell the owner. Clearing that history is **OWNER/ADMIN CONFIRMATION REQUIRED** for the shell in use.
+
+### Recovery completion checklist
+
+Database recovery completion is separate from Storage recovery completion. Neither one is full recovery by itself.
+
+Database recovery completion:
+
+- [ ] The isolated `pg_restore` exit status was captured and is 0.
+- [ ] The server-confirmed database, host, and port matched the named disposable target.
+- [ ] `supabase_vault` version `0.3.1` and the section H area counts were compared.
+- [ ] For a new restore, the owner/admin expected-object list for vault was used. The 15 November result remains historical. A new restore is not complete while that list is absent.
+- [ ] Extracted Storage-file hashes are not required for database completion.
+
+Storage recovery completion:
+
+- [ ] A separate owner authorization for extraction was recorded. Until it exists, Storage recovery is not complete.
+- [ ] The four extracted-file hashes are required only after that authorization and the section F inventory. They are not required while extraction remains unauthorized.
+- [ ] Supabase Storage was not changed.
+
+Shared completion:
+
+- [ ] Drive originals still exist, with the same file IDs and checksums.
+- [ ] No Drive permission changed.
+- [ ] The local encrypted downloads still match section B, and they were hashed only after the type inventory showed regular files.
+- [ ] The inventory shows no directory, symlink, FIFO, socket, device, plaintext dump, identity, tar, passphrase file, editor swap file, `tejas-payment-proofs` directory, or `tejas-registration-files` directory. The `.tejas-recovery-workspace` marker may remain. An unexpected file is still a stop.
+- [ ] The passphrase variables and `SUPABASE_BACKUP_DB_URL` were unset. Their values were not displayed. Unsetting `SUPABASE_BACKUP_DB_URL` did not revoke a credential.
+- [ ] Shell history and scrollback were checked for accidental secrets.
+- [ ] Production was not contacted, or a separate owner approval names exactly what was changed.
+- [ ] Pull request #25 was not applied as part of this recovery. Its 17 November status was not reverified.
+- [ ] Full recovery is complete only when both the database items and the Storage items above are complete.
+
+## L. Known limitations and items requiring owner confirmation
+
+Sections M, N, and O record synthetic tests. They do not change the historical facts in items 1 through 4 or the administrative decisions in items 7 through 13. The real TEJAS backups remain **NOT TESTED**.
+
+1. The 17 November 2026 audit verified Drive ciphertext. It did not repeat decryption, the isolated restore, or the four-file hash comparison.
+2. The local encrypted database file was not on the audit computer. The Drive copy is the verified copy.
+3. Companion `.globals.sql.enc` and `.metadata.json.enc` files were created locally during the backup session and were not in the verified Drive folder. Role and privilege recovery from those files is **OWNER/ADMIN CONFIRMATION REQUIRED**.
+4. The historical `tar` argument list and the exact 68-table counting script were not preserved. The hashes, sizes, and summary counts were preserved.
+5. The section F listing check passed on synthetic archives in section M. It was not run on the real Storage archive, which remains **NOT TESTED**. Reading a tar listing by eye is not mechanical validation. Named-file extraction was not part of that synthetic test and remains unauthorized until the owner/admin approves it. A zero exit from the checker is not approval to extract.
+6. The OpenSSL `-pass fd:3` form passed on dummy data in section O. It is untested on this archive. The historical command remains `-pass env:TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`. The historical command was not executed in Phase 2C.
+7. The compile commands for `supabase_vault` 0.3.1 were not preserved. The required SQL and version were preserved.
+8. `--no-owner` and `--no-acl` were not part of the successful restore. A missing Production role is **OWNER/ADMIN CONFIRMATION REQUIRED**. Do not add those flags without a new owner approval.
+9. No verified command restores the four Storage files into Supabase Storage. That action is **OWNER/ADMIN CONFIRMATION REQUIRED** and needs a separate approval.
+10. Offline passphrase custody is not verified. `rm` removes a directory entry and does not guarantee erasure on SSDs, cloud disks, snapshots, or backups.
+11. How to clear a particular shell's history is **OWNER/ADMIN CONFIRMATION REQUIRED** if a secret was recorded. `set +o history` is Bash-specific, does not erase history already written, and does not protect other shells.
+12. rclone reported that its shared Google client is scheduled to stop working during 2026. Creating a replacement client is a future change and needs a separate approval. It is not part of this recovery. A new `drive.file` client would not automatically see files created by the current client.
+13. The backup baseline is 2026-11-15 00:44:17 UTC for the database and 16 November 2026 for Storage. Later Production changes are outside this backup.
+14. The passphrase-entry silent-read shape and the GNU `find -printf` inventory passed on dummy data in section N. The all-schema pre-restore query passed on an empty disposable database in section O. None of those tests used a real passphrase, a real extract, or a restored TEJAS database. None of them resolves the unknown trailing newline in the stored passphrase. The real backup remains **NOT TESTED**.
+15. Creating a live device node was not permitted in Phase 2B, so that part of the filesystem test is **BLOCKED**. The character-device result in section M used a tar header only. No device node was created.
+16. Phase 2C did not install `supabase_vault`, did not restore roles, and did not restore any TEJAS schema. Portable PostgreSQL 17.12 and disposable port `55432` are not the historical restore server or port `5433`.
+17. Phase 3D left these prerequisites unresolved: the portable archive checksum is unavailable; the plaintext dump size and required free space were not retained; the full `supabase_vault` 0.3.1 relation list was not retained; and the 17 November pull request #25 status was not reverified. None of those items is a completed check.
+18. Phase 3E put the workspace and rclone checks on the write path, rejected extra hard links during cleanup, and moved `pg_restore` exit capture into the same block as the command. Those were disposable tests. They did not execute a historical recovery command.
+19. Section R is the consolidated register for the open prerequisites in this section. It does not close any of them.
+20. Phase 3G corrected the gate wording that made P-09, the checker, and the extracted hashes look like permission to begin. The prerequisites remain unresolved. Section S records the disposable logic tests.
+21. Section T is later execution evidence. It does not rewrite the historical commands, checksums, or the Phase 3G register.
+
+## M. Phase 2A synthetic archive listing tests
+
+**Synthetic test passed. The real Storage archive remains NOT TESTED.**
+
+These tests ran on 17 November 2026 under `/tmp/tejas-dr-phase2-synthetic/tests/`. Every archive was constructed for the test. None was a TEJAS backup. The checker was the listing script in section F. GNU tar was 1.35, using `--quoting-style=escape` with `-tf` and `-tvf`. No test ran `tar -x`. A checker exit of 0 printed `proposed check exited 0; this is not approval to extract`.
+
+| Test | Synthetic condition | Exit | Result |
+| --- | --- | --- | --- |
+| T01 | Four regular files at the exact allow-list paths | 0 | Pass. The stdout was the not-an-approval line above. |
+| T02 | Those four files plus the six expected parent directories | 0 | Pass. The same stdout. |
+| T03 | Only the first three required files | 1 | `required regular file missing` |
+| T04 | The four files plus `notes.txt` | 1 | `unexpected or unsafe member name` |
+| T05 | An absolute member. The listing still showed a leading `/`. | 1 | `unexpected or unsafe member name` |
+| T06 | Two parent-traversal names. The listing still showed `..`. | 1 | `unexpected or unsafe member name` |
+| T07 | The first required file stored a second time | 1 | `duplicate name` |
+| T08 | A symbolic link at the first required path | 1 | `link member` |
+| T09 | A hard link. The verbose line began with `h` and contained ` link to `. | 1 | `link member` |
+| T10 | A FIFO header at the first required path. No FIFO node was created. | 1 | `required path is not a regular file` |
+| T11 | A character-device header, device numbers 1,3. No device node was created. | 1 | `required path is not a regular file` |
+| T12 | The first 64 bytes of the T01 archive | 1 | `tar listing failed; fail closed; do not extract` |
+| T13a | The four required paths prefixed with `./` | 1 | `unexpected or unsafe member name` |
+| T13b | An extra member named `C:/outside-dummy.txt` | 1 | `unexpected or unsafe member name` |
+| T13c | An extra member whose name contains a newline | 1 | `unexpected or unsafe member name` |
+
+Limits of this test:
+
+- The real file `tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age` was not listed or decrypted.
+- T01 and T02 were not extracted. Their zero exits are not extraction approval.
+- T11 tested a crafted header. It did not test a live device node.
+- The historical `tar` argument list remains unknown.
+- Owner/admin approval to extract the real archive is still required.
+
+## N. Phase 2B synthetic filesystem and dummy secret-handling tests
+
+**Synthetic test passed. No real TEJAS file, passphrase, or backup was used. The real backup remains NOT TESTED.**
+
+These tests ran on 17 November 2026 under `/tmp/tejas-dr-phase2-synthetic/fs/` and `/tmp/tejas-dr-phase2-synthetic/secrets/`. The inventory command was GNU `find -mindepth 1 -printf '%y %p\n'`. `sha256sum` ran only after that inventory showed directories and regular files.
+
+| Test | Synthetic condition | `sha256sum` | Result |
+| --- | --- | --- | --- |
+| F01 | The two Storage directories, their parent directories, and four regular dummy files | Ran, exit 0 | Pass |
+| F02 | A symlink named `tejas-payment-proofs/dummy-link` | Did not run | Pass. Stopped before the hash. |
+| F03 | A FIFO and a socket beside the dummy files | Did not run | Pass. Both types were detected. Live device-node creation was **BLOCKED**: `mknod` was not permitted, and it was not attempted. |
+| F04 | An extra regular file `notes-dummy.txt` and an extra directory `unexpected-dir` | Did not run | Pass. Stopped before the hash. |
+| F05 | The `receipt.jpg` file and its parent directory were absent | Did not run | Pass. Stopped before the hash. |
+| F06a | `tejas-payment-proofs` was a symlink. `sentinel/keep.txt` was present. | Did not run | Pass. Cleanup stopped. The sentinel remained. |
+| F06b | `tejas-registration-files` was a symlink. `sentinel/keep.txt` was present. | Did not run | Pass. Cleanup stopped. The sentinel remained. |
+| F07 | The four dummy files and their parent directories were removed by explicit path. Four dummy encrypted stand-ins remained. | Ran on the stand-ins, exit 0 | Pass |
+
+The SHA-256 values below are synthetic. They are not the TEJAS backup checksums in section B.
+
+F01 dummy files:
+
+| Synthetic path | SHA-256 |
+| --- | --- |
+| `receipt.pdf` under `TEJAS-2026-NS553XMZZG2N8XE7DHV3` | `e20d0bd80b9dc539e2bd188dafe654318fe6b3bd208bc273ee4f5712c11d1081` |
+| `receipt.jpg` under `TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ` | `94ffaed6d9cb78e384bc038c5902c60322b1192ff47cefc4683f53bf821b3cda` |
+| `upload.xlsx` under `TEJAS-2026-NS553XMZZG2N8XE7DHV3` | `0eade8a061d284f8f0812e54c3855a974ae9f43f340fafe4806a0572478cdcaa` |
+| `upload.xlsx` under `TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ` | `9dc2591584db5a31c0daec96c8f0b2b214be5bb888fb23f22870d59f14c68b40` |
+
+F07 dummy encrypted stand-ins, which are not TEJAS backups:
+
+| Synthetic filename | SHA-256 |
+| --- | --- |
+| `dummy-database.dump.enc` | `77967776203db054107516e905157bcb20a8132a7e779040421ae9786b93929d` |
+| `dummy-storage.tar.age` | `9f7b7a6b79d92031f10db7fd5e00c68c7e91da9b972bcdf3383a80c1bfdce44b` |
+| `dummy-identity.gpg` | `1e999871592cd4ab9a94b0ca77d1558057fa82bec254ea973c54f5597f233cd6` |
+| `dummy-owner-identity.gpg` | `22f6e2003b6036ba8d9e86f74f8bd79e126d2768a1c7b646a9ea43db6db00d12` |
+
+Secret-handling results, also synthetic:
+
+| Test | What was exercised | Result |
+| --- | --- | --- |
+| S01 | `install -m 600 /dev/null` created an empty dummy file. `stat` reported `600 1000 ubuntu 1000 ubuntu`. The file contents were not read. | Pass |
+| S02 | Bash `set +o history`, `stty -echo`, then `IFS= read -r -s DUMMY_PHASE2B_ENTRY < /dev/tty`, then `export` of that name only, a non-empty test that did not print the value, and `unset`. The variable was not a TEJAS passphrase variable. | Pass. The value was not printed, hashed, or dumped from the environment, and it was not visible in the terminal transcript. |
+| S03 | The same S02 session was checked for unsafe forms. | Pass. No history file existed (`history_file_exists` false), so the dummy was not found in a history file. The terminal transcript did not contain the dummy. `echo`, `printf`, and `export NAME=value` were not used. |
+| S04 | An isolated history file, not the user history file. Bash wrote `echo MARK_BEFORE` before `set +o history`. A later `echo MARK_AFTER` was command output. Dash ran `set +o history`. | Pass. The history file still contained four identical `echo MARK_BEFORE` lines and did not gain `MARK_AFTER`. Dash exited 2 with `sh: 1: set: Illegal option -o history`. Bash accepted `set +o history`. |
+
+Limits of this test:
+
+- The dummy value must not be written until echo is off and `read -s` is active. An earlier attempt displayed a dummy because it was written too soon. The recorded passing run waited.
+- `set +o history` did not erase the lines already in the isolated history file.
+- The real passphrase format, including any trailing newline, remains unknown.
+- Explicit deletion of named paths is not forensic erasure.
+- F06 left `sentinel/keep.txt` in place because cleanup stopped at the symlink.
+- No real backup file was hashed, deleted, decrypted, or extracted.
+
+## O. Phase 2C synthetic OpenSSL file-descriptor and PostgreSQL 17.12 validation
+
+**Synthetic test passed. The real database archive, the real Storage archive, and the real passphrases remain NOT TESTED.**
+
+### OpenSSL file descriptor
+
+OpenSSL was 3.0.13, dated 30 January 2024. The test used a newly generated dummy passphrase and dummy plaintext under `/tmp/tejas-dr-phase2-synthetic/openssl-fd/`. The passphrase file was mode `600`. Its mode and owner were checked without displaying the secret. The passphrase was not a command argument, was not passed with `-pass pass:`, and was not printed with `echo` or `printf`.
+
+Both commands used `-aes-256-cbc -pbkdf2 -salt -pass fd:3`. Descriptor 3 was redirected from the mode `600` file.
+
+| Check | Result |
+| --- | --- |
+| Encryption exit | 0 |
+| Decryption exit | 0 |
+| Byte comparison of the dummy plaintext | Matched |
+| Passphrase file after the test | Unlinked |
+
+The SHA-256 values below are synthetic. They are not the TEJAS backup checksums in section B.
+
+| Synthetic object | SHA-256 |
+| --- | --- |
+| Dummy plaintext | `ef235e2a286db50333fdc2c2f2ed45f7b38781743babacbab0b8ebd4fb97bf3c` |
+| Dummy ciphertext | `e3acf2d11676ed991580b7efab01d8a3a1fadd92cf28beb7a9ba9294235cf55d` |
+
+The dummy passphrase file had no trailing newline. That does not establish the format of the real stored passphrase.
+
+File-descriptor delivery does not remove every host-level exposure. OpenSSL held the passphrase in memory while it ran. The file existed on disk until it was unlinked. Unlinking does not erase a copy that a disk, a snapshot, or a backup may already hold.
+
+The historical command `-pass env:TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` was not executed. The file-descriptor form was not used on the real archive. The two commands remain distinct. The historical command is still the command for this archive.
+
+### PostgreSQL 17.12
+
+No system PostgreSQL package or service was installed. The server was the portable build from the theseus-rs `postgresql-binaries` release 17.12.0, file `postgresql-17.12.0-x86_64-unknown-linux-gnu.tar.gz`. The retained Phase 2 evidence says the published checksum matched. The exact SHA-256 of that archive is not in the retained evidence. It is **UNAVAILABLE**. Do not invent it. The comparison cannot be repeated from the retained files. The archive was extracted only under `/tmp/tejas-dr-phase2-synthetic/postgresql/`. `postgres`, `psql`, and `initdb` each reported PostgreSQL 17.12.
+
+An earlier portable package, Maven `io.zonky.test.postgres:embedded-postgres-binaries-linux-amd64:17.12.0`, also reported PostgreSQL 17.12 and contained `postgres`, `initdb`, and `pg_ctl` only. It was not the server used for the queries.
+
+The disposable database was `tejas_phase2c_validation`. The server listened on `127.0.0.1:55432` and on a Unix socket inside the disposable directory. Port `55432` was free before startup. `pg_hba.conf` allowed local sockets, `127.0.0.1/32`, and `::1/128`. No non-loopback listener was observed.
+
+`version()` returned:
+
+`PostgreSQL 17.12 on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit`
+
+| Check | Unix socket | `127.0.0.1` |
+| --- | --- | --- |
+| `current_database()` | `tejas_phase2c_validation` | `tejas_phase2c_validation` |
+| `inet_server_addr()` | SQL NULL | `127.0.0.1` |
+| `current_setting('port')` | `55432` | `55432` |
+
+Schemas present: `information_schema`, `pg_catalog`, `pg_toast`, and `public`. The first three are system schemas. `public` was present and held no application relation. The section G query excludes only `pg_catalog` and `information_schema`. It does not name `pg_toast`, so `pg_toast` is not excluded by the SQL. The selected kinds are `r`, `p`, `v`, `m`, `S`, and `f`. Toast tables use kind `t`, which this query does not select. On the empty disposable database the query returned zero rows. That result does not mean the SQL excluded `pg_toast`.
+
+`supabase_vault` was not installed. No real dump was restored. No Production role, vault object, or TEJAS schema was present. `pg_restore` was not run.
+
+The server was then stopped. No PostgreSQL process remained, and port `55432` was closed. The Phase 2C OpenSSL and PostgreSQL files were removed. The Phase 2A and Phase 2B synthetic evidence was left in place. No system-wide PostgreSQL service was changed.
+
+Limits of this test:
+
+- Portable PostgreSQL 17.12 is not the historical restore server, whose `version()` string was not recorded. The historical dump came from PostgreSQL 17.11 and pg_dump 17.12.
+- Port `55432` was the disposable port for this empty database. The historical test port remains `5433`.
+- The empty-database result does not predict the objects a restored TEJAS database would contain. Section H remains the historical baseline.
+- The real database archive was not decrypted.
+
+No phase in this section authorizes decryption, extraction, `pg_restore`, a Storage upload, or a Production change. Those actions still require a separate owner approval.
+
+## P. Phase 3D synthetic guard tests
+
+**Synthetic test passed. No real TEJAS file, passphrase, client, or remote service was used. The real backup remains NOT TESTED.**
+
+These checks ran on 17 November 2026 under `/tmp/tejas-dr-phase3d-synthetic/`. They executed the guard functions added in this phase. They did not run the historical `age`, GnuPG, OpenSSL, `pg_restore`, or rclone commands, and they did not execute the pinned age or `pg_restore` binaries.
+
+| Guard | Disposable case | Result |
+| --- | --- | --- |
+| rclone direction | Drive source and a destination inside the work directory | Pass |
+| rclone direction | Local source and a `tejasdrive:` destination | Stop. The message says reversed arguments can upload. |
+| rclone direction | Destination outside the work directory | Stop |
+| rclone direction | Source that is not `tejasdrive:` | Stop |
+| age version | Dummy program printing `v1.3.2` | Pass |
+| age version | `v1.3.20`, `v1.2.0`, a non-zero exit, and a prefixed version line | Stop |
+| age version | Symlink and a non-executable file | Stop |
+| age path | A path other than `/home/ubuntu/tejas-backups/bin/age` | Stop, and the dummy program was not executed |
+| pg_restore version | Dummy text `pg_restore (PostgreSQL) 17.12` | Pass |
+| pg_restore version | PostgreSQL 16 and PostgreSQL 18 text | Stop |
+| pg_restore path | A path other than `/usr/lib/postgresql/17/bin/pg_restore` | Stop, and the dummy program was not executed |
+| SQL session | Matching disposable name with `ON_ERROR_STOP` set to `1` | Pass |
+| SQL session | Name mismatch, `ON_ERROR_STOP` not `1`, and database `postgres` | Stop |
+| Restore identity | Historical socket, port `5433`, and `tejas_restore_full_20261115` | Pass |
+| Restore identity | Remote host, port mismatch, and a matching loopback pair | Stop for the first two. Pass for the loopback pair. |
+| Passphrase unlink | Two regular dummy passphrase files in a private work directory | Pass. An encrypted stand-in and an outside sentinel remained. |
+| Passphrase unlink | Empty, unset, relative, and root work values | Stop. Sentinels remained. |
+| Passphrase unlink | Symlinked work directory and a symlinked passphrase path | Stop. The target files remained. |
+
+The pinned age binary and the pinned `pg_restore` client were not executed. The portable PostgreSQL archive checksum remains **UNAVAILABLE**. The plaintext dump size remains **UNAVAILABLE**. No historical recovery command was executed.
+
+## Q. Phase 3E independent readiness corrections
+
+**Synthetic test passed. No real TEJAS file, passphrase, client, or remote service was used. The real backup remains NOT TESTED.**
+
+These checks ran on 17 November 2026 under `/tmp/tejas-dr-phase3e-synthetic/`. They cover the gaps found by reading the runbook, not by repeating the Phase 3D labels.
+
+| Check | Disposable case | Result |
+| --- | --- | --- |
+| `require_private_work` | Valid marked mode `700` directory | Pass. Outside sentinel unchanged. |
+| `require_private_work` | Empty, unset, relative, root, symlink, mode `755`, and missing marker | Stop. Sentinel unchanged. |
+| `require_rclone_download` | Drive source and destination inside the work directory | Pass |
+| `require_rclone_download` | Reversed arguments, empty `work` with destination `/file`, and a `..` destination | Stop. No rclone program was launched. |
+| Exit capture | A disposable command exiting 7, after `set -e` had been on | Exit 7. The following command did not run. |
+| Exit capture | A disposable command exiting 0 | Pass. The following command ran. |
+| Guard before a client | Empty `work`, then a disposable program | Stop. The program was not executed. |
+| Passphrase cleanup | A passphrase name hard-linked to an outside sentinel | Stop. Both names remained. |
+| Section K cleanup | `archive.tar` hard-linked to an outside sentinel | Stop. The sentinel and an unlisted file remained. |
+| Extraction guard | Work directory without the marker | Stop. The destination was not created. |
+
+The historical `age`, GnuPG, OpenSSL, and `pg_restore` commands were not executed. The pinned binaries were not executed.
+
+## R. Prerequisite register and recovery gates
+
+Phase 3F, 17 November 2026, IST. This section collects every unresolved prerequisite as of that phase. Phase 3G, 17 November 2026, IST, corrected the gate states below. Section T records what was later established. This section is the audit trail, not the current status table.
+
+Missing evidence is **OPEN**. A test that was not run is **NOT TESTED**. A step that cannot be performed in the recorded environment is **BLOCKED**. A choice that only the owner or administrator can make is **OWNER DECISION REQUIRED**. None of these words means that a test failed.
+
+On this computer, `/home/ubuntu/tejas-backups/bin/age` and `/usr/lib/postgresql/17/bin/pg_restore` are absent. Their version output was not read. No external service was contacted to refresh a status.
+
+### Register index
+
+| ID | Prerequisite | Status | Responsible | Blocks | Real backup | External service |
+| --- | --- | --- | --- | --- | --- | --- |
+| P-01 | Plaintext database-dump size | OPEN | Owner | Database decryption | No, if a retained record exists | No |
+| P-02 | Free space required before decryption | OPEN | Technical Operator | Database decryption | No | No |
+| P-03 | Portable PostgreSQL 17.12.0 archive checksum | OPEN | Owner | Reuse of that portable package | No | No |
+| P-04 | Expected `supabase_vault` 0.3.1 relation list | OWNER DECISION REQUIRED | Owner | Database RECOVERY COMPLETE | No | No |
+| P-05 | Current pull request #25 status | OPEN | Owner | Nothing | No | Yes, so it was not refreshed |
+| P-06 | Storage extraction authorization | OWNER DECISION REQUIRED | Owner | Storage extraction | No, for the decision itself | No |
+| P-07 | Real passphrase bytes and trailing newline | OWNER DECISION REQUIRED | Owner | Decryption of the named archive | No. Do not reveal the bytes | No |
+| P-08 | Offline passphrase custody | OWNER DECISION REQUIRED | Owner | Decryption of the named archive | No. Do not reveal the bytes | No |
+| P-09 | Real database and Storage archive validation | NOT TESTED | Technical Operator | VALIDATION PASSED and RECOVERY COMPLETE | Yes, to produce the evidence | Yes, only for a new download |
+| P-10 | Pinned age and `pg_restore` version output | NOT TESTED | Technical Operator | age decryption and any `pg_restore` use | No | No |
+| P-11 | GNU tar extraction of unsafe members | NOT TESTED | Owner | Storage extraction acceptance | No | No |
+| P-12 | Companion `.globals.sql.enc` and `.metadata.json.enc` files | OWNER DECISION REQUIRED | Owner | Role recovery only | No, until a copy is identified | No |
+| P-13 | Install commands for the non-vault extensions, and `supabase_vault` build flags | OPEN | Administrator | A new restore only if the server cannot create them | No | No |
+| P-14 | Exact SQL that counted all 68 tables | OPEN | Owner | A row-by-row recount only | No | No |
+| P-15 | Historical `tar` argument list | OPEN | Owner | Treating the old extraction as a safe procedure | No | No |
+| P-16 | Shell-history clear command | OPEN | Administrator | Cleanup only after a secret was captured | No | No |
+| P-17 | `tejasdrive` availability and the shared rclone client | OPEN | Owner | Downloads, if the remote is absent | No | Yes, so it was not refreshed |
+| P-18 | Supabase Storage upload command | OWNER DECISION REQUIRED | Owner | Storage upload | Yes, if upload is later approved | Yes |
+| P-19 | Production repair plan | OWNER DECISION REQUIRED | Owner | Production writes | Yes | Yes |
+| P-20 | Missing Production role | OWNER DECISION REQUIRED | Owner | Continuing after a role error | No, until that error exists | No |
+| P-21 | Historical OpenSSL version string and historical restore `version()` string | OPEN | Owner | None. A new restore still checks `version()` | No | No |
+| P-22 | Live device-node synthetic case | BLOCKED | Technical Operator | Nothing in the recovery gates | No | No |
+
+### What each item requires
+
+P-01. Section B records the plaintext checksum and says the size was not retained. This is missing evidence, not a failed measurement. The owner may supply a size from a retained record. Do not decrypt the archive to discover the size, and do not invent one. Until a size is recorded, do not decrypt the database archive. A ciphertext checksum does not use this size.
+
+P-02. Section B requires a free-space comparison against the P-01 size. The operator measures free space on the recovery work filesystem at execution time. That measurement does not need the backup file. It cannot be completed while P-01 is open. Do not invent the figure.
+
+P-03. Section O says the published checksum matched and that the exact SHA-256 was not retained. This is missing evidence, not a failed comparison. Do not invent the digest and do not download the archive to recreate it during this phase. Reusing that portable package later requires the retained digest. The historical restore server is separate and does not depend on this digest.
+
+P-04. Sections G and H retain `supabase_vault` 0.3.1 and `vault.secrets` count 0. The other relation names were not retained. The owner approves an expected-object list from an independent source. Do not invent names. The 15 November restore remains historical. A new restore cannot be called fully checked, and database RECOVERY COMPLETE cannot be declared, until the list exists. Do not run that restore to discover the names. Limited validation does not need the list.
+
+P-05. Section I records that pull request #25 was open and unmerged on 17 November 2026 and that this status was not reverified. Refreshing it would require GitHub, which this phase does not use. Applying the pull request is a software change. It is not required to decrypt, restore, or extract the backup. Do not apply it as part of recovery, regardless of its later status.
+
+P-06. Sections A and F require a separate owner authorization before `tar -x` on the real Storage archive. A checker exit of 0 is not that authorization. The decision itself does not read the archive. Until it is granted, do not extract, and do not mark Storage recovery or full recovery complete. P-06 does not block a ciphertext checksum, age decryption, or the section F checker.
+
+P-07. Sections C and N say the real passphrase bytes, including any trailing newline, are unknown. The dummy tests did not use a TEJAS variable. The real bytes remain **NOT TESTED**. The open action is an owner confirmation, so the register status is **OWNER DECISION REQUIRED**. The owner confirms that the stored bytes for the named secret will be supplied unchanged. Database decryption uses `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`. Storage decryption uses the one named identity file. Confirmation of one secret does not confirm the other. Do not write the bytes into this runbook, and do not trim, normalize, or add a newline to make decryption succeed. If decryption fails for that reason, stop.
+
+P-08. Section C and section J say offline custody was not verified. The owner confirms custody for the secret named in the authorization. Confirmation of the database passphrase does not confirm an identity file, and the reverse is also unresolved until the owner confirms it. Confirmation does not include sending either value. Do not decrypt with a passphrase whose custody the owner has not confirmed.
+
+P-09. Sections B, F, and G identify the real archives and say they remain **NOT TESTED**. No phase failed a real decrypt, extract, or restore, because none was run. P-09 is the evidence produced by an authorized limited validation. It is required before VALIDATION PASSED and before RECOVERY COMPLETE for that archive. It is not required before the written authorization that names the first validation. Database evidence does not satisfy the Storage archive, and Storage evidence does not satisfy the database archive. Do not declare either of those two states without a recorded result. This runbook does not record one.
+
+P-10. Section F pins age at `/home/ubuntu/tejas-backups/bin/age` and expects output `v1.3.2`. Section G pins `pg_restore` at `/usr/lib/postgresql/17/bin/pg_restore` and expects PostgreSQL 17. Both paths are absent on this computer, and neither program was executed. On the recovery computer, the operator may run only `--version`, with no archive or dump argument. Do not accept a binary from `PATH`. Do not run age decryption before the age result is `v1.3.2`. Do not run `pg_restore`, including `--list`, before the client result starts with PostgreSQL 17. A ciphertext checksum does not use either binary.
+
+P-11. Section F and section M stopped unsafe synthetic members before `tar -x`. GNU tar's extraction behavior for an absolute path, a traversal name, a symlink, a hard link, and a duplicate member is **NOT TESTED**. Do not extract those members to learn the behavior. The owner accepts that residual limit in the same decision as P-06, or withholds extraction. Withholding it blocks extraction. It does not block the section F checker. Do not describe the tar options as a tested containment boundary.
+
+P-12. Section B says the companion files were not in the verified Drive folder. Their full names and any surviving copy were not established. The owner decides whether role recovery depends on them. Do not add `--no-owner` or `--no-acl` while this is open.
+
+P-13. Section C records the five extension versions and the vault SQL. The package commands for the other four extensions, and the vault compile flags, were not preserved. If a packaged `supabase_vault` 0.3.1 is absent, stop. Do not skip dump objects instead of installing the matching extension.
+
+P-14. Section H preserves the eight area counts and says the exact 68-table script was not preserved. The area comparison can use those counts. A full row-by-row recount needs the owner to supply the query text. Do not invent that script and do not update rows to make counts match.
+
+P-15. Sections F and M say the historical `tar` argument list was not preserved. Use the section F checker and the separate extraction decision. Do not reconstruct the old command from memory.
+
+P-16. Sections C, J, and K say no tested history-clear command was recorded. This matters only after a secret is captured. Until the administrator identifies the command for the shell in use, do not clear history by guessing and do not paste the history into a report.
+
+P-17. Section D says `tejasdrive` used scope `drive.file` on 17 November 2026. If that remote is absent, stop and ask the owner before authorizing rclone again. Replacing the shared Google client is a separate approval. This phase did not contact Google Drive, so current availability is not known.
+
+P-18. Section F records no upload command for the four Storage objects. Upload is not part of recovering the backup. The owner must give a separate approval, confirm the buckets are private, and decide overwrite behavior. Do not upload while this is open.
+
+P-19. Section I says the isolated restore is not permission to repair Production. A later plan must name the target database, backup file, baseline time, and rollback method. This runbook does not contain that plan. Do not write to Production while this is open.
+
+P-20. Section G says a missing role stops the restore. The owner decides how to handle it. `--no-owner` and `--no-acl` remain prohibited. Do not continue a restore by adding those flags.
+
+P-21. Section C says the historical OpenSSL version string was not recorded. Section C also says the historical restore server's `version()` string was not recorded. These are missing records, not failed checks. A new restore still requires `version()` to report PostgreSQL 17. Do not invent either historical string.
+
+P-22. Section N records that `mknod` was not permitted, so the live device-node case is **BLOCKED**. Section M tested a character-device tar header only. This does not block either recovery gate. Do not create a device node to close it.
+
+### Gate states
+
+The database gate and the Storage gate each use five states. Upload and Production are separate decisions, not states of either gate.
+
+- **CLOSED.** No real archive operation is authorized.
+- **AUTHORIZED FOR LIMITED VALIDATION.** A separate written authorization names the exact archive, the permitted operation, the target, and the stop conditions. Only that validation may occur.
+- **VALIDATION PASSED.** The authorized checks have succeeded and their evidence is recorded.
+- **RECOVERY AUTHORIZED.** A separate authorization names the recovery operation and its target.
+- **RECOVERY COMPLETE.** The required criteria for that component have been met and verified.
+
+Limited validation does not authorize a restore, extraction, an upload, or a Production write. Recovery authorization does not authorize an upload or a Production write. One component reaching **RECOVERY COMPLETE** leaves the other component where it is.
+
+### Database recovery gate
+
+This gate covers a named database-archive validation, isolated `pg_restore`, and the section H comparison. It does not authorize Storage extraction or a Storage upload. Its current state is **CLOSED**.
+
+**AUTHORIZED FOR LIMITED VALIDATION** may name a ciphertext checksum while P-01 remains open. It may name decryption only after P-01 and P-02 are recorded figures and the owner has confirmed P-07 and P-08 for `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`. The confirmation names the secret and does not include its bytes. It may name `pg_restore --list` only after P-10 shows that `/usr/lib/postgresql/17/bin/pg_restore` is PostgreSQL 17. The writing names the section B database archive, the work target, and the stop conditions. P-09 remains **NOT TESTED** when that writing is made. This runbook is not that writing.
+
+**VALIDATION PASSED** records the result of the named checks. A failed check does not reach this state and does not authorize recovery. This state does not authorize `pg_restore` into a database.
+
+**RECOVERY AUTHORIZED** is a second writing. It names the disposable database, the host, and the port. The host is `/var/run/postgresql`, `127.0.0.1`, or `::1`. The database is not `postgres` and it is not Production. It requires decrypt-validation evidence and the pinned PostgreSQL 17 client. It does not follow from the validation authorization.
+
+**RECOVERY COMPLETE** requires a captured `pg_restore` exit of 0, a server-confirmed target match, the section H comparison, and P-04. P-04 is required before a new restore is called fully checked. The database P-09 evidence is part of this completion. P-06, P-11, and P-18 do not move this gate. P-05 does not move it.
+
+### Storage recovery gate
+
+This gate covers a named Storage-archive validation and extraction after P-06. It does not authorize `pg_restore`, a database restore, or an upload. Its current state is **CLOSED**.
+
+**AUTHORIZED FOR LIMITED VALIDATION** may name a ciphertext checksum, age decryption, or the section F checker. Decryption and the checker require P-07 and P-08 for the named identity file, without its bytes, and P-10 output `v1.3.2` from `/home/ubuntu/tejas-backups/bin/age`. The writing names the section B Storage archive, the work target, and the stop conditions. P-06 is not required to start the checker. P-09 remains **NOT TESTED** when that writing is made. P-11 remains **NOT TESTED** and is disclosed in any later extraction decision.
+
+**VALIDATION PASSED** records the checker result when the checker was one of the authorized checks. A checker exit of 0 is evidence for this state. It is not permission to extract.
+
+**RECOVERY AUTHORIZED** is the extraction decision. It requires P-06, the owner's acceptance of the P-11 limit, and a checker result that has already passed. The writing names the archive and the extract target. Withholding P-06 or P-11 leaves extraction unauthorized and leaves a completed checker at **VALIDATION PASSED**.
+
+**RECOVERY COMPLETE** requires that authorized extraction and a match of the four section B file hashes. The Storage P-09 evidence is part of this completion. P-18 remains a separate upload decision.
+
+### Full recovery gate
+
+Full recovery requires the database gate and the Storage gate, each at **RECOVERY COMPLETE**. Either component alone leaves full recovery **CLOSED**. P-18 remains an upload decision. P-19 remains a Production decision. P-05 remains a software-change decision and is not a third component of full recovery.
+
+### Owner decisions
+
+These boxes are not answers. None is approved by this runbook.
+
+- [ ] Authorize one limited validation, or withhold it. Name the archive, the operation, the target, and the stop conditions.
+- [ ] Authorize the database restore in a separate decision, or withhold it.
+- [ ] P-04: approve an expected `supabase_vault` 0.3.1 object list from an independent source, or withhold the fully checked claim.
+- [ ] P-07: confirm that the stored passphrase bytes for the named secret will be supplied unchanged, including the unresolved trailing newline. Do not write the bytes here.
+- [ ] P-08: confirm offline custody for the named secret. Do not write the value here.
+- [ ] P-06: authorize Storage extraction, or withhold it.
+- [ ] P-11: accept that unsafe-member extraction is **NOT TESTED**, or withhold extraction.
+- [ ] Name the disposable database, host, and port. The host is `/var/run/postgresql`, `127.0.0.1`, or `::1`. Do not name Production.
+- [ ] Confirm that the backup identity is the section B file IDs, sizes, and checksums.
+- [ ] P-05: decide any software change for pull request #25 outside this recovery. Do not approve applying it as part of recovery.
+- [ ] P-12: decide whether the missing companion files are required for roles.
+- [ ] P-18: authorize a Supabase Storage upload, or withhold it.
+- [ ] P-19: authorize a Production write under a separate plan, or withhold it.
+- [ ] P-20: decide, only after a missing-role error, how to proceed without `--no-owner` or `--no-acl`.
+
+### Operator tasks before any real file is read
+
+The operator can do these without a real backup, a passphrase, or an external service:
+
+- Keep section R matched to sections A through S. A blocker is removed only when its evidence is recorded.
+- On the future recovery computer, run only the pinned `--version` checks in P-10. Do not pass an archive or a dump.
+- Measure free space for P-02 after P-01 has a real figure.
+- Prepare an empty local PostgreSQL 17 server. Do not connect it to Production.
+- Refuse `--no-owner`, `--no-acl`, a Drive destination, and extraction while P-06 is open.
+
+A real TEJAS file is read only when its gate is **AUTHORIZED FOR LIMITED VALIDATION** for that named operation, or **RECOVERY AUTHORIZED** for that named recovery operation. **CLOSED** permits neither. **VALIDATION PASSED** records evidence and does not itself permit the recovery operation.
+
+## S. Phase 3G gate-state logic
+
+Phase 3G, 17 November 2026, IST. This section records the dependency audit and the disposable logic tests. It does not authorize a real archive operation. The real TEJAS backups remain **NOT TESTED**.
+
+### Wording corrected
+
+Phase 3F said the database gate stays closed until its list is true, and that the gate is not complete while P-09 remains **NOT TESTED**. The operator rule then said a real file waits until the gate is open. Together, those sentences required the validation result before the authorization that would produce it.
+
+Phase 3F also said the Storage gate stays closed until the checker exits 0 and the four file hashes match. Those results are produced by the checker and by extraction. It required P-06 before the gate, so the pre-extraction checker waited on extraction authorization. Withholding P-11 closed every Storage step, including a checksum and the checker.
+
+Section R now uses the five states. P-09, a checker exit, and the four hashes are evidence for **VALIDATION PASSED** or **RECOVERY COMPLETE**. They are not permission to begin. P-06 and P-11 block extraction. They do not block the checker. No prerequisite in P-01 through P-22 changed from unresolved to resolved. No approval was added.
+
+### Dependency audit
+
+The status and the responsible party are unchanged. The dependency column is the Phase 3G reading.
+
+| ID | Status | Responsible | Dependency | Stop condition |
+| --- | --- | --- | --- | --- |
+| P-01 | OPEN | Owner | Decrypt waits on a retained size. Checksum validation does not. | Do not decrypt to discover the size, and do not invent it. |
+| P-02 | OPEN | Technical Operator | Decrypt waits on a free-space comparison. P-02 waits on P-01. The comparison does not read the archive. | Do not invent the free-space figure. |
+| P-03 | OPEN | Owner | No database, Storage, upload, or Production dependency. | Do not reuse the portable package without the retained digest. |
+| P-04 | OWNER DECISION REQUIRED | Owner | Database **RECOVERY COMPLETE** waits on the approved list. Limited validation does not. | Do not invent relation names or call a new restore fully checked. |
+| P-05 | OPEN | Owner | No validation, recovery, upload, or Production dependency. | Do not apply pull request #25 as part of recovery. |
+| P-06 | OWNER DECISION REQUIRED | Owner | Extraction waits on this writing. The checker does not. | Do not run `tar -x` on the real archive. |
+| P-07 | OWNER DECISION REQUIRED | Owner | Decryption waits on confirmation for the named secret. The real bytes remain **NOT TESTED**. | Do not write, trim, or invent the bytes. |
+| P-08 | OWNER DECISION REQUIRED | Owner | Decryption waits on custody confirmation for the named secret. | Do not decrypt on an unconfirmed custody. |
+| P-09 | NOT TESTED | Technical Operator | **VALIDATION PASSED** and **RECOVERY COMPLETE** wait on recorded evidence. The first validation authorization does not. | Do not declare either state without that evidence. |
+| P-10 | NOT TESTED | Technical Operator | age decryption waits on `v1.3.2`. Any `pg_restore` use waits on PostgreSQL 17. A checksum waits on neither. | Do not pass an archive or a dump to the version check. |
+| P-11 | NOT TESTED | Owner | Extraction acceptance waits on this disclosure. The checker does not. | Do not extract unsafe members to learn tar's behavior. |
+| P-12 | OWNER DECISION REQUIRED | Owner | Role recovery from the missing companion files. | Do not add `--no-owner` or `--no-acl`. |
+| P-13 | OPEN | Administrator | A restore stops if the matching extension cannot be created. | Do not skip dump objects in place of the extension. |
+| P-14 | OPEN | Owner | A 68-table recount only. The eight area counts remain usable. | Do not invent the counting script. |
+| P-15 | OPEN | Owner | Reuse of the unknown historical tar command. | Do not reconstruct that command from memory. |
+| P-16 | OPEN | Administrator | Cleanup after a captured secret. | Do not guess a history-clear command. |
+| P-17 | OPEN | Owner | A new download when `tejasdrive` is absent. | Do not re-authorize rclone or replace the shared client here. |
+| P-18 | OWNER DECISION REQUIRED | Owner | Upload only. | Do not upload to Supabase Storage. |
+| P-19 | OWNER DECISION REQUIRED | Owner | Production writes only. | Do not write to Production. |
+| P-20 | OWNER DECISION REQUIRED | Owner | Continuation after a missing-role error. | Do not add `--no-owner` or `--no-acl`. |
+| P-21 | OPEN | Owner | No gate dependency. A new restore still checks `version()`. | Do not invent the missing historical strings. |
+| P-22 | BLOCKED | Technical Operator | No gate dependency. | Do not create a device node to close it. |
+
+P-01 and P-02 are ordered, not circular. P-07 and P-08 are the byte rule and the custody rule for one named secret. P-12 and P-20 are the missing companion files and a later role error. P-06 and P-11 are the extraction decision and the untested tar limit. No second register entry repeats an ID.
+
+### Disposable logic tests
+
+The tests used string identifiers `tejas-database-dump.enc`, `tejas-storage.tar.age`, and `identity.gpg`. They did not open a file, a passphrase, a database, or a network service. All 27 cases passed.
+
+| Check | Fixture state | Result |
+| --- | --- | --- |
+| Gate closed | No authorization | Decrypt validation denied. Restore denied. |
+| Validation without recovery | Checksum authorization while P-09 was **NOT TESTED** | State became **AUTHORIZED FOR LIMITED VALIDATION**. Restore denied. |
+| Validation failure | Authorized decrypt returned failure | State stayed **AUTHORIZED FOR LIMITED VALIDATION**. Recovery authorization denied. |
+| Validation success | Authorized decrypt returned success | State became **VALIDATION PASSED**. Restore still denied. |
+| Restore authorization | A second writing after **VALIDATION PASSED** | Restore denied until that writing. The validation writing was not enough. |
+| Extraction | Checker passed and P-06 unset | Extraction denied. |
+| Extraction after P-06 | Checker passed, P-06 set, P-11 accepted, recovery writing present | Extraction allowed in the fixture only. |
+| Upload | Storage **RECOVERY COMPLETE**, P-18 unset | Upload denied. |
+| Production | P-19 unset | Production write denied. |
+| Database only | Database **RECOVERY COMPLETE**, Storage **CLOSED** | Full recovery denied. |
+| Storage only | Storage **RECOVERY COMPLETE**, database **CLOSED** | Full recovery denied. |
+| Both complete | Both fixture gates **RECOVERY COMPLETE** | The fixture accepted full recovery. The real gates remain **CLOSED**. Upload and Production still denied. |
+| Checksum and P-01 | P-01 unset | Checksum authorization allowed. Decrypt authorization denied. |
+| Checker and P-06 | P-06 unset | Checker authorization allowed. |
+| P-04 | Restore evidence present, P-04 unset | Database **RECOVERY COMPLETE** denied. |
+| P-05 | No P-05 input on the fixture | Full recovery did not read it. |
+
+## T. Execution evidence, 17 November 2026
+
+Current verified evidence, recorded 17 November 2026, 12:49 IST. The computer was Ubuntu 24.04.5, hostname `cursor`. The work filesystem had 263,068,471,296 bytes free. This section does not replace sections A through S.
+
+The owner authorization in the execution request covered pending recovery work. It did not name a Production database other than the injected remote URLs, and those URLs use database name `postgres`. No statement in this section is a Production change.
+
+### Archive identity
+
+Drive remote `tejasdrive` listed the same three folders and four files as section B. Copies were downloaded into a mode `700` workspace. The originals on Drive were not uploaded to, renamed, or deleted. A later listing showed the same four sizes.
+
+| File | Bytes | SHA-256 | Result |
+| --- | --- | --- | --- |
+| Database `.dump.enc` | 476,816 | `49d69874bc494c2c353a903906045ece4ad37c989a69ddaf0ae7195314fcdde1` | Match |
+| Storage `.tar.age` | 555,336 | `ac76e4f8895284f098e0f674d58d8a901702f7b219809a0d51f64b358d7e72c4` | Match |
+| `identity.gpg` | 273 | `fd2df7cdfd3041cf33c1bce947af0b90213e449642c58b4d7de1ce1f3fb1ab5b` | Match |
+| `identity.owner.gpg` | 248 | `e6f86e98fb5203cf75daa7f8dfa13e6d608f1b71fe8c8f0987eb6d4c5a0945cf` | Match |
+
+The local file `/home/ubuntu/tejas-backups/age-recovery/tejas-storage-backup.identity.owner.gpg` is 248 bytes, mode `600`, and has the owner-file digest above. It was not modified. No `.globals.sql.enc` or `.metadata.json.enc` file was found on Drive or on this computer.
+
+### Database validation and isolated restore
+
+The encryption passphrase was already in the environment. Its bytes were not printed, hashed, or edited. The value had no trailing newline. OpenSSL 3.0.13 decrypted a copy with the historical `env:` command. OpenSSL exited 0. The plaintext was 476,793 bytes, began with the custom-dump header, and its SHA-256 was `408b10c3ef0e18bd4cde728afe529a780c7d2af7f83042c16c5faf9fe327e4b8`. That is current measured evidence. It does not change the older statement that the size had not been retained before this run.
+
+The plaintext was removed after the restore. The encrypted copy remains.
+
+`pg_restore` at `/usr/lib/postgresql/17/bin/pg_restore` reports `pg_restore (PostgreSQL) 17.12 (Ubuntu 17.12-1.pgdg24.04+1)`. It came from the signed PGDG repository after the published key fingerprint `B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8` was checked. The archive TOC says it was dumped from PostgreSQL 17.11 by pg_dump 17.12 (Ubuntu 17.12-1.pgdg24.04+1) at 2026-11-15 00:44:17 UTC. The historical OpenSSL version string is still not in a retained log. The current OpenSSL 3.0.13 string is the version that decrypted the copy. It is not a claim about the 15 November binary.
+
+The local cluster is PostgreSQL 17.12 on socket `/var/run/postgresql`, port `5432`. That port is the cluster that was created here. It is not the historical port `5433`. `inet_server_addr()` was null. The target database `tejas_restore_full_20261115` was created empty. It is not database `postgres` and it is not the remote Supabase URL.
+
+The first restore exited 1 because role `supabase_admin` did not exist. The incomplete database was dropped. The dump names these roles and does not contain `CREATE ROLE`: `anon`, `authenticated`, `dashboard_user`, `pgbouncer`, `service_role`, `supabase_admin`, `supabase_auth_admin`, `supabase_functions_admin`, `supabase_realtime_admin`, and `supabase_storage_admin`. They were created on this local cluster only, `NOLOGIN` and `NOINHERIT`, with no password. `supabase_admin` was then made a local superuser because the dump assigns it event triggers, and PostgreSQL requires that owner to be a superuser. No Production role was created or altered. `--no-owner` and `--no-acl` were not used.
+
+The second restore exited 0.
+
+`supabase_vault` 0.3.1 was built from git tag `v0.3.1`, commit `6e0cd916242d922a646e4d611cc215e09dd429f4`, using that tag's Makefile and `PG_CONFIG=/usr/lib/postgresql/17/bin/pg_config`. The other four extensions were already available at the historical versions. After restore, `pg_extension` showed five extensions: `pg_stat_statements` 1.11, `pgcrypto` 1.3, `plpgsql` 1.0, `supabase_vault` 0.3.1, and `uuid-ossp` 1.1. `vault.secrets` count was 0.
+
+Observed inventory, from queries run in this session. These queries are current evidence. They are not the missing historical 68-table script.
+
+| Measure | Observed | Historical figure |
+| --- | --- | --- |
+| Ordinary tables plus one partitioned table | 68 | 68 |
+| Ordinary indexes plus two partitioned indexes | 189 | 189 |
+| Constraints | 238 | 238 |
+| Sequences | 2 | 2 |
+| Triggers | 12 | 12 |
+| Extensions | 5 | 5 |
+| Non-system schemas, including `vault` | 10 | 9 |
+| Functions outside system schemas | 117 | 116 |
+| Invalid indexes | 0 | not separately recorded |
+
+One check constraint, `realtime.messages_payload_exclusive`, is not validated. The restore did not change it afterward. `public.tejas_case_files` and `public.tejas_payment_utrs` are absent.
+
+Application counts, with no row contents recorded:
+
+| Area | Table | Rows |
+| --- | --- | --- |
+| Payments | `public.tejas_payments` | 2, one `confirmed` and one `reported` |
+| Registrations | `public.tejas_registrations` | 2 |
+| Entitlements | `public.tejas_learn_entitlements` | 3, one `verified` and two `unpaid` |
+| E-book audit | `public.tejas_learn_audit` | 20 |
+| Book orders | `public.tejas_book_orders` | 2 |
+| E-book access | `public.tejas_ebook_access` | 2 |
+| Payment proofs | `public.tejas_payment_proofs` | 2 |
+| Idempotency | `public.tejas_idempotency` | 2 |
+
+The schema count and the function count do not equal the unlabeled historical totals. Database recovery is therefore not declared complete.
+
+### Storage validation
+
+Age v1.3.2 was downloaded from the official v1.3.2 release and checked with `sigsum-verify` against the two public keys published in that tag's `SIGSUM.md`. The binary was installed at `/home/ubuntu/tejas-backups/bin/age`. `--version` returned `v1.3.2` and one trailing newline. No PATH binary was used.
+
+The original identity file decrypted with the encryption passphrase file. GnuPG exited 0. The plaintext identity SHA-256 was `86ac6f159d6a53449622fa1ba4dccad08dd019ec19b855aa5d79e02ea05996e8`. The identity and the passphrase file were then unlinked. The owner passphrase was present, had no trailing newline, and was not used, because the matching identity file had already decrypted. Offline custody beyond this computer and Drive was not verified.
+
+Pinned age decrypted the Storage copy. The section F checker exited 0 on 10 members. The four named files were extracted into a new mode `700` directory. Their sizes and SHA-256 values matched section B. Those extracted files were then removed from the workspace. The encrypted `.tar.age` copy remains. Nothing was uploaded to Supabase Storage.
+
+### GNU tar 1.35 disposable results
+
+These used archives created for the test. They did not use a TEJAS archive.
+
+| Case | Result |
+| --- | --- |
+| Absolute member | Exit 0. Tar removed the leading slash and wrote inside the destination. The absolute target was not written. |
+| `..` member | Exit 2. Tar rejected the member. The outside sentinel stayed unchanged. |
+| Symlink | Exit 0. The symlink was created. |
+| Hard link | Exit 0. The two names shared one inode. |
+| Duplicate member | Exit 0. The later member remained. |
+| FIFO | Exit 0. A FIFO was created. |
+| Character-device header | Exit 2. `mknod` returned `EPERM`. No device node remained. |
+| Direct `mknod` | `EPERM`. This case stays **BLOCKED**. |
+| Unexpected member | Exit 0. Tar extracted it. The checker, not tar, is what rejects it. |
+| Truncated payload | Exit 2. Tar said it did not look like a tar archive. |
+| Existing destination file | Exit 0. `--no-overwrite-dir` did not keep the old bytes. |
+| Stored ownership | Exit 0. The file is owned by the extracting user, not the stored uid. |
+
+### Current prerequisite status
+
+| ID | Status now | Evidence | Remaining action |
+| --- | --- | --- | --- |
+| P-01 | Closed for the measured size | Plaintext copy was 476,793 bytes | None for decryption safety |
+| P-02 | Closed | 263,068,471,296 bytes free before decryption | None |
+| P-03 | OPEN | Portable archive checksum was not found | Do not invent it |
+| P-04 | Observed, confirmation outstanding | Installed and restored `supabase_vault` 0.3.1; `vault.secrets` count 0 | Owner confirmation of any fuller expected list |
+| P-05 | Refreshed | Pull request #25 is open, not merged, head `fff8cd20cd78ecca7d0c8beeef83f25cd4eb805c`, base `266156332bda1ca3857471c0d83ec59134c83d3f` | Do not merge it as recovery |
+| P-06 | Used | Checker exit 0, then the four named files were extracted | None for that extraction |
+| P-07 | Closed for the encryption passphrase | Bytes were used unchanged and both decryptions matched | Owner passphrase was not used |
+| P-08 | OPEN | Drive copies and the local owner file match section B | Offline custody outside this computer and Drive is not verified |
+| P-09 | Closed for these checks | Both ciphertext digests, the plaintext digest, and the four file digests matched | None for those checks |
+| P-10 | Closed | Pinned age `v1.3.2`; pinned `pg_restore` PostgreSQL 17.12 | None |
+| P-11 | Tested | GNU tar 1.35 results above | Do not treat tar options as a substitute for the checker |
+| P-12 | OPEN | Companion files were not found | Do not invent them |
+| P-13 | Closed on this cluster | Five extensions at the recorded versions | Production installation is separate |
+| P-14 | OPEN for the original script | A labeled count of ordinary plus partitioned tables is 68 | Do not call that query the historical script |
+| P-15 | OPEN for the historical command | The named-file extraction in section F was used | Do not call it the historical tar command |
+| P-16 | Documented | Bash `set +o history` does not erase existing history. No history was deleted | None |
+| P-17 | Closed for this download | `tejasdrive` listed and downloaded into the workspace. Nothing was copied back to Drive | Shared-client replacement remains separate |
+| P-18 | OPEN | No upload was performed | Do not invent a bucket or command |
+| P-19 | Plan only | No Production restore. The injected URL points at remote database `postgres` | Do not restore there |
+| P-20 | Local only | Named roles were created on this cluster. Production roles were not changed | Do not copy those grants to Production without the missing globals file |
+| P-21 | Partial | Archive header records PostgreSQL 17.11 and pg_dump 17.12. Current OpenSSL is 3.0.13 | Historical OpenSSL version string remains unknown |
+| P-22 | BLOCKED | `mknod` returned `EPERM` | Do not raise privileges to force it |
+
+### Gate result
+
+Database gate: ciphertext and plaintext validation passed. An isolated restore exited 0 and the application counts matched. Schema and function totals did not match the unlabeled historical figures, so the database gate is not **RECOVERY COMPLETE**.
+
+Storage gate: decryption, the checker, extraction, and the four hashes passed. The extracted files were removed after that check. Nothing was uploaded. Isolated Storage verification is complete. Upload remains **CLOSED**.
+
+Full recovery is not complete. Production was not changed. Pull request #25 was not merged.
+
+### Cleanup
+
+The passphrase file, plaintext identity, plaintext database dump, and extracted Storage files were unlinked inside the marked workspace. Ordinary unlink is not secure erasure. The encrypted copies in the workspace and the Drive originals remain. Unsetting `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`, `TEJAS_BACKUP_OWNER_PASSPHRASE`, and `SUPABASE_BACKUP_DB_URL` in the shell does not revoke those credentials. No secret value was written into this runbook.

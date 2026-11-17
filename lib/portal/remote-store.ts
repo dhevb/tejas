@@ -455,7 +455,8 @@ export async function remoteStaffOverview() {
   const catalog = loadCatalog();
   const publication = await remotePublicationMap();
   const students = await supabaseRest("/rest/v1/tejas_learn_students?select=id,full_name,parent_name,mobile,email,school_name,stream_id,class_level,session_version,created_at", { method: "GET" });
-  const entitlements = await supabaseRest("/rest/v1/tejas_learn_entitlements?select=student_id,book_id,status,amount_inr", { method: "GET" });
+  const entitlements = await supabaseRest("/rest/v1/tejas_learn_entitlements?select=student_id,book_id,status,amount_inr,transaction_reference,reported_at", { method: "GET" });
+  const claims = await supabaseRest("/rest/v1/tejas_payment_utrs?category=eq.ebook&select=owner_reference,utr_text,extracted_utr,bank_result,review_reason,payment_status,reported_at", { method: "GET" });
   const audit = await supabaseRest("/rest/v1/tejas_learn_audit?select=id,created_at,actor,action_name,student_id,reason,before_state,after_state&order=created_at.desc&limit=100", { method: "GET" });
   if (students.status !== 200 || entitlements.status !== 200 || audit.status !== 200) throw new PortalUnavailable();
   const rowsOut = [];
@@ -495,11 +496,20 @@ export async function remoteStaffOverview() {
     flags: catalog.flags,
     students: rows(students.json).map((row) => studentFrom(row)).filter((item): item is PortalStudent => item !== null).map((student) => ({
       ...publicStudent(student),
-      payment: entitlementRows.filter((item) => item.student_id === student.id).map((item) => ({
-        bookId: String(item.book_id),
-        status: item.status as PaymentState,
-        amountInr: typeof item.amount_inr === "number" ? item.amount_inr : 0,
-      })),
+      payment: entitlementRows.filter((item) => item.student_id === student.id).map((item) => {
+        const claim = claims.status === 200 ? rows(claims.json).find((row) => row.owner_reference === `ebook:${student.id}:${String(item.book_id)}`) : undefined;
+        return {
+          bookId: String(item.book_id),
+          status: item.status as PaymentState,
+          amountInr: typeof item.amount_inr === "number" ? item.amount_inr : 0,
+          enteredUtr: typeof claim?.utr_text === "string" ? claim.utr_text : typeof item.transaction_reference === "string" ? item.transaction_reference : null,
+          extractedUtr: typeof claim?.extracted_utr === "string" ? claim.extracted_utr : null,
+          bankResult: typeof claim?.bank_result === "string" ? claim.bank_result : "unavailable",
+          reviewReason: typeof claim?.review_reason === "string" ? claim.review_reason : null,
+          reportedAt: typeof item.reported_at === "string" ? item.reported_at : typeof claim?.reported_at === "string" ? claim.reported_at : null,
+          proof: Boolean(claim?.utr_text || item.transaction_reference),
+        };
+      }),
     })),
     audit: rows(audit.json).map((item) => ({
       id: String(item.id),

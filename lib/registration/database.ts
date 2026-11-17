@@ -1,4 +1,7 @@
+import { appendFile, mkdir } from "node:fs/promises";
+import path from "node:path";
 import { durableStorageConfigured, serverKeyValue, supabaseOrigin } from "@/lib/registration/durable";
+import { dataDir } from "@/lib/registration/paths";
 import { streamById } from "@/lib/registration/schema";
 import type { RegistrationRecord } from "@/lib/registration/store";
 
@@ -203,8 +206,9 @@ export async function readRegistration(reference: string): Promise<RegistrationR
   assertOk(result.status, [200]);
   const snapshot = rows(result.json)[0]?.record_snapshot;
   const record = asRecord(snapshot);
-  if (!record || record.reference !== reference) return null;
-  return record;
+  if (record && record.reference === reference) return record;
+  const caseFile = await readCaseFile(reference);
+  return caseFile?.kind === "registration" ? asRecord(caseFile.record) : null;
 }
 
 export async function listRegistrations(): Promise<RegistrationRecord[]> {
@@ -450,4 +454,140 @@ export async function attachReceipt(reference: string, record: RegistrationRecor
   }
   const saved = await updatePayment(reference, record, "school");
   if (saved === "missing") throw new Error("Database request failed (missing)");
+}
+
+type CaseSnapshot = {
+  kind: string;
+  reference: string;
+  channel: string;
+  payment: { status: string; transactionReference?: string | null };
+  record?: RegistrationRecord;
+};
+
+export async function insertCaseFile(snapshot: CaseSnapshot, idempotency?: { key: string; hash: string }): Promise<void> {
+  await insert("tejas_case_files", {
+    reference: snapshot.reference,
+    channel: snapshot.channel,
+    status: snapshot.payment.status,
+    record_snapshot: snapshot,
+    idempotency_key: idempotency?.key ?? null,
+    payload_hash: idempotency?.hash ?? null,
+  }, "return=minimal");
+}
+
+export async function readCaseFile(reference: string): Promise<CaseSnapshot | null> {
+  const result = await request(`/rest/v1/tejas_case_files?reference=eq.${quote(reference)}&select=record_snapshot`, { method: "GET" });
+  if (result.status !== 200) return null;
+  const snapshot = rows(result.json)[0]?.record_snapshot;
+  if (!snapshot || typeof snapshot !== "object") return null;
+  const record = snapshot as CaseSnapshot;
+  return record.reference === reference ? record : null;
+}
+
+export async function updateCaseFile(snapshot: CaseSnapshot, proof: Buffer | null, proofExt: "jpg" | "png" | "webp" | null): Promise<void> {
+  if (proof && proofExt) {
+    const objectPath = `${snapshot.reference}/proof.${proofExt}`;
+    await uploadObject("tejas-payment-proofs", objectPath, proof, RECEIPT_TYPES[proofExt]);
+  }
+  await patch("tejas_case_files", `reference=eq.${quote(snapshot.reference)}`, {
+    status: snapshot.payment.status,
+    record_snapshot: snapshot,
+  });
+}
+
+export async function transactionSeenInCases(reference: string): Promise<boolean> {
+  const result = await request(`/rest/v1/tejas_case_files?select=reference&record_snapshot->payment->>transactionReference=ilike.${quote(reference)}&limit=1`, { method: "GET" });
+  if (result.status !== 200) return false;
+  return rows(result.json).some((row) => typeof row.reference === "string");
+}
+
+export type UtrClaimRow = {
+  utr_text?: string;
+  owner_reference?: string;
+  category?: string;
+  extracted_utr?: string | null;
+  bank_result?: string | null;
+  review_reason?: string | null;
+  proof_ext?: string | null;
+  amount_due?: number | null;
+  payment_status?: string | null;
+  reported_at?: string | null;
+};
+
+/** Insert is the atomic claim. 409 means another owner already holds this UTR. 404 means the registry table is not present yet. */
+export async function insertUtrClaim(row: { utr_key: string; utr_text: string; category: string; owner_reference: string }): Promise<"claimed" | "conflict" | "missing" | "error"> {
+  const result = await request("/rest/v1/tejas_payment_utrs", {
+    method: "POST",
+    headers: { "content-type": "application/json", prefer: "return=minimal" },
+    body: JSON.stringify(row),
+  });
+  if (result.status === 200 || result.status === 201) return "claimed";
+  if (result.status === 409) return "conflict";
+  if (result.status === 404) return "missing";
+  return "error";
+}
+
+export async function readUtrClaim(utrKey: string): Promise<UtrClaimRow | null | "missing"> {
+  const result = await request(`/rest/v1/tejas_payment_utrs?utr_key=eq.${quote(utrKey)}&select=utr_text,owner_reference,category,extracted_utr,bank_result,review_reason,proof_ext,amount_due,payment_status,reported_at&limit=1`, { method: "GET" });
+  if (result.status === 404) return "missing";
+  if (result.status !== 200) return null;
+  return rows(result.json)[0] ?? null;
+}
+
+export async function releaseUtrClaim(utrKey: string, owner: string): Promise<void> {
+  const result = await request(`/rest/v1/tejas_payment_utrs?utr_key=eq.${quote(utrKey)}&owner_reference=eq.${quote(owner)}`, {
+    method: "DELETE",
+    headers: { prefer: "return=minimal" },
+  });
+  if (result.status === 404) return;
+  if (![200, 204].includes(result.status)) throw new Error("Database request failed (utr)");
+}
+
+export async function noteUtrClaim(utrKey: string, owner: string, note: { extracted_utr: string | null; bank_result: string; review_reason: string | null; proof_ext: string; amount_due: number; payment_status: string; reported_at: string }): Promise<void> {
+  const result = await request(`/rest/v1/tejas_payment_utrs?utr_key=eq.${quote(utrKey)}&owner_reference=eq.${quote(owner)}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", prefer: "return=minimal" },
+    body: JSON.stringify(note),
+  });
+  if (result.status === 404) return;
+  if (![200, 204].includes(result.status)) throw new Error("Database request failed (utr)");
+}
+
+export async function listUtrClaims(category: string): Promise<UtrClaimRow[] | null> {
+  const result = await request(`/rest/v1/tejas_payment_utrs?category=eq.${quote(category)}&select=utr_text,owner_reference,category,extracted_utr,bank_result,review_reason,proof_ext,amount_due,payment_status,reported_at`, { method: "GET" });
+  if (result.status === 404) return null;
+  if (result.status !== 200) return null;
+  return rows(result.json) as UtrClaimRow[];
+}
+
+export async function listRemoteCaseSnapshots(): Promise<CaseSnapshot[] | null> {
+  const result = await request("/rest/v1/tejas_case_files?select=record_snapshot&order=created_at.desc&limit=500", { method: "GET" });
+  if (result.status !== 200) return null;
+  return rows(result.json).flatMap((row) => {
+    const item = row.record_snapshot;
+    if (!item || typeof item !== "object" || !("reference" in item)) return [];
+    return [item as CaseSnapshot];
+  });
+}
+
+export async function readPrivateProof(objectPath: string): Promise<Buffer | null> {
+  return downloadObject("tejas-payment-proofs", objectPath);
+}
+
+export async function recordStaffProofView(actor: string, note: string): Promise<void> {
+  if (!configured()) {
+    const dir = dataDir();
+    await mkdir(dir, { recursive: true, mode: 0o700 });
+    await appendFile(path.join(dir, "staff-proof-access.log"), `${new Date().toISOString()} ${actor} ${note}\n`, { mode: 0o600 });
+    return;
+  }
+  try {
+    await insert("tejas_audit_logs", { registration_id: null, actor, action_name: "view-payment-proof", note }, "return=minimal");
+  } catch {
+    console.error("staff proof view was not recorded");
+  }
+}
+
+export async function storePrivateProof(objectPath: string, bytes: Buffer, contentType: string): Promise<void> {
+  await uploadObject("tejas-payment-proofs", objectPath, bytes, contentType);
 }

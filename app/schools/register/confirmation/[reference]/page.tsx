@@ -30,7 +30,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
         <div className="space-y-4 rounded-3xl border border-tejas-border bg-white px-5 py-6 text-sm text-tejas-ink shadow-sm sm:px-8 sm:py-8">
           <p className="text-xs font-semibold uppercase tracking-widest text-tejas-saffron">Registration received</p>
           <h1 className="break-all text-2xl font-bold text-tejas-blue sm:text-3xl">{summary.reference}</h1>
-          <p className="text-base leading-relaxed">The school registration for {summary.schoolName} has been received. Keep this reference for payment and any later enquiry.</p>
+          <p className="text-base leading-relaxed">{summary.channel === "individual" ? `The individual registration for ${summary.schoolName} has been received.` : `The school registration for ${summary.schoolName} has been received.`} Keep this reference for payment and any later enquiry.</p>
           <p>{summary.studentCount} students. {summary.studentStreamRegistrations} student-stream registrations.</p>
           <dl className="grid gap-2 sm:grid-cols-2">
             <div><dt className="text-tejas-muted">Registration fee collected</dt><dd className="font-semibold">{inr.format(summary.totalStudentFees)}</dd></div>
@@ -45,7 +45,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ r
             ) : null}
           </dl>
           <p className="rounded-xl bg-tejas-blue px-4 py-3 text-base font-semibold text-white">Net amount payable to TEJAS: {inr.format(summary.amountDue)}</p>
-          <p>The school retains the school share and transfers the registration amount to the school-registration account. {summary.printedBookAmount > 0 ? "This registration also recorded a printed-book amount. That amount is separate from the registration fee and is not marked as dispatched or delivered." : "This registration does not include a printed-book order."}</p>
+          <p>{summary.channel === "individual" ? "There is no school share. Transfer the full registration amount to the TEJAS Olympiad registration account." : "The school retains the school share and transfers the registration amount to the school-registration account."} {summary.printedBookAmount > 0 ? "This registration also recorded a printed-book amount. That amount is separate from the registration fee and is not marked as dispatched or delivered." : "This registration does not include a printed-book order."}</p>
           <p>This registration does not include the ₹49 e-book. That fee is paid in the student portal when a published book is selected.</p>
           {summary.schoolShareApproved ? null : <p>These amounts are the figures saved with this registration. They have not been recalculated.</p>}
           <p className="font-semibold">{summary.paymentLabel}</p>

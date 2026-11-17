@@ -1,12 +1,10 @@
 import { calculateFee } from "@/lib/registration/fee";
 import { clientKey, noStore, rateLimit, sameOrigin } from "@/lib/registration/http";
-import { readPaymentConfig } from "@/lib/registration/payment";
-import { detectReceipt } from "@/lib/registration/receipt";
 import { newReference } from "@/lib/registration/reference";
-import { readPaymentSubmission, readSchoolForm } from "@/lib/registration/school";
-import { MAX_RECEIPT_BYTES, MAX_UPLOAD_BYTES } from "@/lib/registration/schema";
+import { readSchoolForm } from "@/lib/registration/school";
+import { MAX_UPLOAD_BYTES } from "@/lib/registration/schema";
 import { detectSheetKind, parseStudentSheet } from "@/lib/registration/sheet";
-import { findIdempotent, panSeenBefore, payloadHash, readRegistration, saveRegistration, toPublicSummary, transactionSeenBefore, type PaymentStatus } from "@/lib/registration/store";
+import { findIdempotent, panSeenBefore, payloadHash, readRegistration, saveRegistration, toPublicSummary, type PaymentStatus } from "@/lib/registration/store";
 
 export const runtime = "nodejs";
 
@@ -21,6 +19,11 @@ export async function POST(request: Request) {
   }
 
   const form = await request.formData();
+  const transactionRaw = String(form.get("transactionReference") ?? "").trim();
+  const receiptFile = form.get("receipt");
+  if (transactionRaw || (receiptFile instanceof File && receiptFile.size > 0)) {
+    return noStore({ ok: false, formErrors: ["Submit the registration without a receipt. Please upload your payment screenshot and enter the UTR number. Both are mandatory for payment verification."], fieldErrors: {} }, 400);
+  }
   const schoolResult = readSchoolForm(form);
   if (!schoolResult.value) return noStore({ ok: false, fieldErrors: schoolResult.errors, formErrors: [] }, 400);
 
@@ -52,42 +55,13 @@ export async function POST(request: Request) {
   }
   schoolResult.value.panDuplicate = await panSeenBefore(schoolResult.value.pan);
 
-  const payment = await readPaymentConfig();
-  const transactionRaw = String(form.get("transactionReference") ?? "").trim();
-  const receiptFile = form.get("receipt");
-  const hasReceipt = receiptFile instanceof File && receiptFile.size > 0;
-  const proofAttempt = Boolean(transactionRaw || hasReceipt);
-
-  let status: PaymentStatus = "pending_instructions";
-  let transactionReference: string | null = null;
-  let receipt: Buffer | null = null;
-  let receiptExt: "pdf" | "jpg" | "png" | "webp" | null = null;
-  let paymentMode: string | null = null;
-  let paidOn: string | null = null;
-  let payerName: string | null = null;
-  if (proofAttempt && !payment.activated) {
-    return noStore({ ok: false, formErrors: ["Payment-proof submission is not open yet. Submit the registration without a receipt. The official account details are on the form."], fieldErrors: {} }, 400);
-  }
-  if (proofAttempt && payment.activated) {
-    const paid = readPaymentSubmission(form, fee.amountDue);
-    if (!paid.value) return noStore({ ok: false, fieldErrors: paid.errors, formErrors: ["Check the payment details, or submit the registration without a receipt and upload the proof afterwards."] }, 400);
-    if (!(receiptFile instanceof File) || receiptFile.size === 0) {
-      return noStore({ ok: false, formErrors: ["Upload the payment proof as a JPG, PNG, or PDF."], fieldErrors: {} }, 400);
-    }
-    if (receiptFile.size > MAX_RECEIPT_BYTES) return noStore({ ok: false, formErrors: ["The payment proof is larger than 5 MB."], fieldErrors: {} }, 413);
-    const receiptBytes = Buffer.from(await receiptFile.arrayBuffer());
-    receiptExt = detectReceipt(receiptBytes, receiptFile.name);
-    if (!receiptExt) return noStore({ ok: false, formErrors: ["Upload the payment proof as a JPG, PNG, or PDF."], fieldErrors: {} }, 400);
-    if (await transactionSeenBefore(paid.value.transactionReference)) {
-      return noStore({ ok: false, formErrors: ["This transaction reference is already recorded. A second registration cannot use the same payment."] }, 409);
-    }
-    transactionReference = paid.value.transactionReference;
-    paymentMode = paid.value.mode;
-    paidOn = paid.value.paidOn;
-    payerName = paid.value.payerName;
-    receipt = receiptBytes;
-    status = "reported";
-  }
+  const status: PaymentStatus = "pending_instructions";
+  const transactionReference: string | null = null;
+  const receipt: Buffer | null = null;
+  const receiptExt = null;
+  const paymentMode: string | null = null;
+  const paidOn: string | null = null;
+  const payerName: string | null = null;
 
   const reference = newReference();
   try {

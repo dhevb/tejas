@@ -152,3 +152,45 @@ export function calculateFee(studentStreamRegistrations: number, extras: FeeExtr
 export function formatInr(amount: number): string {
   return `₹${amount.toLocaleString("en-IN")}`;
 }
+
+/** Printed-book PAN is required only when the gross book total is above this amount. */
+export const BOOK_PAN_THRESHOLD = 2000;
+
+export type PayerKind = "school" | "individual";
+
+export type Charge = {
+  units: number;
+  total: number;
+  schoolShare: number;
+  payableToTejas: number;
+  panRequired: boolean;
+};
+
+function wholeCount(value: number, label: string): void {
+  if (!Number.isInteger(value) || value < 0) throw new Error(`${label} must be a whole number.`);
+}
+
+/**
+ * An individual student pays the full ₹150 per stream.
+ * The school share is never applied.
+ */
+export function calculateIndividualRegistration(streams: number): Charge {
+  wholeCount(streams, "Stream count");
+  if (streams < 1 || streams > 3) throw new Error("Select one, two, or three streams.");
+  const total = streams * FEE_TOTAL;
+  return { units: streams, total, schoolShare: 0, payableToTejas: total, panRequired: false };
+}
+
+/**
+ * Printed books are priced at the gross ₹170. The PAN rule uses that gross total.
+ * A school keeps ₹34 per book. An individual pays the full ₹170.
+ */
+export function calculatePrintedBooks(quantity: number, payer: PayerKind): Charge {
+  wholeCount(quantity, "Book quantity");
+  if (quantity < 1) throw new Error("Enter at least one book.");
+  const total = quantity * BOOK_PRICE;
+  const schoolShare = payer === "school" ? quantity * BOOK_SCHOOL_SHARE : 0;
+  const payableToTejas = payer === "school" ? quantity * BOOK_TEJAS : total;
+  if (schoolShare + payableToTejas !== total) throw new Error("Book shares do not add up to the book price.");
+  return { units: quantity, total, schoolShare, payableToTejas, panRequired: total > BOOK_PAN_THRESHOLD };
+}

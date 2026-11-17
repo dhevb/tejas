@@ -23,7 +23,7 @@ type Student = {
   email: string;
   streamName: string;
   classLevel: number;
-  payment: { bookId: string; status: string; amountInr: number }[];
+  payment: { bookId: string; status: string; amountInr: number; enteredUtr?: string | null; extractedUtr?: string | null; bankResult?: string | null; reviewReason?: string | null; reportedAt?: string | null }[];
 };
 
 type Flag = { severity: string; code: string; detail: string };
@@ -201,6 +201,14 @@ export function StaffConsole() {
               <p className="font-semibold">{student.fullName}</p>
               <p className="text-tejas-muted">{student.email} · {student.streamName} · Class {student.classLevel}</p>
               <p className="text-tejas-muted">{student.payment.map((item) => `${item.bookId} ${item.status} ₹${item.amountInr}`).join("; ") || "No entitlement"}</p>
+              {student.payment.filter((item) => item.status !== "unpaid").map((item) => (
+                <p key={`${item.bookId}-proof`} className="mt-1">
+                  UTR {item.enteredUtr ?? "—"}. Screenshot UTR {item.extractedUtr ?? "—"}. Bank {item.bankResult ?? "unavailable"}. {item.reportedAt ?? ""}
+                  {item.reviewReason ? ` Review: ${item.reviewReason}` : ""}
+                  {" "}
+                  <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/proof?kind=ebook&studentId=${student.id}&bookId=${item.bookId}`}>View screenshot</a>
+                </p>
+              ))}
               <form className="mt-3 grid gap-2 sm:grid-cols-2" onSubmit={(event) => {
                 event.preventDefault();
                 const form = new FormData(event.currentTarget);

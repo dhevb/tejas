@@ -37,6 +37,12 @@ type Row = {
   panDuplicate: boolean;
   printedBooks: number;
   ebookAccess: number;
+  category?: string;
+  reviewReason?: string | null;
+  bankResult?: string | null;
+  approvalMethod?: string | null;
+  extractedUtr?: string | null;
+  enteredUtr?: string | null;
 };
 
 type Detail = {
@@ -83,7 +89,17 @@ type Detail = {
     payerName?: string | null;
     reviewNote: string | null;
     history?: { at: string; status: string; note: string | null; actor?: string }[];
+    verification?: {
+      enteredUtr: string | null;
+      extractedUtr: string | null;
+      reviewReason: string | null;
+      bankResult: string | null;
+      receivingAccount: string | null;
+      approvalMethod: string | null;
+      category: string;
+    };
   };
+  channel?: "school" | "individual";
   receiptExt: string | null;
   paymentLabel?: string;
 };
@@ -136,6 +152,9 @@ export function ReviewDashboard() {
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [bookOrders, setBookOrders] = useState<{ reference: string; category: string; schoolName: string; expectedAmount: number; total: number; schoolShare: number; paymentStatus: string; reviewReason: string | null; bankResult: string | null; enteredUtr: string | null; extractedUtr: string | null; panStatus: string; maskedPan: string; lines?: { streamId: string; classNumber: number; quantity: number }[] }[]>([]);
+  const [ebookPayments, setEbookPayments] = useState<{ student: string; bookId: string; studentId: string; amountInr: number; status: string; enteredUtr?: string | null; extractedUtr?: string | null; bankResult?: string | null; reviewReason?: string | null; reportedAt?: string | null }[]>([]);
+  const [bookListError, setBookListError] = useState("");
 
   async function load() {
     const response = await fetch("/api/register/admin/registrations");
@@ -146,6 +165,20 @@ export function ReviewDashboard() {
     const body = (await response.json()) as { registrations: Row[]; overview: Overview };
     setRows(body.registrations);
     setOverview(body.overview);
+    const cases = await fetch("/api/register/admin/cases");
+    if (cases.ok) {
+      const caseBody = await cases.json() as { orders?: typeof bookOrders };
+      setBookOrders(caseBody.orders ?? []);
+      setBookListError("");
+    } else {
+      setBookOrders([]);
+      setBookListError("Hosted book orders could not be listed.");
+    }
+    const ebooks = await fetch("/api/learn/staff/overview");
+    if (ebooks.ok) {
+      const ebookBody = await ebooks.json() as { students?: { id: string; fullName: string; payment: { bookId: string; amountInr: number; status: string; enteredUtr?: string | null; extractedUtr?: string | null; bankResult?: string | null; reviewReason?: string | null; reportedAt?: string | null }[] }[] };
+      setEbookPayments((ebookBody.students ?? []).flatMap((student) => student.payment.filter((item) => item.status !== "unpaid").map((item) => ({ ...item, student: student.fullName, studentId: student.id }))));
+    }
     setReady(true);
   }
 
@@ -281,6 +314,11 @@ export function ReviewDashboard() {
             <option value="confirmed">Verified</option>
             <option value="rejected">Rejected</option>
             <option value="refund_pending">Refund or adjustment pending</option>
+            <option value="staff_pending">Pending verification</option>
+            <option value="automatic">Automatically verified</option>
+            <option value="utr_mismatch">UTR mismatch</option>
+            <option value="duplicate">Duplicate UTR</option>
+            <option value="bank_unavailable">Bank verification unavailable</option>
           </select>
         </label>
       </div>
@@ -301,7 +339,13 @@ export function ReviewDashboard() {
             {rows.filter((row) => {
               const needle = query.trim().toLowerCase();
               const matchesQuery = !needle || row.schoolName.toLowerCase().includes(needle) || row.reference.toLowerCase().includes(needle);
-              const matchesStatus = statusFilter === "all" || row.paymentStatus === statusFilter;
+              const matchesStatus = statusFilter === "all"
+                || row.paymentStatus === statusFilter
+                || (statusFilter === "automatic" && row.approvalMethod === "automatic")
+                || (statusFilter === "staff_pending" && row.paymentStatus === "reported" && row.approvalMethod !== "automatic")
+                || (statusFilter === "utr_mismatch" && row.bankResult === "utr_mismatch")
+                || (statusFilter === "duplicate" && row.bankResult === "duplicate")
+                || (statusFilter === "bank_unavailable" && row.bankResult === "unavailable");
               return matchesQuery && matchesStatus;
             }).map((row) => (
               <tr key={row.reference} className="border-b border-stone-100">
@@ -320,6 +364,40 @@ export function ReviewDashboard() {
           </tbody>
         </table>
       </div>
+      {bookListError ? <p className="text-sm text-red-700">{bookListError}</p> : null}
+      {bookOrders.length ? (
+        <div className="space-y-2">
+          <h2 className="font-bold">Printed book payments</h2>
+          <ul className="space-y-2 text-sm">
+            {bookOrders.map((order) => (
+              <li key={order.reference} className="rounded-xl border border-stone-200 p-3">
+                <p className="font-semibold">{order.category} · {order.reference}</p>
+                <p>{order.schoolName}. Gross {inr.format(order.total)}. School share {inr.format(order.schoolShare)}. Payable to TEJAS {inr.format(order.expectedAmount)}. Status {order.paymentStatus}.</p>
+                <p>{(order.lines ?? []).map((line) => `${line.streamId} class ${line.classNumber}: ${line.quantity}`).join("; ") || "No quantities recorded."}</p>
+                <p>UTR entered {order.enteredUtr ?? "—"}. UTR from screenshot {order.extractedUtr ?? "—"}. Bank result {order.bankResult ?? "—"}. PAN {order.panStatus} {order.maskedPan}.</p>
+                <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/proof?kind=book&reference=${order.reference}`}>View screenshot</a>
+                {order.reviewReason ? <p>Review reason: {order.reviewReason}</p> : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {ebookPayments.length ? (
+        <div className="space-y-2">
+          <h2 className="font-bold">E-book payments</h2>
+          <ul className="space-y-2 text-sm">
+            {ebookPayments.map((item) => (
+              <li key={`${item.studentId}-${item.bookId}`} className="rounded-xl border border-stone-200 p-3">
+                <p className="font-semibold">{item.student} · {item.bookId}</p>
+                <p>Amount {inr.format(item.amountInr)}. Status {item.status}. Bank result {item.bankResult ?? "—"}. Reported {item.reportedAt ?? "—"}.</p>
+                <p>UTR entered {item.enteredUtr ?? "—"}. UTR from screenshot {item.extractedUtr ?? "—"}.</p>
+                {item.reviewReason ? <p>Review reason: {item.reviewReason}</p> : null}
+                <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/proof?kind=ebook&studentId=${item.studentId}&bookId=${item.bookId}`}>View screenshot</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {detail ? (
         <section className="space-y-3 rounded-2xl border border-stone-200 bg-white p-4 text-sm">
           <h2 className="text-lg font-bold">{detail.school.schoolName}</h2>
@@ -330,8 +408,12 @@ export function ReviewDashboard() {
           <FeeLines fee={detail.fee} books={detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0} />
           <p>Book order: {detail.school.printedBooks === "yes" ? bookOrderLabel(detail.payment.status) : "No printed books ordered"}. Dispatch and delivery are not recorded here.</p>
           <p>This screen does not charge or activate the ₹49 e-book.</p>
+          <p>Category: {detail.channel === "individual" ? "Individual registration payment" : "School registration payment"}.</p>
           <p>Payment: {detail.paymentLabel ?? paymentLabel(detail.payment.status)}. {detail.payment.mode ?? ""} {detail.payment.paidOn ?? ""} {detail.payment.payerName ?? ""} {detail.payment.transactionReference ?? ""}</p>
-          {detail.receiptExt ? <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=receipt`}>Open payment proof</a> : <p>No payment proof is stored.</p>}
+          <p>UTR entered: {detail.payment.verification?.enteredUtr ?? "—"}. UTR read from the screenshot: {detail.payment.verification?.extractedUtr ?? "—"}. Bank result: {detail.payment.verification?.bankResult ?? "—"}. Receiving account: {detail.payment.verification?.receivingAccount ?? "—"}. Approval: {detail.payment.verification?.approvalMethod ?? "—"}.</p>
+          {detail.payment.verification?.reviewReason ? <p>Review reason: {detail.payment.verification.reviewReason}</p> : null}
+          {detail.receiptExt && detail.receiptExt !== "pdf" ? <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/proof?kind=registration&reference=${detail.reference}`}>View screenshot</a> : null}
+          {detail.receiptExt ? <a className="ml-3 font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=receipt`}>Open stored proof</a> : <p>No payment proof is stored.</p>}
           <ul>
             {detail.students.map((student) => (
               <li key={`${student.fullName}-${student.rollNumber}`}>{student.fullName}, class {student.classLabel} {student.section}, roll {student.rollNumber}, {student.streams.join(", ")}</li>

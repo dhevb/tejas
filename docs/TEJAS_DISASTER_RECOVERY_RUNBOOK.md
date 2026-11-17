@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the current documentation status.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. When this paragraph was written, the real TEJAS backup files remained **NOT TESTED**. Section T records the later checks. Read section W before running a command. Do not restore again into the database section T already filled.
 
@@ -122,6 +122,8 @@ These are different files. Either one, after decryption with its own passphrase,
 `86ac6f159d6a53449622fa1ba4dccad08dd019ec19b855aa5d79e02ea05996e8`
 
 The original GPG file was created and decrypted on 15–16 November 2026 with GnuPG symmetric AES-256. The owner GPG file was created and decrypted in a later verified session with GnuPG 2.4.4, AES-256, S2K mode 3, SHA-512, and S2K count 65011712. The 17 November audit checked both ciphertext files and did not decrypt them again.
+
+Section T later decrypted the original identity file, matched the plaintext digest above, and unlinked the plaintext. The sentence above describes the inventory check before that execution. Do not decrypt either identity file again from this paragraph.
 
 Keep the plaintext identity only on the recovery computer, in a mode `600` file, and delete it when the Storage check is finished. Do not upload it to Google Drive. Deletion limits are in section K. Removing the file does not promise that an SSD or a cloud disk has forgotten it.
 
@@ -2572,4 +2574,288 @@ The remaining owner decisions are unchanged:
 | P-21 | Open | Historical OpenSSL version string remains unknown |
 | P-22 | Blocked | The device-node test returned `EPERM` |
 
+The rows in this table record the state at 3:52 PM IST. Section Y records the owner's later confirmation that P-08 is closed. Section AA records the owner's later approval that P-03, P-21, and P-22 are closed as accepted limitations. P-04, P-12, P-14, P-18, and P-19 remain open. Section AB records the owner's later decisions that keep those five open. P-15 remains open in sections T and V. No owner decision has been made for it. The table cells above were not rewritten.
+
 Full disaster recovery is not complete.
+
+## Y. P-08 offline custody confirmation, 17 November 2026, 6:24 PM IST
+
+The owner explicitly confirmed P-08 on 17 November 2026. P-08 is **CLOSED**. This section does not close any other owner decision. Rows in sections R, S, T, U, V, and X that call P-08 open describe the state before this confirmation.
+
+The transfer stage created and uploaded only these two files to `tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/PASSPHRASE_CUSTODY/`:
+
+| File | Bytes |
+| --- | --- |
+| `tejas-recovery-passphrases-20261117.age` | 471 |
+| `tejas-recovery-passphrases-20261117.manifest.txt` | 386 |
+
+The ciphertext was created at `2026-11-17T11:26:06Z`. Its SHA-256 is `a5a945fc2fa0cd06edeb38e981c1690d28a67be93d91584e1cc4b1da48f26f94`. A download of that remote ciphertext matched this digest. The ciphertext is encrypted to the owner's Windows age public recipient. This section does not record either passphrase, the private identity, or a plaintext copy.
+
+The owner confirmed all of the following:
+
+- Both files were downloaded to the owner's Windows computer.
+- The owner decrypted the ciphertext with the private age identity held on that computer.
+- Both passphrases were placed in offline custody.
+- `recovered.txt` was deleted and the Recycle Bin was emptied.
+- The private identity remains stored on Windows.
+
+This confirmation did not decrypt a backup, query Production, change Supabase, upload Storage objects, change Google Drive again, or change GitHub. Full disaster recovery is not complete.
+
+## Z. Proposed owner decisions, 17 November 2026, 6:41 PM IST
+
+**PROPOSED — NOT YET APPROVED BY OWNER**
+
+This heading records the draft at 6:41 PM IST. The owner later approved P-03, P-21, and P-22, as recorded in section AA. The owner later approved the five decision statements in section AB on 17 November 2026. That approval keeps P-04, P-12, P-14, P-18, and P-19 **OPEN** and does not close them. Sentences below that say the five proposals are not yet approved, and sentences that say P-03, P-21, and P-22 remain open, describe this draft, not the current status.
+
+This section drafts five decisions for owner review. Drafting them does not approve them. P-04, P-12, P-14, P-18, and P-19 remain **OPEN**. P-03, P-21, and P-22 also remain **OPEN**. P-08 remains **CLOSED** in section Y. Section Y was not rewritten by this draft.
+
+No proposal below authorizes a Production connection, a Supabase connection, a database restore, a Storage upload, a decryption, a Google Drive change, or a change to the local database `tejas_restore_full_20261115`. Database recovery, Storage destination restoration, Production recovery, and full disaster recovery are not complete.
+
+### P-19 — Production repair
+
+Existing status: **OPEN**. Section I requires a separate plan before any Production write. Section T records that no Production restore was performed and that the injected remote URL uses database `postgres`.
+
+| Item | Label | Record |
+| --- | --- | --- |
+| Isolated restore | VERIFIED | Exit 0 into local `tejas_restore_full_20261115`. It is not Production |
+| Remote database name `postgres` | VERIFIED | Section T records it as the injected URL's database. It is not an approved restore target |
+| Production repair plan | UNKNOWN | No approved target, baseline, or tested rollback is in this runbook |
+| Proposed decision | PROPOSED | Defer Production repair. Preserve the existing Production database and its data |
+| Owner approval | OWNER APPROVAL REQUIRED | This draft is not that approval |
+| Later repair | NOT AUTHORIZED | A future repair needs a separately reviewed plan, an approved target, a backup baseline, and a tested rollback |
+
+Accepting this proposal would record a deferral. It would not show that Production recovery is complete. Production data would stay where it is. No connection or modification is authorized by this draft.
+
+### P-18 — Storage destination restoration
+
+Existing status: **OPEN**. Section T records archive validation as complete, destination restoration as not performed, and upload as not performed. Section F records no upload command. Section B records the four archive paths and their historical hashes.
+
+| Item | Label | Record |
+| --- | --- | --- |
+| Storage archive validation | VERIFIED | Ciphertext check, member check, and the four file hashes matched. Extracted copies were then removed |
+| Destination restoration and upload | UNKNOWN | No approved bucket confirmation, object-path approval, or overwrite rule |
+| Proposed decision | PROPOSED | Defer destination restoration and upload. Preserve the verified archive and its validation evidence |
+| Owner approval | OWNER APPROVAL REQUIRED | This draft is not that approval |
+| Later upload | NOT AUTHORIZED | A future upload needs an approved bucket, exact object paths, a privacy and access confirmation, and overwrite rules |
+
+Accepting this proposal would leave the verified archive in place. It would not show that Storage destination restoration is complete. Archive validation would remain the completed part. No Storage object would be uploaded, overwritten, deleted, or changed under this draft.
+
+### P-04 — Supabase Vault relations
+
+Existing status: **OPEN**. Section R requires an expected `supabase_vault` 0.3.1 relation list before database **RECOVERY COMPLETE**. Section U records the observed extension and relations. Those observations are not an approved expected inventory.
+
+| Item | Label | Record |
+| --- | --- | --- |
+| Extension version | OBSERVED | `supabase_vault` 0.3.1 in schema `vault` |
+| `vault.secrets` row count | OBSERVED | 0 |
+| Relation names | OBSERVED | `vault.secrets`, `vault.secrets_pkey`, `vault.secrets_name_idx`, `vault.decrypted_secrets` |
+| Expected relation list | UNKNOWN | No independent expected list has been approved |
+| Proposed decision | PROPOSED | Keep database **RECOVERY COMPLETE** unclaimed until an independent list is reconciled. Keep the four relations as observations only |
+| Owner approval | OWNER APPROVAL REQUIRED | This draft is not that approval |
+| Vault changes | NOT AUTHORIZED | Do not modify Vault objects or secrets |
+
+Accepting this proposal would keep the observed list unlabeled as the expected inventory. Database recovery would remain short of **RECOVERY COMPLETE**. No Vault object would be changed under this draft.
+
+### P-12 — Companion files
+
+Existing status: **OPEN**. Section B says local companion files ending in `.globals.sql.enc` and `.metadata.json.enc` were not in the verified Drive folder. Section T found neither file on Drive or on this computer. The isolated restore exited 0 after local `NOLOGIN` roles were created on this cluster only. `--no-owner` and `--no-acl` were not used.
+
+| Item | Label | Record |
+| --- | --- | --- |
+| Isolated restore | VERIFIED | Complete on this local cluster. It must not be repeated into `tejas_restore_full_20261115` |
+| Companion files | UNKNOWN | Full filenames and any surviving copy were not established |
+| Dependency on those files | UNKNOWN | Whether further role recovery requires them has not been decided |
+| Proposed decision | PROPOSED | Do not perform additional role recovery now. Do not treat the missing files as unnecessary |
+| Owner approval | OWNER APPROVAL REQUIRED | This draft is not that approval |
+| Flags and file search | NOT AUTHORIZED | Do not add `--no-owner` or `--no-acl`. A later decision needs the exact filenames and an independently supported dependency assessment |
+
+Accepting this proposal would leave the completed isolated restore as it is. It would not decide that the companions are unnecessary. Role recovery beyond that restore would remain incomplete until the filenames and the dependency assessment exist.
+
+### P-14 — Historical counts
+
+Existing status: **OPEN**. Section H preserves eight application-area counts and says the exact 68-table script was not preserved. Section T records a labeled count of ordinary tables plus one partitioned table as 68. Section U records 10 non-system schemas against a historical 9, and 117 non-system function OIDs against a historical 116. Section V found no original counting script.
+
+| Item | Label | Record |
+| --- | --- | --- |
+| Eight application-area counts | VERIFIED | They match section H on the isolated restore |
+| Table count of 68 | OBSERVED | A labeled ordinary-plus-partitioned count. It is not the missing historical script |
+| Schema count | OBSERVED | 10 non-system schemas. Historical figure 9. The difference is unresolved |
+| Function count | OBSERVED | 117 non-system function OIDs. Historical figure 116. The difference is unresolved |
+| Original queries | UNKNOWN | No schema, function, or 68-table script was found with a verified source |
+| Proposed decision | PROPOSED | Keep 68 as a labeled observation. Keep both discrepancies unresolved until the original query is supplied or the owner accepts that limitation in a later decision |
+| Owner approval | OWNER APPROVAL REQUIRED | This draft is not that approval |
+| Catalog changes | NOT AUTHORIZED | Do not change objects to force a match, and do not label a new query as historical |
+
+Accepting this proposal would not explain the schema or function discrepancy. An acceptance of the labeled 68 count, if the owner gives it later, would still leave 10 versus 9 and 117 versus 116 unresolved. Database **RECOVERY COMPLETE** stays unclaimed.
+
+### What this draft does not decide
+
+P-03, P-21, and P-22 stay **OPEN**. No blocker in this section changes from **OPEN** to closed. Full disaster recovery is not complete.
+
+## AA. Proposed decisions for the remaining three blockers, 17 November 2026, 6:46 PM IST
+
+**PROPOSED — NOT YET APPROVED BY OWNER**
+
+This heading records the draft at 6:46 PM IST. The owner approved these three proposals later on 17 November 2026. The approval record at the end of this section is the current status of P-03, P-21, and P-22. Section AB is the later record for P-04, P-12, P-14, P-18, and P-19. The proposal tables below were not rewritten, and sentences in them that say the blockers remain open describe the draft.
+
+This section drafts decisions for P-03, P-21, and P-22. Drafting them does not approve them. Those three blockers remain **OPEN**. P-04, P-12, P-14, P-18, and P-19 remain **OPEN** in section Z, and section Z remains an unapproved draft. P-08 remains **CLOSED** in section Y. Sections Y and Z were not rewritten by this draft.
+
+No proposal below authorizes a download, a checksum reconstruction, a privileged test, a restore, a Production connection, or a Supabase connection. Database recovery, Storage destination restoration, Production recovery, and full disaster recovery are not complete.
+
+### P-03 — Portable PostgreSQL package checksum
+
+Existing status: **OPEN**. Section O says the published checksum of the portable PostgreSQL 17.12.0 archive matched, and that the exact SHA-256 was not retained. Section T records the isolated restore with the PGDG client `pg_restore (PostgreSQL) 17.12 (Ubuntu 17.12-1.pgdg24.04+1)`.
+
+| Item | Label | Record |
+| --- | --- | --- |
+| Published checksum comparison | VERIFIED | Section O says it matched. The retained evidence does not include the digest |
+| Exact archive SHA-256 | UNKNOWN | It was not retained. This draft does not reconstruct it |
+| Isolated restore client | VERIFIED | PGDG PostgreSQL 17.12. That restore did not use the portable package |
+| Proposed decision | PROPOSED | Accept the missing digest as an evidence limitation. Do not reuse the portable package |
+| Owner approval | OWNER APPROVAL REQUIRED | This draft is not that approval |
+| Later reuse of that package | NOT AUTHORIZED | Reuse would need the retained digest from a source that can be checked |
+
+Accepting this proposal would close only the missing-digest record, and only after the owner approves it. It would not prove the portable package's historical integrity. The completed isolated restore would remain the PGDG restore already recorded.
+
+### P-21 — Historical version strings
+
+Existing status: **OPEN**. Section C says the historical OpenSSL version string was not recorded, and that the historical restore server's `version()` string was not recorded. Section T records PostgreSQL 17.11 and pg_dump 17.12 in the archive header. The 17 November decryption used the current OpenSSL 3.0.13. That current string is not the 15 November binary.
+
+| Item | Label | Record |
+| --- | --- | --- |
+| Archive header | VERIFIED | PostgreSQL 17.11, dumped by pg_dump 17.12 |
+| Current decryption OpenSSL | OBSERVED | 3.0.13 on 17 November. It is not historical evidence for 15 November |
+| Historical OpenSSL version | UNKNOWN | The 15 November version string was not retained |
+| Historical restore `version()` | UNKNOWN | The historical restore server's output was not retained |
+| Proposed decision | PROPOSED | Accept both missing strings as unknown. Do not invent either value, and do not substitute OpenSSL 3.0.13 for the historical string |
+| Owner approval | OWNER APPROVAL REQUIRED | This draft is not that approval |
+| Future restore | NOT AUTHORIZED | Any later restore still requires a PostgreSQL 17 server confirmed by its actual `version()` output |
+
+Accepting this proposal would record an evidence limit. It would not create a historical version string. A future restore would still have to read `version()` from the server being used.
+
+### P-22 — mknod EPERM
+
+Existing status: **OPEN** and blocked. Section T records that direct `mknod` returned `EPERM`, and that a character-device tar header exited 2 with no device node left behind. Section R says this case blocks nothing in the recovery gates.
+
+| Item | Label | Record |
+| --- | --- | --- |
+| Direct `mknod` | OBSERVED | `EPERM` |
+| Character-device tar header | OBSERVED | Exit 2. No device node remained |
+| Recovery-gate dependency | VERIFIED | Section R records no gate dependency |
+| Proposed decision | PROPOSED | Accept the permission limitation. Do not run a privileged retest |
+| Owner approval | OWNER APPROVAL REQUIRED | This draft is not that approval |
+| Later device-node test | NOT AUTHORIZED | Another `mknod` or device-node test would need a separate authorization. This draft does not request elevated privileges |
+
+Accepting this proposal would leave the `EPERM` result as the recorded result. It would not show that a device node can be created here. The limitation does not block the recovery checks that have already been completed.
+
+### What this draft does not decide
+
+P-03, P-21, and P-22 stay **OPEN** until the owner approves a decision. Section Z's proposals for P-04, P-12, P-14, P-18, and P-19 stay unapproved. No blocker changes from **OPEN** to closed because this section was drafted. Full disaster recovery is not complete.
+
+### Owner approval, 17 November 2026
+
+The owner explicitly approved the three proposals in this section on 17 November 2026. The proposal tables above remain the record of what was proposed at 6:46 PM IST. They are not rewritten. The sentences above that say these three blockers remain **OPEN** describe the draft before this approval.
+
+Current status:
+
+| Item | Current status | What the approval accepts |
+| --- | --- | --- |
+| P-03 | **CLOSED — OWNER ACCEPTED LIMITATION** | The missing portable PostgreSQL checksum stays unknown. The portable package is not to be reused, and no checksum is to be invented |
+| P-21 | **CLOSED — OWNER ACCEPTED LIMITATION** | The 15 November OpenSSL version and the historical restore server's `version()` output stay unknown. OpenSSL 3.0.13 is not historical evidence |
+| P-22 | **CLOSED — OWNER ACCEPTED LIMITATION** | The recorded `mknod` result remains `EPERM`. No privileged retest is authorized |
+
+Closing these three blockers does not mean the missing evidence was recovered. The checksum, the two historical version strings, and a successful device-node result are still absent.
+
+P-04, P-12, P-14, P-18, and P-19 remain **OPEN**. Section Z remains an unapproved draft. P-08 remains **CLOSED** in section Y. A future restore still requires a PostgreSQL 17 server confirmed by its actual `version()` output. Reuse of the portable package, invention of a checksum or version string, and another `mknod` test are not authorized. Database recovery, Storage destination restoration, Production recovery, and full disaster recovery are not complete.
+
+Current blocker summary after this approval:
+
+| Item | Current status |
+| --- | --- |
+| P-03 | **CLOSED — OWNER ACCEPTED LIMITATION** |
+| P-04 | **OPEN** |
+| P-08 | **CLOSED** |
+| P-12 | **OPEN** |
+| P-14 | **OPEN** |
+| P-18 | **OPEN** |
+| P-19 | **OPEN** |
+| P-21 | **CLOSED — OWNER ACCEPTED LIMITATION** |
+| P-22 | **CLOSED — OWNER ACCEPTED LIMITATION** |
+
+This table is the status after the P-03, P-21, and P-22 approval. The sentence above that says section Z remains an unapproved draft describes the state before section AB. Section AB records the owner's later decisions for P-04, P-12, P-14, P-18, and P-19. Those five remain **OPEN**. P-15 remains **OPEN** in sections T and V. No owner decision has been made for it.
+
+## AB. Owner decisions for five open blockers, 17 November 2026, 7:02 PM IST
+
+The owner explicitly approved the five decision statements in this section on 17 November 2026. These are approved limitations, deferrals, and safety decisions. They are not closure of the blockers. P-04, P-12, P-14, P-18, and P-19 remain **OPEN**.
+
+Section Z remains the historical draft and was not rewritten. Its proposal tables are not these approvals. Section AA's closures of P-03, P-21, and P-22 are unchanged. P-08 remains **CLOSED** in section Y.
+
+This approval does not mark database recovery complete, Storage destination restoration complete, Production recovery complete, or full disaster recovery complete. It does not authorize a Production connection, a Supabase connection, a Storage upload, a backup decryption or extraction, role recovery, or a change to the local database `tejas_restore_full_20261115`.
+
+### P-04 — Vault inventory
+
+Status after this approval: **OPEN**. Sections R and U are the evidence. Section R requires an expected `supabase_vault` 0.3.1 relation list before database **RECOVERY COMPLETE**. Section U records the observed extension and four relations. This decision does not make those observations the expected inventory.
+
+Approved owner decision:
+
+> Keep database recovery short of complete. Do not treat the four observed Vault relations as the expected inventory, and do not modify Vault objects.
+
+This is an owner limitation. It is not technical completion of database recovery.
+
+### P-12 — Missing companion files and role recovery
+
+Status after this approval: **OPEN**. Sections B and T are the evidence. Section B records that companion files ending in `.globals.sql.enc` and `.metadata.json.enc` were not in the verified Drive folder. Section T found neither file. The isolated restore exited 0 after local `NOLOGIN` roles were created, without `--no-owner` or `--no-acl`.
+
+Approved owner decision:
+
+> Do not perform more role recovery now. Do not treat the missing companion files as unnecessary, and do not use `--no-owner` or `--no-acl`.
+
+This is an owner safety decision. It is not a finding that the companion files are unnecessary, and it is not completion of role recovery.
+
+### P-14 — Historical counts
+
+Status after this approval: **OPEN**. Sections H, T, U, and V are the evidence. Section H preserves the eight application-area counts and says the exact 68-table script was not preserved. Section T records a labeled ordinary-plus-partitioned count of 68. Section U records 10 non-system schemas against a historical 9, and 117 non-system function OIDs against a historical 116. Section V found no original counting script.
+
+Approved owner decision:
+
+> Keep the 68 table count as an observation, not as the missing historical script. Leave the schema difference, 10 against 9, and the function difference, 117 against 116, unresolved. Do not change objects to force a match.
+
+This is an owner limitation. It does not explain the differences, and it is not completion of historical object-count reconciliation.
+
+### P-18 — Storage destination
+
+Status after this approval: **OPEN**. Sections B, F, and T are the evidence. Section B records the four archive paths and their historical hashes. Section F records no upload command. Section T records archive validation as complete, destination restoration as not performed, and upload as not performed.
+
+Approved owner decision:
+
+> Defer Storage destination restoration and upload. Do not upload, overwrite, delete, or change any Storage object. Archive validation remains complete, and destination restoration remains not performed.
+
+This is an approved deferral. It is not Storage destination restoration, and it is not an upload.
+
+### P-19 — Production repair
+
+Status after this approval: **OPEN**. Sections I and T are the evidence. Section I requires a separate plan before any Production write and rejects the remote `postgres` database as a restore target. Section T records that no Production restore was performed.
+
+Approved owner decision:
+
+> Defer Production repair. Do not connect to Production, and do not use database `postgres` as a restore target. A later repair needs its own plan, approved target, backup baseline, and tested rollback.
+
+This is an approved deferral. It is not Production recovery.
+
+### Current blocker summary after these decisions
+
+| Item | Current status | What this record means |
+| --- | --- | --- |
+| P-03 | **CLOSED — OWNER ACCEPTED LIMITATION** | Unchanged. Section AA. The missing checksum was not recovered |
+| P-04 | **OPEN** | Approved limitation. Database recovery stays short of complete |
+| P-08 | **CLOSED** | Unchanged. Section Y |
+| P-12 | **OPEN** | Approved safety decision. Role recovery stays incomplete |
+| P-14 | **OPEN** | Approved limitation. The count differences stay unresolved |
+| P-18 | **OPEN** | Approved deferral. Destination restoration stays not performed |
+| P-19 | **OPEN** | Approved deferral. Production repair stays not performed |
+| P-21 | **CLOSED — OWNER ACCEPTED LIMITATION** | Unchanged. Section AA. The historical strings were not recovered |
+| P-22 | **CLOSED — OWNER ACCEPTED LIMITATION** | Unchanged. Section AA. The `EPERM` result stands |
+
+This table records the nine owner items in sections Y, AA, and AB. It is not the full prerequisite register. P-15 remains **OPEN**. Sections T and V record that the historical tar command was not found. The named-file extraction in section F is not that command. No owner decision has been made for P-15, and the command must not be reconstructed. Sections T and V remain the status record for every other ID. Section V's disposal note for `tejas_restore_full_20261115` is unchanged.
+
+Database recovery is not complete. Storage archive validation is complete. Storage destination restoration was not performed. Production recovery was not performed. Full disaster recovery is not complete.

@@ -1,5 +1,5 @@
 import type { OlympiadPortalContent } from "@/content/types";
-import { currentCycle, pastEnglishOlympiad2025 } from "@/content/current-cycle";
+import { currentCycle, pastEnglishOlympiad2025, REGISTRATION_CLOSES_ON } from "@/content/current-cycle";
 
 export const englishOlympiad: OlympiadPortalContent = {
   slug: "english",
@@ -34,8 +34,8 @@ export const englishOlympiad: OlympiadPortalContent = {
       hi: "कक्षा सीमा: कक्षा III–X (वर्तमान TEJAS संस्करण)",
     },
     {
-      en: "School registration through Olympiad Cell, DHE official channels",
-      hi: "DHE ओलंपियाड सेल के आधिकारिक चैनलों के माध्यम से विद्यालय पंजीकरण",
+      en: "School registration on the TEJAS Olympiad website, organised by the Department of Holistic Education (DHE)",
+      hi: "TEJAS ओलंपियाड वेबसाइट पर विद्यालय पंजीकरण। आयोजक समग्र शिक्षा विभाग (DHE) है।",
     },
     {
       en: "One attempt per edition per student",
@@ -218,8 +218,8 @@ export const englishOlympiad: OlympiadPortalContent = {
         hi: "TEJAS अंग्रेज़ी ओलंपियाड कब है?",
       },
       answer: {
-        en: "TEJAS English is on 10 December 2026. Schools register from 3 November 2026 to 20 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
-        hi: "TEJAS अंग्रेज़ी 10 दिसंबर 2026 को है। पंजीकरण 3–20 नवंबर 2026।",
+        en: "TEJAS English is on 10 December 2026. Schools register from 3 November 2026 to 30 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
+        hi: "TEJAS अंग्रेज़ी 10 दिसंबर 2026 को है। पंजीकरण 3–30 नवंबर 2026।",
       },
     },
     {
@@ -277,7 +277,7 @@ export const englishOlympiad: OlympiadPortalContent = {
     {
       title: { en: "Registration Process", hi: "पंजीकरण प्रक्रिया" },
       points: [
-        { en: "Register via Olympiad Cell, DHE official channels", hi: "DHE ओलंपियाड सेल के आधिकारिक चैनलों से पंजीकरण" },
+        { en: "Register the school on the TEJAS Olympiad website", hi: "TEJAS ओलंपियाड वेबसाइट पर विद्यालय पंजीकरण करें" },
         { en: "Submit student list by level (A–E) with accurate class mapping", hi: "स्तर (A–E) के अनुसार छात्र सूची जमा करें" },
         { en: "Coordinate exam dates within the announced window", hi: "घोषित अवधि में परीक्षा तिथि समन्वय" },
       ],
@@ -314,7 +314,7 @@ export const englishOlympiad: OlympiadPortalContent = {
     },
     {
       label: { en: "TEJAS English — registration closes", hi: "पंजीकरण समाप्ति" },
-      date: "2026-11-20",
+      date: REGISTRATION_CLOSES_ON,
       status: "upcoming",
     },
     {

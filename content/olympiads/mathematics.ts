@@ -1,5 +1,5 @@
 import type { OlympiadPortalContent } from "@/content/types";
-import { currentCycle } from "@/content/current-cycle";
+import { currentCycle, REGISTRATION_CLOSES_ON } from "@/content/current-cycle";
 
 export const mathematicsOlympiad: OlympiadPortalContent = {
   slug: "mathematics",
@@ -29,8 +29,8 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
       hi: "मान्यता प्राप्त विद्यालयों में कक्षा III–X के छात्र",
     },
     {
-      en: "School registration through Olympiad Cell, DHE",
-      hi: "DHE ओलंपियाड सेल के माध्यम से विद्यालय पंजीकरण",
+      en: "School registration on the TEJAS Olympiad website, organised by the Department of Holistic Education (DHE)",
+      hi: "TEJAS ओलंपियाड वेबसाइट पर विद्यालय पंजीकरण। आयोजक समग्र शिक्षा विभाग (DHE) है।",
     },
     {
       en: "Grade-appropriate level assignment (Levels B–E for current TEJAS Edition)",
@@ -168,8 +168,8 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       question: { en: "When is TEJAS Mathematics Olympiad?", hi: "TEJAS गणित ओलंपियाड कब है?" },
       answer: {
-        en: "TEJAS Mathematics is on 9 December 2026. Schools register from 3 November 2026 to 20 November 2026.",
-        hi: "TEJAS गणित 9 दिसंबर 2026 को है। पंजीकरण 3–20 नवंबर 2026।",
+        en: "TEJAS Mathematics is on 9 December 2026. Schools register from 3 November 2026 to 30 November 2026.",
+        hi: "TEJAS गणित 9 दिसंबर 2026 को है। पंजीकरण 3–30 नवंबर 2026।",
       },
     },
     {
@@ -210,7 +210,7 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       title: { en: "School Registration", hi: "विद्यालय पंजीकरण" },
       points: [
-        { en: "Register through Olympiad Cell official channels", hi: "ओलंपियाड सेल के आधिकारिक चैनलों से" },
+        { en: "Register the school on the TEJAS Olympiad website", hi: "TEJAS ओलंपियाड वेबसाइट पर विद्यालय पंजीकरण करें" },
         { en: "Nominate students by grade level (B–E)", hi: "कक्षा स्तर (B–E) के अनुसार छात्र नामांकित करें" },
       ],
     },
@@ -223,7 +223,7 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     },
     {
       label: { en: "TEJAS Mathematics — registration closes", hi: "पंजीकरण समाप्ति" },
-      date: "2026-11-20",
+      date: REGISTRATION_CLOSES_ON,
       status: "upcoming",
     },
     {

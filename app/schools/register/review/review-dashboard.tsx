@@ -115,12 +115,11 @@ function FeeLines({ fee, books }: { fee: Detail["fee"]; books: number }) {
   );
 }
 
-function bookOrderLabel(status: string): string {
-  if (status === "reported") return "Book payment submitted";
-  if (status === "confirmed") return "Book payment verified";
-  if (status === "rejected") return "Book payment rejected";
-  if (status === "refund_pending") return "Book payment adjustment pending";
-  return "Book order pending";
+function bookOrderLabel(quantity: number): string {
+  if (quantity > 0) {
+    return `Printed books recorded: ${quantity}. The payment line is the school registration payment. This screen does not record a separate book receipt.`;
+  }
+  return "No printed books ordered.";
 }
 
 export function ReviewDashboard() {
@@ -328,7 +327,7 @@ export function ReviewDashboard() {
           <p>Principal: {detail.school.principalName}, {detail.school.principalMobile}, {detail.school.principalEmail}</p>
           <p>Coordinator: {detail.school.coordinatorName}, {detail.school.coordinatorMobile}, {detail.school.coordinatorEmail}</p>
           <FeeLines fee={detail.fee} books={detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0} />
-          <p>Book order: {detail.school.printedBooks === "yes" ? bookOrderLabel(detail.payment.status) : "No printed books ordered"}. Dispatch and delivery are not recorded here.</p>
+          <p>Book order: {bookOrderLabel(detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0)} Dispatch and delivery are not recorded here.</p>
           <p>This screen does not charge or activate the ₹49 e-book.</p>
           <p>Payment: {detail.paymentLabel ?? paymentLabel(detail.payment.status)}. {detail.payment.mode ?? ""} {detail.payment.paidOn ?? ""} {detail.payment.payerName ?? ""} {detail.payment.transactionReference ?? ""}</p>
           {detail.receiptExt ? <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=receipt`}>Open payment proof</a> : <p>No payment proof is stored.</p>}

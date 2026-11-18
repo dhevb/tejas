@@ -21,7 +21,7 @@ export function FutureVisionSection() {
             quote={brandContent.vision.en}
             quoteHi={brandContent.vision.hi}
             author="TEJAS Vision"
-            role="Department of Holistic Education · Olympiad Cell"
+            role="Department of Holistic Education (DHE)"
             className="max-w-4xl mx-auto border-white/10 bg-white/5 text-white [&_p]:text-white/90 [&_span]:text-tejas-gold"
           />
         </FadeIn>

@@ -23,7 +23,7 @@ export function WhatIsTejasSection() {
               subtitle={brand.fullName}
             />
             <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
-              {t(brandContent.ecosystem)} — administered by Olympiad Cell, {brand.parentOrg}.
+              {t(brandContent.ecosystem)} — organised by the {brand.parentOrg}. The Olympiad is TEJAS Olympiad.
               TEJAS is not just an Olympiad. It is Bharat&apos;s long-term national initiative for
               talent discovery, learning, research, innovation, and recognition.
             </p>

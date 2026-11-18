@@ -57,11 +57,11 @@ const reasons = [
 ] as const;
 
 const steps = [
-  { n: "1", title: "School registration", text: "A school submits the form between 3 and 20 November 2026." },
+  { n: "1", title: "School registration", text: "A school submits the form between 3 and 30 November 2026." },
   { n: "2", title: "Student sheet", text: "The school uploads the student sheet and chooses a stream for each student." },
   { n: "3", title: "Preparation", text: "Subject pages and published guides are available. They do not start an online test." },
   { n: "4", title: "Examination", text: "Mathematics, English, and Future Tech are held on 9, 10, and 11 December 2026." },
-  { n: "5", title: "Results", text: "Results are placed in February 2027. A declaration date has not been fixed." },
+  { n: "5", title: "Results", text: "Results are declared on 12 January 2027." },
 ] as const;
 
 const learning = [
@@ -214,8 +214,8 @@ export function HomeLanding() {
           <div className="mt-8 grid gap-4 lg:grid-cols-4">
             <article className="rounded-2xl bg-tejas-blue p-5 text-white lg:col-span-1">
               <p className="text-xs font-semibold uppercase tracking-widest text-tejas-gold">Registration</p>
-              <p className="mt-3 text-2xl font-bold">3–20 November 2026</p>
-              <p className="mt-2 text-sm text-white/75">The school form closes on 20 November 2026.</p>
+              <p className="mt-3 text-2xl font-bold">3–30 November 2026</p>
+              <p className="mt-2 text-sm text-white/75">The school form closes on 30 November 2026.</p>
             </article>
             {[
               ["Mathematics", "9 December 2026"],

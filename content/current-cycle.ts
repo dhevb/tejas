@@ -1,5 +1,12 @@
 import type { LocalizedString } from "./types";
 
+/** Owner-approved current registration window. Display and countdown use this date. */
+export const REGISTRATION_OPENS_ON = "2026-11-03";
+export const REGISTRATION_CLOSES_ON = "2026-11-30";
+
+/** Owner-approved result declaration date for TEJAS Olympiad 2026–27. */
+export const RESULT_ANNOUNCEMENT_ON = "2027-01-12";
+
 /** Current TEJAS Olympiad 2026–27, as printed in the approved brochure. */
 export const currentCycle = {
   editionSlug: "tejas-2026-27",
@@ -18,8 +25,8 @@ export const currentCycle = {
     hi: "कक्षा III–X",
   } satisfies LocalizedString,
   registrationStatus: {
-    en: "Registration opens on 3 November 2026 and closes on 20 November 2026.",
-    hi: "पंजीकरण 3 नवंबर 2026 से 20 नवंबर 2026 तक खुला है।",
+    en: "Registration opens on 3 November 2026 and closes on 30 November 2026.",
+    hi: "पंजीकरण 3 नवंबर 2026 से 30 नवंबर 2026 तक खुला है।",
   } satisfies LocalizedString,
   examDates: {
     en: "Mathematics 9 December 2026, English 10 December 2026, Future Tech 11 December 2026.",
@@ -30,8 +37,8 @@ export const currentCycle = {
     hi: "शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम है। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है। मुद्रित पुस्तक और ₹49 ई-बुक इस शुल्क से अलग हैं।",
   } satisfies LocalizedString,
   felicitation: {
-    en: "Results are placed in February 2027. A declaration date has not been fixed.",
-    hi: "परिणाम फरवरी 2027 में रखे गए हैं। घोषणा की तारीख तय नहीं हुई है।",
+    en: "Results are declared on 12 January 2027.",
+    hi: "परिणाम 12 जनवरी 2027 को घोषित किए जाते हैं।",
   } satisfies LocalizedString,
   administeredBy: {
     en: "Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra",

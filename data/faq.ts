@@ -29,7 +29,7 @@ export const faqItems: FAQItem[] = [
     category: "Registration",
     question: "How do schools participate?",
     answer:
-      "Schools register at /schools/register from 3 November 2026 to 20 November 2026 and upload a student sheet. The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS. The school registration form does not order printed books or charge the ₹49 e-book. The school's PAN, principal's mobile number, every student field, and a stream choice are required. Write to tejas@dhe.org.in or call +91 99886 90588 or +91 79034 31900.",
+      "Schools register at /schools/register from 3 November 2026 to 30 November 2026 and upload a student sheet. The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS. The school registration form does not order printed books or charge the ₹49 e-book. The school's PAN, principal's mobile number, every student field, and a stream choice are required. Write to tejas@dhe.org.in or call +91 99886 90588 or +91 79034 31900.",
   },
   {
     category: "Exams",

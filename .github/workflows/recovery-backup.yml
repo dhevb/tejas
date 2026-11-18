@@ -1,0 +1,48 @@
+name: recovery-backup
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: validate runs the local checks. backup refuses until the private destination exists.
+        required: true
+        default: validate
+        type: choice
+        options:
+          - validate
+          - backup
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request' || github.event.inputs.action == 'validate'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the authenticated-encryption library
+        run: python3 -m pip install --disable-pip-version-check cryptography==41.0.7
+      - name: Run recovery checks
+        working-directory: scripts/recovery
+        run: python3 -m unittest test_safe_extract.py test_inventory_sql.py test_retention.py test_restore_target.py test_seal_backup.py test_workflows.py
+
+  backup:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'backup'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Refuse the backup until required secrets and tejasdrive are present
+        working-directory: scripts/recovery
+        env:
+          SUPABASE_BACKUP_DB_URL: ${{ secrets.SUPABASE_BACKUP_DB_URL }}
+          TEJAS_BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.TEJAS_BACKUP_ENCRYPTION_PASSPHRASE }}
+          TEJAS_BACKUP_DESTINATION: ${{ secrets.TEJAS_BACKUP_DESTINATION }}
+        run: python3 backup_preflight.py

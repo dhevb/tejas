@@ -1,15 +1,26 @@
-"""Hardened tar inspection and extraction.
+"""Future standard for TEJAS recovery-archive extraction.
 
-This is a new recovery tool. It is not the historical tar command, and it does
-not call ``tar -x``. Members are classified before any payload is written.
+This tool is not the unrecovered historical tar command. It never calls
+``tar -x``. Every member is classified before a payload is written. Archive
+ownership and permission bits are not copied. Extracted files are mode 0600.
+
+Example:
+
+    python3 scripts/recovery/safe_extract.py \\
+      --archive archive.tar \\
+      --destination /path/to/new-directory \\
+      --allow bucket/item.txt:<64-lowercase-hex-sha256> \\
+      --allow-dir bucket
 """
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import io
 import os
 import stat
+import sys
 import tarfile
 from pathlib import Path
 
@@ -20,6 +31,36 @@ class ArchiveRejected(Exception):
 
 def _parts(name: str) -> list[str]:
     return [part for part in name.split("/") if part != ""]
+
+
+def _normalized(name: str) -> str:
+    return "/".join(_parts(name))
+
+
+def _valid_digest(value: object) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(character in "0123456789abcdef" for character in value)
+
+
+def _check_allowlist(allowed_files: dict[str, str], allowed_dirs: set[str]) -> None:
+    if not allowed_files:
+        raise ArchiveRejected("allowlist is empty")
+    for name, digest in allowed_files.items():
+        _reject_name(name)
+        if not _valid_digest(digest):
+            raise ArchiveRejected("expected checksum is not lowercase sha256")
+    for name in allowed_dirs:
+        _reject_name(name.rstrip("/"))
+
+
+def _reject_symlink_path(path: Path) -> None:
+    current = path
+    while True:
+        if os.path.islink(current):
+            raise ArchiveRejected("symlink in destination path")
+        parent = current.parent
+        if parent == current:
+            return
+        current = parent
 
 
 def _reject_name(name: str) -> None:
@@ -37,9 +78,9 @@ def _reject_type(member: tarfile.TarInfo) -> str:
         raise ArchiveRejected("link member")
     if member.isdev() or member.ischr() or member.isblk() or member.isfifo():
         raise ArchiveRejected("special member")
-    if member.isdir():
+    if member.type == tarfile.DIRTYPE:
         return "directory"
-    if member.isreg() or member.type in {tarfile.REGTYPE, tarfile.AREGTYPE}:
+    if member.type in {tarfile.REGTYPE, tarfile.AREGTYPE}:
         return "file"
     raise ArchiveRejected("unexpected member type")
 
@@ -54,6 +95,7 @@ def inspect_members(archive_path: str | Path, allowed_files: set[str], allowed_d
     except (tarfile.TarError, OSError) as exc:
         raise ArchiveRejected("malformed archive") from exc
     seen: set[str] = set()
+    seen_paths: set[str] = set()
     listed: list[tuple[str, str, int]] = []
     try:
         members = handle.getmembers()
@@ -65,6 +107,10 @@ def inspect_members(archive_path: str | Path, allowed_files: set[str], allowed_d
                 raise ArchiveRejected("duplicate member")
             seen.add(name)
             _reject_name(name)
+            normal = _normalized(name)
+            if normal in seen_paths:
+                raise ArchiveRejected("duplicate path")
+            seen_paths.add(normal)
             kind = _reject_type(member)
             allowed = allowed_files if kind == "file" else allowed_dirs
             if name not in allowed:
@@ -89,14 +135,21 @@ def extract_allowlist(
     ``allowed_files`` maps a member name to its expected SHA-256. The
     destination must not already exist. Returns the computed digests.
     """
+    _check_allowlist(allowed_files, allowed_dirs)
     listed = inspect_members(archive_path, set(allowed_files), allowed_dirs)
+    if inspect_members(archive_path, set(allowed_files), allowed_dirs) != listed:
+        raise ArchiveRejected("archive changed")
     dest = Path(destination)
     if os.path.lexists(dest):
         raise ArchiveRejected("destination already exists")
     parent = dest.parent
-    if parent.is_symlink() or not parent.is_dir():
+    if not parent.is_dir() or parent.is_symlink():
         raise ArchiveRejected("destination parent is not a real directory")
+    _reject_symlink_path(parent)
     dest.mkdir(mode=0o700)
+    os.chmod(dest, 0o700)
+    if os.path.islink(dest):
+        raise ArchiveRejected("destination is a symlink")
     digests: dict[str, str] = {}
     try:
         with tarfile.open(archive_path, "r:") as handle:
@@ -104,7 +157,7 @@ def extract_allowlist(
                 if kind != "file":
                     continue
                 member = handle.getmember(name)
-                if not member.isreg():
+                if member.type not in {tarfile.REGTYPE, tarfile.AREGTYPE}:
                     raise ArchiveRejected("required path is not a regular file")
                 target = dest.joinpath(*_parts(name))
                 if dest.resolve() not in target.resolve().parents:
@@ -112,17 +165,26 @@ def extract_allowlist(
                 if os.path.lexists(target):
                     raise ArchiveRejected("refusing to overwrite a file")
                 target.parent.mkdir(parents=True, exist_ok=True)
+                stop = dest.parent.resolve()
+                for directory in [target.parent, *target.parent.parents]:
+                    if directory.resolve() == stop:
+                        break
+                    os.chmod(directory, 0o700)
                 source = handle.extractfile(member)
                 if source is None:
                     raise ArchiveRejected("member payload is missing")
                 digest = hashlib.sha256()
+                written = 0
                 with open(os.open(target, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600), "wb") as output:
-                    while True:
-                        chunk = source.read(1024 * 1024)
+                    while written < member.size:
+                        chunk = source.read(min(1024 * 1024, member.size - written))
                         if not chunk:
                             break
                         digest.update(chunk)
                         output.write(chunk)
+                        written += len(chunk)
+                if written != member.size:
+                    raise ArchiveRejected("size mismatch")
                 actual = digest.hexdigest()
                 expected = allowed_files[name]
                 if actual != expected:
@@ -151,12 +213,45 @@ def _remove_tree(path: Path) -> None:
     path.rmdir()
 
 
-def make_fixture(path: Path, members: list[tuple[str, bytes, str, str]]) -> None:
+def make_fixture(path: Path, members: list[tuple[str, bytes, str, str]], mode: int = 0o644) -> None:
     """Test helper. Each member is ``(name, payload, type, linkname)``."""
     with tarfile.open(path, "w") as handle:
         for name, payload, type_, linkname in members:
             info = tarfile.TarInfo(name)
             info.type = type_
             info.linkname = linkname
+            info.mode = mode
             info.size = len(payload) if type_ in {tarfile.REGTYPE, tarfile.AREGTYPE} else 0
             handle.addfile(info, io.BytesIO(payload) if info.size else None)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Command line for the future extraction standard. Prints no secrets."""
+    parser = argparse.ArgumentParser(
+        prog="safe_extract.py",
+        description="Extract an allowlisted tar without tar -x. This is not the historical tar command.",
+    )
+    parser.add_argument("--archive", required=True)
+    parser.add_argument("--destination", required=True)
+    parser.add_argument("--allow", action="append", required=True, metavar="PATH:SHA256")
+    parser.add_argument("--allow-dir", action="append", default=[], metavar="PATH")
+    args = parser.parse_args(argv)
+    allowed: dict[str, str] = {}
+    for entry in args.allow:
+        member_name, separator, digest = entry.rpartition(":")
+        if separator != ":" or member_name == "":
+            print("allow entry must be path:sha256", file=sys.stderr)
+            return 2
+        allowed[member_name] = digest
+    try:
+        extracted = extract_allowlist(args.archive, args.destination, allowed, set(args.allow_dir))
+    except ArchiveRejected as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    for name, digest in extracted.items():
+        print(f"{digest}  {name}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

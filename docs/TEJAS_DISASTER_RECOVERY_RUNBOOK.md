@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Section AD, 18 November 2026, 5:22 AM IST, records the expected `supabase_vault` 0.3.1 relation inventory and closes P-04 only. P-12, P-14, P-15, P-18, and P-19 remain open. Section AE, 18 November 2026, 6:15 AM IST, records the owner's acceptance that no additional Production repair is required on the evidence then available, and closes P-19 only. That decision supersedes the Section AB deferral for P-19. The Section AB text remains the historical record. P-12, P-14, P-15, and P-18 remain open. Section AF, 18 November 2026, 6:36 AM IST, records a later isolated rehearsal, a new inventory script, and a hardened extractor. It does not close P-12, P-14, P-15, or P-18, and it does not reopen P-03, P-04, P-08, P-19, P-21, or P-22.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Section AD, 18 November 2026, 5:22 AM IST, records the expected `supabase_vault` 0.3.1 relation inventory and closes P-04 only. P-12, P-14, P-15, P-18, and P-19 remain open. Section AE, 18 November 2026, 6:15 AM IST, records the owner's acceptance that no additional Production repair is required on the evidence then available, and closes P-19 only. That decision supersedes the Section AB deferral for P-19. The Section AB text remains the historical record. P-12, P-14, P-15, and P-18 remain open. Section AF, 18 November 2026, 6:36 AM IST, records a later isolated rehearsal, a new inventory script, and a hardened extractor. It does not close P-12, P-14, P-15, or P-18, and it does not reopen P-03, P-04, P-08, P-19, P-21, or P-22. Section AG, 18 November 2026, 6:47 AM IST, adopts the hardened extractor as the future extraction standard and closes P-15 only. The historical tar command remains unrecovered. P-12, P-14, and P-18 remain open.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. When this paragraph was written, the real TEJAS backup files remained **NOT TESTED**. Section T records the later checks. Read section W before running a command. Do not restore again into the database section T already filled.
 
@@ -3086,3 +3086,53 @@ The restore target was a new local PostgreSQL 17.12 cluster on port `55441`, dat
 The local server was stopped. The plaintext dump, decrypted archive, identity, and extracted Storage files were overwritten and removed. The original encrypted backups were not deleted.
 
 Full disaster recovery is not complete.
+
+## AG. Future extraction standard, 18 November 2026, 6:47 AM IST
+
+This section closes P-15 only. It does not rewrite sections A through AF. Section AF's statement that P-15 stays open describes the state when that section was written. The historical `tar` command was not recovered, and this section does not claim that it was.
+
+Current status of P-15: **CLOSED — FUTURE EXTRACTION STANDARD ADOPTED**.
+
+The owner directed that `scripts/recovery/safe_extract.py` is the future standard for extracting a TEJAS recovery archive. Its SHA-256 is `d367983bb3dd330b869a197474bd2f739c529a1d82bc06431ed6a55c8ab35292`. It does not call `tar -x`. Archive ownership and permission bits are not copied. Files are written mode `0600` into a new directory.
+
+The command reads every member before writing. It rejects an empty allowlist, a checksum that is not lowercase SHA-256, absolute names, drive letters, null bytes, `.` and `..`, duplicate names, names that normalize to the same path, links, FIFOs, device headers, continuation headers, unexpected members, a truncated archive, a symlink archive, a symlink anywhere in the destination path, an existing destination, a short member, and a checksum mismatch. A mismatch removes the destination. Python 3.12.3 ran 23 tests in `scripts/recovery/test_safe_extract.py`. All passed.
+
+Decrypt the Storage archive first, then extract only into a new directory:
+
+```
+python3 scripts/recovery/safe_extract.py \
+  --archive archive.tar \
+  --destination /path/to/new-empty-directory \
+  --allow tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/receipt.pdf:26977633c8fa8c2b3c241a9b0e86113deaf6850718ca14af2ddbedc7ba264b07 \
+  --allow tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/receipt.jpg:171fd8bbc7f14342103ac8589fb5b9f91058178b561a9854b8988d899ee47486 \
+  --allow tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/upload.xlsx:762695a34046feb8e58e364d77b562545d960aec6dc658736c83e020dcff06ad \
+  --allow tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx:762695a34046feb8e58e364d77b562545d960aec6dc658736c83e020dcff06ad \
+  --allow-dir tejas-payment-proofs \
+  --allow-dir tejas-payment-proofs/ \
+  --allow-dir tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3 \
+  --allow-dir tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/ \
+  --allow-dir tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ \
+  --allow-dir tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/ \
+  --allow-dir tejas-registration-files \
+  --allow-dir tejas-registration-files/ \
+  --allow-dir tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3 \
+  --allow-dir tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/ \
+  --allow-dir tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ \
+  --allow-dir tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/
+```
+
+The destination's parent must be a real directory. Do not point it at a live Storage bucket or at an existing recovery directory.
+
+### P-12 final name check
+
+A targeted Drive listing for `*globals*`, `*metadata*`, `*.sql.enc`, and `*.json.enc` returned no names. No local file with those companion names was found. The original files were not created. P-12 stays **OPEN**.
+
+### P-14 script label
+
+`scripts/recovery/inventory.sql` now states in the file itself that it does not reproduce the historical claims of 9 schemas, 116 functions, and 189 indexes, and that it must not be edited to force those figures. The counting filters are unchanged. The file SHA-256 is now `1ad055c4ef5df5b5f1755b037b9a6a152b97909f9011a2f8801fc599b70ad29b`. The 18 November reading of these rules remains 10 durable schemas, 117 function OIDs, and 190 indexes. No Production object was changed. P-14 stays **OPEN**.
+
+### P-18 credential check
+
+No live Storage bytes were downloaded. The injected environment names are `SUPABASE_DB_URL`, `SUPABASE_BACKUP_DB_URL`, `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`, and `TEJAS_BACKUP_OWNER_PASSPHRASE`. `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_SECRET_KEY` are absent. The Cursor app secret store for this workspace has no secrets. GitHub Actions secret names were not readable from this session. No Storage object was uploaded, overwritten, or deleted. P-18 stays **OPEN**.
+
+P-12, P-14, and P-18 stay **OPEN**. Writing this section did not connect a restore to Production, execute migration SQL, or enable Supabase Deploy to production. Full disaster recovery is not complete.

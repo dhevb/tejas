@@ -1,4 +1,5 @@
 import type { OlympiadPortalContent } from "@/content/types";
+import { REGISTRATION_CLOSES_ON } from "@/content/current-cycle";
 
 export const technologyOlympiad: OlympiadPortalContent = {
   slug: "technology",
@@ -31,8 +32,8 @@ export const technologyOlympiad: OlympiadPortalContent = {
       hi: "मान्यता प्राप्त विद्यालयों में कक्षा VI–X के छात्र",
     },
     {
-      en: "School registration via Olympiad Cell, DHE",
-      hi: "DHE ओलंपियाड सेल के माध्यम से पंजीकरण",
+      en: "School registration on the TEJAS Olympiad website, organised by the Department of Holistic Education (DHE)",
+      hi: "TEJAS ओलंपियाड वेबसाइट पर विद्यालय पंजीकरण। आयोजक समग्र शिक्षा विभाग (DHE) है।",
     },
     {
       en: "No prior coding experience is required",
@@ -162,8 +163,8 @@ export const technologyOlympiad: OlympiadPortalContent = {
     {
       question: { en: "When is TEJAS Future Tech Olympiad?", hi: "TEJAS फ्यूचर टेक ओलंपियाड कब है?" },
       answer: {
-        en: "TEJAS Future Tech is on 11 December 2026. Schools register from 3 November 2026 to 20 November 2026.",
-        hi: "TEJAS फ्यूचर टेक 11 दिसंबर 2026 को है। पंजीकरण 3–20 नवंबर 2026।",
+        en: "TEJAS Future Tech is on 11 December 2026. Schools register from 3 November 2026 to 30 November 2026.",
+        hi: "TEJAS फ्यूचर टेक 11 दिसंबर 2026 को है। पंजीकरण 3–30 नवंबर 2026।",
       },
     },
   ],
@@ -202,7 +203,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
     },
     {
       label: { en: "TEJAS Future Tech — registration closes", hi: "पंजीकरण समाप्ति" },
-      date: "2026-11-20",
+      date: REGISTRATION_CLOSES_ON,
       status: "upcoming",
     },
     {

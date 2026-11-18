@@ -6,6 +6,7 @@ import type { OlympiadPortalContent } from "@/content/types";
 import { StickySubNav } from "@/components/shared/StickySubNav";
 import { Countdown } from "@/components/shared/Countdown";
 import { formatDisplayDate } from "@/lib/format-date";
+import { REGISTRATION_CLOSES_ON } from "@/content/current-cycle";
 import { CertificatePreview } from "@/components/shared/CertificatePreview";
 import { ResourceCard } from "@/components/shared/ResourceCard";
 import { FAQAccordion } from "@/components/ui/accordion";
@@ -100,7 +101,7 @@ export function OlympiadPortal({ olympiad }: Props) {
               </div>
             </div>
             {!isComingSoon && (
-              <Countdown targetDate="2026-11-20" label="Registration closes" />
+              <Countdown targetDate={REGISTRATION_CLOSES_ON} label="Registration closes" />
             )}
           </div>
         </div>
@@ -400,7 +401,7 @@ export function OlympiadPortal({ olympiad }: Props) {
 
         <section id="register" className="scroll-mt-32 border-t border-stone-200 py-16 text-center">
           <h2 className="text-2xl font-bold text-tejas-ink">{isComingSoon ? "This stream is not open" : "Ready to Participate?"}</h2>
-          <p className="mt-2 text-tejas-muted">{isComingSoon ? "School registration for TEJAS Olympiad 2026–27 covers Mathematics, English, and Future Tech only." : "Register through your school via Olympiad Cell, DHE."}</p>
+          <p className="mt-2 text-tejas-muted">{isComingSoon ? "School registration for TEJAS Olympiad 2026–27 covers Mathematics, English, and Future Tech only." : "Register through your school on the TEJAS Olympiad website. The organiser is the Department of Holistic Education (DHE)."}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             {isComingSoon ? <Button disabled>Coming Soon</Button> : (
               <Link href="/schools/register"><Button>Register a school</Button></Link>

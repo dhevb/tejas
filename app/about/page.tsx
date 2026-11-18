@@ -61,7 +61,7 @@ export default function AboutPage() {
       <PageHero
         eyebrow="About TEJAS"
         title={brand.name}
-        subtitle={`${brand.fullName} — an independent initiative by the Olympiad Cell, ${brand.parentOrg}. Standalone. Long-term. National.`}
+        subtitle={`${brand.fullName} — organised by the ${brand.parentOrg}. Standalone. Long-term. National.`}
         primaryCta={{ label: "Explore Olympiads", href: "/olympiads" }}
         secondaryCta={{ label: "School registration", href: "/schools/register" }}
       />
@@ -102,7 +102,7 @@ export default function AboutPage() {
               quote={brandContent.vision.en}
               quoteHi={brandContent.vision.hi}
               author="Our Vision"
-              role={`${brand.parentOrg} · Olympiad Cell`}
+              role={`${brand.parentOrg} (DHE)`}
               className="max-w-4xl mx-auto border-white/10 bg-white/5 [&_p]:text-white/90 [&_span]:text-tejas-gold"
             />
           </FadeIn>
@@ -123,7 +123,7 @@ export default function AboutPage() {
             <FadeIn delay={0.1}>
               <h2 className="text-2xl font-bold text-tejas-ink">For Schools</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>School registration is open on this website from 3 to 20 November 2026</li>
+                <li>School registration is open on this website from 3 to 30 November 2026. Results are declared on 12 January 2027.</li>
                 <li>The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120.</li>
                 <li>The registration form collects the registration fee only. Printed books and the ₹49 e-book are separate payments.</li>
               </ul>

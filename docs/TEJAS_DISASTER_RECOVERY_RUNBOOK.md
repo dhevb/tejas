@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Section AD, 18 November 2026, 5:22 AM IST, records the expected `supabase_vault` 0.3.1 relation inventory and closes P-04 only. P-12, P-14, P-15, P-18, and P-19 remain open. Section AE, 18 November 2026, 6:15 AM IST, records the owner's acceptance that no additional Production repair is required on the evidence then available, and closes P-19 only. That decision supersedes the Section AB deferral for P-19. The Section AB text remains the historical record. P-12, P-14, P-15, and P-18 remain open. Section AF, 18 November 2026, 6:36 AM IST, records a later isolated rehearsal, a new inventory script, and a hardened extractor. It does not close P-12, P-14, P-15, or P-18, and it does not reopen P-03, P-04, P-08, P-19, P-21, or P-22. Section AG, 18 November 2026, 6:47 AM IST, adopts the hardened extractor as the future extraction standard and closes P-15 only. The historical tar command remains unrecovered. P-12, P-14, and P-18 remain open. Section AH, 18 November 2026, 6:53 AM IST, records the owner's acceptance of the P-12 and P-14 limitations and closes those two items only. P-15 stays closed as the future extraction standard. P-18 stays open because no Storage API credential is available. Full disaster recovery is not complete. Section AI, 18 November 2026, 7:23 AM IST, records the later read-only comparison of the four live Storage objects. `SUPABASE_SECRET_KEY` was present, and its value is not written here. The four live hashes matched Section B and the archive members reconfirmed in Section AF. That comparison closes P-18. No Storage object was uploaded, overwritten, or deleted. Section AJ, 18 November 2026, 7:50 AM IST, records two owner-accepted limitations. P-14 remains the accepted counting limitation and does not satisfy the Section H comparison. The P-11 disposable-test record is accepted as historical evidence only. That acceptance does not supply the missing extraction authorization. The database gate and the Storage gate remain not complete. Full disaster recovery remains not complete.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Section AD, 18 November 2026, 5:22 AM IST, records the expected `supabase_vault` 0.3.1 relation inventory and closes P-04 only. P-12, P-14, P-15, P-18, and P-19 remain open. Section AE, 18 November 2026, 6:15 AM IST, records the owner's acceptance that no additional Production repair is required on the evidence then available, and closes P-19 only. That decision supersedes the Section AB deferral for P-19. The Section AB text remains the historical record. P-12, P-14, P-15, and P-18 remain open. Section AF, 18 November 2026, 6:36 AM IST, records a later isolated rehearsal, a new inventory script, and a hardened extractor. It does not close P-12, P-14, P-15, or P-18, and it does not reopen P-03, P-04, P-08, P-19, P-21, or P-22. Section AG, 18 November 2026, 6:47 AM IST, adopts the hardened extractor as the future extraction standard and closes P-15 only. The historical tar command remains unrecovered. P-12, P-14, and P-18 remain open. Section AH, 18 November 2026, 6:53 AM IST, records the owner's acceptance of the P-12 and P-14 limitations and closes those two items only. P-15 stays closed as the future extraction standard. P-18 stays open because no Storage API credential is available. Full disaster recovery is not complete. Section AI, 18 November 2026, 7:23 AM IST, records the later read-only comparison of the four live Storage objects. `SUPABASE_SECRET_KEY` was present, and its value is not written here. The four live hashes matched Section B and the archive members reconfirmed in Section AF. That comparison closes P-18. No Storage object was uploaded, overwritten, or deleted. Section AJ, 18 November 2026, 7:50 AM IST, records two owner-accepted limitations. P-14 remains the accepted counting limitation and does not satisfy the Section H comparison. The P-11 disposable-test record is accepted as historical evidence only. That acceptance does not supply the missing extraction authorization. The database gate and the Storage gate remain not complete. Full disaster recovery remains not complete. Section AK, 18 November 2026, 8:19 AM IST, records a new read-only Production inventory, one new encrypted logical backup, an isolated restore of that backup, and a new read-only Storage listing. It does not mark either recovery gate complete.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. When this paragraph was written, the real TEJAS backup files remained **NOT TESTED**. Section T records the later checks. Read section W before running a command. Do not restore again into the database section T already filled.
 
@@ -3236,3 +3236,116 @@ The Storage Gate remains **NOT COMPLETE**. This is an owner-accepted limitation.
 Section R still requires the database gate and the Storage gate each to be **RECOVERY COMPLETE** before full recovery is complete. Neither gate is in that state. These rows do not weaken that rule.
 
 Writing this section did not connect to Production, Supabase, Google Drive, or Storage. It did not run a backup, decryption, extraction, restore, migration, or database command. It did not start or stop a service. It did not change a credential, a role, a password, or a deployment setting.
+
+## AK. Isolated backup and restore, 18 November 2026, 8:19 AM IST
+
+This section records new evidence. It does not rewrite sections A through AJ. The historical counts, hashes, archive names, and owner decisions stay as written. P-11 remains **Tested**. P-14's accepted limitation still does not satisfy the Section H comparison. No historical SQL was invented. No Production row, role, password, Storage object, or deployment setting was changed.
+
+### Database connection
+
+`db.zapccpipwxduzlnvjdmy.supabase.co` port 5432 publishes only an IPv6 address. This environment has no IPv6 route, so a direct connection returned `Network is unreachable`. The reachable path was the session pooler `aws-0-ap-northeast-1.pooler.supabase.com` port 5432, user `postgres.zapccpipwxduzlnvjdmy`, database `postgres`, with TLS. The pooler did not honor a startup `default_transaction_read_only` setting. The preflight then executed `SET default_transaction_read_only = on` and `BEGIN READ ONLY`. `transaction_read_only` returned `on` before the inventory.
+
+| Check | Result |
+| --- | --- |
+| `current_database()` | `postgres` |
+| `current_user` | `postgres` |
+| `is_superuser` | `off` |
+| `inet_server_addr()` | `2406:da14:311:1501:8d8d:5a73:fe74:1b71/128` |
+| `inet_server_port()` | `5432` |
+| `current_setting('port')` | `5432` |
+| `current_setting('ssl')` | `on` |
+| `server_version` | `17.11` |
+
+That address is the AAAA record of `db.zapccpipwxduzlnvjdmy.supabase.co`. The credential value was not printed. No Production role or password was changed.
+
+`scripts/recovery/inventory.sql` returned the same catalog shape recorded in Section AF, with two application-count changes since that section:
+
+| Measure | This reading | Section AF |
+| --- | --- | --- |
+| Durable schemas | 10 | 10 |
+| Tables, ordinary plus partitioned | 68 | 68 |
+| Indexes, relkind `i` and `I` | 190 | 190 |
+| Constraints | 238 | 238 |
+| Sequences | 2 | 2 |
+| Function OIDs | 117 | 117 |
+| Non-internal triggers | 12 | 12 |
+| Policies | 0 | 0 |
+| Extensions | 5 | 5 |
+| `tejas_learn_audit` rows | 32 | 31 |
+| `tejas_learn_entitlements` rows | 5 | 4 |
+| `tejas_payments`, registrations, proofs, orders, e-book access, idempotency | 2 each | 2 each |
+
+The extensions remain `pg_stat_statements` 1.11, `pgcrypto` 1.3, `plpgsql` 1.0, `supabase_vault` 0.3.1, and `uuid-ossp` 1.1. The three migration statement digests match Section AC. Section H's historical totals, 9 schemas and 116 functions, were not reproduced. The Section T index total of 189 was not reproduced by this script. Those historical figures stay unchanged.
+
+### Backup
+
+pg_dump 17.12 wrote one custom-format archive from the read-only-verified pooler session. The command did not use `--clean`, `--no-owner`, or `--no-acl`. The archive header says it was created at 2026-11-18 02:44:05 UTC, which is 18 November 2026, 8:14:05 AM IST, from database `postgres` on PostgreSQL 17.11. The source database name is the Production name. It was not used as the restore target.
+
+| Item | Result |
+| --- | --- |
+| Plaintext bytes | 480,109 |
+| Plaintext SHA-256 | `2d4457b19536d978d76cdc0b823d14491b40f1c48d6e4657e0643faabcafc872` |
+| `pg_restore --list` | Exit 0. 785 catalog entries, including `supabase_migrations.schema_migrations` and its data |
+| Post-dump application counts | Unchanged from the pre-dump reading |
+
+OpenSSL 3.0.13 encrypted the plaintext with `enc -aes-256-cbc -pbkdf2 -salt`. The passphrase was `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE`, supplied on file descriptor 3. Its value is not written here. Decrypting that ciphertext reproduced the plaintext SHA-256.
+
+| Item | Result |
+| --- | --- |
+| Ciphertext bytes | 480,128 |
+| Ciphertext SHA-256 | `254fb4540980c97ffea1b79201db0c02c4249828da618e86990bf4be283c6424` |
+| Round trip | Match |
+
+The plaintext copies were overwritten and unlinked. The ciphertext remained only on the recovery machine, mode `600`, outside the repository. It was not committed and it was not uploaded. `rclone` and the `tejasdrive` remote were not present, so Google Drive was not contacted. A ciphertext checksum does not by itself prove a restore. The restore below used the plaintext before it was removed.
+
+### Isolated restore
+
+The target was a new local PostgreSQL 17.12 cluster. `listen_addresses` was `127.0.0.1`. The port was `55442`. The connection used the socket `/var/run/postgresql`. `inet_server_addr()` was empty because the session used that socket. The data directory was `/var/lib/postgresql/17/tejas-isolated`. Before `pg_restore`, `current_database()` was `tejas_isolated_20261118`.
+
+The ten role names recorded in Section T were created on this cluster only, `NOLOGIN` and `NOINHERIT`, with no password: `anon`, `authenticated`, `dashboard_user`, `pgbouncer`, `service_role`, `supabase_admin`, `supabase_auth_admin`, `supabase_functions_admin`, `supabase_realtime_admin`, and `supabase_storage_admin`. `supabase_admin` was a local superuser and could not log in. No Production role was created or altered.
+
+`supabase_vault` 0.3.1 was built from tag `v0.3.1`, commit `6e0cd916242d922a646e4d611cc215e09dd429f4`, with `PG_CONFIG=/usr/lib/postgresql/17/bin/pg_config`. `pg_restore --exit-on-error` exited 0 in less than one second. `--no-owner` and `--no-acl` were not used. After the restore, the local database named `postgres` contained zero `public` relations whose names begin with `tejas_`. Its size stayed near the template databases. The restored database was the larger database.
+
+A read-only transaction on `tejas_isolated_20261118` returned the same inventory totals, extension versions, migration digests, and application row counts as the pre-dump Production reading, including audit 32 and entitlements 5. `public.tejas_payments` was owned by `postgres`. Seventy non-system relations had ACLs. `vault.secrets` had 0 rows. The vault relations were `vault.secrets`, `vault.secrets_pkey`, `vault.secrets_name_idx`, and `vault.decrypted_secrets`.
+
+The local server was then stopped and its data directory was removed. The package-created cluster `17/main` was never started and was not a restore target.
+
+This restore confirms that the new backup can be read and restored into an isolated database. It does not satisfy Section H. The Database Gate remains **NOT COMPLETE**.
+
+### Storage listing
+
+`SUPABASE_SECRET_KEY` was present. Its value was not printed. The JWT payload claims are issuer `supabase`, project ref `zapccpipwxduzlnvjdmy`, and role `service_role`. Every object read was HTTP GET. Bucket metadata used HTTP GET. Listing used POST `/storage/v1/object/list/{bucket}`, which returns names. No upload, overwrite, or delete was sent.
+
+Both buckets are private. `tejas-payment-proofs` allows 5,242,880 bytes and the MIME types recorded in Section AI. `tejas-registration-files` allows 10,485,760 bytes and the MIME types recorded in Section AI. Each bucket has exactly two prefixes, and each prefix has exactly one object. No additional object was listed.
+
+| Path | Bytes | SHA-256 against Section B |
+| --- | --- | --- |
+| `tejas-payment-proofs/TEJAS-2026-NS553XMZZG2N8XE7DHV3/receipt.pdf` | 205,575 | Match |
+| `tejas-payment-proofs/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/receipt.jpg` | 320,492 | Match |
+| `tejas-registration-files/TEJAS-2026-NS553XMZZG2N8XE7DHV3/upload.xlsx` | 11,160 | Match |
+| `tejas-registration-files/TEJAS-2026-P8ZHXTS26PJSMD2EMUJZ/upload.xlsx` | 11,160 | Match |
+
+The downloaded copies were hashed in memory and overwritten. The Storage archive was not on this machine. `/home/ubuntu/tejas-backups/bin/age` was absent. No decryption or extraction was run. This listing reconfirms the four live objects. It does not supply the missing historical extraction authorization, and it does not restore a Storage destination. The Storage Gate remains **NOT COMPLETE**.
+
+### Application access
+
+The restored `tejas_learn_students` table had 16 rows with both `password_hash` and `password_salt`. `tejas_learn_staff` had 0 such rows. The hash and salt values were not selected or printed. No sign-in was attempted. No password, role, or session was changed. PostgreSQL role passwords remain unrecovered under the Section AH limitation. Application and service operational recovery remains **NOT ESTABLISHED**.
+
+### Scheduling and retention
+
+The repository has no GitHub Actions workflow. Listing GitHub Actions secret names returned HTTP 403, so a scheduled Production backup was not added. No backup alert, retention job, or restore schedule was enabled. The encrypted archive was not copied to Google Drive. Off-machine retention of this new backup remains **BLOCKED**.
+
+`python3 -m unittest test_safe_extract.py test_inventory_sql.py` ran 25 tests. All passed. Those tests do not connect to Production.
+
+### Status after this evidence
+
+| Item | Status |
+| --- | --- |
+| Database Gate | **NOT COMPLETE** |
+| Storage Gate | **NOT COMPLETE** |
+| Production database recovery | **NOT PERFORMED** |
+| Storage destination restoration | **NOT PERFORMED** |
+| Application/service operational recovery | **NOT ESTABLISHED** |
+| Full disaster recovery | **NOT COMPLETE** |
+
+Section R still requires the Section H comparison before the database gate is **RECOVERY COMPLETE**, and an authorized extraction plus the four archive-member hashes before the Storage gate is **RECOVERY COMPLETE**. This section supplies a new backup and a new isolated restore. It does not replace either requirement.

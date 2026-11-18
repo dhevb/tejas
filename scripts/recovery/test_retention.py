@@ -51,6 +51,7 @@ class RetentionTests(unittest.TestCase):
                 "SUPABASE_BACKUP_DB_URL",
                 "TEJAS_BACKUP_ENCRYPTION_PASSPHRASE",
                 "TEJAS_BACKUP_DESTINATION",
+                "TEJAS_RCLONE_CONFIG_B64",
             ],
         )
 

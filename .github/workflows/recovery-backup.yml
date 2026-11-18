@@ -29,7 +29,7 @@ jobs:
         run: python3 -m pip install --disable-pip-version-check cryptography==41.0.7
       - name: Run recovery checks
         working-directory: scripts/recovery
-        run: python3 -m unittest test_safe_extract.py test_inventory_sql.py test_retention.py test_restore_target.py test_seal_backup.py test_workflows.py
+        run: python3 -m unittest test_safe_extract.py test_inventory_sql.py test_retention.py test_restore_target.py test_seal_backup.py test_backup_pipeline.py test_workflows.py
 
   backup:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'backup'
@@ -39,6 +39,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install the authenticated-encryption library
+        run: python3 -m pip install --disable-pip-version-check cryptography==41.0.7
       - name: Refuse the backup until required secrets and tejasdrive are present
         working-directory: scripts/recovery
         env:
@@ -46,3 +48,17 @@ jobs:
           TEJAS_BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.TEJAS_BACKUP_ENCRYPTION_PASSPHRASE }}
           TEJAS_BACKUP_DESTINATION: ${{ secrets.TEJAS_BACKUP_DESTINATION }}
         run: python3 backup_preflight.py
+      - name: Install the PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+      - name: Seal one new backup and verify the remote checksum
+        working-directory: scripts/recovery
+        env:
+          SUPABASE_BACKUP_DB_URL: ${{ secrets.SUPABASE_BACKUP_DB_URL }}
+          TEJAS_BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.TEJAS_BACKUP_ENCRYPTION_PASSPHRASE }}
+          TEJAS_BACKUP_DESTINATION: ${{ secrets.TEJAS_BACKUP_DESTINATION }}
+        run: python3 backup_pipeline.py

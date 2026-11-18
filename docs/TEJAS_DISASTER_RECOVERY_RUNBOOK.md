@@ -3514,3 +3514,51 @@ The child environment for rclone does not receive the database URL, the passphra
 | Full disaster recovery | **NOT COMPLETE** |
 
 Section R is unchanged. A pinned installer does not move a gate to **RECOVERY COMPLETE**. The owner still has to place the existing rclone configuration in the Actions secret `TEJAS_RCLONE_CONFIG_B64`, without sending that value in chat, and confirm the other three backup secret names. The destination secret must be the approved directory.
+
+## AO. Windows local verification, 18 November 2026, 8:31 PM IST
+
+This section records checks on `DESKTOP-K12JQ1D`. It does not rewrite sections A through AN. No Production connection was opened. No Drive object was uploaded, renamed, replaced, or deleted. No backup workflow was dispatched. Supabase Deploy to production was not enabled. No schedule was added.
+
+Repository `main` was `c6038a6dd6a6bb3f891b647e48a668423f3c3545`, matching `origin/main`, the merge of pull request #42. The worktree had no uncommitted change before this section. Pull request #25 remained open. The eight most recent recovery workflow runs visible from this session were pull-request checks, and all succeeded. No manual backup run was in that list.
+
+Local rclone was v1.76.0. The existing `tejasdrive` remote was type `drive`, scope `drive.readonly`, and root folder ID `1O1afC89m69bKA3oOITls6CnCno7s_geR`. The duplicate folder ID was not used. `rclone lsl --max-depth 1` exited 0 for all four approved directories. The ten object names and sizes matched Section AF. Nothing else was listed.
+
+### Database file and manifest
+
+The previously downloaded `tejas-zapccpipwxduzlnvjdmy-20261117T184209Z.dump.enc` was not downloaded again. Its size remained 479,856 bytes and its SHA-256 remained `1dd023171475ebf2386918ad7be4ba9634b02dc4145f1e643b820ece148d0cd5`.
+
+The matching manifest was downloaded once. It was 1,645 bytes and SHA-256 `cdf86ab281851665f3d64a66df7a5b3025693e4f25d5844f3ac089e301587411`. Both match Section AC. The manifest names project `zapccpipwxduzlnvjdmy`, stage `post-repair`, created `20261117T184209Z`, PostgreSQL custom format, database `postgres`, server PostgreSQL 17.11, pg_dump 17.12, and encryption `openssl-enc-aes-256-cbc-pbkdf2-salt`. It records the encrypted size and SHA-256 above, plaintext 479,830 bytes, and plaintext SHA-256 `b7d804738410f77f4aedfcf9e9b5e8c2fe925792d34d32e2bd33ab7ed213446c`. It records the three Section AC migration rows and says the plaintext was not uploaded. It contains no passphrase.
+
+### Decryption attempt
+
+age v1.3.2, the pinned version, decrypted `tejas-recovery-passphrases-20261117.age` with the Section Y Windows identity. The ciphertext was 471 bytes and SHA-256 `a5a945fc2fa0cd06edeb38e981c1690d28a67be93d91584e1cc4b1da48f26f94`, matching Section Y. The decrypted record names `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` and then a 2-digit field. OpenSSL used that 2-digit field as the passphrase and exited 1 with `bad decrypt`. The following line was not a length-prefixed value for that field, so it was not tried. No further passphrase candidate was tried. The passphrase value was not printed.
+
+The OpenSSL binary on this PC is Git's OpenSSL 3.2.3. Its `enc -pbkdf2` help says the default iteration count is 10000. Section AC used OpenSSL 3.0.13. GnuPG from Git is 2.4.5. Section B records GnuPG 2.4.4 for the owner identity file. Neither identity ciphertext was decrypted. PostgreSQL is not installed, so `pg_restore` and an isolated cluster were not run. Python is not installed, so the local recovery unit tests were not run.
+
+The failed plaintext output and the decrypted custody copy were overwritten and removed. The owner's original identity file and original `recovered.txt` were not deleted. The encrypted downloads remain under `C:\TEJAS_RECOVERY_VERIFICATION`.
+
+### Storage archive
+
+`tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age` was downloaded. Its size was 555,336 bytes and its SHA-256 was `ac76e4f8895284f098e0f674d58d8a901702f7b219809a0d51f64b358d7e72c4`, matching Section B. Both identity ciphertexts matched the Section B sizes and SHA-256 values. They were not decrypted. The encryption passphrase stop also blocks the original identity file, and the owner passphrase was not separated as its own value.
+
+A pre-existing directory, `Downloads\TEJAS_STORAGE_BACKUP`, already contained the four Section B object paths. Their sizes and SHA-256 values matched Section B. That directory was not produced by decrypting the archive downloaded in this section. It is not an isolated extraction of that archive.
+
+### Pipeline review
+
+The code on `main` refuses a backup when a required secret is absent, when the destination is not the approved database directory, or when `tejasdrive` is not in the supplied configuration. rclone is pinned to v1.76.0, and the Linux zip digest is the one in Section AN. The rclone child environment drops `TEJAS_*` and `SUPABASE_*` variables. The passphrase is used in the Python seal step and is not passed to rclone. Production identity checks reject a loopback server. The upload is one `copyto`, followed by a download and SHA-256 comparison. Deletion remains refused. The workflow trigger is a pull request or a manual dispatch. It has no schedule. This review did not dispatch it.
+
+### Status after this check
+
+| Item | Status |
+| --- | --- |
+| Database ciphertext and manifest | Verified |
+| Database decryption | **BLOCKED** |
+| Isolated database restore | **NOT TESTED** |
+| Storage ciphertext | Verified |
+| Storage identity decryption | **BLOCKED** |
+| Isolated extraction of this Storage archive | **NOT TESTED** |
+| Database Gate | **NOT COMPLETE** |
+| Storage Gate | **NOT COMPLETE** |
+| Full disaster recovery | **NOT COMPLETE** |
+
+The owner can continue decryption by supplying `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` as the passphrase bytes only, in the user environment or a mode-600 file. It must not be sent in chat, and it must not be taken from the 2-digit field in the custody record. This PC also needs PostgreSQL 17.12 before an isolated restore can run. The owner passphrase is still required before the owner identity ciphertext can be decrypted if the encryption passphrase is not the one that opens the original identity file.

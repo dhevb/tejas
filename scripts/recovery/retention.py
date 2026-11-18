@@ -18,7 +18,7 @@ class RetentionRejected(Exception):
 
 
 APPROVED_PREFIX = "tejasdrive:TEJAS_PRODUCTION_SECURE_BACKUPS/DATABASE_BACKUPS/"
-NAME_PATTERN = re.compile(r"^tejas-zapccpipwxduzlnvjdmy-\d{8}T\d{6}Z\.dump\.(enc|age)$")
+NAME_PATTERN = re.compile(r"^tejas-zapccpipwxduzlnvjdmy-\d{8}T\d{6}Z\.dump\.(enc|age|seal)$")
 SECRET_NAMES = (
     "SUPABASE_BACKUP_DB_URL",
     "TEJAS_BACKUP_ENCRYPTION_PASSPHRASE",
@@ -58,6 +58,30 @@ def validate_destination(destination: str) -> str:
     if "/" in name or not NAME_PATTERN.fullmatch(name):
         raise RetentionRejected("destination rejected")
     return name
+
+
+def validate_directory(destination: str) -> str:
+    if not isinstance(destination, str) or "\n" in destination or "\x00" in destination or ".." in destination:
+        raise RetentionRejected("destination rejected")
+    if destination.strip().rstrip("/") != APPROVED_PREFIX.rstrip("/"):
+        raise RetentionRejected("destination rejected")
+    return APPROVED_PREFIX
+
+
+def manifest_line(name: str, digest: str, size: int) -> str:
+    if not NAME_PATTERN.fullmatch(name) or not re.fullmatch(r"[0-9a-f]{64}", digest) or not isinstance(size, int) or size < 0:
+        raise RetentionRejected("manifest rejected")
+    return f"{digest}  {size}  {name}"
+
+
+def refuse_existing(listing: str, name: str) -> None:
+    present = {line.strip() for line in listing.splitlines() if line.strip()}
+    if name in present:
+        raise RetentionRejected("destination object already exists")
+
+
+def delete_backup(name: str) -> None:
+    raise RetentionRejected("backup deletion is not permitted")
 
 
 def remote_ready(remotes: list[str]) -> None:

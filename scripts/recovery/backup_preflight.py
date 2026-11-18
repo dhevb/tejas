@@ -13,7 +13,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from retention import RetentionRejected, missing_secrets, remote_ready, validate_destination
+from retention import RetentionRejected, missing_secrets, remote_ready, validate_directory
 
 
 def main() -> int:
@@ -22,7 +22,7 @@ def main() -> int:
         print("required secret is absent: " + ",".join(missing), file=sys.stderr)
         return 2
     try:
-        validate_destination(os.environ["TEJAS_BACKUP_DESTINATION"])
+        validate_directory(os.environ["TEJAS_BACKUP_DESTINATION"])
     except RetentionRejected as exc:
         print(str(exc), file=sys.stderr)
         return 2
@@ -39,7 +39,7 @@ def main() -> int:
     except RetentionRejected as exc:
         print(str(exc), file=sys.stderr)
         return 2
-    print("preflight accepted; no backup command was run")
+    print("preflight accepted")
     return 0
 
 

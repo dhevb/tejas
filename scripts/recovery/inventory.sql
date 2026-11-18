@@ -1,4 +1,7 @@
 -- New read-only inventory. This is not the historical 15 November counting script.
+-- Historical claims this script does not reproduce, and must not be edited to force:
+-- 9 schemas, 116 functions, and 189 indexes.
+-- The 18 November 2026 reading of these rules was 10 durable schemas, 117 function OIDs, and 190 indexes.
 -- System schemas are pg_catalog, information_schema, and pg_toast.
 -- Temporary schemas pg_temp_* and pg_toast_temp_* are session artifacts and are excluded.
 -- Tables are ordinary relations (relkind r) and partitioned tables (relkind p).

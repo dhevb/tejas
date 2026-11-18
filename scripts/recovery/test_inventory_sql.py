@@ -21,6 +21,10 @@ class InventorySqlTests(unittest.TestCase):
         self.assertIn("pg_toast", SQL)
         self.assertIn("pg_temp_%", SQL)
         self.assertIn("pg_toast_temp_%", SQL)
+        self.assertIn("9 schemas", SQL)
+        self.assertIn("116 functions", SQL)
+        self.assertIn("189 indexes", SQL)
+        self.assertIn("does not reproduce", SQL)
 
 
 if __name__ == "__main__":

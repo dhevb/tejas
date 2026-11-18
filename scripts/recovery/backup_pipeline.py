@@ -20,14 +20,12 @@ from urllib.parse import unquote, urlparse
 
 sys.path.insert(0, os.path.dirname(__file__))
 
+from rclone_remote import scrubbed_env, verify_remote
 from retention import (
     NAME_PATTERN,
     RetentionRejected,
     manifest_line,
-    missing_secrets,
     refuse_existing,
-    remote_ready,
-    validate_directory,
 )
 from seal_backup import seal
 
@@ -107,80 +105,106 @@ def _scrub(text: str, secrets: list[str]) -> str:
     return text
 
 
-def _run(argv: list[str], env: dict[str, str], secrets: list[str]) -> subprocess.CompletedProcess[str]:
-    completed = subprocess.run(argv, env=env, text=True, capture_output=True, check=False)
-    if completed.returncode != 0:
-        print(_scrub(completed.stderr, secrets), file=sys.stderr)
-        raise PipelineRejected("command failed")
-    return completed
-
-
-def run_backup() -> int:
-    missing = missing_secrets(os.environ)
-    if missing:
-        print("required secret is absent: " + ",".join(missing), file=sys.stderr)
-        return 2
-    raw_url = os.environ["SUPABASE_BACKUP_DB_URL"]
-    passphrase = os.environ["TEJAS_BACKUP_ENCRYPTION_PASSPHRASE"].encode()
-    secrets = [raw_url, passphrase.decode(errors="ignore")]
+def _runner(environ: dict[str, str]):
+    raw_url = environ.get("SUPABASE_BACKUP_DB_URL", "")
+    secrets = [
+        raw_url,
+        environ.get("TEJAS_BACKUP_ENCRYPTION_PASSPHRASE", ""),
+        environ.get("TEJAS_RCLONE_CONFIG_B64", ""),
+    ]
     try:
-        directory = validate_directory(os.environ["TEJAS_BACKUP_DESTINATION"])
+        secrets.append(unquote(urlparse(raw_url).password or ""))
+    except ValueError:
+        pass
+
+    def run(argv: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+        completed = subprocess.run(argv, env=env, text=True, capture_output=True, check=False)
+        if completed.returncode != 0 and os.path.basename(argv[0]) != "rclone":
+            print(_scrub(completed.stderr, secrets), file=sys.stderr)
+        return completed
+
+    return run
+
+
+def execute_backup(environ: dict[str, str], run, rclone: str, work: str, stamp: str) -> int:
+    config_path = os.path.join(work, "rclone.conf")
+    plain = os.path.join(work, "plain.dump")
+    sealed = ""
+    downloaded = os.path.join(work, "remote.seal")
+    try:
+        directory = verify_remote(environ, run, rclone, work)
+        raw_url = environ["SUPABASE_BACKUP_DB_URL"]
+        passphrase = environ["TEJAS_BACKUP_ENCRYPTION_PASSPHRASE"].encode()
         parsed = urlparse(raw_url)
         password = unquote(parsed.password or "")
-        secrets.append(password)
         host = parsed.hostname or ""
         user = parsed.username or ""
         source_is_project(host, user)
         if not password or parsed.scheme not in {"postgresql", "postgres"}:
             raise PipelineRejected("source connection was not verified")
-        rclone = os.environ.get("RCLONE_BIN") or shutil.which("rclone")
-        if not rclone:
-            raise PipelineRejected("rclone is not installed")
-        listed = _run([rclone, "listremotes"], os.environ.copy(), secrets)
-        remote_ready(listed.stdout.splitlines())
-        child = {key: value for key, value in os.environ.items() if key not in {"SUPABASE_BACKUP_DB_URL", "SUPABASE_DB_URL", "TEJAS_BACKUP_ENCRYPTION_PASSPHRASE"}}
-        child["PGPASSWORD"] = password
-        child["PGSSLMODE"] = "require"
-        child["PGCONNECT_TIMEOUT"] = "20"
-        identity = _run(
+        db_env = scrubbed_env(environ, config_path, password)
+        identity = run(
             [PSQL, "-X", "-v", "ON_ERROR_STOP=1", "-A", "-t", "-h", host, "-p", str(parsed.port or 5432), "-U", user, "-d", "postgres", "-c", IDENTITY_SQL],
-            child,
-            secrets,
+            db_env,
         )
+        if identity.returncode != 0:
+            raise PipelineRejected("command failed")
         identity_accepted(parse_identity(identity.stdout))
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         name = backup_name(stamp)
-        present = _run([rclone, "lsf", directory], child, secrets)
+        remote_env = scrubbed_env(environ, config_path)
+        present = run([rclone, "lsf", directory], remote_env)
+        if present.returncode != 0:
+            raise PipelineRejected("command failed")
         refuse_existing(present.stdout, name)
-        with tempfile.TemporaryDirectory(prefix="tejas-backup-") as work:
-            os.chmod(work, 0o700)
-            plain = os.path.join(work, "plain.dump")
-            sealed = os.path.join(work, name)
-            _run(dump_argv(host, parsed.port or 5432, user, plain), child, secrets)
-            blob = seal(open(plain, "rb").read(), passphrase)
-            _wipe(plain)
-            descriptor = os.open(sealed, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(descriptor, "wb") as handle:
-                handle.write(blob)
-            digest = hashlib.sha256(blob).hexdigest()
-            destination = directory + name
-            _run([rclone, "copyto", sealed, destination], child, secrets)
-            downloaded = os.path.join(work, "remote.seal")
-            _run([rclone, "copyto", destination, downloaded], child, secrets)
-            remote_digest = hashlib.sha256(open(downloaded, "rb").read()).hexdigest()
-            compare_checksums(digest, remote_digest)
-            print(manifest_line(name, digest, len(blob)))
-            print("remote_match true")
+        sealed = os.path.join(work, name)
+        dumped = run(dump_argv(host, parsed.port or 5432, user, plain), db_env)
+        if dumped.returncode != 0:
+            raise PipelineRejected("command failed")
+        blob = seal(open(plain, "rb").read(), passphrase)
+        _wipe(plain)
+        descriptor = os.open(sealed, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(blob)
+        digest = hashlib.sha256(blob).hexdigest()
+        destination = directory + name
+        uploaded = run([rclone, "copyto", sealed, destination], remote_env)
+        if uploaded.returncode != 0:
+            raise PipelineRejected("command failed")
+        fetched = run([rclone, "copyto", destination, downloaded], remote_env)
+        if fetched.returncode != 0:
+            raise PipelineRejected("command failed")
+        remote_digest = hashlib.sha256(open(downloaded, "rb").read()).hexdigest()
+        compare_checksums(digest, remote_digest)
+        print(manifest_line(name, digest, len(blob)))
+        print("remote_match true")
+        return 0
     except (PipelineRejected, RetentionRejected) as exc:
         print(str(exc), file=sys.stderr)
         return 2
     except OSError:
         print("backup file is not readable", file=sys.stderr)
         return 2
-    return 0
+    finally:
+        for path in (config_path, plain, sealed, downloaded):
+            if path:
+                try:
+                    _wipe(path)
+                except OSError:
+                    pass
+
+
+def run_backup() -> int:
+    rclone = os.environ.get("RCLONE_BIN") or shutil.which("rclone") or ""
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    with tempfile.TemporaryDirectory(prefix="tejas-backup-") as work:
+        os.chmod(work, 0o700)
+        return execute_backup(dict(os.environ), _runner(os.environ), rclone, work, stamp)
 
 
 def _wipe(path: str) -> None:
+    if not path or not os.path.exists(path):
+        return
     size = os.path.getsize(path)
     with open(path, "r+b") as handle:
         handle.write(b"\x00" * size)

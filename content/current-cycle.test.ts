@@ -61,6 +61,7 @@ test("the three Olympiad pages use the result sentence and do not publish a syll
   assert.match(readFileSync("content/olympiads/english.ts", "utf8"), /Classes 3–10/);
   assert.match(readFileSync("content/olympiads/mathematics.ts", "utf8"), /Classes 3–10/);
   assert.match(readFileSync("content/olympiads/technology.ts", "utf8"), /Classes 6–10/);
+  assert.match(readFileSync("data/faq.ts", "utf8"), /Results to be declared on 12 January 2027/);
   assert.match(form, /If a student participates in two or more TEJAS streams, enter the student&apos;s details separately for each stream in separate rows\. Each stream entry will be considered a separate registration, and the registration fee will be charged separately for each stream\./);
 });
 

@@ -88,7 +88,7 @@ export function StaffConsole() {
   if (!overview) {
     return (
       <form onSubmit={signIn} className="mx-auto max-w-md space-y-4 rounded-3xl border border-tejas-border bg-white p-6 shadow-tejas">
-        <p className="text-sm text-tejas-muted">Use a staff email and password when an individual account exists. Until then, the recovery token configured on the server still opens this page.</p>
+        <p className="text-sm text-tejas-muted">TEJAS Olympiad staff inventory. Use a staff email and password when an individual account exists. Until then, the recovery token configured on the server still opens this page.</p>
         <label className="block text-sm font-semibold">Email
           <input className={fieldClass} type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" />
         </label>

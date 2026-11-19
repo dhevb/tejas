@@ -320,21 +320,67 @@ test("classes outside III–X are rejected for each selected stream", () => {
   assert.equal(registrations(sheet([student({ className: "10" })])).students.length, 1);
   const futureTechInClassV = registrations(sheet([student({ className: "V", streams: "TEJAS Future Tech" })]));
   assert.equal(futureTechInClassV.students.length, 0);
-  assert.match(futureTechInClassV.rowErrors[0]?.messages.join(" ") ?? "", /Classes VI–X/);
+  assert.match(futureTechInClassV.rowErrors[0]?.messages.join(" ") ?? "", /Classes 6–10/);
   assert.equal(registrations(sheet([student({ className: "VI", streams: "TEJAS Future Tech" })])).students.length, 1);
   assert.equal(registrations(sheet([student({ className: "V", streams: "TEJAS English" })])).students.length, 1);
 });
 
 test("duplicate students and duplicate roll numbers are reported", () => {
   const same = registrations(sheet([student({ rollNumber: "4" }), student({ rollNumber: "9" })]));
-  assert.equal(same.students.length, 0);
-  assert.match(same.rowErrors.map((error) => error.messages.join(" ")).join(" "), /matches row|repeated/);
+  assert.equal(same.students.length, 1);
+  assert.equal(same.fee?.totalStudentFees, 150);
+  assert.match(same.rowErrors.map((error) => error.messages.join(" ")).join(" "), /duplicate/i);
   const rolls = registrations(sheet([
     student({ rollNumber: "4" }),
     student({ fullName: "Kavya Iyer", parentName: "Arun Iyer", dob: "02-02-2014", rollNumber: "4" }),
   ]));
   assert.equal(rolls.students.length, 0);
   assert.match(rolls.rowErrors.map((error) => error.messages.join(" ")).join(" "), /Roll number 4/);
+});
+
+test("the same student in different streams is a separate registration on each row", () => {
+  const two = registrations(sheet([
+    student({ streams: "TEJAS English" }),
+    student({ streams: "TEJAS Mathematics" }),
+  ]));
+  assert.equal(two.rowErrors.length, 0);
+  assert.equal(two.students.length, 2);
+  assert.equal(two.fee?.studentStreamRegistrations, 2);
+  assert.equal(two.fee?.totalStudentFees, 300);
+  assert.equal(two.fee?.payableToTejas, 240);
+
+  const three = registrations(sheet([
+    student({ className: "VI", streams: "TEJAS English" }),
+    student({ className: "VI", streams: "TEJAS Mathematics" }),
+    student({ className: "VI", streams: "TEJAS Future Tech" }),
+  ]));
+  assert.equal(three.rowErrors.length, 0);
+  assert.equal(three.students.length, 3);
+  assert.equal(three.fee?.studentStreamRegistrations, 3);
+  assert.equal(three.fee?.totalStudentFees, 450);
+  assert.equal(three.fee?.payableToTejas, 360);
+
+  const duplicatedEnglish = registrations(sheet([
+    student({ streams: "TEJAS English" }),
+    student({ streams: "TEJAS English" }),
+  ]));
+  assert.equal(duplicatedEnglish.students.length, 1);
+  assert.equal(duplicatedEnglish.fee?.totalStudentFees, 150);
+  assert.match(duplicatedEnglish.rowErrors.map((error) => error.messages.join(" ")).join(" "), /duplicate/i);
+
+  const sameName = registrations(sheet([
+    student({ rollNumber: "1", streams: "TEJAS English" }),
+    student({
+      parentName: "Anil Sharma",
+      parentMobile: "9898989897",
+      dob: "16-08-2015",
+      rollNumber: "2",
+      streams: "TEJAS English",
+    }),
+  ]));
+  assert.equal(sameName.rowErrors.length, 0);
+  assert.equal(sameName.students.length, 2);
+  assert.equal(sameName.fee?.studentStreamRegistrations, 2);
 });
 
 test("bad headers, unknown streams, blank names, and a different school are rejected", () => {

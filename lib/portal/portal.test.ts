@@ -517,3 +517,30 @@ test("the public e-book summary follows publication status and does not include 
   assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "awaiting_approval", reason: "Restore after the public summary check." })).ok, true);
   assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "awaiting_approval", reason: "Restore after the public summary check." })).ok, true);
 });
+
+test("the student library and staff inventory use TEJAS Olympiad branding", () => {
+  const pages = [
+    "app/learn/dashboard/page.tsx",
+    "app/learn/staff/page.tsx",
+    "app/learn/staff/staff-console.tsx",
+  ];
+  const shared = [
+    "app/layout.tsx",
+    "components/layout/TejasNavbar.tsx",
+    "components/layout/TejasFooter.tsx",
+    "components/shared/FloatingCTA.tsx",
+    "components/brand/TejasEmblem.tsx",
+  ];
+  for (const file of pages) {
+    const source = readFileSync(path.join(process.cwd(), file), "utf8");
+    assert.equal(source.includes("DHE English Olympiad"), false, file);
+    assert.equal(source.includes("TEJAS Olympiad"), true, file);
+  }
+  for (const file of shared) {
+    const source = readFileSync(path.join(process.cwd(), file), "utf8");
+    assert.equal(source.includes("DHE English Olympiad"), false, file);
+  }
+  const footer = readFileSync(path.join(process.cwd(), "components/layout/TejasFooter.tsx"), "utf8");
+  assert.equal(footer.includes("brand.parentOrg"), true);
+  assert.equal(footer.includes("DHE Ecosystem"), true);
+});

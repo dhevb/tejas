@@ -5,31 +5,31 @@ export const technologyOlympiad: OlympiadPortalContent = {
   slug: "technology",
   name: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" },
   tagline: {
-    en: "TEJAS Future Tech Olympiad — Classes VI–X",
-    hi: "TEJAS फ्यूचर टेक ओलंपियाड — कक्षा VI–X",
+    en: "TEJAS Future Tech Olympiad — Classes 6–10",
+    hi: "TEJAS फ्यूचर टेक ओलंपियाड — कक्षा 6–10",
   },
   description: {
-    en: "TEJAS Future Tech Olympiad is examined offline on 11 December 2026 for Classes VI–X. It assesses digital literacy, computational thinking, and awareness of emerging technologies.",
-    hi: "TEJAS फ्यूचर टेक ओलंपियाड कक्षा VI–X के लिए है। परीक्षा 11 दिसंबर 2026 को है।",
+    en: "TEJAS Future Tech Olympiad is examined offline on 11 December 2026 for Classes 6–10. It assesses digital literacy, computational thinking, and awareness of emerging technologies.",
+    hi: "TEJAS फ्यूचर टेक ओलंपियाड कक्षा 6–10 के लिए है। परीक्षा 11 दिसंबर 2026 को है।",
   },
   whySubject: {
-    en: "Technology-enabled education is part of the work of the Department of Holistic Education. TEJAS Future Tech Olympiad is the current stream for Classes VI–X.",
-    hi: "TEJAS फ्यूचर टेक ओलंपियाड कक्षा VI–X के लिए है। आयोजक समग्र शिक्षा विभाग है।",
+    en: "Technology-enabled education is part of the work of the Department of Holistic Education. TEJAS Future Tech Olympiad is the current stream for Classes 6–10.",
+    hi: "TEJAS फ्यूचर टेक ओलंपियाड कक्षा 6–10 के लिए है। आयोजक समग्र शिक्षा विभाग है।",
   },
   status: "active",
   icon: "cpu",
   color: "#8A5A10",
   grades: {
-    en: "Classes VI–X",
-    hi: "कक्षा VI–X",
+    en: "Classes 6–10",
+    hi: "कक्षा 6–10",
   },
   duration: { en: "45 minutes", hi: "45 मिनट" },
   questions: 40,
   registrationOpen: true,
   eligibility: [
     {
-      en: "Students in Classes VI–X in recognised schools",
-      hi: "मान्यता प्राप्त विद्यालयों में कक्षा VI–X के छात्र",
+      en: "Students in Classes 6–10 in recognised schools",
+      hi: "मान्यता प्राप्त विद्यालयों में कक्षा 6–10 के छात्र",
     },
     {
       en: "School registration on the TEJAS Olympiad website, organised by the Department of Holistic Education (DHE)",
@@ -62,35 +62,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
       marks: 10,
     },
   ],
-  syllabus: [
-    {
-      level: { en: "Level C", hi: "स्तर C" },
-      classes: { en: "Class VI", hi: "कक्षा VI" },
-      topics: [
-        { en: "MS Office basics and file management", hi: "MS Office मूल बातें" },
-        { en: "Algorithms and flowcharts introduction", hi: "एल्गोरिदम और फ्लोचार्ट परिचय" },
-        { en: "Cyber safety and digital citizenship", hi: "साइबर सुरक्षा और डिजिटल नागरिकता" },
-      ],
-    },
-    {
-      level: { en: "Level D", hi: "स्तर D" },
-      classes: { en: "Class VII–VIII", hi: "कक्षा VII–VIII" },
-      topics: [
-        { en: "Programming logic and pseudocode", hi: "प्रोग्रामिंग लॉजिक और pseudocode" },
-        { en: "Introduction to AI and machine learning concepts", hi: "AI और ML अवधारणाएँ" },
-        { en: "Robotics and IoT awareness", hi: "रोबोटिक्स और IoT जागरूकता" },
-      ],
-    },
-    {
-      level: { en: "Level E", hi: "स्तर E" },
-      classes: { en: "Class IX–X", hi: "कक्षा IX–X" },
-      topics: [
-        { en: "Data science fundamentals and visualisation", hi: "डेटा विज्ञान मूल बातें" },
-        { en: "AI ethics and responsible technology", hi: "AI नैतिकता और जिम्मेदार प्रौद्योगिकी" },
-        { en: "Innovation, startups, and Bharat's tech ecosystem", hi: "नवाचार, स्टार्टअप और भारत का tech ecosystem" },
-      ],
-    },
-  ],
+  syllabus: [],
   preparationRoadmap: [
     {
       phase: { en: "Digital Basics (Weeks 1–2)", hi: "डिजिटल मूल (सप्ताह 1–2)" },
@@ -156,7 +128,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
     {
       question: { en: "Do I need to know coding?", hi: "क्या coding आना चाहिए?" },
       answer: {
-        en: "No prior coding is required. Future Tech is for Classes VI–X and focuses on digital literacy, logical thinking, and technology awareness appropriate to each grade.",
+        en: "No prior coding is required. Future Tech is for Classes 6–10 and focuses on digital literacy, logical thinking, and technology awareness appropriate to each grade.",
         hi: "निचले स्तरों के लिए prior coding आवश्यक नहीं।",
       },
     },

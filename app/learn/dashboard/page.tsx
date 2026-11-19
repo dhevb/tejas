@@ -8,8 +8,8 @@ import { formatInr } from "@/lib/registration/fee";
 export const dynamic = "force-dynamic";
 
 export const metadata = createMetadata({
-  title: "My e-book",
-  description: "E-book and mock tests for the signed-in student.",
+  title: "TEJAS Olympiad student library",
+  description: "TEJAS Olympiad e-book and mock tests for the signed-in student.",
   path: "/learn/dashboard",
   noIndex: true,
 });
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     <section className="py-12">
       <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-6">
         <header>
-          <p className="text-sm font-semibold uppercase tracking-widest text-tejas-saffron">Student library</p>
+          <p className="text-sm font-semibold uppercase tracking-widest text-tejas-saffron">TEJAS Olympiad</p>
           <h1 className="mt-2 text-3xl font-bold text-tejas-blue">{view.student.fullName}</h1>
           <p className="mt-2 text-tejas-muted">{view.student.streamName} · Class {view.student.classLevel} · {view.student.schoolName}</p>
           <div className="mt-4 flex flex-wrap gap-3 text-sm">

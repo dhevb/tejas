@@ -5,16 +5,16 @@ export const englishOlympiad: OlympiadPortalContent = {
   slug: "english",
   name: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" },
   tagline: {
-    en: "TEJAS English Olympiad — language for Classes III–X",
-    hi: "TEJAS अंग्रेज़ी ओलंपियाड — कक्षा III–X",
+    en: "TEJAS English Olympiad — language for Classes 3–10",
+    hi: "TEJAS अंग्रेज़ी ओलंपियाड — कक्षा 3–10",
   },
   description: {
-    en: "Language is not merely a medium of communication; it is the foundation of expression, creativity, and confidence. TEJAS English Olympiad is for Classes III–X and is examined on 10 December 2026.",
-    hi: "TEJAS अंग्रेज़ी ओलंपियाड कक्षा III–X के लिए है। परीक्षा 10 दिसंबर 2026 को है।",
+    en: "Language is not merely a medium of communication; it is the foundation of expression, creativity, and confidence. TEJAS English Olympiad is for Classes 3–10 and is examined on 10 December 2026.",
+    hi: "TEJAS अंग्रेज़ी ओलंपियाड कक्षा 3–10 के लिए है। परीक्षा 10 दिसंबर 2026 को है।",
   },
   whySubject: {
-    en: "TEJAS English is examined on 10 December 2026 for Classes III–X. It follows the 1st DHE English Olympiad (10,040+ students, 25 schools) held on 13–16 October 2025.",
-    hi: "TEJAS अंग्रेज़ी की परीक्षा 10 दिसंबर 2026 को है। कक्षा III–X।",
+    en: "TEJAS English is examined on 10 December 2026 for Classes 3–10. It follows the 1st DHE English Olympiad (10,040+ students, 25 schools) held on 13–16 October 2025.",
+    hi: "TEJAS अंग्रेज़ी की परीक्षा 10 दिसंबर 2026 को है। कक्षा 3–10।",
   },
   status: "active",
   icon: "book-open",
@@ -30,8 +30,8 @@ export const englishOlympiad: OlympiadPortalContent = {
       hi: "भारत भर के मान्यता प्राप्त विद्यालयों में नामांकित विद्यार्थी",
     },
     {
-      en: "Grade range: Classes III–X (Current TEJAS Edition)",
-      hi: "कक्षा सीमा: कक्षा III–X (वर्तमान TEJAS संस्करण)",
+      en: "Grade range: Classes 3–10 (Current TEJAS Edition)",
+      hi: "कक्षा सीमा: कक्षा 3–10 (वर्तमान TEJAS संस्करण)",
     },
     {
       en: "School registration on the TEJAS Olympiad website, organised by the Department of Holistic Education (DHE)",
@@ -64,53 +64,7 @@ export const englishOlympiad: OlympiadPortalContent = {
       marks: 5,
     },
   ],
-  syllabus: [
-    {
-      level: { en: "Level A", hi: "स्तर A" },
-      classes: { en: "Class I–II", hi: "कक्षा I–II" },
-      topics: [
-        { en: "Basic vocabulary & picture-word association", hi: "मूल शब्दावली एवं चित्र-शब्द संबंध" },
-        { en: "Simple sentence formation", hi: "सरल वाक्य निर्माण" },
-        { en: "Phonics & pronunciation basics", hi: "ध्वन्यात्मकता एवं उच्चारण मूल बातें" },
-      ],
-    },
-    {
-      level: { en: "Level B", hi: "स्तर B" },
-      classes: { en: "Class III–IV", hi: "कक्षा III–IV" },
-      topics: [
-        { en: "Parts of speech & tenses", hi: "शब्द भेद एवं काल" },
-        { en: "Short passage comprehension", hi: "लघु गद्यांश बोध" },
-        { en: "Synonyms, antonyms & spelling", hi: "पर्यायवाची, विलोम एवं वर्तनी" },
-      ],
-    },
-    {
-      level: { en: "Level C", hi: "स्तर C" },
-      classes: { en: "Class V–VI", hi: "कक्षा V–VI" },
-      topics: [
-        { en: "Advanced grammar & sentence transformation", hi: "उन्नत व्याकरण एवं वाक्य परिवर्तन" },
-        { en: "Paragraph comprehension & inference", hi: "अनुच्छेद बोध एवं निष्कर्ष" },
-        { en: "Creative writing prompts", hi: "रचनात्मक लेखन संकेत" },
-      ],
-    },
-    {
-      level: { en: "Level D", hi: "स्तर D" },
-      classes: { en: "Class VII–VIII", hi: "कक्षा VII–VIII" },
-      topics: [
-        { en: "Complex grammar & error detection", hi: "जटिल व्याकरण एवं त्रुटि पहचान" },
-        { en: "Literary devices & figurative language", hi: "साहित्यिक उपकरण एवं रूपक भाषा" },
-        { en: "Critical reading & analysis", hi: "आलोचनात्मक पठन एवं विश्लेषण" },
-      ],
-    },
-    {
-      level: { en: "Level E", hi: "स्तर E" },
-      classes: { en: "Class IX–X", hi: "कक्षा IX–X" },
-      topics: [
-        { en: "Advanced comprehension & summarisation", hi: "उन्नत बोध एवं सारांश" },
-        { en: "Essay-style & argumentative prompts", hi: "निबंध एवं तर्कपूर्ण संकेत" },
-        { en: "Communication skills & global expression", hi: "संचार कौशल एवं वैश्विक अभिव्यक्ति" },
-      ],
-    },
-  ],
+  syllabus: [],
   preparationRoadmap: [
     {
       phase: { en: "Foundation (Weeks 1–2)", hi: "नींव (सप्ताह 1–2)" },

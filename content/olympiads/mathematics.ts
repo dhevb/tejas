@@ -5,16 +5,16 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
   slug: "mathematics",
   name: { en: "TEJAS Mathematics", hi: "TEJAS गणित" },
   tagline: {
-    en: "TEJAS Mathematics Olympiad — Classes III–X",
-    hi: "TEJAS गणित ओलंपियाड — कक्षा III–X",
+    en: "TEJAS Mathematics Olympiad — Classes 3–10",
+    hi: "TEJAS गणित ओलंपियाड — कक्षा 3–10",
   },
   description: {
-    en: "TEJAS Mathematics Olympiad is examined on 9 December 2026 for Classes III–X. It strengthens conceptual clarity, analytical thinking, and problem-solving.",
-    hi: "TEJAS गणित ओलंपियाड कक्षा III–X के लिए है। परीक्षा 9 दिसंबर 2026 को है।",
+    en: "TEJAS Mathematics Olympiad is examined on 9 December 2026 for Classes 3–10. It strengthens conceptual clarity, analytical thinking, and problem-solving.",
+    hi: "TEJAS गणित ओलंपियाड कक्षा 3–10 के लिए है। परीक्षा 9 दिसंबर 2026 को है।",
   },
   whySubject: {
-    en: "Mathematics is the language of science and innovation. From Srinivasa Ramanujan to modern data science, mathematical thinking drives Bharat's knowledge economy. TEJAS Mathematics Olympiad is the current stream for Classes III–X.",
-    hi: "गणित विज्ञान और नवाचार की भाषा है। TEJAS गणित ओलंपियाड कक्षा III–X के लिए है।",
+    en: "Mathematics is the language of science and innovation. From Srinivasa Ramanujan to modern data science, mathematical thinking drives Bharat's knowledge economy. TEJAS Mathematics Olympiad is the current stream for Classes 3–10.",
+    hi: "गणित विज्ञान और नवाचार की भाषा है। TEJAS गणित ओलंपियाड कक्षा 3–10 के लिए है।",
   },
   status: "active",
   icon: "calculator",
@@ -25,8 +25,8 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
   registrationOpen: true,
   eligibility: [
     {
-      en: "Students in Classes III–X enrolled in recognised schools",
-      hi: "मान्यता प्राप्त विद्यालयों में कक्षा III–X के छात्र",
+      en: "Students in Classes 3–10 enrolled in recognised schools",
+      hi: "मान्यता प्राप्त विद्यालयों में कक्षा 3–10 के छात्र",
     },
     {
       en: "School registration on the TEJAS Olympiad website, organised by the Department of Holistic Education (DHE)",
@@ -64,44 +64,7 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
       marks: 5,
     },
   ],
-  syllabus: [
-    {
-      level: { en: "Level B", hi: "स्तर B" },
-      classes: { en: "Class III–IV", hi: "कक्षा III–IV" },
-      topics: [
-        { en: "Addition, subtraction, multiplication, division", hi: "जोड़, घटाव, गुणा, भाग" },
-        { en: "Basic fractions and shapes", hi: "मूल भिन्न और आकृतियाँ" },
-        { en: "Patterns and simple word problems", hi: "पैटर्न और सरल शाब्दिक प्रश्न" },
-      ],
-    },
-    {
-      level: { en: "Level C", hi: "स्तर C" },
-      classes: { en: "Class V–VI", hi: "कक्षा V–VI" },
-      topics: [
-        { en: "Decimals, percentages, LCM/HCF", hi: "दशमलव, प्रतिशत, LCM/HCF" },
-        { en: "Basic algebra and equations", hi: "मूल बीजगणित और समीकरण" },
-        { en: "Area, perimeter, and angles", hi: "क्षेत्रफल, परिमाप और कोण" },
-      ],
-    },
-    {
-      level: { en: "Level D", hi: "स्तर D" },
-      classes: { en: "Class VII–VIII", hi: "कक्षा VII–VIII" },
-      topics: [
-        { en: "Linear equations and polynomials", hi: "रैखिक समीकरण और बहुपद" },
-        { en: "Pythagoras theorem and coordinate geometry basics", hi: "पाइथागोरस प्रमेय और निर्देशांक ज्यामिति" },
-        { en: "Statistics and probability introduction", hi: "सांख्यिकी और प्रायिकता परिचय" },
-      ],
-    },
-    {
-      level: { en: "Level E", hi: "स्तर E" },
-      classes: { en: "Class IX–X", hi: "कक्षा IX–X" },
-      topics: [
-        { en: "Quadratic equations and trigonometry", hi: "द्विघात समीकरण और त्रिकोणमिति" },
-        { en: "Coordinate geometry and constructions", hi: "निर्देशांक ज्यामिति और रचनाएँ" },
-        { en: "Olympiad-style combinatorics and number theory basics", hi: "ओलंपियाड-शैली संयोजकता" },
-      ],
-    },
-  ],
+  syllabus: [],
   preparationRoadmap: [
     {
       phase: { en: "Concepts (Weeks 1–2)", hi: "अवधारणाएँ (सप्ताह 1–2)" },
@@ -175,15 +138,8 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       question: { en: "Which classes can participate?", hi: "कौन सी कक्षाएँ भाग ले सकती हैं?" },
       answer: {
-        en: "Classes III–X, as printed for TEJAS Olympiad 2026–27.",
-        hi: "वर्तमान स्वतंत्र TEJAS चक्र में कक्षा III–X।",
-      },
-    },
-    {
-      question: { en: "Is the syllabus aligned with NCERT?", hi: "क्या पाठ्यक्रम NCERT के अनुरूप है?" },
-      answer: {
-        en: "Yes. Questions are grade-appropriate and aligned with NCERT and major state board curricula, with higher-order thinking components.",
-        hi: "हाँ, NCERT और प्रमुख राज्य बोर्ड के अनुरूप।",
+        en: "Classes 3–10.",
+        hi: "कक्षा 3–10।",
       },
     },
   ],

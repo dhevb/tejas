@@ -2,7 +2,7 @@ import { serverKeyValue, supabaseOrigin } from "@/lib/registration/durable";
 
 /** Tables the prepared registration migration would create. Column lists are names only. */
 export const EXPECTED_TABLES: Record<string, readonly string[]> = {
-  tejas_schools: ["id", "school_name", "school_address", "state_name", "district", "city", "pin_code", "pan", "pan_duplicate", "school_email", "school_mobile", "affiliation_board", "affiliation_number", "school_category", "created_at"],
+  tejas_schools: ["id", "school_name", "school_address", "state_name", "district", "city", "pin_code", "pan", "pan_holder", "pan_duplicate", "school_email", "school_mobile", "affiliation_board", "affiliation_number", "school_category", "created_at"],
   tejas_principals: ["school_id", "full_name", "mobile", "email", "designation"],
   tejas_coordinators: ["school_id", "full_name", "mobile", "email", "designation"],
   tejas_registrations: ["id", "school_id", "reference", "status", "created_at"],

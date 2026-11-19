@@ -15,6 +15,7 @@ create table if not exists tejas_schools (
   city text not null,
   pin_code text not null check (pin_code ~ '^[1-9][0-9]{5}$'),
   pan text not null check (pan ~ '^[A-Z]{5}[0-9]{4}[A-Z]$'),
+  pan_holder text check (pan_holder is null or pan_holder in ('school', 'authorised-staff')),
   pan_duplicate boolean not null default false,
   school_email text not null,
   school_mobile text not null check (school_mobile ~ '^[6-9][0-9]{9}$'),

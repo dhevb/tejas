@@ -11,7 +11,7 @@ export const metadata = createMetadata({
 });
 
 const steps = [
-  ["1", "School details", "Name, address, principal, and coordinator"],
+  ["1", "School details", "Name, address, PAN, principal, and coordinator"],
   ["2", "Student sheet", "Excel or CSV, with a stream for each student"],
   ["3", "Fee summary", "Server-calculated registration fee"],
   ["4", "Submit", "Receive a registration reference"],

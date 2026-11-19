@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FAQSection } from "@/components/shared/FAQSection";
-import { currentCycle, pastEnglishOlympiad2025 } from "@/content/current-cycle";
+import { currentCycle, pastEnglishOlympiad2025, REGISTRATION_CLOSES_LABEL, REGISTRATION_CLOSES_SHORT } from "@/content/current-cycle";
 import { hallOfFameRegistry } from "@/content/hall-of-fame";
 import { faqItems } from "@/data/faq";
 
@@ -136,7 +136,7 @@ export function HomeLanding() {
               ["3", "Olympiad streams", "Mathematics, English, Future Tech"],
               ["III–X", "Mathematics and English", "Future Tech is Classes VI–X"],
               ["₹150", "Registration fee", "School retains ₹30; ₹120 to TEJAS"],
-              ["20 Nov", "Last registration day", "Opens 3 November 2026"],
+              [REGISTRATION_CLOSES_SHORT, "Last registration day", `Closes ${REGISTRATION_CLOSES_LABEL}`],
             ].map(([value, label, note]) => (
               <div key={label} className="rounded-2xl border border-tejas-border bg-tejas-ivory p-5">
                 <dt className="text-sm font-medium text-tejas-muted">{label}</dt>

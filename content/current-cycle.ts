@@ -3,6 +3,8 @@ import type { LocalizedString } from "./types";
 /** Owner-approved current registration window. Display and countdown use this date. */
 export const REGISTRATION_OPENS_ON = "2026-11-03";
 export const REGISTRATION_CLOSES_ON = "2026-11-30";
+export const REGISTRATION_CLOSES_SHORT = "30 Nov";
+export const REGISTRATION_CLOSES_LABEL = "30 November 2026";
 
 /** Owner-approved result declaration date for TEJAS Olympiad 2026–27. */
 export const RESULT_ANNOUNCEMENT_ON = "2027-01-12";

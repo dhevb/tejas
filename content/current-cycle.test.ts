@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { currentCycle, REGISTRATION_CLOSES_ON, REGISTRATION_OPENS_ON, RESULT_ANNOUNCEMENT_ON } from "./current-cycle";
+import { currentCycle, REGISTRATION_CLOSES_LABEL, REGISTRATION_CLOSES_ON, REGISTRATION_CLOSES_SHORT, REGISTRATION_OPENS_ON, RESULT_ANNOUNCEMENT_ON } from "./current-cycle";
 
 const ROOTS = ["app", "components", "content", "data", "features"];
 
@@ -20,6 +20,8 @@ function sourceFiles(dir: string): string[] {
 test("current registration and result dates use the approved values", () => {
   assert.equal(REGISTRATION_OPENS_ON, "2026-11-03");
   assert.equal(REGISTRATION_CLOSES_ON, "2026-11-30");
+  assert.equal(REGISTRATION_CLOSES_SHORT, "30 Nov");
+  assert.equal(REGISTRATION_CLOSES_LABEL, "30 November 2026");
   assert.equal(RESULT_ANNOUNCEMENT_ON, "2027-01-12");
   assert.match(currentCycle.registrationStatus.en, /closes on 30 November 2026/);
   assert.match(currentCycle.registrationStatus.hi, /30 नवंबर 2026/);
@@ -30,7 +32,7 @@ test("current registration and result dates use the approved values", () => {
 });
 
 test("public source does not keep the retired deadline or the February 2027 result sentence", () => {
-  const retired = ["20 November 2026", "2026-11-20", "3–20 November", "February 2027", "फरवरी 2027", "20 नवंबर 2026"];
+  const retired = ["20 November 2026", "20 Nov", "20th November", "2026-11-20", "3–20 November", "February 2027", "फरवरी 2027", "20 नवंबर 2026"];
   const hits: string[] = [];
   for (const root of ROOTS) {
     for (const file of sourceFiles(root)) {

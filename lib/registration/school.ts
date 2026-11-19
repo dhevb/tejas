@@ -9,8 +9,8 @@ export type PanHolder = (typeof PAN_HOLDERS)[number];
 
 export function panHolderLabel(holder: string | null | undefined): string {
   if (holder === "school") return "School PAN";
-  if (holder === "authorised-staff") return "Authorised Staff Member's PAN";
-  return "PAN holder was not recorded";
+  if (holder === "authorised-staff") return "Authorised Staff PAN";
+  return "PAN holder not recorded";
 }
 
 export type SchoolForm = {

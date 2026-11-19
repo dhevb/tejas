@@ -40,8 +40,8 @@ export const currentCycle = {
     hi: "शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम है। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है। मुद्रित पुस्तक और ₹49 ई-बुक इस शुल्क से अलग हैं।",
   } satisfies LocalizedString,
   felicitation: {
-    en: "Results are declared on 12 January 2027.",
-    hi: "परिणाम 12 जनवरी 2027 को घोषित किए जाते हैं।",
+    en: "Results to be declared on 12 January 2027",
+    hi: "परिणाम 12 जनवरी 2027 को घोषित किए जाएंगे।",
   } satisfies LocalizedString,
   administeredBy: {
     en: "Department of Holistic Education (DHE), Vidya Bharti Institute of Training & Research Trust (VBITR), Kurukshetra",

@@ -6,7 +6,7 @@ import { SchoolRegistrationForm } from "./school-registration-form";
 
 export const metadata = createMetadata({
   title: "School registration",
-  description: "Register a school for TEJAS Olympiad 2026–27. Registration opens on 3 November 2026 and closes on 30 November 2026. Results are declared on 12 January 2027.",
+  description: "Register a school for TEJAS Olympiad 2026–27. Registration opens on 3 November 2026 and closes on 30 November 2026. Results to be declared on 12 January 2027.",
   path: "/schools/register",
 });
 

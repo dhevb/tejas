@@ -25,7 +25,7 @@ const streams = [
     alt: "Illustration of a student drawing a circle and triangle with a compass",
     text: "Number sense, geometry, patterns, and reasoning through a problem.",
     when: "9 December 2026",
-    classes: "Classes III–X",
+    classes: "Classes 3–10",
   },
   {
     href: "/olympiads/english",
@@ -34,7 +34,7 @@ const streams = [
     alt: "Illustration of a student reading a book in an Indian classroom",
     text: "Reading, vocabulary, grammar, and the confidence to express an idea clearly.",
     when: "10 December 2026",
-    classes: "Classes III–X",
+    classes: "Classes 3–10",
   },
   {
     href: "/olympiads/technology",
@@ -43,7 +43,7 @@ const streams = [
     alt: "Illustration of two students looking at a small classroom robot and a laptop",
     text: "Digital literacy, computational thinking, and a first look at emerging technology.",
     when: "11 December 2026",
-    classes: "Classes VI–X",
+    classes: "Classes 6–10",
   },
 ] as const;
 
@@ -61,7 +61,7 @@ const steps = [
   { n: "2", title: "Student sheet", text: "The school uploads the student sheet and chooses a stream for each student." },
   { n: "3", title: "Preparation", text: "Subject pages and published guides are available. They do not start an online test." },
   { n: "4", title: "Examination", text: "Mathematics, English, and Future Tech are held on 9, 10, and 11 December 2026." },
-  { n: "5", title: "Results", text: "Results are declared on 12 January 2027." },
+  { n: "5", title: "Results", text: "Results to be declared on 12 January 2027" },
 ] as const;
 
 const learning = [
@@ -94,7 +94,7 @@ export function HomeLanding() {
               Discover your talent. Explore your potential. Build your future.
             </p>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-tejas-muted">
-              Talent Exploration for Junior Aspiring Scholars. Mathematics and English for Classes III–X, and Future Tech for Classes VI–X, organised by the Department of Holistic Education (DHE), VBITR, Kurukshetra.
+              Talent Exploration for Junior Aspiring Scholars. Mathematics and English for Classes 3–10, and Future Tech for Classes 6–10, organised by the Department of Holistic Education (DHE), VBITR, Kurukshetra.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/olympiads">
@@ -134,7 +134,7 @@ export function HomeLanding() {
           <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["3", "Olympiad streams", "Mathematics, English, Future Tech"],
-              ["III–X", "Mathematics and English", "Future Tech is Classes VI–X"],
+              ["3–10", "Mathematics and English", "Future Tech is Classes 6–10"],
               ["₹150", "Registration fee", "School retains ₹30; ₹120 to TEJAS"],
               [REGISTRATION_CLOSES_SHORT, "Last registration day", `Closes ${REGISTRATION_CLOSES_LABEL}`],
             ].map(([value, label, note]) => (

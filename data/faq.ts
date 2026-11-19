@@ -23,7 +23,7 @@ export const faqItems: FAQItem[] = [
     category: "Olympiads",
     question: "Which Olympiads are active in the current TEJAS edition?",
     answer:
-      "TEJAS Mathematics on 9 December 2026 and TEJAS English on 10 December 2026 are for Classes III–X. TEJAS Future Tech on 11 December 2026 is for Classes VI–X. The examinations are offline, at the participating schools.",
+      "TEJAS Mathematics on 9 December 2026 and TEJAS English on 10 December 2026 are for Classes 3–10. TEJAS Future Tech on 11 December 2026 is for Classes 6–10. The examinations are offline, at the participating schools.",
   },
   {
     category: "Registration",
@@ -41,7 +41,7 @@ export const faqItems: FAQItem[] = [
     category: "Exams",
     question: "What are the examination levels?",
     answer:
-      "The 2025 English Olympiad used Level A: Class I–II, Level B: Class III–IV, Level C: Class V–VI, Level D: Class VII–VIII, Level E: Class IX–X. In 2026–27, English and Mathematics are for Classes III–X and Future Tech is for Classes VI–X.",
+      "The 2025 English Olympiad used Level A: Class I–II, Level B: Class III–IV, Level C: Class V–VI, Level D: Class VII–VIII, Level E: Class IX–X. In 2026–27, English and Mathematics are for Classes 3–10 and Future Tech is for Classes 6–10.",
   },
   {
     category: "Awards",

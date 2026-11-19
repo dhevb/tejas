@@ -92,7 +92,7 @@ export const technologyOlympiad: OlympiadPortalContent = {
       author: { en: "Department of Holistic Education", hi: "समग्र शिक्षा विभाग" },
       publisher: { en: "Student portal", hi: "छात्र पोर्टल" },
       description: {
-        en: "Book 1 is for Classes VI–VIII and Book 2 is for Classes IX–X. They open from the student portal when published and the payment is verified. This page does not open a file.",
+        en: "Book 1 is for Classes 6–8 and Book 2 is for Classes 9–10. They open from the student portal when published and the payment is verified. This page does not open a file.",
         hi: "पुस्तक 1 कक्षा VI–VIII और पुस्तक 2 कक्षा IX–X। छात्र पोर्टल से खुलती हैं।",
       },
     },

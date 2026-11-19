@@ -281,7 +281,7 @@ export function SchoolRegistrationForm() {
                 </label>
                 <label className="flex items-center gap-2">
                   <input type="radio" name="panHolder" value="authorised-staff" required />
-                  Authorised Staff Member&apos;s PAN
+                  Authorised Staff PAN
                 </label>
               </div>
               {fieldErrors.panHolder ? <span className="mt-1 block text-sm text-red-700">{fieldErrors.panHolder}</span> : null}

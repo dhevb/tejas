@@ -25,7 +25,7 @@ test("current registration and result dates use the approved values", () => {
   assert.equal(RESULT_ANNOUNCEMENT_ON, "2027-01-12");
   assert.match(currentCycle.registrationStatus.en, /closes on 30 November 2026/);
   assert.match(currentCycle.registrationStatus.hi, /30 नवंबर 2026/);
-  assert.equal(currentCycle.felicitation.en, "Results are declared on 12 January 2027.");
+  assert.equal(currentCycle.felicitation.en, "Results to be declared on 12 January 2027");
   assert.equal(RESULT_PAGE_SENTENCE, "Results to be declared on 12 January 2027");
   assert.match(currentCycle.felicitation.hi, /12 जनवरी 2027/);
   assert.match(currentCycle.fee.en, /₹150/);
@@ -33,7 +33,7 @@ test("current registration and result dates use the approved values", () => {
 });
 
 test("public source does not keep the retired deadline or the February 2027 result sentence", () => {
-  const retired = ["20 November 2026", "20 Nov", "20th November", "2026-11-20", "3–20 November", "February 2027", "फरवरी 2027", "20 नवंबर 2026"];
+  const retired = ["20 November 2026", "20 Nov", "20th November", "2026-11-20", "3–20 November", "February 2027", "फरवरी 2027", "20 नवंबर 2026", "Results are declared"];
   const hits: string[] = [];
   for (const root of ROOTS) {
     for (const file of sourceFiles(root)) {

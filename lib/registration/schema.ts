@@ -1,6 +1,6 @@
 /**
  * Eligibility from the 31 October 2026 invitation: Mathematics and English
- * are Classes III–X. Future Tech is Classes VI–X.
+ * are Classes 3–10. Future Tech is Classes 6–10.
  */
 export const CLASS_MIN = 3;
 export const CLASS_MAX = 10;

@@ -7,7 +7,7 @@ import { olympiads, getActiveOlympiads } from "@/data/olympiads";
 
 export const metadata = createMetadata({
   title: "Olympiads",
-  description: "TEJAS English and TEJAS Mathematics for Classes III–X, and TEJAS Future Tech for Classes VI–X, in TEJAS Olympiad 2026–27.",
+  description: "TEJAS English and TEJAS Mathematics for Classes 3–10, and TEJAS Future Tech for Classes 6–10, in TEJAS Olympiad 2026–27.",
   path: "/olympiads",
 });
 
@@ -20,7 +20,7 @@ export default function OlympiadsPage() {
       <PageHero
         eyebrow="Olympiads"
         title="National Olympiad Series"
-        subtitle="TEJAS Mathematics and English for Classes III–X. TEJAS Future Tech for Classes VI–X. Registration 3–30 November 2026. Results on 12 January 2027."
+        subtitle="TEJAS Mathematics and English for Classes 3–10. TEJAS Future Tech for Classes 6–10. Registration 3–30 November 2026. Results to be declared on 12 January 2027."
         primaryCta={{ label: "School registration", href: "/schools/register" }}
         secondaryCta={{ label: "Prepare Hub", href: "/prepare" }}
       />

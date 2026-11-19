@@ -115,7 +115,7 @@ export default function AboutPage() {
             <FadeIn>
               <h2 className="text-2xl font-bold text-tejas-ink">For Outstanding Students</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>TEJAS Mathematics and TEJAS English for Classes III–X, and TEJAS Future Tech for Classes VI–X</li>
+                <li>TEJAS Mathematics and TEJAS English for Classes 3–10, and TEJAS Future Tech for Classes 6–10</li>
                 <li>Hall of Fame names are from the 1st DHE English Olympiad in 2025, not from TEJAS Olympiad 2026–27</li>
                 <li>Class prizes are listed on each Olympiad page. Scholarship amounts have not been announced.</li>
               </ul>
@@ -123,7 +123,7 @@ export default function AboutPage() {
             <FadeIn delay={0.1}>
               <h2 className="text-2xl font-bold text-tejas-ink">For Schools</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>School registration is open on this website from 3 to 30 November 2026. Results are declared on 12 January 2027.</li>
+                <li>School registration is open on this website from 3 to 30 November 2026. Results to be declared on 12 January 2027.</li>
                 <li>The registration fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120.</li>
                 <li>The registration form collects the registration fee only. Printed books and the ₹49 e-book are separate payments.</li>
               </ul>

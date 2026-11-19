@@ -19,7 +19,7 @@ export function RegisterCTASection() {
           Join the {currentCycle.editionName.en}
         </h2>
         <p className="mt-4 text-lg text-tejas-muted leading-relaxed">
-          Schools register on this website. TEJAS English and TEJAS Mathematics are for Classes III–X. TEJAS Future Tech is for Classes VI–X.
+          Schools register on this website. TEJAS English and TEJAS Mathematics are for Classes 3–10. TEJAS Future Tech is for Classes 6–10.
           {currentCycle.registrationStatus.en} {currentCycle.fee.en}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">

@@ -709,11 +709,11 @@ test("a second school with the same PAN is flagged, and listings mask it", async
   assert.equal(staffRecord?.school.pan, "BBBPC2468K");
   assert.equal(staffRecord?.school.panHolder, "authorised-staff");
   const staffCsv = registrationsToCsv([staffRecord!], "schools", true);
-  assert.equal(staffCsv.includes("Authorised Staff Member's PAN"), true);
+  assert.equal(staffCsv.includes("Authorised Staff PAN"), true);
   assert.equal(staffCsv.includes("School PAN"), false);
   const staffListed = JSON.stringify((await staffSnapshot()).registrations.find((row) => row.reference === staffSaved.registration.reference));
   assert.equal(staffListed.includes("BBBPC2468K"), false);
-  assert.equal(staffListed.includes("Authorised Staff Member's PAN"), true);
+  assert.equal(staffListed.includes("Authorised Staff PAN"), true);
   assert.equal(staffListed.includes("School PAN"), false);
   assert.equal(registrationsToCsv([record!], "ebooks", false).includes("not activated"), true);
   const updated = await updatePayment(saved.registration.reference, "rejected", "Amount did not match the bank statement.");

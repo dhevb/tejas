@@ -28,10 +28,10 @@ export function classIsEligible(classNumber: number, allowed: readonly number[])
 }
 
 export function publishedClassLabel(): string {
-  return "Classes III–X";
+  return "Classes 3–10";
 }
 
-/** Sanity bounds for a Classes III–X examination in December 2026. Not an official age rule. */
+/** Sanity bounds for a Classes 3–10 examination in December 2026. Not an official age rule. */
 const MIN_DOB = 20040101;
 const MAX_DOB = 20201231;
 
@@ -68,7 +68,7 @@ export function validateDob(input: string): DobResult {
   if (stamp < MIN_DOB || stamp > MAX_DOB) {
     return {
       ok: false,
-      message: "This date of birth is outside the range that can be accepted for Classes III–X in 2026.",
+      message: "This date of birth is outside the range that can be accepted for Classes 3–10 in 2026.",
     };
   }
   return { ok: true, value: canonicalDob(day, month, year) };

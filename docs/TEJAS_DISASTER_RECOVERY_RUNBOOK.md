@@ -1,6 +1,6 @@
 # TEJAS disaster recovery runbook
 
-Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Section AD, 18 November 2026, 5:22 AM IST, records the expected `supabase_vault` 0.3.1 relation inventory and closes P-04 only. P-12, P-14, P-15, P-18, and P-19 remain open. Section AE, 18 November 2026, 6:15 AM IST, records the owner's acceptance that no additional Production repair is required on the evidence then available, and closes P-19 only. That decision supersedes the Section AB deferral for P-19. The Section AB text remains the historical record. P-12, P-14, P-15, and P-18 remain open. Section AF, 18 November 2026, 6:36 AM IST, records a later isolated rehearsal, a new inventory script, and a hardened extractor. It does not close P-12, P-14, P-15, or P-18, and it does not reopen P-03, P-04, P-08, P-19, P-21, or P-22. Section AG, 18 November 2026, 6:47 AM IST, adopts the hardened extractor as the future extraction standard and closes P-15 only. The historical tar command remains unrecovered. P-12, P-14, and P-18 remain open. Section AH, 18 November 2026, 6:53 AM IST, records the owner's acceptance of the P-12 and P-14 limitations and closes those two items only. P-15 stays closed as the future extraction standard. P-18 stays open because no Storage API credential is available. Full disaster recovery is not complete. Section AI, 18 November 2026, 7:23 AM IST, records the later read-only comparison of the four live Storage objects. `SUPABASE_SECRET_KEY` was present, and its value is not written here. The four live hashes matched Section B and the archive members reconfirmed in Section AF. That comparison closes P-18. No Storage object was uploaded, overwritten, or deleted. Section AJ, 18 November 2026, 7:50 AM IST, records two owner-accepted limitations. P-14 remains the accepted counting limitation and does not satisfy the Section H comparison. The P-11 disposable-test record is accepted as historical evidence only. That acceptance does not supply the missing extraction authorization. The database gate and the Storage gate remain not complete. Full disaster recovery remains not complete. Section AK, 18 November 2026, 8:19 AM IST, records a new read-only Production inventory, one new encrypted logical backup, an isolated restore of that backup, and a new read-only Storage listing. It does not mark either recovery gate complete. Section AL, 18 November 2026, 8:30 AM IST, records the local ciphertext recheck, the absent `tejasdrive` remote, the absent Storage archive, and fail-closed recovery guards. It does not upload a backup, extract an archive, or mark either recovery gate complete. Section AM, 18 November 2026, 8:45 AM IST, records the backup pipeline that runs only after that preflight. The pipeline was not executed against Production. It does not upload a backup, extract an archive, or mark either recovery gate complete. Section AN, 18 November 2026, 8:55 AM IST, records the runner-side rclone install and the fail-closed `tejasdrive` configuration. It does not execute a Production backup or mark either recovery gate complete.
+Draft revised 17 November 2026, IST. Phase 3A evidence reconciliation, 17 November 2026, IST, added sections M, N, and O. Phase 3C, 17 November 2026, IST, added fail-closed cleanup, checksum, and extraction guards. Phase 3D, 17 November 2026, IST, dispositioned the remaining medium and low findings. Phase 3E, 17 November 2026, IST, closed fail-open gaps found in an independent read. Phase 3F, 17 November 2026, IST, added the prerequisite register and recovery gates in section R. Phase 3G, 17 November 2026, IST, separated validation, recovery, upload, and Production states in sections R and S. Section T, 17 November 2026, 12:49 IST, records the later execution. Section U, 17 November 2026, 12:54 IST, reconciles the schema and function counts and corrects the Storage status. Section V, 17 November 2026, 12:58 IST, records the independent reconfirm, the historical-script search, and the owner-decision register. Section W, 17 November 2026, 3:00 PM IST, records the later operator rule. Section X, 17 November 2026, 3:52 PM IST, records the post-merge documentation status. Section Y, 17 November 2026, 6:24 PM IST, records the owner's confirmation that P-08 is closed. Statements above section T that say the real backups were **NOT TESTED** were true when written. Section V is the recovery status of the isolated restore. Section W is the rule for the next operator. Section X is the post-merge documentation status. Section Y is the current P-08 status. Section AA records the owner's approval on 17 November 2026 of the P-03, P-21, and P-22 limitations. Section AB records the owner's decisions on 17 November 2026 for P-04, P-12, P-14, P-18, and P-19. Those five remain open. P-15 also remains open. Sections T and V record it, and no owner decision has been made for it. Section AC, 18 November 2026, 12:01 AM IST, records the later repository alignment, the version-only history repair, and the 17 November backup. It does not close P-04, P-12, P-14, P-15, P-18, or P-19. It does not reopen P-03, P-08, P-21, or P-22. Section AD, 18 November 2026, 5:22 AM IST, records the expected `supabase_vault` 0.3.1 relation inventory and closes P-04 only. P-12, P-14, P-15, P-18, and P-19 remain open. Section AE, 18 November 2026, 6:15 AM IST, records the owner's acceptance that no additional Production repair is required on the evidence then available, and closes P-19 only. That decision supersedes the Section AB deferral for P-19. The Section AB text remains the historical record. P-12, P-14, P-15, and P-18 remain open. Section AF, 18 November 2026, 6:36 AM IST, records a later isolated rehearsal, a new inventory script, and a hardened extractor. It does not close P-12, P-14, P-15, or P-18, and it does not reopen P-03, P-04, P-08, P-19, P-21, or P-22. Section AG, 18 November 2026, 6:47 AM IST, adopts the hardened extractor as the future extraction standard and closes P-15 only. The historical tar command remains unrecovered. P-12, P-14, and P-18 remain open. Section AH, 18 November 2026, 6:53 AM IST, records the owner's acceptance of the P-12 and P-14 limitations and closes those two items only. P-15 stays closed as the future extraction standard. P-18 stays open because no Storage API credential is available. Full disaster recovery is not complete. Section AI, 18 November 2026, 7:23 AM IST, records the later read-only comparison of the four live Storage objects. `SUPABASE_SECRET_KEY` was present, and its value is not written here. The four live hashes matched Section B and the archive members reconfirmed in Section AF. That comparison closes P-18. No Storage object was uploaded, overwritten, or deleted. Section AJ, 18 November 2026, 7:50 AM IST, records two owner-accepted limitations. P-14 remains the accepted counting limitation and does not satisfy the Section H comparison. The P-11 disposable-test record is accepted as historical evidence only. That acceptance does not supply the missing extraction authorization. The database gate and the Storage gate remain not complete. Full disaster recovery remains not complete. Section AK, 18 November 2026, 8:19 AM IST, records a new read-only Production inventory, one new encrypted logical backup, an isolated restore of that backup, and a new read-only Storage listing. It does not mark either recovery gate complete. Section AL, 18 November 2026, 8:30 AM IST, records the local ciphertext recheck, the absent `tejasdrive` remote, the absent Storage archive, and fail-closed recovery guards. It does not upload a backup, extract an archive, or mark either recovery gate complete. Section AM, 18 November 2026, 8:45 AM IST, records the backup pipeline that runs only after that preflight. The pipeline was not executed against Production. It does not upload a backup, extract an archive, or mark either recovery gate complete. Section AN, 18 November 2026, 8:55 AM IST, records the runner-side rclone install and the fail-closed `tejasdrive` configuration. It does not execute a Production backup or mark either recovery gate complete. Section AO, 18 November 2026, 8:31 PM IST, records the Windows local verification. Section AP, 19 November 2026, records a later read-only Drive listing. It does not decrypt, restore, or mark either recovery gate complete. Section AQ, 19 November 2026, 10:05 PM IST, recomputes the ciphertext checksums. It does not decrypt, restore, or mark either recovery gate complete.
 
 This manual describes the verified TEJAS Olympiad Production backup set dated 15–16 November 2026. Revising this draft did not decrypt a backup, query Production, change Supabase, change GitHub, or change Google Drive. The safety-wording revision did not test the proposed checks, did not extract an archive, and did not authorize a remote database connection. Later synthetic tests are recorded in sections M, N, O, P, Q, and S. Phase 2 used disposable data under `/tmp/tejas-dr-phase2-synthetic/`. Phase 3C and Phase 3D used separate disposable directories. When this paragraph was written, the real TEJAS backup files remained **NOT TESTED**. Section T records the later checks. Read section W before running a command. Do not restore again into the database section T already filled.
 
@@ -3514,3 +3514,130 @@ The child environment for rclone does not receive the database URL, the passphra
 | Full disaster recovery | **NOT COMPLETE** |
 
 Section R is unchanged. A pinned installer does not move a gate to **RECOVERY COMPLETE**. The owner still has to place the existing rclone configuration in the Actions secret `TEJAS_RCLONE_CONFIG_B64`, without sending that value in chat, and confirm the other three backup secret names. The destination secret must be the approved directory.
+
+## AO. Windows local verification, 18 November 2026, 8:31 PM IST
+
+This section records checks on `DESKTOP-K12JQ1D`. It does not rewrite sections A through AN. No Production connection was opened. No Drive object was uploaded, renamed, replaced, or deleted. No backup workflow was dispatched. Supabase Deploy to production was not enabled. No schedule was added.
+
+Repository `main` was `c6038a6dd6a6bb3f891b647e48a668423f3c3545`, matching `origin/main`, the merge of pull request #42. The worktree had no uncommitted change before this section. Pull request #25 remained open. The eight most recent recovery workflow runs visible from this session were pull-request checks, and all succeeded. No manual backup run was in that list.
+
+Local rclone was v1.76.0. The existing `tejasdrive` remote was type `drive`, scope `drive.readonly`, and root folder ID `1O1afC89m69bKA3oOITls6CnCno7s_geR`. The duplicate folder ID was not used. `rclone lsl --max-depth 1` exited 0 for all four approved directories. The ten object names and sizes matched Section AF. Nothing else was listed.
+
+### Database file and manifest
+
+The previously downloaded `tejas-zapccpipwxduzlnvjdmy-20261117T184209Z.dump.enc` was not downloaded again. Its size remained 479,856 bytes and its SHA-256 remained `1dd023171475ebf2386918ad7be4ba9634b02dc4145f1e643b820ece148d0cd5`.
+
+The matching manifest was downloaded once. It was 1,645 bytes and SHA-256 `cdf86ab281851665f3d64a66df7a5b3025693e4f25d5844f3ac089e301587411`. Both match Section AC. The manifest names project `zapccpipwxduzlnvjdmy`, stage `post-repair`, created `20261117T184209Z`, PostgreSQL custom format, database `postgres`, server PostgreSQL 17.11, pg_dump 17.12, and encryption `openssl-enc-aes-256-cbc-pbkdf2-salt`. It records the encrypted size and SHA-256 above, plaintext 479,830 bytes, and plaintext SHA-256 `b7d804738410f77f4aedfcf9e9b5e8c2fe925792d34d32e2bd33ab7ed213446c`. It records the three Section AC migration rows and says the plaintext was not uploaded. It contains no passphrase.
+
+### Decryption attempt
+
+age v1.3.2, the pinned version, decrypted `tejas-recovery-passphrases-20261117.age` with the Section Y Windows identity. The ciphertext was 471 bytes and SHA-256 `a5a945fc2fa0cd06edeb38e981c1690d28a67be93d91584e1cc4b1da48f26f94`, matching Section Y. The decrypted record names `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` and then a 2-digit field. OpenSSL used that 2-digit field as the passphrase and exited 1 with `bad decrypt`. The following line was not a length-prefixed value for that field, so it was not tried. No further passphrase candidate was tried. The passphrase value was not printed.
+
+The OpenSSL binary on this PC is Git's OpenSSL 3.2.3. Its `enc -pbkdf2` help says the default iteration count is 10000. Section AC used OpenSSL 3.0.13. GnuPG from Git is 2.4.5. Section B records GnuPG 2.4.4 for the owner identity file. Neither identity ciphertext was decrypted. PostgreSQL is not installed, so `pg_restore` and an isolated cluster were not run. Python is not installed, so the local recovery unit tests were not run.
+
+The failed plaintext output and the decrypted custody copy were overwritten and removed. The owner's original identity file and original `recovered.txt` were not deleted. The encrypted downloads remain under `C:\TEJAS_RECOVERY_VERIFICATION`.
+
+### Storage archive
+
+`tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age` was downloaded. Its size was 555,336 bytes and its SHA-256 was `ac76e4f8895284f098e0f674d58d8a901702f7b219809a0d51f64b358d7e72c4`, matching Section B. Both identity ciphertexts matched the Section B sizes and SHA-256 values. They were not decrypted. The encryption passphrase stop also blocks the original identity file, and the owner passphrase was not separated as its own value.
+
+A pre-existing directory, `Downloads\TEJAS_STORAGE_BACKUP`, already contained the four Section B object paths. Their sizes and SHA-256 values matched Section B. That directory was not produced by decrypting the archive downloaded in this section. It is not an isolated extraction of that archive.
+
+### Pipeline review
+
+The code on `main` refuses a backup when a required secret is absent, when the destination is not the approved database directory, or when `tejasdrive` is not in the supplied configuration. rclone is pinned to v1.76.0, and the Linux zip digest is the one in Section AN. The rclone child environment drops `TEJAS_*` and `SUPABASE_*` variables. The passphrase is used in the Python seal step and is not passed to rclone. Production identity checks reject a loopback server. The upload is one `copyto`, followed by a download and SHA-256 comparison. Deletion remains refused. The workflow trigger is a pull request or a manual dispatch. It has no schedule. This review did not dispatch it.
+
+### Status after this check
+
+| Item | Status |
+| --- | --- |
+| Database ciphertext and manifest | Verified |
+| Database decryption | **BLOCKED** |
+| Isolated database restore | **NOT TESTED** |
+| Storage ciphertext | Verified |
+| Storage identity decryption | **BLOCKED** |
+| Isolated extraction of this Storage archive | **NOT TESTED** |
+| Database Gate | **NOT COMPLETE** |
+| Storage Gate | **NOT COMPLETE** |
+| Full disaster recovery | **NOT COMPLETE** |
+
+The owner can continue decryption by supplying `TEJAS_BACKUP_ENCRYPTION_PASSPHRASE` as the passphrase bytes only, in the user environment or a mode-600 file. It must not be sent in chat, and it must not be taken from the 2-digit field in the custody record. This PC also needs PostgreSQL 17.12 before an isolated restore can run. The owner passphrase is still required before the owner identity ciphertext can be decrypted if the encryption passphrase is not the one that opens the original identity file.
+
+## AP. Read-only recheck, 19 November 2026
+
+This section records a later listing on the same Windows PC. It does not rewrite sections A through AO. No archive was downloaded. No checksum was recomputed. No passphrase was read, guessed, or printed. No backup was decrypted. No database was restored. No Storage object was uploaded, renamed, replaced, or deleted. The `AGE_KEY_RECOVERY` files were not modified.
+
+`origin/main` at this check was `47833c2ba5452635626d8f871b9e59919423c8e3`, the merge of pull request #46. That merge is the PAN-holder website change. It is not a database restore and it is not a Storage restore. Pull requests #43, #25, #22, #21, and #17 remained open. Pull request #25 was not applied.
+
+### Tools
+
+| Tool | Result |
+| --- | --- |
+| rclone | v1.76.0. `rclone lsl` and `rclone lsf` exited 0. The remote remained read-only. |
+| age | v1.3.2 is installed. It was not used. |
+| psql | PostgreSQL 17.12 client only. No database server was installed. No connection was opened. |
+| pg_restore | Not installed. |
+
+### Drive listing
+
+`tejasdrive:DATABASE_BACKUPS` listed these names and sizes. The times are the listing times.
+
+| Bytes | Listed time | Name |
+| --- | --- | --- |
+| 476,816 | 2026-11-15 06:16:47 | `tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc` |
+| 479,856 | 2026-11-17 23:30:43 | `tejas-zapccpipwxduzlnvjdmy-20261117T175954Z.dump.enc` |
+| 856 | 2026-11-17 23:30:43 | `tejas-zapccpipwxduzlnvjdmy-20261117T175954Z.manifest.txt` |
+| 479,856 | 2026-11-18 00:12:57 | `tejas-zapccpipwxduzlnvjdmy-20261117T184209Z.dump.enc` |
+| 1,645 | 2026-11-18 00:12:57 | `tejas-zapccpipwxduzlnvjdmy-20261117T184209Z.manifest.txt` |
+
+`STORAGE_FILE_BACKUPS` listed `tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age` at 555,336 bytes, 2026-11-16 15:26:15. `AGE_KEY_RECOVERY` listed `tejas-storage-backup.identity.gpg` and `tejas-storage-backup.identity.owner.gpg`. `PASSPHRASE_CUSTODY` listed `tejas-recovery-passphrases-20261117.age` and `tejas-recovery-passphrases-20261117.manifest.txt`. File contents were not opened.
+
+The 479,856-byte database archive matches the size recorded in Section AO. Its SHA-256 was not recomputed in this section. The prior value remains the Section AO value. The Storage archive size matches Section B. Its SHA-256 was not recomputed in this section.
+
+### Status after this listing
+
+| Item | Status |
+| --- | --- |
+| Database archive still present at the recorded size | Verified by listing only |
+| Database checksum on 19 November | **NOT RECOMPUTED** |
+| Database decryption | **BLOCKED**. The Section AO passphrase stop still applies. |
+| Isolated database restore | **NOT TESTED**. `pg_restore` is absent and decryption is blocked. |
+| Storage archive still present at the recorded size | Verified by listing only |
+| Storage identity decryption | **BLOCKED** |
+| Isolated Storage extraction | **NOT TESTED** |
+| Database Gate | **NOT COMPLETE** |
+| Storage Gate | **NOT COMPLETE** |
+| Full disaster recovery | **NOT COMPLETE** |
+
+A matching filename and size are not a new integrity check. Decryption still needs the passphrase bytes supplied outside chat, not the 2-digit field recorded in Section AO. An isolated restore still needs `pg_restore` from PostgreSQL 17 and an empty database that is not Production.
+
+## AQ. Ciphertext checksums recomputed, 19 November 2026, 10:05 PM IST
+
+This section records a read-only `rclone v1.76.0` `hashsum SHA256` of the Drive objects. It does not rewrite sections A through AP. No object was uploaded, renamed, replaced, or deleted. No passphrase was present in the user, machine, or process environment. No archive was decrypted. `pg_restore` is still not installed. `psql` 17.12 and `age` v1.3.2 are installed and were not used on these files.
+
+The recomputed values match the manifests and the earlier recorded hashes.
+
+| Object | Bytes | Recomputed SHA-256 | Comparison |
+| --- | --- | --- | --- |
+| `tejas-zapccpipwxduzlnvjdmy-20261115T004413Z.dump.enc` | 476,816 | `49d69874bc494c2c353a903906045ece4ad37c989a69ddaf0ae7195314fcdde1` | Matches Section B. No manifest file is stored beside it. |
+| `tejas-zapccpipwxduzlnvjdmy-20261117T175954Z.dump.enc` | 479,856 | `536b6e17b42b20d1c42f487e57052f04b0b64b8e8fd2e2cb24fa53a00312b630` | Matches its manifest and Section AC. |
+| `tejas-zapccpipwxduzlnvjdmy-20261117T175954Z.manifest.txt` | 856 | `2a0d1b613c8942eac4523c74a87fff4d485d2a822d09e895568946688bfe76a3` | Matches Section AC. |
+| `tejas-zapccpipwxduzlnvjdmy-20261117T184209Z.dump.enc` | 479,856 | `1dd023171475ebf2386918ad7be4ba9634b02dc4145f1e643b820ece148d0cd5` | Matches its manifest and Section AO. |
+| `tejas-zapccpipwxduzlnvjdmy-20261117T184209Z.manifest.txt` | 1,645 | `cdf86ab281851665f3d64a66df7a5b3025693e4f25d5844f3ac089e301587411` | Matches Section AO. |
+| `tejas-storage-zapccpipwxduzlnvjdmy-20261116.tar.age` | 555,336 | `ac76e4f8895284f098e0f674d58d8a901702f7b219809a0d51f64b358d7e72c4` | Matches Section B. |
+| `tejas-storage-backup.identity.gpg` | 273 | `fd2df7cdfd3041cf33c1bce947af0b90213e449642c58b4d7de1ce1f3fb1ab5b` | Matches Section B. Not decrypted. |
+| `tejas-storage-backup.identity.owner.gpg` | 248 | `e6f86e98fb5203cf75daa7f8dfa13e6d608f1b71fe8c8f0987eb6d4c5a0945cf` | Matches Section B. Not decrypted. |
+
+The 18:42:09 UTC manifest names project `zapccpipwxduzlnvjdmy`, PostgreSQL 17.11, pg_dump 17.12, and `openssl-enc-aes-256-cbc-pbkdf2-salt`. Its encrypted size and SHA-256 are the values above. The 17:59:54 UTC manifest names the same encryption and the same tools, and its encrypted size and SHA-256 also match. Neither manifest contains a passphrase.
+
+| Item | Status |
+| --- | --- |
+| Database ciphertext integrity | Verified by recomputed SHA-256 |
+| Database decryption | **BLOCKED**. No passphrase is available in the local environment. |
+| Isolated database restore | **NOT TESTED** |
+| Storage ciphertext integrity | Verified by recomputed SHA-256 |
+| Storage identity decryption | **BLOCKED** |
+| Isolated Storage extraction | **NOT TESTED** |
+| Database Gate | **NOT COMPLETE** |
+| Storage Gate | **NOT COMPLETE** |
+| Full disaster recovery | **NOT COMPLETE** |

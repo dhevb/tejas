@@ -62,12 +62,10 @@ export type SheetParse = {
 
 export type SheetKind = "xlsx" | "xls" | "csv";
 
-const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
-
 function eligibleClassLabel(classes: readonly number[]): string {
   const min = Math.min(...classes);
   const max = Math.max(...classes);
-  return `Classes ${ROMAN[min]}–${ROMAN[max]}`;
+  return `Classes ${min}–${max}`;
 }
 
 export function detectSheetKind(filename: string, buf: Buffer): { kind: SheetKind } | { error: string } {
@@ -182,8 +180,8 @@ export function parseStudentSheet(buf: Buffer, filename: string, schoolName: str
 
   const errors = new Map<number, string[]>();
   const students: StudentRecord[] = [];
-  const seenStudents = new Map<string, number>();
-  const seenRolls = new Map<string, number>();
+  const seenStreams = new Map<string, Map<StreamId, number>>();
+  const seenRolls = new Map<string, { row: number; identity: string }>();
   const expectedSchool = normaliseSchoolName(schoolName);
   let dataRows = 0;
 
@@ -282,30 +280,39 @@ export function parseStudentSheet(buf: Buffer, filename: string, schoolName: str
       }
     }
 
-    if (name.ok && dateOfBirth) {
-      const key = `${name.value.toLowerCase()}|${dateOfBirth}`;
-      const first = seenStudents.get(key);
-      if (first) {
-        pushError(errors, rowNumber, `This student matches row ${first}.`);
-        pushError(errors, first, `This student is repeated on row ${rowNumber}.`);
-        const index = students.findIndex((student) => student.row === first);
-        if (index >= 0) students.splice(index, 1);
-      } else seenStudents.set(key, rowNumber);
+    const identity = name.ok && parent.ok && parentMobile && dateOfBirth
+      ? [name.value, dateOfBirth, parent.value, parentMobile].map((part) => part.trim().toLowerCase().replace(/\s+/g, " ")).join("|")
+      : "";
+    if (identity && streams.length) {
+      const priorStreams = seenStreams.get(identity);
+      const repeated = streams.filter((id) => priorStreams?.has(id));
+      if (repeated.length && priorStreams) {
+        const names = repeated.map((id) => streamById(id).name).join(", ");
+        const first = priorStreams.get(repeated[0]) ?? rowNumber;
+        pushError(errors, rowNumber, `${names} is already registered for this student on row ${first}. The same student in the same stream is a duplicate. Enter each different stream on its own row.`);
+      }
     }
-    if (rollNumber && classNumber !== null && section) {
+    if (identity && rollNumber && classNumber !== null && section) {
       const rollKey = `${classNumber}|${section.toLowerCase()}|${rollNumber.toLowerCase()}`;
       const first = seenRolls.get(rollKey);
-      if (first) {
-        pushError(errors, rowNumber, `Roll number ${rollNumber} is already used in this class and section on row ${first}.`);
-        pushError(errors, first, `Roll number ${rollNumber} is repeated on row ${rowNumber}.`);
-        const index = students.findIndex((student) => student.row === first);
+      if (first && first.identity !== identity) {
+        pushError(errors, rowNumber, `Roll number ${rollNumber} is already used in this class and section on row ${first.row}.`);
+        pushError(errors, first.row, `Roll number ${rollNumber} is repeated on row ${rowNumber}.`);
+        const index = students.findIndex((student) => student.row === first.row);
         if (index >= 0) students.splice(index, 1);
-      } else seenRolls.set(rollKey, rowNumber);
+      }
     }
 
     if (errors.has(rowNumber) || !name.ok || !parent.ok || !parentMobile || !parentEmail || !dateOfBirth || classNumber === null || !rollNumber) continue;
     const blocked = streams.some((id) => !classIsEligible(classNumber, streamById(id).classes));
     if (blocked || !streams.length || !section || !rowSchool.trim() || normaliseSchoolName(rowSchool) !== expectedSchool) continue;
+    if (identity) {
+      const priorStreams = seenStreams.get(identity) ?? new Map<StreamId, number>();
+      for (const id of streams) priorStreams.set(id, rowNumber);
+      seenStreams.set(identity, priorStreams);
+      const rollKey = `${classNumber}|${section.toLowerCase()}|${rollNumber.toLowerCase()}`;
+      if (!seenRolls.has(rollKey)) seenRolls.set(rollKey, { row: rowNumber, identity });
+    }
     students.push({
       row: rowNumber,
       fullName: name.value,
@@ -346,8 +353,9 @@ export function buildTemplateBuffer(): Buffer {
     ["TEJAS Olympiad 2026–27 student registration template"],
     ["Delete the example row on the Students sheet before you upload. That row is fictional and will be rejected."],
     ["Date of birth must be DD-MM-YYYY."],
-    ["Class is III–X for TEJAS English, TEJAS Mathematics, and TEJAS Future Tech. The brochure does not print a separate range for each stream."],
-    ["Streams: TEJAS English, TEJAS Mathematics, TEJAS Future Tech. Separate more than one with a comma."],
+    ["TEJAS English and TEJAS Mathematics are for Classes 3–10. TEJAS Future Tech is for Classes 6–10."],
+    ["Streams: TEJAS English, TEJAS Mathematics, TEJAS Future Tech. Separate more than one with a comma, or use a separate row for each stream."],
+    ["If a student participates in two or more TEJAS streams, enter the student's details separately for each stream in separate rows. Each stream entry will be considered a separate registration, and the registration fee will be charged separately for each stream."],
     ["Every column is compulsory, including roll number, parent mobile, and parent email."],
     ["School name in every row must match the school name on the registration form."],
     ["Do not include macros, passwords, or hidden sheets."],

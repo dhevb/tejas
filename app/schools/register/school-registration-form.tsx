@@ -320,7 +320,7 @@ export function SchoolRegistrationForm() {
         step="04 · Students"
         title="Student information and Excel/CSV upload"
         icon={FileSpreadsheet}
-        hint="Upload one sheet for this school. The existing column headings and row rules are unchanged."
+        hint="Upload one sheet for this school. A student in more than one stream needs one row for each stream."
       >
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-xl bg-tejas-ivory p-4 text-sm">
@@ -333,7 +333,7 @@ export function SchoolRegistrationForm() {
           </div>
           <div className="rounded-xl bg-tejas-ivory p-4 text-sm">
             <p className="font-semibold text-tejas-ink">Classes</p>
-            <p className="mt-1 text-tejas-muted">English and Mathematics: III–X. Future Tech: VI–X.</p>
+            <p className="mt-1 text-tejas-muted">English and Mathematics: Classes 3–10. Future Tech: Classes 6–10.</p>
           </div>
         </div>
         <div>
@@ -347,6 +347,9 @@ export function SchoolRegistrationForm() {
         <Link href="/api/register/template" className="inline-flex text-sm font-semibold text-tejas-blue underline">
           Download the Excel template
         </Link>
+        <p className="text-sm leading-relaxed text-tejas-ink">
+          If a student participates in two or more TEJAS streams, enter the student&apos;s details separately for each stream in separate rows. Each stream entry will be considered a separate registration, and the registration fee will be charged separately for each stream.
+        </p>
         <div className="rounded-xl border border-dashed border-tejas-border bg-tejas-ivory p-4">
           <label className="block text-sm">
             <span className="font-medium text-tejas-ink">Student sheet <span className="text-tejas-saffron">*</span></span>
@@ -421,9 +424,9 @@ export function SchoolRegistrationForm() {
       >
         <ul className="grid gap-3 sm:grid-cols-3">
           {[
-            ["TEJAS Mathematics", "9 December 2026", "Classes III–X"],
-            ["TEJAS English", "10 December 2026", "Classes III–X"],
-            ["TEJAS Future Tech", "11 December 2026", "Classes VI–X"],
+            ["TEJAS Mathematics", "9 December 2026", "Classes 3–10"],
+            ["TEJAS English", "10 December 2026", "Classes 3–10"],
+            ["TEJAS Future Tech", "11 December 2026", "Classes 6–10"],
           ].map(([name, date, classes]) => (
             <li key={name} className="rounded-xl border border-tejas-border bg-tejas-ivory p-4">
               <p className="font-semibold text-tejas-blue">{name}</p>

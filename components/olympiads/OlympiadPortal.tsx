@@ -6,7 +6,7 @@ import type { OlympiadPortalContent } from "@/content/types";
 import { StickySubNav } from "@/components/shared/StickySubNav";
 import { Countdown } from "@/components/shared/Countdown";
 import { formatDisplayDate } from "@/lib/format-date";
-import { REGISTRATION_CLOSES_ON } from "@/content/current-cycle";
+import { REGISTRATION_CLOSES_ON, RESULT_PAGE_SENTENCE } from "@/content/current-cycle";
 import { CertificatePreview } from "@/components/shared/CertificatePreview";
 import { ResourceCard } from "@/components/shared/ResourceCard";
 import { FAQAccordion } from "@/components/ui/accordion";
@@ -28,7 +28,6 @@ const portalNav = [
   { id: "careers", label: "Careers" },
   { id: "eligibility", label: "Eligibility" },
   { id: "pattern", label: "Exam Pattern" },
-  { id: "syllabus", label: "Syllabus" },
   { id: "samples", label: "Samples" },
   { id: "roadmap", label: "Roadmap" },
   { id: "books", label: "Books" },
@@ -76,6 +75,7 @@ export function OlympiadPortal({ olympiad }: Props) {
               </h1>
               <p className="mt-2 font-hindi text-lg text-white/70">{olympiad.name.hi}</p>
               <p className="mt-4 max-w-2xl text-white/80 leading-relaxed">{t(olympiad.description)}</p>
+              {!isComingSoon && <p className="mt-4 max-w-2xl text-sm font-semibold text-white">{RESULT_PAGE_SENTENCE}</p>}
               <div className="mt-6 flex flex-wrap gap-4 text-sm">
                 <span>{t(olympiad.grades)}</span>
                 {olympiad.partner && (
@@ -186,29 +186,6 @@ export function OlympiadPortal({ olympiad }: Props) {
               ? "This stream is not open. No examination pattern, duration, or question count has been published."
               : "The question-paper pattern, duration, and number of questions have not been published in the TEJAS Olympiad 2026–27 notes on this website. The examination date and class range above are the published schedule."}
           </p>
-        </section>
-
-        <section id="syllabus" className="scroll-mt-32 border-t border-stone-200 py-16">
-          <h2 className="text-2xl font-bold text-tejas-ink">Syllabus</h2>
-          {olympiad.syllabus.length === 0 ? (
-            <p className="mt-4 max-w-3xl text-tejas-muted">No syllabus has been published for this stream.</p>
-          ) : (
-          <div className="mt-6 grid gap-6 md:grid-cols-2">
-            {olympiad.syllabus.map((level) => (
-              <div key={level.level.en} className="rounded-2xl border border-stone-200 bg-white p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-tejas-ink">{t(level.level)}</h3>
-                  <Badge variant="outline">{t(level.classes)}</Badge>
-                </div>
-                <ul className="mt-4 space-y-2">
-                  {level.topics.map((topic) => (
-                    <li key={topic.en} className="text-sm text-tejas-muted">• {t(topic)}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          )}
         </section>
 
         {olympiad.sampleQuestions.length > 0 && (

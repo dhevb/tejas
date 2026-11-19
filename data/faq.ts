@@ -23,7 +23,7 @@ export const faqItems: FAQItem[] = [
     category: "Olympiads",
     question: "Which Olympiads are active in the current TEJAS edition?",
     answer:
-      "TEJAS Mathematics on 9 December 2026 and TEJAS English on 10 December 2026 are for Classes 3–10. TEJAS Future Tech on 11 December 2026 is for Classes 6–10. The examinations are offline, at the participating schools.",
+      "TEJAS Mathematics on 9 December 2026 and TEJAS English on 10 December 2026 are for Classes 3–10. TEJAS Future Tech on 11 December 2026 is for Classes 6–10. The examinations are offline, at the participating schools. Results to be declared on 12 January 2027.",
   },
   {
     category: "Registration",

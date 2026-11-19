@@ -18,6 +18,7 @@ function record(): RegistrationRecord {
       city: "Mohali",
       pin: "140301",
       pan: "PQRSX1234L",
+      panHolder: "school",
       panDuplicate: false,
       schoolEmail: "office@river.example",
       schoolMobile: "9812345678",
@@ -131,6 +132,7 @@ test("a database registration writes the normalised rows and can be read back", 
     assert.equal(payment.history[0]?.note, "Payment Pending");
     assert.equal(bookOrder.includes('"quantity":2'), true);
     assert.equal(bookOrder.includes('"amount":340'), true);
+    assert.equal(schoolBody.includes('"pan_holder":"school"'), true);
     assert.equal(schoolBody.includes('"representative_name":null'), true);
     assert.equal(schoolBody.includes('"representative_designation":null'), true);
     assert.equal(schoolBody.includes("Not Collected"), false);

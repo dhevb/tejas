@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { presentFee } from "@/lib/registration/fee";
+import { panHolderLabel } from "@/lib/registration/school";
 
 type Overview = {
   schools: number;
@@ -34,6 +35,7 @@ type Row = {
   paymentLabel: string;
   paymentStatus: string;
   maskedPan: string;
+  panHolderLabel: string;
   panDuplicate: boolean;
   printedBooks: number;
   ebookAccess: number;
@@ -49,6 +51,7 @@ type Detail = {
     city: string;
     pin: string;
     pan: string;
+    panHolder?: string | null;
     panDuplicate: boolean;
     principalName: string;
     principalMobile: string;
@@ -288,7 +291,8 @@ export function ReviewDashboard() {
           <thead>
             <tr className="border-b border-stone-200">
               <th className="py-2 pr-3">School</th>
-              <th className="py-2 pr-3">PAN</th>
+              <th className="py-2 pr-3">PAN number</th>
+              <th className="py-2 pr-3">PAN holder</th>
               <th className="py-2 pr-3">Students</th>
               <th className="py-2 pr-3">Gross</th>
               <th className="py-2 pr-3">School share</th>
@@ -309,6 +313,7 @@ export function ReviewDashboard() {
                   <div className="text-tejas-muted">{row.reference}</div>
                 </td>
                 <td className="py-2 pr-3">{row.maskedPan}{row.panDuplicate ? " · review" : ""}</td>
+                <td className="py-2 pr-3">{row.panHolderLabel}</td>
                 <td className="py-2 pr-3">{row.studentCount} / {row.studentStreamRegistrations}</td>
                 <td className="py-2 pr-3">{inr.format(row.grossTotal)}</td>
                 <td className="py-2 pr-3">{inr.format(row.schoolShare)}</td>
@@ -323,7 +328,7 @@ export function ReviewDashboard() {
         <section className="space-y-3 rounded-2xl border border-stone-200 bg-white p-4 text-sm">
           <h2 className="text-lg font-bold">{detail.school.schoolName}</h2>
           <p>{[detail.school.schoolAddress, detail.school.city, detail.school.district, detail.school.state, detail.school.pin].filter(Boolean).join(", ")}</p>
-          <p>PAN for this staff view: {detail.school.pan}{detail.school.panDuplicate ? " (duplicate, needs review)" : ""}</p>
+          <p>{panHolderLabel(detail.school.panHolder)}: {detail.school.pan}{detail.school.panDuplicate ? " (duplicate, needs review)" : ""}</p>
           <p>Principal: {detail.school.principalName}, {detail.school.principalMobile}, {detail.school.principalEmail}</p>
           <p>Coordinator: {detail.school.coordinatorName}, {detail.school.coordinatorMobile}, {detail.school.coordinatorEmail}</p>
           <FeeLines fee={detail.fee} books={detail.school.printedBooks === "yes" ? detail.school.bookQuantity : 0} />

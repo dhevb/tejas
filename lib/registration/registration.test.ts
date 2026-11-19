@@ -459,10 +459,11 @@ test("the authorised SBI account is published and proof upload stays closed", as
 
 const PAN = "AAACB2468H";
 
-function schoolFields(body: FormData, pan = PAN) {
+function schoolFields(body: FormData, pan = PAN, panHolder: "school" | "authorised-staff" = "school") {
   body.set("schoolName", SCHOOL);
   body.set("schoolAddress", "12 Station Road, Mohali");
   body.set("pan", pan);
+  body.set("panHolder", panHolder);
   body.set("schoolEmail", "office@river.example");
   body.set("schoolMobile", "9812345678");
   body.set("schoolCategory", "Private");
@@ -506,6 +507,27 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   });
   assert.ok(missing.errors.schoolName);
   assert.ok(missing.errors.pan);
+  assert.ok(missing.errors.panHolder);
+  const invalidPan = new FormData();
+  schoolFields(invalidPan, "ABCDE1234F");
+  const invalidPanResult = readSchoolForm(invalidPan);
+  assert.equal(invalidPanResult.value, null);
+  assert.match(invalidPanResult.errors.pan ?? "", /standard 10-character format/);
+  const missingHolder = new FormData();
+  schoolFields(missingHolder);
+  missingHolder.delete("panHolder");
+  const missingHolderResult = readSchoolForm(missingHolder);
+  assert.equal(missingHolderResult.value, null);
+  assert.match(missingHolderResult.errors.panHolder ?? "", /authorised staff member/);
+  const staffPan = new FormData();
+  schoolFields(staffPan, "BBBPC2468K", "authorised-staff");
+  const staffPanResult = readSchoolForm(staffPan);
+  assert.equal(staffPanResult.value?.pan, "BBBPC2468K");
+  assert.equal(staffPanResult.value?.panHolder, "authorised-staff");
+  const formSource = readFileSync(path.join(process.cwd(), "app/schools/register/school-registration-form.tsx"), "utf8");
+  assert.equal(formSource.includes("PAN Number (School / Authorised Staff Member)"), true);
+  assert.equal(formSource.includes("Enter the school&apos;s PAN number. If the school does not have a PAN number, enter the PAN number of the authorised staff member making the payment on behalf of the school."), true);
+  assert.equal(formSource.includes('label="School PAN"'), false);
   assert.ok(missing.errors.principalMobile);
   assert.ok(missing.errors.coordinatorMobile);
   assert.ok(missing.errors.principalEmail);
@@ -530,6 +552,7 @@ test("school fields, PAN, and Indian mobile numbers are checked", () => {
   extra.set("affiliationBoard", "CBSE");
   extra.set("affiliationNumber", "1630123");
   const cleaned = readSchoolForm(extra).value;
+  assert.equal(cleaned?.panHolder, "school");
   assert.equal(cleaned?.principalName, "Anita Verma");
   assert.equal(cleaned?.principalDesignation, "Principal");
   assert.equal(cleaned?.representativeName, null);
@@ -601,7 +624,9 @@ test("submission stores a reference, ignores a repeated post, and hides student 
   assert.equal(summary.includes("Meera"), false);
   assert.equal(summary.includes(PAN), false);
   assert.equal(record?.school.pan, PAN);
+  assert.equal(record?.school.panHolder, "school");
   assert.equal(record?.school.panDuplicate, false);
+  assert.equal(registrationsToCsv([record!], "schools", false).includes("School PAN"), true);
   const fetched = await publicGet(new Request("http://localhost"), { params: Promise.resolve({ reference: saved.registration.reference }) });
   const payload = await fetched.json() as { registration: { schoolName: string } };
   assert.equal(JSON.stringify(payload).includes("dateOfBirth"), false);
@@ -668,6 +693,28 @@ test("a second school with the same PAN is flagged, and listings mask it", async
   const csv = registrationsToCsv([record!], "schools", false);
   assert.equal(csv.includes(PAN), false);
   assert.equal(registrationsToCsv([record!], "schools", true).includes(PAN), true);
+  assert.equal(listed.includes("School PAN"), true);
+  const staffBytes = sheet([student({ fullName: "Nisha Rao", parentName: "Kiran Rao", dob: "11-03-2014", rollNumber: "11" })]);
+  const staffBody = new FormData();
+  schoolFields(staffBody, "BBBPC2468K", "authorised-staff");
+  staffBody.set("file", new File([new Uint8Array(staffBytes)], "students.xlsx"));
+  const staffResponse = await submitPost(new Request("http://localhost/api/register/submit", {
+    method: "POST",
+    body: staffBody,
+    headers: { "x-idempotency-key": "submission-key-staff-pan" },
+  }));
+  const staffSaved = (await staffResponse.json()) as { registration: { reference: string } };
+  assert.equal(staffResponse.status, 201);
+  const staffRecord = await readRegistration(staffSaved.registration.reference);
+  assert.equal(staffRecord?.school.pan, "BBBPC2468K");
+  assert.equal(staffRecord?.school.panHolder, "authorised-staff");
+  const staffCsv = registrationsToCsv([staffRecord!], "schools", true);
+  assert.equal(staffCsv.includes("Authorised Staff Member's PAN"), true);
+  assert.equal(staffCsv.includes("School PAN"), false);
+  const staffListed = JSON.stringify((await staffSnapshot()).registrations.find((row) => row.reference === staffSaved.registration.reference));
+  assert.equal(staffListed.includes("BBBPC2468K"), false);
+  assert.equal(staffListed.includes("Authorised Staff Member's PAN"), true);
+  assert.equal(staffListed.includes("School PAN"), false);
   assert.equal(registrationsToCsv([record!], "ebooks", false).includes("not activated"), true);
   const updated = await updatePayment(saved.registration.reference, "rejected", "Amount did not match the bank statement.");
   assert.equal(updated?.payment.status, "rejected");

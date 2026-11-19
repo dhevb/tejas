@@ -319,6 +319,7 @@ export async function insertRegistration(record: RegistrationRecord, files: {
       city: school.city || null,
       pin_code: school.pin || null,
       pan: school.pan,
+      pan_holder: school.panHolder ?? null,
       pan_duplicate: school.panDuplicate,
       school_email: school.schoolEmail,
       school_mobile: school.schoolMobile,

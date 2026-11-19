@@ -260,7 +260,33 @@ export function SchoolRegistrationForm() {
         <div className="grid gap-4 md:grid-cols-2">
           <Field className="md:col-span-2" label="Full registered school name" name="schoolName" error={fieldErrors.schoolName} />
           <Field className="md:col-span-2" label="Complete school address" name="schoolAddress" hint="Include the area, city, and PIN in this address." error={fieldErrors.schoolAddress} />
-          <Field label="School PAN" name="pan" hint="The school's PAN, in the standard 10-character format." error={fieldErrors.pan} />
+          <div className="md:col-span-2">
+            <label className="block text-sm">
+              <span className="font-medium text-tejas-ink">
+                PAN Number (School / Authorised Staff Member)
+                <span className="text-tejas-saffron"> *</span>
+              </span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-tejas-muted">
+                Enter the school&apos;s PAN number. If the school does not have a PAN number, enter the PAN number of the authorised staff member making the payment on behalf of the school.
+              </span>
+              <input name="pan" type="text" required autoComplete="off" className={controlClass} />
+              {fieldErrors.pan ? <span className="mt-1 block text-sm text-red-700">{fieldErrors.pan}</span> : null}
+            </label>
+            <fieldset className="mt-3">
+              <legend className="text-sm font-medium text-tejas-ink">Whose PAN number is this? <span className="text-tejas-saffron">*</span></legend>
+              <div className="mt-2 flex flex-col gap-2 text-sm text-tejas-ink">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="panHolder" value="school" required />
+                  School PAN
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="panHolder" value="authorised-staff" required />
+                  Authorised Staff Member&apos;s PAN
+                </label>
+              </div>
+              {fieldErrors.panHolder ? <span className="mt-1 block text-sm text-red-700">{fieldErrors.panHolder}</span> : null}
+            </fieldset>
+          </div>
           <label className="block text-sm">
             <span className="font-medium text-tejas-ink">School category <span className="text-tejas-saffron">*</span></span>
             <select name="schoolCategory" required className={controlClass}>

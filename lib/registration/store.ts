@@ -4,6 +4,7 @@ import path from "node:path";
 import { paymentProofsAccepted } from "@/lib/registration/durable";
 import { presentFee, type FeeBreakdown } from "@/lib/registration/fee";
 import { maskPan } from "@/lib/registration/fields";
+import { panHolderLabel } from "@/lib/registration/school";
 import type { SchoolForm } from "@/lib/registration/school";
 import { streamById } from "@/lib/registration/schema";
 import type { StudentRecord } from "@/lib/registration/sheet";
@@ -337,6 +338,7 @@ export type StaffRow = PublicSummary & {
   coordinatorEmail: string;
   principalName: string;
   maskedPan: string;
+  panHolderLabel: string;
   panDuplicate: boolean;
   createdAt: string;
   printedBooks: number;
@@ -421,6 +423,7 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       coordinatorEmail: record.school.coordinatorEmail,
       principalName: record.school.principalName,
       maskedPan: record.school.pan ? maskPan(record.school.pan) : "",
+      panHolderLabel: panHolderLabel(record.school.panHolder),
       panDuplicate: record.school.panDuplicate === true,
       createdAt: record.createdAt,
       printedBooks: books,

@@ -4,6 +4,14 @@ import { parseEmail, parseIndianMobile, parsePan, validatePersonName } from "@/l
 export const SCHOOL_CATEGORIES = ["Government", "Government-aided", "Private", "Other recognised school"] as const;
 export const PAYMENT_MODES = ["UPI", "NEFT", "IMPS", "RTGS", "Bank Transfer", "Cheque", "Other"] as const;
 export type PaymentMode = (typeof PAYMENT_MODES)[number];
+export const PAN_HOLDERS = ["school", "authorised-staff"] as const;
+export type PanHolder = (typeof PAN_HOLDERS)[number];
+
+export function panHolderLabel(holder: string | null | undefined): string {
+  if (holder === "school") return "School PAN";
+  if (holder === "authorised-staff") return "Authorised Staff Member's PAN";
+  return "PAN holder was not recorded";
+}
 
 export type SchoolForm = {
   schoolName: string;
@@ -13,6 +21,7 @@ export type SchoolForm = {
   city: string;
   pin: string;
   pan: string;
+  panHolder: PanHolder | null;
   panDuplicate: boolean;
   schoolEmail: string;
   schoolMobile: string;
@@ -44,6 +53,7 @@ export type SchoolField =
   | "city"
   | "pin"
   | "pan"
+  | "panHolder"
   | "schoolEmail"
   | "schoolMobile"
   | "affiliationBoard"
@@ -84,6 +94,8 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
   const schoolName = cleanLine(get("schoolName"), 200);
   const schoolAddress = cleanLine(get("schoolAddress"), 500);
   const pan = parsePan(get("pan"));
+  const holderRaw = get("panHolder").trim();
+  const panHolder: PanHolder | null = PAN_HOLDERS.includes(holderRaw as PanHolder) ? holderRaw as PanHolder : null;
   const schoolEmail = parseEmail(get("schoolEmail"));
   const schoolMobile = parseIndianMobile(get("schoolMobile"));
   const categoryRaw = cleanLine(get("schoolCategory"), 80);
@@ -100,7 +112,8 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
 
   if (schoolName.length < 3 || !/\p{L}/u.test(schoolName)) errors.schoolName = "Enter the full registered school name.";
   if (schoolAddress.length < 10) errors.schoolAddress = "Enter the complete school address.";
-  if (!pan) errors.pan = "Enter the school's PAN in the standard format. Dummy or blank values are not accepted.";
+  if (!pan) errors.pan = "Enter the PAN number in the standard 10-character format. Dummy or blank values are not accepted.";
+  if (!panHolder) errors.panHolder = "Say whether this PAN number belongs to the school or to the authorised staff member making the payment.";
   if (!schoolEmail) errors.schoolEmail = "Enter the school's email address.";
   if (!schoolMobile) errors.schoolMobile = "Enter the school's 10-digit contact mobile number.";
   if (!SCHOOL_CATEGORIES.includes(categoryRaw as (typeof SCHOOL_CATEGORIES)[number])) {
@@ -136,6 +149,7 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
     !principal.ok ||
     !coordinator.ok ||
     !pan ||
+    !panHolder ||
     !schoolEmail ||
     !schoolMobile ||
     !principalMobile ||
@@ -154,6 +168,7 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
       city: "",
       pin: "",
       pan,
+      panHolder,
       panDuplicate: false,
       schoolEmail,
       schoolMobile,

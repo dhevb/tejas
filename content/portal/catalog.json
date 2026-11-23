@@ -57,7 +57,7 @@
       "coverTitle": "Class 3",
       "sourceFilename": "eng-class-03-ebook.pdf",
       "sourceSha256": "3f0ef9ccd9ffe61e701beb08ae7c4e51613f35ec07ee5513b427929ad8121c5a",
-      "pageCount": 0,
+      "pageCount": 102,
       "assignedClasses": [
         3
       ],
@@ -77,7 +77,7 @@
       "coverTitle": "Class 4",
       "sourceFilename": "eng-class-04-ebook.pdf",
       "sourceSha256": "fb77293695e856a705a37f23b084afa19091d9eb21535a8309f1f341cba5dd9b",
-      "pageCount": 0,
+      "pageCount": 110,
       "assignedClasses": [
         4
       ],
@@ -97,7 +97,7 @@
       "coverTitle": "Class 5",
       "sourceFilename": "eng-class-05-ebook.pdf",
       "sourceSha256": "ed851794e4f7bb7fb26dee043558956f16427ec0274d7884a411d22db1b37a05",
-      "pageCount": 0,
+      "pageCount": 103,
       "assignedClasses": [
         5
       ],
@@ -117,7 +117,7 @@
       "coverTitle": "Class 6",
       "sourceFilename": "eng-class-06-ebook.pdf",
       "sourceSha256": "fcbe4714cf92cd245339acbe6c7c0b38c96bba763ba16c397a2381af5974b268",
-      "pageCount": 0,
+      "pageCount": 92,
       "assignedClasses": [
         6
       ],
@@ -137,7 +137,7 @@
       "coverTitle": "Class 7",
       "sourceFilename": "eng-class-07-ebook.pdf",
       "sourceSha256": "f24075e7124f2bf7ee2fa8a28195d15cf78c4ce270e23255d75afd2078996a88",
-      "pageCount": 0,
+      "pageCount": 125,
       "assignedClasses": [
         7
       ],
@@ -157,7 +157,7 @@
       "coverTitle": "Class 8",
       "sourceFilename": "eng-class-08-ebook.pdf",
       "sourceSha256": "78d7fd678c2e8f0f99205aa4ee011a7a8b90f9bf1791fb07c857a9c40d32cfe9",
-      "pageCount": 0,
+      "pageCount": 130,
       "assignedClasses": [
         8
       ],
@@ -177,7 +177,7 @@
       "coverTitle": "Class 9",
       "sourceFilename": "eng-class-09-ebook.pdf",
       "sourceSha256": "600004b4d35dbf042814a319ef18251ffd3458f664146aafe2a85182468eda68",
-      "pageCount": 0,
+      "pageCount": 134,
       "assignedClasses": [
         9
       ],
@@ -197,7 +197,7 @@
       "coverTitle": "Class 10",
       "sourceFilename": "eng-class-10-ebook.pdf",
       "sourceSha256": "4293fd8ea712c42845621c4e2bb2a40529356ad7d1f7f630b17c9d62e106e373",
-      "pageCount": 0,
+      "pageCount": 160,
       "assignedClasses": [
         10
       ],
@@ -217,7 +217,7 @@
       "coverTitle": "Class 3",
       "sourceFilename": "math-class-03-ebook.pdf",
       "sourceSha256": "4aeef0b69c204e16f7c2a446a81ac284be896c96bd79d1e7a8028bd64daf1a5a",
-      "pageCount": 0,
+      "pageCount": 89,
       "assignedClasses": [
         3
       ],
@@ -237,7 +237,7 @@
       "coverTitle": "Class 4",
       "sourceFilename": "math-class-04-ebook.pdf",
       "sourceSha256": "a13394d25a7dcdd557bc95bec52baf644d835dc93c2bc792aeac82b84123cc79",
-      "pageCount": 0,
+      "pageCount": 87,
       "assignedClasses": [
         4
       ],
@@ -257,7 +257,7 @@
       "coverTitle": "Class 5",
       "sourceFilename": "math-class-05-ebook.pdf",
       "sourceSha256": "ca9bdff5fe3c73620817e88bbd5459e8bf3bec786c16387245e7f853ed34becb",
-      "pageCount": 0,
+      "pageCount": 104,
       "assignedClasses": [
         5
       ],
@@ -277,7 +277,7 @@
       "coverTitle": "Class 6",
       "sourceFilename": "math-class-06-ebook.pdf",
       "sourceSha256": "831f9ce833a833ebce529dbc2fb33e9a789235bbf4d6dacb4f941c3a052b3ad2",
-      "pageCount": 0,
+      "pageCount": 100,
       "assignedClasses": [
         6
       ],
@@ -297,7 +297,7 @@
       "coverTitle": "Class 7",
       "sourceFilename": "math-class-07-ebook.pdf",
       "sourceSha256": "3c60d1ebb3517dac3b1db438c407d453607d785b4069799d1272846b88866ee5",
-      "pageCount": 0,
+      "pageCount": 168,
       "assignedClasses": [
         7
       ],
@@ -317,7 +317,7 @@
       "coverTitle": "Class 8",
       "sourceFilename": "math-class-08-ebook.pdf",
       "sourceSha256": "ecc5c35d056367bdd1868d54870dd1f115611edf0457eb4ef28dedba0f2b3fb0",
-      "pageCount": 0,
+      "pageCount": 139,
       "assignedClasses": [
         8
       ],
@@ -337,7 +337,7 @@
       "coverTitle": "Class 9",
       "sourceFilename": "math-class-09-ebook.pdf",
       "sourceSha256": "1375543506d305bbd0bb437821a3c31a53681f32c8d44336f076b44ba133f4d9",
-      "pageCount": 0,
+      "pageCount": 147,
       "assignedClasses": [
         9
       ],
@@ -357,7 +357,7 @@
       "coverTitle": "Class 10",
       "sourceFilename": "math-class-10-ebook.pdf",
       "sourceSha256": "d903ff8dd1dcdf9c6d7a8e37ae0e96900db9ff4f82743c4b8b6562133d542593",
-      "pageCount": 0,
+      "pageCount": 187,
       "assignedClasses": [
         10
       ],

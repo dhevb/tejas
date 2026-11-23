@@ -7,7 +7,6 @@ export const PORTAL_EBOOK_FEE_INR = 49;
 /**
  * Owner-approved ₹49 fee applies per selected stream when that stream has
  * an e-book and five mock tests for the learner's class.
- * Mathematics Class 10 mocks are still missing from the supplied pack.
  */
 export const PORTAL_FEE_APPROVED: Record<StreamId, boolean> = {
   technology: true,
@@ -134,6 +133,11 @@ export function booksForLearner(catalog: PortalCatalog, streamId: StreamId, clas
   return catalog.books.filter((book) => book.streamId === streamId && book.assignedClasses.includes(classLevel));
 }
 
+/** All catalog books — used only for the allowlisted content-QA student dashboard. */
+export function booksForContentQa(catalog: PortalCatalog): PortalBook[] {
+  return [...catalog.books];
+}
+
 export function testsForBook(catalog: PortalCatalog, bookId: string): PortalTest[] {
   return catalog.tests.filter((test) => test.bookId === bookId).sort((a, b) => a.number - b.number);
 }
@@ -221,18 +225,24 @@ export function decideAccess(input: {
   bookPublished: boolean;
   testPublished: boolean;
   paid: boolean;
+  /** Allowlisted content-QA identity: published content only; no stream/class/payment lock. */
+  contentQa?: boolean;
 }): AccessDecision {
   const book = input.catalog.books.find((item) => item.id === input.bookId);
   if (!book) return { ok: false, reason: "unknown" };
-  if (book.streamId !== input.streamId) return { ok: false, reason: "wrong_stream" };
-  if (!book.assignedClasses.includes(input.classLevel)) return { ok: false, reason: "wrong_class" };
   const test = input.testId ? input.catalog.tests.find((item) => item.id === input.testId) ?? null : null;
   if (input.testId && (!test || test.bookId !== book.id)) return { ok: false, reason: "unknown" };
+  if (test && !contentChecked(test)) return { ok: false, reason: "not_checked" };
+  const published = test ? input.bookPublished && input.testPublished : input.bookPublished;
+  if (input.contentQa) {
+    if (!published) return { ok: false, reason: "unpublished" };
+    return { ok: true, book, test };
+  }
+  if (book.streamId !== input.streamId) return { ok: false, reason: "wrong_stream" };
+  if (!book.assignedClasses.includes(input.classLevel)) return { ok: false, reason: "wrong_class" };
   if (test && (test.streamId !== input.streamId || !test.assignedClasses.includes(input.classLevel))) {
     return { ok: false, reason: test.streamId !== input.streamId ? "wrong_stream" : "wrong_class" };
   }
-  if (test && !contentChecked(test)) return { ok: false, reason: "not_checked" };
-  const published = test ? input.bookPublished && input.testPublished : input.bookPublished;
   if (!published) return { ok: false, reason: "unpublished" };
   if (!input.paid) return { ok: false, reason: "unpaid" };
   return { ok: true, book, test };

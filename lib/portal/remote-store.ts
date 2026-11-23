@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { loadCatalog } from "@/lib/portal/catalog.server";
+import { isContentQaAccount } from "@/lib/portal/content-qa";
 import {
+  booksForContentQa,
   booksForLearner,
   contentChecked,
   decideAccess,
@@ -36,6 +38,7 @@ function publicStudent(student: PortalStudent): PublicStudent {
     streamId: student.streamId,
     streamName: streamById(student.streamId).name,
     classLevel: student.classLevel,
+    contentQa: isContentQaAccount(student.email),
   };
 }
 
@@ -255,6 +258,7 @@ async function verified(studentId: string, bookId: string): Promise<boolean> {
 export async function remoteAccessFor(student: PortalStudent, bookId: string, testId?: string | null) {
   const catalog = loadCatalog();
   const publication = await remotePublicationMap();
+  const contentQa = isContentQaAccount(student.email);
   const bookPublished = publicationOf(catalog.books.find((book) => book.id === bookId)?.publicationStatus ?? "awaiting_approval", publication.books[bookId]) === "published";
   const testPublished = testId
     ? publicationOf(catalog.tests.find((test) => test.id === testId)?.publicationStatus ?? "awaiting_approval", publication.tests[testId]) === "published"
@@ -267,7 +271,8 @@ export async function remoteAccessFor(student: PortalStudent, bookId: string, te
     testId,
     bookPublished,
     testPublished,
-    paid: await verified(student.id, bookId),
+    paid: contentQa || (await verified(student.id, bookId)),
+    contentQa,
   });
 }
 
@@ -311,18 +316,25 @@ export async function remoteDashboard(student: PortalStudent) {
   const entitlements = await supabaseRest(`/rest/v1/tejas_learn_entitlements?student_id=eq.${encodeURIComponent(student.id)}&select=book_id,status,amount_inr`, { method: "GET" });
   const attempts = await supabaseRest(`/rest/v1/tejas_learn_attempts?student_id=eq.${encodeURIComponent(student.id)}&select=id,test_id,status,score,max_score,submitted_at`, { method: "GET" });
   if (entitlements.status !== 200 || attempts.status !== 200) throw new PortalUnavailable();
+  const contentQa = isContentQaAccount(student.email);
   const quote = quoteFee(catalog, student.streamId, student.classLevel);
   const entitlementRows = rows(entitlements.json);
   const attemptRows = rows(attempts.json);
-  const books = booksForLearner(catalog, student.streamId, student.classLevel).map((book) => {
+  const visibleBooks = contentQa ? booksForContentQa(catalog) : booksForLearner(catalog, student.streamId, student.classLevel);
+  const books = visibleBooks.map((book) => {
     const entitlement = entitlementRows.find((item) => item.book_id === book.id && item.status !== "superseded");
     const bookStatus = publicationOf(book.publicationStatus, publication.books[book.id]);
     const rawStatus = entitlement?.status;
-    const paymentStatus: PaymentState | "none" = rawStatus === "unpaid" || rawStatus === "reported" || rawStatus === "verified" || rawStatus === "rejected" || rawStatus === "superseded" ? rawStatus : "none";
-    const paid = paymentStatus === "verified";
+    const paymentStatus: PaymentState | "none" = contentQa
+      ? "verified"
+      : rawStatus === "unpaid" || rawStatus === "reported" || rawStatus === "verified" || rawStatus === "rejected" || rawStatus === "superseded"
+        ? rawStatus
+        : "none";
+    const paid = contentQa || paymentStatus === "verified";
     return {
       id: book.id,
       title: book.title,
+      streamName: book.streamName,
       bookNumber: book.bookNumber,
       assignedClasses: book.assignedClasses,
       publicationStatus: bookStatus,

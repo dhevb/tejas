@@ -520,6 +520,9 @@ test("the public e-book summary follows publication status and does not include 
   assert.equal(book?.published, true);
   assert.equal((book?.publishedTests ?? 0) >= 1, true);
   assert.equal(book?.classes.join(","), "6,7,8");
+  assert.equal(book?.streamName, "TEJAS Future Tech");
+  const eng = open.books.find((item) => item.id === "eng-class-05");
+  assert.equal(eng?.streamName, "TEJAS English");
   assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "awaiting_approval", reason: "Restore after the public summary check." })).ok, true);
   assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "awaiting_approval", reason: "Restore after the public summary check." })).ok, true);
 });

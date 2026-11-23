@@ -20,7 +20,7 @@ export default function ScholarshipsPage() {
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <p className="text-tejas-muted leading-relaxed">
-              Overall toppers in each class, in every stream, are listed for ₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500 each. The school with the highest student participation is recognised, and its principal receives a Certificate of Appreciation. No separate scholarship, grant, or fellowship amount has been issued.
+              Awards include cash prizes, medals and e-certificates. For each class in each stream the cash prizes are ₹3,100, ₹2,100, ₹1,500 and ten consolation prizes of ₹500. Outstanding students receive gold, silver and bronze medals. Every participant receives an e-certificate. Schools with the highest participation are recognised, and the principal receives a Certificate of Appreciation. No separate scholarship, grant, or fellowship amount is stated beyond these awards.
             </p>
           </FadeIn>
         </div>

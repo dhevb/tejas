@@ -128,6 +128,7 @@ export const footerNav = {
   ],
   support: [
     { label: "FAQ", href: "/faq" },
+    { label: "Official documents", href: "/documents" },
     { label: "Contact", href: "/contact" },
     { label: "For Schools", href: "/schools" },
     { label: "School registration", href: "/schools/register" },

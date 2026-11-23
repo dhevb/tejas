@@ -24,6 +24,8 @@ export function TejasFooter() {
             </p>
             <address className="mt-5 space-y-1 text-sm not-italic text-white/75">
               <p>{currentCycle.administeredBy.en}</p>
+              <p>{currentCycle.officeAddress}</p>
+              <p>{currentCycle.convener}, {currentCycle.convenerRole}</p>
               <p>
                 <a className="hover:text-white" href={`mailto:${currentCycle.olympiadEmail}`}>{currentCycle.olympiadEmail}</a>
               </p>

@@ -45,8 +45,10 @@ export default function ContactPage() {
                 <div className="flex gap-4">
                   <MapPin className="h-6 w-6 text-tejas-saffron shrink-0" aria-hidden />
                   <div>
-                    <h3 className="font-bold text-tejas-ink">Organisation</h3>
+                    <h3 className="font-bold text-tejas-ink">Office</h3>
                     <p className="text-tejas-muted">{currentCycle.administeredBy.en}</p>
+                    <p className="text-tejas-muted">{currentCycle.officeAddress}</p>
+                    <p className="mt-2 text-tejas-muted">{currentCycle.convener}, {currentCycle.convenerRole}</p>
                   </div>
                 </div>
               </div>

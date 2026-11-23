@@ -15,7 +15,7 @@ export default function PreparePage() {
       <PageHero
         eyebrow="Prepare"
         title="Preparation material"
-        subtitle="A syllabus, sample paper, mock test, and e-book have not been published for TEJAS Olympiad 2026–27."
+        subtitle="The invitation says mock tests and e-books are being prepared. Neither is open on this website. No syllabus or sample paper has been published."
         primaryCta={{ label: "Mock test status", href: "/prepare/mock-tests" }}
         secondaryCta={{ label: "School registration", href: "/schools/register" }}
       />
@@ -25,8 +25,9 @@ export default function PreparePage() {
             <ul className="space-y-4 text-tejas-muted leading-relaxed">
               <li>Printed preparation books are optional at ₹170 per copy. The school retains ₹34 and remits ₹136 to TEJAS.</li>
               <li>A school may participate without ordering books.</li>
-              <li>The invitation mentions an e-book at ₹49. E-book sales are closed, and no login is available. This website does not charge ₹49.</li>
-              <li>The examinations are offline at the participating schools. This page does not start a test.</li>
+              <li>The invitation says e-books will be made available through student logins at ₹49 per student. No file or login is open yet, and this website does not charge ₹49.</li>
+              <li>The invitation says the team is working towards online mock tests. This page does not start a test. The examinations are offline at the participating schools.</li>
+              <li><Link href="/documents" className="font-semibold text-tejas-blue underline">Official brochure and invitation</Link></li>
             </ul>
             <p className="mt-8 text-sm">
               <Link href="/olympiads" className="font-semibold text-tejas-saffron hover:underline">View the three active streams</Link>

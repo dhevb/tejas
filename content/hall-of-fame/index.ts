@@ -19,11 +19,6 @@ export const hallOfFameRegistry: HallOfFameFullEntry[] = [
   { id: "eng-e-2", name: "Gurleen Kaur", rank: 2, category: "national", olympiad: { en: "English", hi: "अंग्रेज़ी" }, school: "Sharda Sarvhitkari School, Chandigarh", year: 2025, achievement: { en: "Overall 2nd — Level E", hi: "समग्र द्वितीय — स्तर E" }, level: { en: "Level E", hi: "स्तर E" } },
   { id: "eng-e-3", name: "Avanti Srivastava", rank: 3, category: "national", olympiad: { en: "English", hi: "अंग्रेज़ी" }, school: "Kundan International School, Chandigarh", year: 2025, achievement: { en: "Overall 3rd — Level E", hi: "समग्र तृतीय — स्तर E" }, level: { en: "Level E", hi: "स्तर E" } },
   // School Excellence
-  { id: "sch-wisdom", name: "Wisdom World School", rank: 1, category: "school", olympiad: { en: "English", hi: "अंग्रेज़ी" }, school: "Wisdom World School, Kurukshetra", state: "Haryana", year: 2025, achievement: { en: "Most Overall Winners — 6 medals", hi: "सर्वाधिक समग्र विजeta" } },
-  { id: "sch-kundan", name: "Kundan International School", rank: 2, category: "school", olympiad: { en: "English", hi: "अंग्रेज़ी" }, school: "Kundan International School, Chandigarh", state: "Chandigarh", year: 2025, achievement: { en: "School of Excellence — Multiple level toppers", hi: "उत्कृष्टता विद्यालय" } },
-  { id: "sch-sharda", name: "Sharda Sarvhitkari Model Sr. Sec. School", rank: 3, category: "school", olympiad: { en: "English", hi: "अंग्रेज़ी" }, school: "Sharda Sarvhitkari School, Chandigarh", state: "Chandigarh", year: 2025, achievement: { en: "School Excellence — All 5 levels represented", hi: "सभी 5 स्तरों में प्रतिनिधित्व" } },
-  { id: "sch-angels", name: "Angels World School", rank: 4, category: "school", olympiad: { en: "English", hi: "अंग्रेज़ी" }, school: "Angels World School, Morinda", state: "Punjab", year: 2025, achievement: { en: "School Excellence — Level B champions", hi: "स्तर B चैंपियन" } },
-  { id: "sch-svm", name: "St. Vivekanand Millennium School", rank: 5, category: "school", olympiad: { en: "English", hi: "अंग्रेज़ी" }, school: "St. Vivekanand Millennium School, Pinjore", state: "Haryana", year: 2025, achievement: { en: "School Excellence — Level A champion", hi: "स्तर A चैंपियन" } },
 ];
 
 export const hallOfFameCategories = [

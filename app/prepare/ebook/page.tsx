@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const metadata = createMetadata({
   title: "E-book access",
-  description: "E-book files and student logins are not available for TEJAS Olympiad 2026–27.",
+  description: "The invitation sets an e-book student login fee of ₹49. No e-book file or login is open yet.",
   path: "/prepare/ebook",
 });
 
@@ -13,8 +13,8 @@ export default function EbookPage() {
     <>
       <PageHero
         eyebrow="E-book"
-        title="E-book access is not available"
-        subtitle="No e-book file is published, and no student login is created. The registration form does not charge the ₹49 e-book fee."
+        title="E-book access is not open yet"
+        subtitle="The invitation says e-books will be made available on this website through individual student logins, at ₹49 per student. No file or login is open, and the registration form does not charge ₹49."
       />
       <section className="py-12">
         <div className="mx-auto max-w-3xl space-y-4 px-4 text-sm text-tejas-ink sm:px-6">

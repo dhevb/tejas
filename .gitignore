@@ -13,3 +13,8 @@ next-env.d.ts
 /data/idempotency.json
 /data/payment-config.json
 __pycache__/
+supabase/.temp/
+*.obj
+*.tejas1
+*.pgpass
+tejas-*-pass-*.bin

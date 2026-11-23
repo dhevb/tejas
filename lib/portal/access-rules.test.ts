@@ -49,6 +49,33 @@ test("five mock tests per paid stream and unpaid stream access stays closed", ()
   assert.equal(paid.ok, true);
 
   assert.equal(calculateEbookPurchase(2).mockTestsIncluded, 10);
+
+  const math10 = quoteFee(catalog, "mathematics", 10);
+  assert.equal(math10.status, "payable");
+  if (math10.status === "payable") {
+    assert.equal(math10.includedMockTests, 5);
+    assert.equal(testsForBook(catalog, math10.bookId).length, 5);
+    const unpaidMath = decideAccess({
+      catalog,
+      streamId: "mathematics",
+      classLevel: 10,
+      bookId: math10.bookId,
+      bookPublished: true,
+      testPublished: true,
+      paid: false,
+    });
+    assert.equal(unpaidMath.ok, false);
+    const paidMath = decideAccess({
+      catalog,
+      streamId: "mathematics",
+      classLevel: 10,
+      bookId: math10.bookId,
+      bookPublished: true,
+      testPublished: true,
+      paid: true,
+    });
+    assert.equal(paidMath.ok, true);
+  }
 });
 
 test("no printed-book workflow remains in fee helpers for the current release", async () => {

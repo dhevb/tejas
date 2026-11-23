@@ -30,8 +30,7 @@ export default function EbookPage() {
             Two streams = ₹98. Three streams = ₹147. The server calculates the fee from the selected streams; the browser amount is not trusted.
           </p>
           <p>
-            English and Mathematics class e-books are staged from the owner-supplied pack. Future Tech Books 1 and 2 remain available for their class groups.
-            Mathematics Class 10 mock tests were not included in the supplied pack, so that class stays closed until the five mocks arrive.
+            English and Mathematics class e-books, including Class 10 Mathematics mock tests, are staged from the owner-supplied pack. Future Tech Books 1 and 2 remain available for their class groups.
           </p>
           <p>School Olympiad registration is separate and does not charge this e-book fee.</p>
           <div className="flex flex-wrap gap-4">

@@ -56,7 +56,8 @@ test("the catalog keeps Future Tech extracts and owner-supplied English/Mathemat
   assert.equal(catalog.books.some((book) => book.id === "ft-book-2"), true);
   assert.equal(catalog.books.some((book) => book.id === "eng-class-05"), true);
   assert.equal(catalog.books.some((book) => book.id === "mat-class-09"), true);
-  assert.equal(catalog.books.some((book) => book.id === "mat-class-10" && book.mappingStatus === "mocks_missing"), true);
+  assert.equal(catalog.books.some((book) => book.id === "mat-class-10" && book.mappingStatus === "extracted"), true);
+  assert.equal(catalog.tests.filter((item) => item.bookId === "mat-class-10").length, 5);
   const ftTests = catalog.tests.filter((item) => item.streamId === "technology");
   assert.equal(ftTests.length, 10);
   assert.equal(ftTests.reduce((sum, item) => sum + item.questionCount, 0), 250);
@@ -73,7 +74,7 @@ test("the catalog keeps Future Tech extracts and owner-supplied English/Mathemat
   }
   const first = ftTests[0];
   assert.equal(first.questions.map((question) => question.correct).join(""), "CADCBCABADADABADBCBDBACDC");
-  assert.equal(catalog.flags.some((flag) => flag.code === "missing-mocks"), true);
+  assert.equal(catalog.flags.some((flag) => flag.code === "missing-mocks"), false);
   assert.equal(EBOOK_SALE_OPEN, true);
 });
 
@@ -100,8 +101,12 @@ test("class lists follow the stream and the fee stays with one book", () => {
   assert.equal(class9.status, "payable");
   if (class9.status === "payable") assert.equal(class9.bookId, "ft-book-2");
   assert.equal(quoteFee(catalog, "english", 5).status, "payable");
-  assert.equal(quoteFee(catalog, "mathematics", 10).status, "fee_not_approved");
+  assert.equal(quoteFee(catalog, "mathematics", 10).status, "payable");
+  if (quoteFee(catalog, "mathematics", 10).status === "payable") {
+    assert.equal(quoteFee(catalog, "mathematics", 10).includedMockTests, 5);
+  }
   assert.equal(quoteFee(catalog, "mathematics", 5).status, "payable");
+  assert.deepEqual(booksForLearner(catalog, "mathematics", 10).map((book) => book.id), ["mat-class-10"]);
   const denied = decideAccess({
     catalog,
     streamId: "technology",

@@ -37,7 +37,7 @@ export default function LearnHomePage() {
             <h2 className="text-lg font-bold text-tejas-blue">Publication</h2>
             <div className="mt-2 text-sm leading-relaxed text-tejas-muted">
               <PublicationStatus />
-              <p className="mt-3">English and Mathematics class e-books are available where five mock tests exist for that class. Mathematics Class 10 mocks are still outstanding.</p>
+              <p className="mt-3">English, Mathematics (Classes 3–10) and Future Tech e-books are available with five mock tests per purchased stream after payment verification.</p>
             </div>
           </article>
         </div>

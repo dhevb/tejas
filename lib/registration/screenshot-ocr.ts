@@ -156,6 +156,46 @@ export function parsePaymentScreenshotText(text: string): Omit<ScreenshotOcrResu
   return { utr, beneficiary, amountInr, paymentStatus, confidence };
 }
 
+export type TesseractRuntime = {
+  available: boolean;
+  version: string | null;
+  languages: string[];
+  detail: string;
+};
+
+/** Probe whether the host can run tesseract for real payment screenshots. */
+export function probeTesseractRuntime(): TesseractRuntime {
+  try {
+    const version = spawnSync("tesseract", ["--version"], { encoding: "utf8", timeout: 5_000 });
+    if (version.status !== 0) {
+      return { available: false, version: null, languages: [], detail: "tesseract --version failed or is not installed." };
+    }
+    const versionText = `${version.stdout || ""}\n${version.stderr || ""}`.trim();
+    const langs = spawnSync("tesseract", ["--list-langs"], { encoding: "utf8", timeout: 5_000 });
+    const languageLines = `${langs.stdout || ""}`
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.toLowerCase().includes("list of available languages"));
+    const hasEng = languageLines.some((line) => line === "eng" || line.startsWith("eng"));
+    if (!hasEng) {
+      return {
+        available: false,
+        version: versionText.split(/\r?\n/)[0] ?? null,
+        languages: languageLines,
+        detail: "tesseract is present but the eng language data is missing.",
+      };
+    }
+    return {
+      available: true,
+      version: versionText.split(/\r?\n/)[0] ?? null,
+      languages: languageLines,
+      detail: "tesseract is available with eng language data.",
+    };
+  } catch {
+    return { available: false, version: null, languages: [], detail: "tesseract executable was not found on PATH." };
+  }
+}
+
 function readTesseractText(bytes: Buffer): string | null {
   const result = spawnSync("tesseract", ["stdin", "stdout", "--psm", "6"], {
     input: bytes,

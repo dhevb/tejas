@@ -1,7 +1,8 @@
 # TEJAS — PR #25 / PR #13 owner-decision implementation report
 
 Branch: `feature/pr25-pr13-ebook-payment-ocr`  
-Base: `origin/main` @ `fa1b15e`  
+Review PR: https://github.com/dhevb/tejas/pull/56  
+Base: `origin/main`  
 Original PRs kept open and unmerged: #25, #13  
 Production: unchanged (no deploy, no Production migration)
 
@@ -14,85 +15,104 @@ Production: unchanged (no deploy, no Production migration)
 | Printed books | Removed from current-release UX/pricing; historical rows preserved |
 | E-book + mocks | ₹49 per selected stream = 1 e-book + 5 mocks |
 | Payment proof | Screenshot + entered UTR mandatory; OCR auto-approve when all checks pass |
-| Bank confirmation | Explicitly labelled screenshot OCR match — not bank-statement confirmation |
+| Bank confirmation | Explicitly labelled screenshot OCR match — **not** bank-statement confirmation |
 | Production DB | Migration file prepared only; not applied |
 
-## 2. Old vs new payment flows
+## 2. Class 10 Mathematics booklet
 
-### Before
-- School registration remits ₹120 / stream; payment proof uploaded → status `reported` until staff confirms.
-- Learn portal e-book payment reported by UTR text; staff verifies.
-- Printed-book extras existed in fee helpers / messaging.
-- English/Mathematics portal fees closed (`PORTAL_FEE_APPROVED=false`).
-
-### After
-- School + individual registration use screenshot OCR auto-approval when UTR, beneficiary, amount, success status, confidence, and UTR uniqueness all pass; otherwise exception/`reported`.
-- E-book purchase remains ₹49/stream server-side via `calculateEbookPurchase` / portal `quoteFee`.
-- Printed-book request extras are ignored (`PRINTED_BOOKS_AVAILABLE=false`).
-- English/Mathematics content staged; payable only when exactly five mocks exist for that class.
-
-## 3. Fee examples
-
-| Case | Amount due to TEJAS |
+| Field | Value |
 |---|---|
-| School, 1 stream | ₹120 (of ₹150; school keeps ₹30) |
-| School, 3 streams | ₹360 |
+| Owner path | `C:\Users\Admin\Downloads\TEJAS Mathematics – Class 10.docx` |
+| Portal filename | `content/portal/sources/math-class-10-mocks.docx` |
+| Size | 57,988 bytes |
+| SHA-256 | `3ccb324af04cede26e6f511caaeb1ffb240e4ccf93489b4960a5bac8c1d3c3bb` |
+| Subject / class | TEJAS Mathematics Olympiad 2026–27 · CLASS 10 |
+| Mock headers | Mock Test 1–5 present |
+| Answer keys | Answer Key Class 10 Mock Test 1–5 present |
+| Extracted tests | 5 × 25 questions, answer keys available |
+| English / other-class markers | None found |
+| Purchase enabled | **Yes** — `quoteFee(mathematics, 10) === payable` |
+
+## 3. Stream-wise E-book / Mock Test mapping
+
+| Stream | Classes / books | Mocks per book | Purchase |
+|---|---|---|---|
+| English | Classes 3–10 (`eng-class-XX`) | 5 | Enabled |
+| Mathematics | Classes 3–10 (`mat-class-XX`) | 5 | Enabled (Class 10 now included) |
+| Future Tech | Book 1 (6–8), Book 2 (9–10) | 5 each | Enabled |
+
+Catalog totals after Class 10 Math ingest: **18 books**, **90 mock tests**.
+
+Fee examples (server-side only):
+
+| Case | Amount due |
+|---|---|
+| School, 1 stream | ₹120 |
 | Individual, 1 stream | ₹150 |
-| Individual, 2 streams | ₹300 |
-| E-book, 1 stream | ₹49 (1 book + 5 mocks) |
-| E-book, 2 streams | ₹98 (2 books + 10 mocks) |
-| E-book, 3 streams | ₹147 (3 books + 15 mocks) |
+| E-book, 1 / 2 / 3 streams | ₹49 / ₹98 / ₹147 |
 
-## 4. Beneficiary matching
+## 4. OCR / Tesseract runtime verification
 
-Official name for e-book matching allowlist:
+| Check | Result |
+|---|---|
+| `tesseract` on PATH (this Windows agent host) | **Not installed / not found** |
+| `probeTesseractRuntime()` | `available: false` — executable not found |
+| Fixture PNG UTR extraction | Passes without tesseract |
+| Payment text parser (UTR/beneficiary/amount/status) | Passes |
+| Real screenshot OCR on this host | **Not possible until tesseract + eng data are installed** |
+| Production readiness claim | **Not claimed** — runtime dependency remains a blocker for live screenshot OCR |
 
-`Vidya Bharti Institute of Training and Research Trust`
+Safe failure behaviour when OCR cannot read a screenshot: confidence `low` → exception / pending status → no auto-approval.
 
-Also accepted (normalised): Trust omitted, short truncations, and published `V.B. EDUCATIONAL TRUST`.  
-Registration channel matches published `TEJAS OLYMPIAD`.  
-No unrestricted fuzzy match. Ambiguous/unrelated names → exception.
+School registration (`/api/register/[reference]/payment`) and e-book pay (`/api/learn/pay`) both require screenshot + UTR and use `decideScreenshotPayment` (no mandatory bank-lookup gate).
 
-Published bank account numbers / IFSC were not changed.
+## 5. Payment verification policy status
 
-## 5. Content availability
+Implemented:
 
-Owner pack: `C:\Users\Admin\Downloads\drive-download-20261123T081458Z-1-001`
+- Entered UTR vs OCR UTR exact match after normalisation
+- Beneficiary allowlist for `Vidya Bharti Institute of Training and Research Trust` (+ verified truncations / published `V.B. EDUCATIONAL TRUST`) and registration `TEJAS OLYMPIAD`
+- Amount match against server-calculated due amount
+- Successful payment status required
+- Atomic UTR claim across school / individual / ebook channels
+- Transparent labelling: screenshot OCR match, not bank-verified
 
-- Large Mathematics PDFs compressed (rasterized where needed) into `content/portal/sources/`.
-- English Classes 3–10 ebooks + 5 mocks each: extracted into catalog.
-- Mathematics Classes 3–9 ebooks + 5 mocks each: extracted.
-- Future Tech Book 1/2 ebooks + 5 mocks: present (existing + refreshed sources).
-- **BLOCKER:** Mathematics Class 10 mock booklet missing from the pack (`TEJAS Mathematics – Class 10.docx` absent). Class 10 Mathematics purchase stays closed.
+## 6. Security review findings
 
-Catalog: 18 books, 85 mock tests after merge.
+| Area | Status |
+|---|---|
+| Server-side fee calculation | Enforced (`calculateFee`, `calculateIndividualRegistration`, `calculateEbookPurchase`, `quoteFee`) |
+| UTR uniqueness / race | Filesystem `O_EXCL` claims; DB migration prepared for Production later |
+| Paid-stream-only access | `decideAccess` enforces stream/class/paid/publication |
+| Cross-student leakage | Book/test file routes require session + entitlement checks (existing portal model) |
+| Upload validation | MIME/signature + 5 MB limit; JPG/PNG for OCR path |
+| Secrets in logs | No account secrets logged; payment routes log status only |
+| Printed-book historical rows | Not deleted; new printed-book extras ignored |
+| Learn pay previously UTR-only | **Fixed in this follow-up** — now requires screenshot + UTR with OCR auto-approve |
 
-## 6. Migration impact (unapplied)
+## 7. Test / TypeScript / lint / build
 
-File: `supabase/migrations/20261123_payment_utr_registry_and_ocr.sql`
+Recorded on the follow-up commit (see section 8):
 
-- Creates `tejas_payment_utrs` (atomic UTR registry for school / individual / ebook).
-- Adds OCR/approval columns on `tejas_payments`.
-- Does not delete historical book-order or payment rows.
-- **Must not be applied to Production until owner authorises.**
+- `npm test`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
 
-Local durable path already uses filesystem O_EXCL UTR claims for development/tests.
+## 8. Commit / PR status
 
-## 7. Security notes covered by tests
+- Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
+- Tip commit after Class 10 Math follow-up: *(filled after push)*
+- PR #25 / #13: remain OPEN, unmerged
 
-- Exact UTR match / mismatch / missing
-- Duplicate UTR across channels
-- Concurrent duplicate UTR race (one winner)
-- Beneficiary full / truncated / Trust omitted / ambiguous / unrelated
-- Low OCR confidence, wrong amount, pending/failed status
-- Successful auto-approve labelled as screenshot OCR (not bank-verified)
-- Printed-book extras ignored
+## 9. Production / migration
 
-## 8. Remaining blockers / owner decisions
+- Production deploy: **not performed**
+- Production migration apply: **not performed**
+- Review-only file: `supabase/migrations/20261123_payment_utr_registry_and_ocr.sql`
 
-1. Supply Mathematics Class 10 five-mock booklet, then re-run `scripts/extract_subject_mocks.py`.
-2. Owner review + authorise Production migration apply (separate from this PR).
-3. Tesseract must be available on the runtime host for real screenshot OCR (fixture PNG path covered in tests without tesseract).
-4. Staff console still shows historical printed-book fields for old records; new orders are not offered.
-5. Original PR #25 still required a bank lookup for auto-approve; this implementation follows the newer owner policy (screenshot-only auto-approve). Confirm that supersedes PR #25’s bank-lookup gate.
-6. Do not merge original PR #25 / #13 as-is (conflicting bases; printed-book surfaces).
+## 10. Remaining blockers
+
+1. **Install Tesseract OCR + `eng` traineddata** on the runtime that will process live payment screenshots (local agent currently lacks it). Until then, real screenshots fail closed to pending/exception; fixture/parser paths still work.
+2. Owner review of PR #56 before any merge/deploy.
+3. Separate owner authorisation required before applying the UTR-registry migration to Production.

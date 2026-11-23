@@ -164,7 +164,7 @@ Implemented:
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit: *(filled after push)*
+- Tip commit: `f8b6d3a84de798b70668fb02183041e867f3f988`
 - Pre-merge safety audit: `docs/PR56-PRE-MERGE-PRODUCTION-SAFETY-AUDIT.md` — verdict **SAFE TO MERGE WITH CONDITIONS**
 - PR #25 / #13: remain OPEN, unmerged
 - Production: **unchanged**

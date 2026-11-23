@@ -5,7 +5,7 @@
 | Audit date | 23 November 2026 (IST) — **re-audit after UTR filesystem fix** |
 | PR | https://github.com/dhevb/tejas/pull/56 |
 | Base (`main`) | `fa1b15e62900d12d1832dcb19b88c67ef1a9935f` |
-| Head (feature) | *(see tip after push; audit authored against post-fix working tree)* |
+| Head (feature) | `f8b6d3a84de798b70668fb02183041e867f3f988` |
 | Mode | Code + config inspection; **no** merge, Production deploy, or migration apply |
 | Prior verdict | **DO NOT MERGE** (filesystem `claimUtr` on read-only Vercel FS) |
 | This verdict | **SAFE TO MERGE WITH CONDITIONS** |

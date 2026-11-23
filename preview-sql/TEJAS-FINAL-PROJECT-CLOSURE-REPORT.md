@@ -220,7 +220,7 @@ Recovery archives, secrets, Auth reader, isolated project: **untouched**.
 | Path | `preview-sql/TEJAS-FINAL-PROJECT-CLOSURE-REPORT.md` |
 | Branch | `docs/final-project-closure-20261123` |
 | Draft PR | https://github.com/dhevb/tejas/pull/53 |
-| Tip SHA | *filled after this correction push* |
+| Tip SHA | 0faf1d7b5c58e78619e33e8337d762c76084d4ad |
 
 ---
 

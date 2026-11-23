@@ -13,8 +13,8 @@
       "title": "Understanding IoT and IoT with Arduino",
       "coverTitle": "IoT using Arduino",
       "sourceFilename": "ft-book-1-ebook.pdf",
-      "sourceSha256": "620c948f80f10b27e2261081a461ad22cb570a9d582b59d66589296cb45251ac",
-      "pageCount": 58,
+      "sourceSha256": "e473822327b151d141e5da3a7c413b4eaffa66159666ca1ad84de800c3ea2e6e",
+      "pageCount": 60,
       "assignedClasses": [
         6,
         7,
@@ -35,7 +35,7 @@
       "title": "IoT with ESP32 and IoT with Raspberry Pi",
       "coverTitle": "IoT using ESP32 & Raspberry Pi",
       "sourceFilename": "ft-book-2-ebook.pdf",
-      "sourceSha256": "94bf52831f1ab4ebe02c0f11409309f09948bcf957bd6988f891917447b99503",
+      "sourceSha256": "b1ddb15acda75c315720f22b191038927e49b94196fc425619183b0748fc538f",
       "pageCount": 67,
       "assignedClasses": [
         9,

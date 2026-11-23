@@ -92,17 +92,18 @@ Implemented:
 
 ## 7. Test / TypeScript / lint / build
 
-Recorded on the follow-up commit (see section 8):
+Recorded on tip `28c95664334b0dbe0a9879a14c539982fd7cc533`:
 
-- `npm test`
-- `npx tsc --noEmit`
-- `npm run lint`
-- `npm run build`
+- `npm test` — **79/79 pass** (includes payment-rules, OCR runtime, access-rules)
+- `npx tsc --noEmit` — pass
+- `npm run lint` — pass (existing `<img>` warnings only)
+- `npm run build` — pass
 
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit after Class 10 Math follow-up: 9fb5d79039603e97b0f30e94b5922b09cd163b2c
+- Tip commit after Class 10 Math follow-up: `28c95664334b0dbe0a9879a14c539982fd7cc533`
+- Feature commit: `9fb5d79039603e97b0f30e94b5922b09cd163b2c`
 - PR #25 / #13: remain OPEN, unmerged
 
 ## 9. Production / migration

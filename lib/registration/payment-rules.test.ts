@@ -1,7 +1,4 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import test from "node:test";
 import { matchBeneficiary, normaliseBeneficiary, OFFICIAL_BENEFICIARY_FULL } from "@/lib/registration/beneficiary-match";
 import {
@@ -17,7 +14,14 @@ import {
 } from "@/lib/registration/fee";
 import { decideScreenshotPayment, utrsMatch } from "@/lib/registration/payment-decision";
 import { parsePaymentScreenshotText, renderUtrPng, extractUtr } from "@/lib/registration/screenshot-ocr";
-import { claimUtr, releaseUtr, utrKey, utrOwner } from "@/lib/registration/utr-claim";
+import {
+  claimUtr,
+  createMemoryUtrClaimBackend,
+  installUtrClaimTestBackend,
+  releaseUtr,
+  utrKey,
+  utrOwner,
+} from "@/lib/registration/utr-claim";
 
 test("school registration fee is ₹150 with ₹30 school share and ₹120 to TEJAS", () => {
   assert.equal(FEE_TOTAL, 150);
@@ -231,8 +235,7 @@ test("successful screenshot with all conditions is auto-approved without bank-ve
 });
 
 test("duplicate UTR across channels is rejected", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "tejas-utr-"));
-  process.env.TEJAS_DATA_DIR = root;
+  installUtrClaimTestBackend(createMemoryUtrClaimBackend());
   try {
     const first = await claimUtr("AXISCN555555", "school-registration", utrOwner("school-registration", "REF-A"));
     assert.equal(first.ok, true);
@@ -241,14 +244,12 @@ test("duplicate UTR across channels is rejected", async () => {
     if (!second.ok) assert.equal(second.error, "duplicate");
     await releaseUtr("AXISCN555555", utrOwner("school-registration", "REF-A"));
   } finally {
-    delete process.env.TEJAS_DATA_DIR;
-    await rm(root, { recursive: true, force: true });
+    installUtrClaimTestBackend(null);
   }
 });
 
 test("concurrent duplicate UTR submissions: only one claim wins", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "tejas-utr-race-"));
-  process.env.TEJAS_DATA_DIR = root;
+  installUtrClaimTestBackend(createMemoryUtrClaimBackend());
   try {
     const utr = "RACEUTR123456";
     const results = await Promise.all([
@@ -262,8 +263,7 @@ test("concurrent duplicate UTR submissions: only one claim wins", async () => {
     assert.equal(losses.length, 2);
     assert.equal(utrKey(utr), "RACEUTR123456");
   } finally {
-    delete process.env.TEJAS_DATA_DIR;
-    await rm(root, { recursive: true, force: true });
+    installUtrClaimTestBackend(null);
   }
 });
 

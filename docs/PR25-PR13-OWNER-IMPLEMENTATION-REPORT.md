@@ -146,7 +146,7 @@ Implemented:
 | Area | Status |
 |---|---|
 | Server-side fee calculation | Enforced |
-| UTR uniqueness / race | Filesystem `O_EXCL` claims; DB migration prepared for Production later |
+| UTR uniqueness / race | **Supabase `tejas_payment_utrs` PK insert** (no app filesystem). Missing table → fail-closed, no auto-approve. Migration still unapplied. |
 | Paid-stream-only access | `decideAccess` enforces stream/class/paid/publication |
 | Upload validation | MIME/signature + 5 MB; JPG/PNG for OCR |
 | Command injection | Bytes-only OCR |
@@ -157,15 +157,15 @@ Implemented:
 
 ## 7. Test / TypeScript / lint / build
 
-- Local: OCR runtime tests + probe Production-disable test pass; prior suite green
-- Preview build: Next.js 15.5.20 build succeeded; `/api/register/ocr-probe` present as Node function
-- Preview acceptance: 2 automatic + 6 exception cases as tabulated above
+- Local after UTR fix: `npm test` **94/94**, `tsc`, lint, build — pass
+- Includes `utr-claim.test.ts` (atomic claim, duplicate, concurrent, missing schema, unavailable, OCR gated)
+- Preview OCR acceptance (earlier): serverless tesseract.js + tessdata verified via probe
 
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit: `6cbe58a7a934db0fd5d44bf507f4aa7bee0bd31e`
-- Key commits: `ef83dc7` (tesseract.js + eng data), `963acf6` (preview OCR probe), `cfd807f` (WASM tracing + 45s timeout)
+- Tip commit: *(filled after push)*
+- Pre-merge safety audit: `docs/PR56-PRE-MERGE-PRODUCTION-SAFETY-AUDIT.md` — verdict **SAFE TO MERGE WITH CONDITIONS**
 - PR #25 / #13: remain OPEN, unmerged
 - Production: **unchanged**
 
@@ -173,12 +173,12 @@ Implemented:
 
 - Production deploy: **not performed**
 - Production migration apply: **not performed**
-- Review-only file: `supabase/migrations/20261123_payment_utr_registry_and_ocr.sql`
+- Review-only file: `supabase/migrations/20261123_payment_utr_registry_and_ocr.sql` (includes `service_role` grants)
 
 ## 10. Remaining owner-only steps
 
-1. **Owner review of PR #56** — Preview serverless OCR acceptance is complete; ready for final merge decision.
-2. After merge, **Production deploy** is a separate owner action (do not promote Preview casually without reviewing env).
-3. Separate owner authorisation before applying the UTR-registry migration to Production.
-4. Optionally remove or further lock down `/api/register/ocr-probe` after acceptance (already 404 on Production).
-5. Optional: end-to-end Preview payment with an isolated non-Production Supabase project (not done here to avoid shared Production credentials).
+1. Review `docs/PR56-PRE-MERGE-PRODUCTION-SAFETY-AUDIT.md` and decide merge under stated conditions.
+2. **Accept that merge to `main` auto-deploys Production** (Vercel `productionBranch: main`).
+3. After merge/deploy, **automatic** screenshot approval stays gated until the UTR registry migration is owner-applied.
+4. Separate owner authorisation to apply `20261123_payment_utr_registry_and_ocr.sql` when uniqueness + auto-approve are required.
+5. Optional: remove/lock down `/api/register/ocr-probe` after acceptance (already 404 on Production).

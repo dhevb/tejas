@@ -551,16 +551,20 @@ export async function reportPaymentWithScreenshot(
   const { extractPaymentScreenshotAsync } = await import("@/lib/registration/screenshot-ocr");
   const { decideScreenshotPayment } = await import("@/lib/registration/payment-decision");
 
+  const { utrRegistryUnavailableMessage } = await import("@/lib/registration/utr-claim");
   const owner = utrOwner("ebook", `${studentId}:${quote.bookId}`);
   const claimed = await claimUtr(reference, "ebook", owner);
-  if (!claimed.ok) {
-    if (claimed.error === "duplicate") return { ok: false, error: "This UTR is already used for another payment." };
-    return { ok: false, error: "The UTR could not be reserved. Try again." };
+  if (!claimed.ok && claimed.error === "duplicate") {
+    return { ok: false, error: "This UTR is already used for another payment." };
   }
+  if (!claimed.ok && claimed.error === "invalid") {
+    return { ok: false, error: "Enter a valid UTR / transaction reference." };
+  }
+  const uniquenessOk = claimed.ok;
 
   try {
     const ocr = await extractPaymentScreenshotAsync(receipt);
-    const decision = decideScreenshotPayment({
+    let decision = decideScreenshotPayment({
       enteredUtr: reference,
       extractedUtr: ocr.utr,
       extractedBeneficiary: ocr.beneficiary,
@@ -572,13 +576,22 @@ export async function reportPaymentWithScreenshot(
       utrAlreadyUsed: false,
       ocrSource: ocr.source,
     });
-    const approved = decision.outcome === "automatic";
+    if (!uniquenessOk) {
+      decision = {
+        outcome: "exception",
+        approvalMethod: "pending_exception",
+        reason: utrRegistryUnavailableMessage(),
+        verificationLabel: "screenshot_ocr_exception",
+        checks: decision.checks,
+      };
+    }
+    const approved = uniquenessOk && decision.outcome === "automatic";
 
     if (mode === "remote") {
       const { remoteReportPayment, remoteReviewPayment } = await import("@/lib/portal/remote-store");
       const reported = await remoteReportPayment(studentId, quote.bookId, reference, quote.amountInr);
       if (!reported.ok) {
-        await releaseUtr(reference, owner);
+        if (uniquenessOk) await releaseUtr(reference, owner);
         return reported;
       }
       if (approved) {
@@ -590,7 +603,7 @@ export async function reportPaymentWithScreenshot(
           note: decision.reason,
         });
         if (!verified.ok) {
-          await releaseUtr(reference, owner);
+          if (uniquenessOk) await releaseUtr(reference, owner);
           return verified;
         }
       }
@@ -626,19 +639,21 @@ export async function reportPaymentWithScreenshot(
         return { ok: true as const };
       });
       if (!locked.ok) {
-        await releaseUtr(reference, owner);
+        if (uniquenessOk) await releaseUtr(reference, owner);
         return locked;
       }
     }
 
-    await noteUtr(reference, owner, {
-      extractedUtr: ocr.utr,
-      reviewReason: decision.reason,
-      proofExt: receiptExt,
-      amountDue: quote.amountInr,
-      paymentStatus: approved ? "verified" : "reported",
-      approvalMethod: decision.approvalMethod,
-    });
+    if (uniquenessOk) {
+      await noteUtr(reference, owner, {
+        extractedUtr: ocr.utr,
+        reviewReason: decision.reason,
+        proofExt: receiptExt,
+        amountDue: quote.amountInr,
+        paymentStatus: approved ? "verified" : "reported",
+        approvalMethod: decision.approvalMethod,
+      });
+    }
 
     return {
       ok: true,
@@ -649,7 +664,7 @@ export async function reportPaymentWithScreenshot(
       amountDue: quote.amountInr,
     };
   } catch {
-    await releaseUtr(reference, owner);
+    if (uniquenessOk) await releaseUtr(reference, owner);
     return { ok: false, error: "The payment proof could not be saved. The payment was not marked as verified." };
   }
 }

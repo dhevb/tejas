@@ -30,6 +30,8 @@ create index if not exists tejas_payment_utrs_owner_idx
 
 alter table public.tejas_payment_utrs enable row level security;
 revoke all on table public.tejas_payment_utrs from public;
+-- Server-only access via the service role (PostgREST). Anon/authenticated get nothing.
+grant select, insert, update, delete on table public.tejas_payment_utrs to service_role;
 
 alter table public.tejas_payments
   add column if not exists entered_utr text,

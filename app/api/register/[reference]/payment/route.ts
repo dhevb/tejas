@@ -1,5 +1,5 @@
 import { clientKey, noStore, rateLimit, sameOrigin } from "@/lib/registration/http";
-import { decideScreenshotPayment } from "@/lib/registration/payment-decision";
+import { decideScreenshotPayment, type PaymentDecision } from "@/lib/registration/payment-decision";
 import { readPaymentConfig } from "@/lib/registration/payment";
 import { detectReceipt } from "@/lib/registration/receipt";
 import { referenceIsValid } from "@/lib/registration/reference";
@@ -7,9 +7,20 @@ import { readPaymentSubmission } from "@/lib/registration/school";
 import { MAX_RECEIPT_BYTES } from "@/lib/registration/schema";
 import { extractPaymentScreenshotAsync } from "@/lib/registration/screenshot-ocr";
 import { attachReceipt, readRegistration, toPublicSummary, transactionSeenBefore } from "@/lib/registration/store";
-import { claimUtr, noteUtr, releaseUtr, utrOwner } from "@/lib/registration/utr-claim";
+import { claimUtr, noteUtr, releaseUtr, utrOwner, utrRegistryUnavailableMessage } from "@/lib/registration/utr-claim";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
+
+function blockAutoApproval(decision: PaymentDecision, reason: string): PaymentDecision {
+  return {
+    outcome: "exception",
+    approvalMethod: "pending_exception",
+    reason,
+    verificationLabel: "screenshot_ocr_exception",
+    checks: { ...decision.checks, confidence: decision.checks.confidence },
+  };
+}
 
 export async function POST(request: Request, context: { params: Promise<{ reference: string }> }) {
   if (!sameOrigin(request)) return noStore({ ok: false, formErrors: ["Open this page on the TEJAS website and try again."] }, 403);
@@ -46,16 +57,17 @@ export async function POST(request: Request, context: { params: Promise<{ refere
   const channel = record.channel === "individual-registration" ? "individual-registration" : "school-registration";
   const owner = utrOwner(channel, reference);
   const claimed = await claimUtr(paid.value.transactionReference, channel, owner);
-  if (!claimed.ok) {
-    if (claimed.error === "duplicate") {
-      return noStore({ ok: false, formErrors: ["This UTR is already used for another payment."] }, 409);
-    }
-    return noStore({ ok: false, formErrors: ["The UTR could not be reserved. Try again."] }, 503);
+  if (!claimed.ok && claimed.error === "duplicate") {
+    return noStore({ ok: false, formErrors: ["This UTR is already used for another payment."] }, 409);
   }
+  if (!claimed.ok && claimed.error === "invalid") {
+    return noStore({ ok: false, formErrors: ["Enter a valid UTR / transaction reference."] }, 400);
+  }
+  const uniquenessOk = claimed.ok;
 
   try {
     const ocr = await extractPaymentScreenshotAsync(bytes);
-    const decision = decideScreenshotPayment({
+    let decision = decideScreenshotPayment({
       enteredUtr: paid.value.transactionReference,
       extractedUtr: ocr.utr,
       extractedBeneficiary: ocr.beneficiary,
@@ -67,8 +79,11 @@ export async function POST(request: Request, context: { params: Promise<{ refere
       utrAlreadyUsed: false,
       ocrSource: ocr.source,
     });
+    if (!uniquenessOk) {
+      decision = blockAutoApproval(decision, utrRegistryUnavailableMessage());
+    }
 
-    const approved = decision.outcome === "automatic";
+    const approved = uniquenessOk && decision.outcome === "automatic";
     const updated = await attachReceipt(reference, paid.value.transactionReference, bytes, ext, {
       mode: paid.value.mode,
       paidOn: paid.value.paidOn,
@@ -83,18 +98,20 @@ export async function POST(request: Request, context: { params: Promise<{ refere
       reviewNote: decision.reason,
     });
     if (!updated) {
-      await releaseUtr(paid.value.transactionReference, owner);
+      if (uniquenessOk) await releaseUtr(paid.value.transactionReference, owner);
       return noStore({ ok: false, formErrors: ["The receipt could not be saved."] }, 409);
     }
 
-    await noteUtr(paid.value.transactionReference, owner, {
-      extractedUtr: ocr.utr,
-      reviewReason: decision.reason,
-      proofExt: ext,
-      amountDue,
-      paymentStatus: updated.payment.status,
-      approvalMethod: decision.approvalMethod,
-    });
+    if (uniquenessOk) {
+      await noteUtr(paid.value.transactionReference, owner, {
+        extractedUtr: ocr.utr,
+        reviewReason: decision.reason,
+        proofExt: ext,
+        amountDue,
+        paymentStatus: updated.payment.status,
+        approvalMethod: decision.approvalMethod,
+      });
+    }
 
     return noStore({
       ok: true,
@@ -104,10 +121,11 @@ export async function POST(request: Request, context: { params: Promise<{ refere
         approvalMethod: decision.approvalMethod,
         reason: decision.reason,
         verificationLabel: decision.verificationLabel,
+        utrClaim: uniquenessOk ? "claimed" : "unavailable",
       },
     });
   } catch {
-    await releaseUtr(paid.value.transactionReference, owner);
+    if (uniquenessOk) await releaseUtr(paid.value.transactionReference, owner);
     console.error("payment proof save failed");
     return noStore({ ok: false, formErrors: ["The payment proof could not be saved. The payment was not marked as verified."] }, 503);
   }

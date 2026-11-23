@@ -164,8 +164,10 @@ Implemented:
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit: `f8b6d3a84de798b70668fb02183041e867f3f988`
+- Tip commit: *(filled after push)*
 - Pre-merge safety audit: `docs/PR56-PRE-MERGE-PRODUCTION-SAFETY-AUDIT.md` — verdict **SAFE TO MERGE WITH CONDITIONS**
+- Migration security audit: `docs/PR56-MIGRATION-FINAL-SECURITY-AUDIT.md` — verdict **SAFE WITH CONDITIONS**
+- Migration SHA-256: `91758B3FB2B53AFA7E549A33A12546DA97604F857BB7F9D2CA15C25628E20E2C`
 - PR #25 / #13: remain OPEN, unmerged
 - Production: **unchanged**
 
@@ -173,7 +175,7 @@ Implemented:
 
 - Production deploy: **not performed**
 - Production migration apply: **not performed**
-- Review-only file: `supabase/migrations/20261123_payment_utr_registry_and_ocr.sql` (includes `service_role` grants)
+- Review-only file: `supabase/migrations/20261123_payment_utr_registry_and_ocr.sql` (`service_role` grants + explicit `REVOKE` from `anon`/`authenticated`)
 
 ## 10. Remaining owner-only steps
 

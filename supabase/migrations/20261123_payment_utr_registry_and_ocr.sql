@@ -29,8 +29,9 @@ create index if not exists tejas_payment_utrs_owner_idx
   on public.tejas_payment_utrs (owner_reference);
 
 alter table public.tejas_payment_utrs enable row level security;
+-- Defense in depth: deny PUBLIC defaults and JWT client roles. Server uses service_role only.
 revoke all on table public.tejas_payment_utrs from public;
--- Server-only access via the service role (PostgREST). Anon/authenticated get nothing.
+revoke all on table public.tejas_payment_utrs from anon, authenticated;
 grant select, insert, update, delete on table public.tejas_payment_utrs to service_role;
 
 alter table public.tejas_payments

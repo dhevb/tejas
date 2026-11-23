@@ -32,7 +32,8 @@ Evidence (unchanged from prior audit):
 ## B. Migration dependency matrix
 
 Migration (still **unapplied**): `supabase/migrations/20261123_payment_utr_registry_and_ocr.sql`  
-(now also grants `service_role` DML on `tejas_payment_utrs`).
+SHA-256: `91758B3FB2B53AFA7E549A33A12546DA97604F857BB7F9D2CA15C25628E20E2C`  
+(grants `service_role` DML; explicit `REVOKE ALL` from `public`, `anon`, and `authenticated`).
 
 | API/Workflow | New DB dependency | Migration applied? | Safe after merge? | Evidence |
 |---|---|---|---|---|
@@ -134,6 +135,8 @@ Migration (still **unapplied**): `supabase/migrations/20261123_payment_utr_regis
 - Missing table / DB errors → `{ error: "unavailable" }`.
 - Payment + learn flows: OCR may succeed, but **approval requires claim success**.
 - Tests: `lib/registration/utr-claim.test.ts` (+ updated payment-rules); suite **94/94**, `tsc`, lint, build pass locally.
-- Migration file updated with `service_role` grants (still **not applied**).
+- Migration file includes `service_role` grants + explicit anon/authenticated REVOKE (still **not applied**).
+- Final migration SHA-256: `91758B3FB2B53AFA7E549A33A12546DA97604F857BB7F9D2CA15C25628E20E2C`.
+- Tip commit: *(filled after push)*
 
 **Production unchanged by this work.** PR #56 remains **OPEN / unmerged** until the owner decides.

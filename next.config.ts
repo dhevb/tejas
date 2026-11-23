@@ -4,7 +4,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  serverExternalPackages: ["xlsx"],
+  serverExternalPackages: ["xlsx", "tesseract.js", "tesseract.js-core"],
+  // Include tessdata + WASM cores; Next tracing otherwise omits dynamically opened .wasm files.
+  outputFileTracingIncludes: {
+    "/api/register/*/payment": ["./vendor/tessdata/**/*", "./node_modules/tesseract.js-core/**/*"],
+    "/api/learn/pay": ["./vendor/tessdata/**/*", "./node_modules/tesseract.js-core/**/*"],
+    "/api/register/ocr-probe": ["./vendor/tessdata/**/*", "./node_modules/tesseract.js-core/**/*"],
+  },
   async redirects() {
     return [
       { source: "/olympiads/future-tech", destination: "/olympiads/technology", permanent: false },

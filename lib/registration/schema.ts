@@ -85,6 +85,7 @@ const STREAM_ALIASES: Record<string, StreamId> = {
   mathematics: "mathematics",
   "tejas future tech": "technology",
   "future tech": "technology",
+  technology: "technology",
 };
 
 export function streamById(id: StreamId) {

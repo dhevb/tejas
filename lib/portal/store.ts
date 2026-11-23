@@ -518,6 +518,157 @@ export async function reportPayment(studentId: string, transactionReference: str
   });
 }
 
+export type ScreenshotPaymentReport = {
+  ok: true;
+  outcome: "automatic" | "exception";
+  approvalMethod: "screenshot_ocr_automatic" | "pending_exception";
+  reason: string;
+  verificationLabel: "screenshot_ocr_match" | "screenshot_ocr_exception";
+  amountDue: number;
+} | { ok: false; error: string };
+
+/**
+ * E-book payment with mandatory screenshot + entered UTR.
+ * Auto-verifies only when screenshot OCR checks all pass. Never labelled bank-verified.
+ */
+export async function reportPaymentWithScreenshot(
+  studentId: string,
+  transactionReference: string,
+  receipt: Buffer,
+  receiptExt: "jpg" | "png" | "webp",
+): Promise<ScreenshotPaymentReport> {
+  const reference = transactionReference.trim();
+  if (reference.length < 6 || reference.length > 80) return { ok: false, error: "Enter the UTR / transaction reference." };
+  const mode = portalPersistence();
+  if (mode === "unavailable") return { ok: false, error: DATABASE_UNAVAILABLE };
+
+  const student = await readStudent(studentId);
+  if (!student) return { ok: false, error: "Account not found." };
+  const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
+  if (quote.status !== "payable") return { ok: false, error: "There is no approved e-book fee for this account." };
+
+  const { claimUtr, noteUtr, releaseUtr, utrOwner } = await import("@/lib/registration/utr-claim");
+  const { extractPaymentScreenshotAsync } = await import("@/lib/registration/screenshot-ocr");
+  const { decideScreenshotPayment } = await import("@/lib/registration/payment-decision");
+
+  const { utrRegistryUnavailableMessage } = await import("@/lib/registration/utr-claim");
+  const owner = utrOwner("ebook", `${studentId}:${quote.bookId}`);
+  const claimed = await claimUtr(reference, "ebook", owner);
+  if (!claimed.ok && claimed.error === "duplicate") {
+    return { ok: false, error: "This UTR is already used for another payment." };
+  }
+  if (!claimed.ok && claimed.error === "invalid") {
+    return { ok: false, error: "Enter a valid UTR / transaction reference." };
+  }
+  const uniquenessOk = claimed.ok;
+
+  try {
+    const ocr = await extractPaymentScreenshotAsync(receipt);
+    let decision = decideScreenshotPayment({
+      enteredUtr: reference,
+      extractedUtr: ocr.utr,
+      extractedBeneficiary: ocr.beneficiary,
+      extractedAmount: ocr.amountInr,
+      paymentStatus: ocr.paymentStatus,
+      expectedAmount: quote.amountInr,
+      ocrConfidence: ocr.confidence,
+      purpose: "ebook",
+      utrAlreadyUsed: false,
+      ocrSource: ocr.source,
+    });
+    if (!uniquenessOk) {
+      decision = {
+        outcome: "exception",
+        approvalMethod: "pending_exception",
+        reason: utrRegistryUnavailableMessage(),
+        verificationLabel: "screenshot_ocr_exception",
+        checks: decision.checks,
+      };
+    }
+    const approved = uniquenessOk && decision.outcome === "automatic";
+
+    if (mode === "remote") {
+      const { remoteReportPayment, remoteReviewPayment } = await import("@/lib/portal/remote-store");
+      const reported = await remoteReportPayment(studentId, quote.bookId, reference, quote.amountInr);
+      if (!reported.ok) {
+        if (uniquenessOk) await releaseUtr(reference, owner);
+        return reported;
+      }
+      if (approved) {
+        const verified = await remoteReviewPayment({
+          actor: "screenshot-ocr",
+          studentId,
+          bookId: quote.bookId,
+          decision: "verified",
+          note: decision.reason,
+        });
+        if (!verified.ok) {
+          if (uniquenessOk) await releaseUtr(reference, owner);
+          return verified;
+        }
+      }
+    } else {
+      const locked = await withLock(async () => {
+        const db = await readDb();
+        const entitlement = activeEntitlement(db, studentId, quote.bookId);
+        if (!entitlement) return { ok: false as const, error: "No entitlement record exists for this e-book." };
+        if (entitlement.amountInr !== quote.amountInr || entitlement.mockTestAmountInr !== 0) {
+          return { ok: false as const, error: "The stored fee does not match the approved price." };
+        }
+        if (entitlement.status === "verified") return { ok: false as const, error: "Payment is already verified." };
+        entitlement.transactionReference = reference;
+        entitlement.reportedAt = new Date().toISOString();
+        if (approved) {
+          entitlement.status = "verified";
+          entitlement.verifiedAt = new Date().toISOString();
+          entitlement.verifiedBy = "screenshot-ocr";
+          entitlement.note = decision.reason;
+        } else {
+          entitlement.status = "reported";
+          entitlement.note = decision.reason;
+        }
+        db.audit.push(event(
+          "student",
+          approved ? "screenshot-ocr-auto-approve" : "report-payment",
+          studentId,
+          decision.reason,
+          null,
+          { bookId: quote.bookId, amountInr: quote.amountInr, receiptExt, verificationLabel: decision.verificationLabel },
+        ));
+        await writeDb(db);
+        return { ok: true as const };
+      });
+      if (!locked.ok) {
+        if (uniquenessOk) await releaseUtr(reference, owner);
+        return locked;
+      }
+    }
+
+    if (uniquenessOk) {
+      await noteUtr(reference, owner, {
+        extractedUtr: ocr.utr,
+        reviewReason: decision.reason,
+        proofExt: receiptExt,
+        amountDue: quote.amountInr,
+        paymentStatus: approved ? "verified" : "reported",
+        approvalMethod: decision.approvalMethod,
+      });
+    }
+
+    return {
+      ok: true,
+      outcome: decision.outcome,
+      approvalMethod: decision.approvalMethod,
+      reason: decision.reason,
+      verificationLabel: decision.verificationLabel,
+      amountDue: quote.amountInr,
+    };
+  } catch {
+    if (uniquenessOk) await releaseUtr(reference, owner);
+    return { ok: false, error: "The payment proof could not be saved. The payment was not marked as verified." };
+  }
+}
+
 export async function reviewPayment(input: {
   actor: string;
   studentId: string;

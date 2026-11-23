@@ -53,7 +53,7 @@ export default async function DashboardPage() {
             {book.canRead ? (
               <Link className="mt-4 inline-flex font-semibold text-tejas-blue underline" href={`/learn/books/${book.id}`}>Read this e-book</Link>
             ) : (
-              <p className="mt-4 text-sm text-tejas-muted">{book.publicationStatus !== "published" ? "This file stays closed until the organisation publishes it." : "Reading opens after staff verify the payment."} {book.paymentStatus === "unpaid" || book.paymentStatus === "rejected" ? <Link className="font-semibold text-tejas-blue underline" href="/learn/pay">Go to payment</Link> : null}</p>
+              <p className="mt-4 text-sm text-tejas-muted">{book.publicationStatus !== "published" ? "This file stays closed until the organisation publishes it." : "Reading opens after screenshot OCR automatic approval or staff verification."} {book.paymentStatus === "unpaid" || book.paymentStatus === "rejected" ? <Link className="font-semibold text-tejas-blue underline" href="/learn/pay">Go to payment</Link> : null}</p>
             )}
             <h3 className="mt-6 text-lg font-bold">Mock tests</h3>
             <ul className="mt-3 divide-y divide-tejas-border">

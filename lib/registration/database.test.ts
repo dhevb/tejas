@@ -128,10 +128,10 @@ test("a database registration writes the normalised rows and can be read back", 
     const payment = JSON.parse(paymentAmount) as { registration_id: string; status: string; amount_due: number; history: { note: string }[] };
     assert.equal(payment.registration_id, "reg-1");
     assert.equal(payment.status, "pending_instructions");
-    assert.equal(payment.amount_due, 512);
+    assert.equal(payment.amount_due, 240);
     assert.equal(payment.history[0]?.note, "Payment Pending");
-    assert.equal(bookOrder.includes('"quantity":2'), true);
-    assert.equal(bookOrder.includes('"amount":340'), true);
+    // Printed-book extras are ignored in this release, so no book-order row is written.
+    assert.equal(bookOrder, "");
     assert.equal(schoolBody.includes('"pan_holder":"school"'), true);
     assert.equal(schoolBody.includes('"representative_name":null'), true);
     assert.equal(schoolBody.includes('"representative_designation":null'), true);

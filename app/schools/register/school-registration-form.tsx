@@ -464,7 +464,7 @@ export function SchoolRegistrationForm() {
         </ul>
       </Section>
 
-      <Section step="06 · Fee" title="Registration fee summary" icon={Receipt} hint="The school collects ₹150 for each student-stream, retains ₹30, and transfers ₹120 to TEJAS. The server calculates that amount. This form does not order printed books or charge the ₹49 e-book.">
+      <Section step="06 · Fee" title="Registration fee summary" icon={Receipt} hint="The school collects ₹150 for each student-stream, retains ₹30, and transfers ₹120 to TEJAS. The server calculates that amount. This form does not charge the ₹49 e-book. Printed-book orders are not offered in this release.">
         <div className="overflow-x-auto rounded-xl border border-tejas-border">
           <table className="min-w-full text-left text-sm">
             <caption className="sr-only">Published fee shares</caption>
@@ -509,7 +509,7 @@ export function SchoolRegistrationForm() {
             {"Check the student sheet to see this school's registration fee calculated on the server."}
           </p>
         )}
-        <p className="text-sm text-tejas-muted">The school collects ₹150 for each student-stream, retains ₹30, and transfers ₹120 to the school-registration account. The school share stays with the school. It is not an additional payment. This form does not charge the ₹49 e-book and does not order printed books. <Link href="/prepare/ebook" className="font-semibold text-tejas-blue underline">E-book publication status</Link>.</p>
+        <p className="text-sm text-tejas-muted">The school collects ₹150 for each student-stream, retains ₹30, and transfers ₹120 to the school-registration account. The school share stays with the school. It is not an additional payment. This form does not charge the ₹49 e-book. Printed-book orders are not offered in this release. <Link href="/prepare/ebook" className="font-semibold text-tejas-blue underline">E-book and mock tests</Link>.</p>
         <div className="rounded-xl border border-tejas-warning/30 bg-tejas-warning/10 p-4">
           <h3 className="text-base font-bold text-tejas-blue">{payment?.heading ?? "Official payment account"}</h3>
           <p className="mt-2 text-sm text-tejas-muted">{payment?.message ?? "These are the official account details. Payment-proof submission will open once the secure payment system is operational."}</p>

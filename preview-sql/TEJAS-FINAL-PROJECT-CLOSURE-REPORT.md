@@ -13,7 +13,7 @@ This is the execution record for the Final Master Project Closure & Repository C
 
 | Item | Count | Evidence |
 |------|------:|----------|
-| Open Pull Requests | **4** | #25, #13, #12, #10 |
+| Open Pull Requests | **6** (4 product/migration + 2 draft closure/security) | #25, #13, #12, #10; drafts #53, #54 |
 | Open Issues | **0** | `gh issue list --state open` empty |
 | Remote branches (excl. HEAD) | **7** | `main` + 5 open-PR stack branches + `security/npm-audit-20261123` |
 | `main` HEAD | `8851ada865b814992c6e81c78a05c42e4634d7a5` | Merge of PR #52 |
@@ -180,14 +180,14 @@ No new backup/restore/extraction executed. No secrets/archives in Git. Isolated 
 
 ## 13. Push verification
 
-Verified:
-
 | Field | Value |
 |-------|-------|
-| Report commit | f8fb6c74be865bc310a3db54b4bbf053ff44b737 |
-| Remote tip of docs branch | f8fb6c74be865bc310a3db54b4bbf053ff44b737 |
+| First report commit | `f8fb6c74be865bc310a3db54b4bbf053ff44b737` |
+| Docs branch tip (after ID refresh) | see commit containing this section |
 | Security branch tip | `52bced777b8a09155e1e3454cdf6a9bfa6593ac0` |
+| Draft PR (report) | https://github.com/dhevb/tejas/pull/53 |
+| Draft PR (security) | https://github.com/dhevb/tejas/pull/54 |
 
 ---
 
-**Honest final status: CLOSED WITH OWNER-ONLY ITEMS** — all safe autonomous closure work completed; four unfinished product/migration PRs plus security merge and recovery-retention decisions remain for the owner.
+**Honest final status: CLOSED WITH OWNER-ONLY ITEMS** — all safe autonomous closure work completed; four unfinished product/migration PRs (#25/#13/#12/#10) plus draft merge decisions (#53/#54) and recovery-retention choices remain for the owner.

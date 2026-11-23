@@ -164,7 +164,7 @@ Implemented:
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit: *(filled after push)*
+- Tip commit: `6cbe58a7a934db0fd5d44bf507f4aa7bee0bd31e`
 - Key commits: `ef83dc7` (tesseract.js + eng data), `963acf6` (preview OCR probe), `cfd807f` (WASM tracing + 45s timeout)
 - PR #25 / #13: remain OPEN, unmerged
 - Production: **unchanged**

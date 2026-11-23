@@ -5,7 +5,7 @@ import { detectReceipt } from "@/lib/registration/receipt";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { readPaymentSubmission } from "@/lib/registration/school";
 import { MAX_RECEIPT_BYTES } from "@/lib/registration/schema";
-import { extractPaymentScreenshot } from "@/lib/registration/screenshot-ocr";
+import { extractPaymentScreenshotAsync } from "@/lib/registration/screenshot-ocr";
 import { attachReceipt, readRegistration, toPublicSummary, transactionSeenBefore } from "@/lib/registration/store";
 import { claimUtr, noteUtr, releaseUtr, utrOwner } from "@/lib/registration/utr-claim";
 
@@ -54,7 +54,7 @@ export async function POST(request: Request, context: { params: Promise<{ refere
   }
 
   try {
-    const ocr = extractPaymentScreenshot(bytes);
+    const ocr = await extractPaymentScreenshotAsync(bytes);
     const decision = decideScreenshotPayment({
       enteredUtr: paid.value.transactionReference,
       extractedUtr: ocr.utr,
@@ -65,6 +65,7 @@ export async function POST(request: Request, context: { params: Promise<{ refere
       ocrConfidence: ocr.confidence,
       purpose: "registration",
       utrAlreadyUsed: false,
+      ocrSource: ocr.source,
     });
 
     const approved = decision.outcome === "automatic";

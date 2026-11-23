@@ -24,6 +24,10 @@ export type ScreenshotPaymentSignals = {
   purpose: BeneficiaryPurpose;
   /** True when this UTR is already claimed by another owner. */
   utrAlreadyUsed: boolean;
+  /**
+   * OCR engine source. Fixture/glyph helpers and missing OCR must never auto-approve.
+   */
+  ocrSource?: "fixture" | "tesseractjs" | "none";
 };
 
 export type PaymentDecision = {
@@ -79,6 +83,14 @@ export function decideScreenshotPayment(input: ScreenshotPaymentSignals): Paymen
     verificationLabel: "screenshot_ocr_exception",
   });
 
+  if (input.ocrSource === "fixture" || input.ocrSource === "none") {
+    return fail(
+      input.ocrSource === "fixture"
+        ? "Fixture OCR output cannot auto-approve a payment."
+        : "Screenshot OCR is unavailable or returned no usable text.",
+      { confidence: "low" },
+    );
+  }
   if (input.ocrConfidence === "low") {
     return fail("OCR confidence is too low to auto-approve this screenshot.", { confidence: "low" });
   }

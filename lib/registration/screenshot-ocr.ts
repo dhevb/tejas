@@ -1,7 +1,8 @@
 import { inflateSync, deflateSync } from "node:zlib";
-import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
-/** 5×7 glyphs for deterministic test fixtures. */
+/** 5×7 glyphs for deterministic test fixtures and synthetic screenshots. */
 const FONT: Record<string, string[]> = {
   "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
   "1": ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
@@ -40,9 +41,18 @@ const FONT: Record<string, string[]> = {
   Y: ["10001", "10001", "01010", "00100", "00100", "00100", "00100"],
   Z: ["11111", "00001", "00010", "00100", "01000", "10000", "11111"],
   " ": ["00000", "00000", "00000", "00000", "00000", "00000", "00000"],
+  ":": ["00000", "00100", "00100", "00000", "00100", "00100", "00000"],
+  ".": ["00000", "00000", "00000", "00000", "00000", "00100", "00100"],
+  ",": ["00000", "00000", "00000", "00000", "00100", "00100", "01000"],
+  "/": ["00001", "00010", "00010", "00100", "01000", "01000", "10000"],
+  "-": ["00000", "00000", "00000", "11111", "00000", "00000", "00000"],
+  "₹": ["01111", "10000", "11110", "10000", "11110", "10000", "10000"],
 };
 
+/** Pixel scale for glyph fixtures. Real OCR tests use renderPaymentScreenshotPng with larger scale. */
 const SCALE = 3;
+const PAYMENT_SCREENSHOT_SCALE = 8;
+const OCR_TIMEOUT_MS = 20_000;
 
 function crc32(bytes: Buffer): number {
   let crc = 0xffffffff;
@@ -62,33 +72,7 @@ function chunk(type: string, data: Buffer): Buffer {
   return out;
 }
 
-/** Draw uppercase text into a PNG using the built-in glyph set (test fixtures). */
-export function renderTextPng(text: string): Buffer {
-  const upper = text.toUpperCase();
-  if (![...upper].every((char) => FONT[char])) throw new Error("This renderer only draws letters, digits, and spaces.");
-  const width = Math.max(1, upper.length) * (5 * SCALE + SCALE) + SCALE;
-  const height = 7 * SCALE + SCALE * 2;
-  const raw = Buffer.alloc((width * 3 + 1) * height, 255);
-  upper.split("").forEach((char, index) => {
-    const glyph = FONT[char];
-    const originX = SCALE + index * (5 * SCALE + SCALE);
-    glyph.forEach((row, y) => {
-      for (let x = 0; x < 5; x += 1) {
-        if (row[x] !== "1") continue;
-        for (let sy = 0; sy < SCALE; sy += 1) {
-          for (let sx = 0; sx < SCALE; sx += 1) {
-            const px = originX + x * SCALE + sx;
-            const py = SCALE + y * SCALE + sy;
-            const offset = py * (width * 3 + 1) + 1 + px * 3;
-            raw[offset] = 0;
-            raw[offset + 1] = 0;
-            raw[offset + 2] = 0;
-          }
-        }
-      }
-    });
-  });
-  for (let y = 0; y < height; y += 1) raw[y * (width * 3 + 1)] = 0;
+function encodePng(width: number, height: number, raw: Buffer): Buffer {
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
@@ -102,8 +86,75 @@ export function renderTextPng(text: string): Buffer {
   ]);
 }
 
+function drawLine(raw: Buffer, width: number, line: string, originY: number, scale = SCALE): void {
+  const upper = line.toUpperCase();
+  const gap = Math.max(2, Math.floor(scale / 2));
+  upper.split("").forEach((char, index) => {
+    const glyph = FONT[char] ?? FONT[" "];
+    const originX = scale + index * (5 * scale + gap);
+    glyph.forEach((row, y) => {
+      for (let x = 0; x < 5; x += 1) {
+        if (row[x] !== "1") continue;
+        for (let sy = 0; sy < scale; sy += 1) {
+          for (let sx = 0; sx < scale; sx += 1) {
+            const px = originX + x * scale + sx;
+            const py = originY + y * scale + sy;
+            const offset = py * (width * 3 + 1) + 1 + px * 3;
+            if (offset + 2 >= raw.length) continue;
+            raw[offset] = 0;
+            raw[offset + 1] = 0;
+            raw[offset + 2] = 0;
+          }
+        }
+      }
+    });
+  });
+}
+
+/** Draw uppercase text into a PNG using the built-in glyph set (test fixtures). */
+export function renderTextPng(text: string): Buffer {
+  const upper = text.toUpperCase();
+  if (![...upper].every((char) => FONT[char])) throw new Error("This renderer only draws supported characters.");
+  const width = Math.max(1, upper.length) * (5 * SCALE + SCALE) + SCALE;
+  const height = 7 * SCALE + SCALE * 2;
+  const raw = Buffer.alloc((width * 3 + 1) * height, 255);
+  for (let y = 0; y < height; y += 1) raw[y * (width * 3 + 1)] = 0;
+  drawLine(raw, width, upper, SCALE);
+  return encodePng(width, height, raw);
+}
+
 export function renderUtrPng(utr: string): Buffer {
   return renderTextPng(utr);
+}
+
+/** Synthetic multi-line payment screenshot for real OCR path testing (not auto-approve fixture). */
+export function renderPaymentScreenshotPng(input: {
+  statusLine: string;
+  beneficiaryLine: string;
+  amountLine: string;
+  utrLine: string;
+}): Buffer {
+  const scale = PAYMENT_SCREENSHOT_SCALE;
+  const gap = Math.max(2, Math.floor(scale / 2));
+  const lines = [
+    input.statusLine.toUpperCase(),
+    input.beneficiaryLine.toUpperCase(),
+    input.amountLine.toUpperCase(),
+    input.utrLine.toUpperCase(),
+  ];
+  for (const line of lines) {
+    if (![...line].every((char) => FONT[char])) {
+      throw new Error(`Unsupported character in synthetic screenshot line: ${line}`);
+    }
+  }
+  const maxChars = Math.max(...lines.map((line) => line.length), 1);
+  const width = maxChars * (5 * scale + gap) + scale * 2;
+  const lineHeight = 7 * scale + scale * 3;
+  const height = lineHeight * lines.length + scale * 2;
+  const raw = Buffer.alloc((width * 3 + 1) * height, 255);
+  for (let y = 0; y < height; y += 1) raw[y * (width * 3 + 1)] = 0;
+  lines.forEach((line, index) => drawLine(raw, width, line, scale + index * lineHeight, scale));
+  return encodePng(width, height, raw);
 }
 
 export type ScreenshotOcrResult = {
@@ -112,15 +163,24 @@ export type ScreenshotOcrResult = {
   amountInr: number | null;
   paymentStatus: "success" | "pending" | "failed" | "unknown";
   confidence: "high" | "low";
-  source: "fixture" | "tesseract" | "none";
-  rawText: string;
+  /**
+   * fixture = glyph-only unit helper (never sufficient for auto-approval).
+   * tesseractjs = bundled WASM OCR used on Vercel Node runtimes.
+   * none = OCR unavailable or unreadable.
+   */
+  source: "fixture" | "tesseractjs" | "none";
+  /** Redacted length-only diagnostics; never log full payment text in routes. */
+  rawTextLength: number;
+  detail: string;
 };
 
 const UTR_RE = /\b(?:UTR|UPI\s*REF(?:ERENCE)?|REF(?:ERENCE)?(?:\s*NO)?|RRN|TXN(?:\s*ID)?)\s*[:#-]?\s*([A-Z0-9]{6,40})\b/i;
 const BARE_UTR_RE = /\b([A-Z]{4}[A-Z0-9]{8,36})\b/;
 const AMOUNT_RE = /(?:₹|INR|RS\.?)\s*([0-9]{1,3}(?:,[0-9]{2,3})*(?:\.[0-9]{1,2})?|\d+(?:\.\d{1,2})?)/i;
+/** Stop at line end or payment-field keywords so amount/UTR lines are not swallowed. */
 const BENEFICIARY_RE =
-  /(?:to|beneficiary|paid\s+to|account\s+holder|a\/c\s*name|creditor)\s*[:-]?\s*([A-Za-z0-9.&'’\-]+(?:\s+[A-Za-z0-9.&'’\-]+){1,12})(?=\s*(?:amount|inr|rs\.?|₹|utr|upi|ref|txn|$))/i;
+  /(?:^|\n)\s*(?:to|beneficiary|paid\s+to|account\s+holder|a\/c\s*name|creditor)\s*[:-]?\s*([A-Za-z0-9.&'’\-]+(?:\s+[A-Za-z0-9.&'’\-]+){1,12})(?=\s*(?:\n|$|amount|inr|rs\.?|₹|utr|upi|ref|txn))/im;
+const BENEFICIARY_STOP = /\b(?:amount|inr|rs\.?|₹|utr|upi|ref|txn|rrn)\b/i;
 
 function parseAmount(token: string): number | null {
   const cleaned = token.replace(/,/g, "");
@@ -136,8 +196,19 @@ function inferStatus(text: string): ScreenshotOcrResult["paymentStatus"] {
   return "unknown";
 }
 
-/** Parse payment fields from OCR/plain text (deterministic rules for tests and tesseract output). */
-export function parsePaymentScreenshotText(text: string): Omit<ScreenshotOcrResult, "source" | "rawText" | "confidence"> & { confidence: "high" | "low" } {
+function extractBeneficiary(text: string): string | null {
+  const match = text.match(BENEFICIARY_RE);
+  if (!match?.[1]) return null;
+  const cleaned = match[1]
+    .split(/\n/)[0]
+    .replace(BENEFICIARY_STOP, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.length >= 3 ? cleaned : null;
+}
+
+/** Parse payment fields from OCR/plain text (deterministic rules for tests and OCR output). */
+export function parsePaymentScreenshotText(text: string): Omit<ScreenshotOcrResult, "source" | "rawTextLength" | "detail" | "confidence"> & { confidence: "high" | "low" } {
   const normalised = text.replace(/\u00a0/g, " ");
   let utr: string | null = null;
   const labelled = normalised.match(UTR_RE);
@@ -148,74 +219,198 @@ export function parsePaymentScreenshotText(text: string): Omit<ScreenshotOcrResu
   }
   const amountMatch = normalised.match(AMOUNT_RE);
   const amountInr = amountMatch?.[1] ? parseAmount(amountMatch[1]) : null;
-  const beneficiaryMatch = normalised.match(BENEFICIARY_RE);
-  const beneficiary = beneficiaryMatch?.[1]?.replace(/\s+/g, " ").trim() ?? null;
+  const beneficiary = extractBeneficiary(normalised);
   const paymentStatus = inferStatus(normalised);
   const confidence: "high" | "low" =
     utr && amountInr != null && beneficiary && paymentStatus === "success" ? "high" : "low";
   return { utr, beneficiary, amountInr, paymentStatus, confidence };
 }
 
-export type TesseractRuntime = {
+export type OcrRuntime = {
+  available: boolean;
+  engine: "tesseractjs" | "none";
+  version: string | null;
+  languages: string[];
+  tessdataPath: string;
+  engDataPresent: boolean;
+  detail: string;
+  executionEnvironment: string;
+};
+
+export function tessdataDirectory(): string {
+  return path.join(process.cwd(), "vendor", "tessdata");
+}
+
+export function engTrainedDataPath(): string {
+  return path.join(tessdataDirectory(), "eng.traineddata.gz");
+}
+
+/**
+ * OCR executes inside Next.js Node.js API routes (Vercel serverless functions).
+ * System tesseract binaries are not available there; bundled tesseract.js + vendor eng data is required.
+ */
+export function probeOcrRuntime(): OcrRuntime {
+  const tessdataPath = tessdataDirectory();
+  const engGz = engTrainedDataPath();
+  const engDataPresent = existsSync(engGz);
+  const executionEnvironment =
+    process.env.VERCEL === "1"
+      ? "vercel-node-serverless"
+      : process.env.NODE_ENV === "production"
+        ? "node-production"
+        : "node-local";
+  if (!engDataPresent) {
+    return {
+      available: false,
+      engine: "none",
+      version: null,
+      languages: [],
+      tessdataPath,
+      engDataPresent: false,
+      detail: "vendor/tessdata/eng.traineddata.gz is missing; screenshot OCR cannot run.",
+      executionEnvironment,
+    };
+  }
+  try {
+    // Resolve package presence without executing OCR yet.
+    require.resolve("tesseract.js");
+    return {
+      available: true,
+      engine: "tesseractjs",
+      version: "tesseract.js",
+      languages: ["eng"],
+      tessdataPath,
+      engDataPresent: true,
+      detail: "Bundled tesseract.js with local eng.traineddata.gz is ready for Node/Vercel OCR.",
+      executionEnvironment,
+    };
+  } catch {
+    return {
+      available: false,
+      engine: "none",
+      version: null,
+      languages: [],
+      tessdataPath,
+      engDataPresent,
+      detail: "tesseract.js package is not installed.",
+      executionEnvironment,
+    };
+  }
+}
+
+/** @deprecated Use probeOcrRuntime — system tesseract is not the deployment path. */
+export function probeTesseractRuntime(): {
   available: boolean;
   version: string | null;
   languages: string[];
   detail: string;
+} {
+  const runtime = probeOcrRuntime();
+  return {
+    available: runtime.available,
+    version: runtime.version,
+    languages: runtime.languages,
+    detail: runtime.detail,
+  };
+}
+
+type WorkerLike = {
+  recognize: (image: Buffer) => Promise<{ data: { text: string } }>;
+  setParameters: (params: Record<string, string>) => Promise<void>;
+  terminate: () => Promise<void>;
 };
 
-/** Probe whether the host can run tesseract for real payment screenshots. */
-export function probeTesseractRuntime(): TesseractRuntime {
+let workerPromise: Promise<WorkerLike> | null = null;
+
+async function getTesseractWorker(): Promise<WorkerLike> {
+  if (!workerPromise) {
+    workerPromise = (async () => {
+      const { createWorker } = await import("tesseract.js");
+      // Plain filesystem path (not file://). tesseract.js Node adapter reads
+      // local traineddata via fs; file:// URLs go through fetch and fail.
+      const langPath = tessdataDirectory();
+      const worker = await createWorker("eng", 1, {
+        langPath,
+        gzip: true,
+        cacheMethod: "readOnly",
+        logger: () => undefined,
+      });
+      const typed = worker as unknown as WorkerLike;
+      await typed.setParameters({
+        // Assume a uniform block of text (payment receipt screenshot).
+        tessedit_pageseg_mode: "6",
+      });
+      return typed;
+    })();
+  }
   try {
-    const version = spawnSync("tesseract", ["--version"], { encoding: "utf8", timeout: 5_000 });
-    if (version.status !== 0) {
-      return { available: false, version: null, languages: [], detail: "tesseract --version failed or is not installed." };
-    }
-    const versionText = `${version.stdout || ""}\n${version.stderr || ""}`.trim();
-    const langs = spawnSync("tesseract", ["--list-langs"], { encoding: "utf8", timeout: 5_000 });
-    const languageLines = `${langs.stdout || ""}`
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.toLowerCase().includes("list of available languages"));
-    const hasEng = languageLines.some((line) => line === "eng" || line.startsWith("eng"));
-    if (!hasEng) {
-      return {
-        available: false,
-        version: versionText.split(/\r?\n/)[0] ?? null,
-        languages: languageLines,
-        detail: "tesseract is present but the eng language data is missing.",
-      };
-    }
-    return {
-      available: true,
-      version: versionText.split(/\r?\n/)[0] ?? null,
-      languages: languageLines,
-      detail: "tesseract is available with eng language data.",
-    };
-  } catch {
-    return { available: false, version: null, languages: [], detail: "tesseract executable was not found on PATH." };
+    return await workerPromise;
+  } catch (error) {
+    workerPromise = null;
+    throw error;
   }
 }
 
-function readTesseractText(bytes: Buffer): string | null {
-  const result = spawnSync("tesseract", ["stdin", "stdout", "--psm", "6"], {
-    input: bytes,
-    encoding: "utf8",
-    timeout: 12_000,
-  });
-  if (result.status !== 0 || !result.stdout) return null;
-  return result.stdout;
+/** Release the cached OCR worker (tests / process shutdown). */
+export async function terminateOcrWorker(): Promise<void> {
+  if (!workerPromise) return;
+  try {
+    const worker = await workerPromise;
+    await worker.terminate();
+  } catch {
+    // ignore terminate failures
+  } finally {
+    workerPromise = null;
+  }
+}
+
+async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(label)), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function readTesseractJsText(bytes: Buffer): Promise<{ text: string } | { error: string }> {
+  const runtime = probeOcrRuntime();
+  if (!runtime.available) return { error: runtime.detail };
+  try {
+    const worker = await withTimeout(getTesseractWorker(), OCR_TIMEOUT_MS, "OCR worker startup timed out.");
+    const result = await withTimeout(worker.recognize(bytes), OCR_TIMEOUT_MS, "OCR recognition timed out.");
+    const text = result.data.text ?? "";
+    if (!text.trim()) return { error: "OCR returned empty text." };
+    return { text };
+  } catch (error) {
+    workerPromise = null;
+    const message = error instanceof Error ? error.message : "OCR failed.";
+    return { error: message };
+  }
 }
 
 /**
- * Extract UTR, beneficiary, amount, and status from a payment screenshot.
- * Returns low confidence when required fields are missing or ambiguous.
+ * Synchronous fixture/helper path only.
+ * Never sufficient for payment auto-approval (confidence stays low; source=fixture).
  */
 export function extractPaymentScreenshot(bytes: Buffer): ScreenshotOcrResult {
   if (bytes.length < 32) {
-    return { utr: null, beneficiary: null, amountInr: null, paymentStatus: "unknown", confidence: "low", source: "none", rawText: "" };
+    return {
+      utr: null,
+      beneficiary: null,
+      amountInr: null,
+      paymentStatus: "unknown",
+      confidence: "low",
+      source: "none",
+      rawTextLength: 0,
+      detail: "Image too small.",
+    };
   }
-
-  // Deterministic fixture path: PNG with only a UTR drawn by renderUtrPng.
   try {
     const drawn = readDrawnUtr(bytes);
     if (drawn) {
@@ -226,30 +421,88 @@ export function extractPaymentScreenshot(bytes: Buffer): ScreenshotOcrResult {
         paymentStatus: "unknown",
         confidence: "low",
         source: "fixture",
-        rawText: drawn,
+        rawTextLength: drawn.length,
+        detail: "Glyph fixture only; not used for automatic approval.",
       };
     }
   } catch {
     // continue
   }
+  return {
+    utr: null,
+    beneficiary: null,
+    amountInr: null,
+    paymentStatus: "unknown",
+    confidence: "low",
+    source: "none",
+    rawTextLength: 0,
+    detail: "Use extractPaymentScreenshotAsync for real OCR.",
+  };
+}
 
-  try {
-    const text = readTesseractText(bytes);
-    if (text) {
-      const parsed = parsePaymentScreenshotText(text);
-      return { ...parsed, source: "tesseract", rawText: text };
-    }
-  } catch {
-    // fall through
+/**
+ * Production OCR path for payment API routes.
+ * Uses bundled tesseract.js + vendor eng.traineddata.gz (Vercel Node compatible).
+ */
+export async function extractPaymentScreenshotAsync(bytes: Buffer): Promise<ScreenshotOcrResult> {
+  if (bytes.length < 32) {
+    return {
+      utr: null,
+      beneficiary: null,
+      amountInr: null,
+      paymentStatus: "unknown",
+      confidence: "low",
+      source: "none",
+      rawTextLength: 0,
+      detail: "Image too small.",
+    };
   }
 
-  return { utr: null, beneficiary: null, amountInr: null, paymentStatus: "unknown", confidence: "low", source: "none", rawText: "" };
+  // Never treat glyph fixtures as live OCR success.
+  try {
+    const drawn = readDrawnUtr(bytes);
+    if (drawn) {
+      return {
+        utr: drawn,
+        beneficiary: null,
+        amountInr: null,
+        paymentStatus: "unknown",
+        confidence: "low",
+        source: "fixture",
+        rawTextLength: drawn.length,
+        detail: "Glyph fixture detected; automatic approval is blocked.",
+      };
+    }
+  } catch {
+    // continue to real OCR
+  }
+
+  const ocr = await readTesseractJsText(bytes);
+  if ("error" in ocr) {
+    return {
+      utr: null,
+      beneficiary: null,
+      amountInr: null,
+      paymentStatus: "unknown",
+      confidence: "low",
+      source: "none",
+      rawTextLength: 0,
+      detail: ocr.error,
+    };
+  }
+  const parsed = parsePaymentScreenshotText(ocr.text);
+  return {
+    ...parsed,
+    source: "tesseractjs",
+    rawTextLength: ocr.text.length,
+    detail: "OCR completed with bundled tesseract.js.",
+  };
 }
 
 /** Back-compat helper used by older tests and call sites. */
 export function extractUtr(bytes: Buffer): { utr: string | null; source: "image" | "tesseract" | "none" } {
   const result = extractPaymentScreenshot(bytes);
-  const source = result.source === "fixture" ? "image" : result.source;
+  const source = result.source === "fixture" ? "image" : result.source === "tesseractjs" ? "tesseract" : "none";
   return { utr: result.utr, source };
 }
 
@@ -295,7 +548,7 @@ function readGlyph(image: Image, left: number, right: number, top: number, botto
   let best = "";
   let bestScore = Number.POSITIVE_INFINITY;
   for (const [char, rows] of Object.entries(FONT)) {
-    if (char === " ") continue;
+    if (char === " " || char.length !== 1) continue;
     let score = 0;
     for (let y = 0; y < 7; y += 1) {
       for (let x = 0; x < 5; x += 1) {
@@ -321,6 +574,8 @@ function columnHasInk(image: Image, x: number, top: number, bottom: number): boo
 function readDrawnUtr(bytes: Buffer): string | null {
   const image = readPng(bytes);
   if (!image) return null;
+  // Multi-line synthetic screenshots are taller than a single glyph row — skip fixture path.
+  if (image.height > 7 * SCALE + SCALE * 4) return null;
   let top = image.height;
   let bottom = -1;
   let left = image.width;

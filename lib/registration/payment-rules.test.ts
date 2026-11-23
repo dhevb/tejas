@@ -110,6 +110,7 @@ test("UTR parse rejects missing or unreadable values for auto-approval", () => {
     ocrConfidence: "high",
     purpose: "registration",
     utrAlreadyUsed: false,
+    ocrSource: "tesseractjs",
   });
   assert.equal(missing.outcome, "exception");
   assert.equal(missing.checks.utr, "unreadable");
@@ -124,6 +125,7 @@ test("UTR parse rejects missing or unreadable values for auto-approval", () => {
     ocrConfidence: "high",
     purpose: "registration",
     utrAlreadyUsed: false,
+    ocrSource: "tesseractjs",
   });
   assert.equal(mismatch.outcome, "exception");
   assert.equal(mismatch.checks.utr, "mismatch");
@@ -159,6 +161,7 @@ test("OCR low confidence, wrong amount, and pending/failed screenshots stay exce
     ocrConfidence: "low",
     purpose: "ebook",
     utrAlreadyUsed: false,
+    ocrSource: "tesseractjs",
   });
   assert.equal(low.outcome, "exception");
 
@@ -172,6 +175,7 @@ test("OCR low confidence, wrong amount, and pending/failed screenshots stay exce
     ocrConfidence: "high",
     purpose: "ebook",
     utrAlreadyUsed: false,
+    ocrSource: "tesseractjs",
   });
   assert.equal(wrongAmount.checks.amount, "mismatch");
 
@@ -185,9 +189,26 @@ test("OCR low confidence, wrong amount, and pending/failed screenshots stay exce
     ocrConfidence: "high",
     purpose: "ebook",
     utrAlreadyUsed: false,
+    ocrSource: "tesseractjs",
   });
   assert.equal(pending.checks.status, "pending");
   assert.equal(pending.outcome, "exception");
+});
+
+test("fixture OCR source can never auto-approve", () => {
+  const decision = decideScreenshotPayment({
+    enteredUtr: "AXISCN123456",
+    extractedUtr: "AXISCN123456",
+    extractedBeneficiary: OFFICIAL_BENEFICIARY_FULL,
+    extractedAmount: 49,
+    paymentStatus: "success",
+    expectedAmount: 49,
+    ocrConfidence: "high",
+    purpose: "ebook",
+    utrAlreadyUsed: false,
+    ocrSource: "fixture",
+  });
+  assert.equal(decision.outcome, "exception");
 });
 
 test("successful screenshot with all conditions is auto-approved without bank-verified label", () => {
@@ -201,6 +222,7 @@ test("successful screenshot with all conditions is auto-approved without bank-ve
     ocrConfidence: "high",
     purpose: "ebook",
     utrAlreadyUsed: false,
+    ocrSource: "tesseractjs",
   });
   assert.equal(decision.outcome, "automatic");
   assert.equal(decision.approvalMethod, "screenshot_ocr_automatic");

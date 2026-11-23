@@ -4,7 +4,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  serverExternalPackages: ["xlsx"],
+  serverExternalPackages: ["xlsx", "tesseract.js"],
+  // Bundle local eng.traineddata.gz into serverless functions that run OCR.
+  outputFileTracingIncludes: {
+    "/api/register/*/payment": ["./vendor/tessdata/**/*"],
+    "/api/learn/pay": ["./vendor/tessdata/**/*"],
+  },
   async redirects() {
     return [
       { source: "/olympiads/future-tech", destination: "/olympiads/technology", permanent: false },

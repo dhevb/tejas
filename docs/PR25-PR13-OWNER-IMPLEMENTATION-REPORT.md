@@ -51,20 +51,48 @@ Fee examples (server-side only):
 | Individual, 1 stream | ₹150 |
 | E-book, 1 / 2 / 3 streams | ₹49 / ₹98 / ₹147 |
 
-## 4. OCR / Tesseract runtime verification
+## 4. OCR execution environment and Tesseract installation
 
-| Check | Result |
+### 4.1 Actual OCR execution environment
+
+| Item | Finding |
 |---|---|
-| `tesseract` on PATH (this Windows agent host) | **Not installed / not found** |
-| `probeTesseractRuntime()` | `available: false` — executable not found |
-| Fixture PNG UTR extraction | Passes without tesseract |
-| Payment text parser (UTR/beneficiary/amount/status) | Passes |
-| Real screenshot OCR on this host | **Not possible until tesseract + eng data are installed** |
-| Production readiness claim | **Not claimed** — runtime dependency remains a blocker for live screenshot OCR |
+| Application host | **Vercel Node.js serverless** (Next.js `runtime = "nodejs"` API routes) |
+| Routes | `/api/register/[reference]/payment`, `/api/learn/pay` → `extractPaymentScreenshotAsync` |
+| Not the OCR host | Cursor agent Windows host (system `tesseract` binary is irrelevant for Production) |
+| Engine chosen | **`tesseract.js` v5** (WASM), not a system Tesseract executable |
 
-Safe failure behaviour when OCR cannot read a screenshot: confidence `low` → exception / pending status → no auto-approval.
+System Tesseract cannot be installed persistently on Vercel serverless. OCR therefore uses the Node-compatible WASM engine bundled with the app.
 
-School registration (`/api/register/[reference]/payment`) and e-book pay (`/api/learn/pay`) both require screenshot + UTR and use `decideScreenshotPayment` (no mandatory bank-lookup gate).
+### 4.2 Installation method (deployment-compatible)
+
+| Component | Method |
+|---|---|
+| OCR engine | npm dependency `tesseract.js@^5.1.1` (`serverExternalPackages`) |
+| English data | Committed `vendor/tessdata/eng.traineddata.gz` (~10.9 MB) |
+| Uncompressed extract | Gitignored (`eng.traineddata`) — not required at runtime (`gzip: true`) |
+| Path | Plain filesystem `vendor/tessdata` (not `file://`; Node adapter uses `fs`) |
+| Serverless tracing | `outputFileTracingIncludes` for payment API routes includes `./vendor/tessdata/**/*` |
+| Permissions | No shell; image bytes only — no filename-based command execution |
+
+### 4.3 Real screenshot OCR test results (local Node, bundled engine)
+
+Synthetic Arial-font payment screenshots (fake UTRs, no real account secrets) in `lib/registration/fixtures/`:
+
+| Fixture | Result |
+|---|---|
+| `payment-success-49.png` | UTR `AXISCN777001`, beneficiary Trust full name, amount ₹49, status success → **auto-approve** |
+| `payment-success-120-truncated.png` | UTR + truncated beneficiary allowlist + ₹120 → **auto-approve** on match; wrong entered UTR → **exception** |
+| `payment-pending-49.png` | Status pending → **exception** (no auto-approve) |
+| `payment-unreadable.png` | Low confidence → **exception** |
+| Glyph-only `renderUtrPng` | `source=fixture` → **never auto-approves** |
+| Corrupt/tiny bytes | `source=none` / low confidence → **exception** |
+
+Timeouts: worker start and recognize each capped at **20s**; failures reset the worker and return pending/exception.
+
+### 4.4 Production readiness claim
+
+**Not claimed.** Local Node verification of bundled `tesseract.js` + `eng.traineddata.gz` passed. Live Vercel serverless OCR has **not** been exercised against Production or a preview deploy of this branch. Fail-closed behaviour remains until that runtime is verified.
 
 ## 5. Payment verification policy status
 
@@ -76,6 +104,7 @@ Implemented:
 - Successful payment status required
 - Atomic UTR claim across school / individual / ebook channels
 - Transparent labelling: screenshot OCR match, not bank-verified
+- **`ocrSource` gate:** `fixture` and `none` can never auto-approve (even if other fields look perfect)
 
 ## 6. Security review findings
 
@@ -86,15 +115,18 @@ Implemented:
 | Paid-stream-only access | `decideAccess` enforces stream/class/paid/publication |
 | Cross-student leakage | Book/test file routes require session + entitlement checks (existing portal model) |
 | Upload validation | MIME/signature + 5 MB limit; JPG/PNG for OCR path |
-| Secrets in logs | No account secrets logged; payment routes log status only |
+| Command injection | OCR receives image **bytes only**; no shell, no filename interpolation into commands |
+| Timeouts / resources | 20s OCR startup + recognize timeouts; worker reset on failure |
+| Secrets in logs | No UTRs/account details/screenshot text logged; routes log generic failures only |
+| Package size | ~10.9 MB tessdata.gz + tesseract.js WASM — within typical Vercel function limits; confirm on first preview deploy |
 | Printed-book historical rows | Not deleted; new printed-book extras ignored |
-| Learn pay previously UTR-only | **Fixed in this follow-up** — now requires screenshot + UTR with OCR auto-approve |
+| Learn pay previously UTR-only | Fixed — requires screenshot + UTR with OCR auto-approve |
 
 ## 7. Test / TypeScript / lint / build
 
-Recorded before tip documentation commit (feature work `9fb5d79` / report `28c9566`):
+Recorded for this OCR-runtime follow-up:
 
-- `npm test` — **79/79 pass** (includes payment-rules, OCR runtime, access-rules)
+- `npm test` — **84/84 pass** (includes real bundled OCR fixture tests)
 - `npx tsc --noEmit` — pass
 - `npm run lint` — pass (existing `<img>` warnings only)
 - `npm run build` — pass
@@ -102,9 +134,9 @@ Recorded before tip documentation commit (feature work `9fb5d79` / report `28c95
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit: `a2715f2325118793a77e609bb90119040347daf8`
-- Feature commit (Class 10 Math + learn-pay OCR): `9fb5d79039603e97b0f30e94b5922b09cd163b2c`
+- Tip commit: *(filled after push)*
 - PR #25 / #13: remain OPEN, unmerged
+- Production: **unchanged**
 
 ## 9. Production / migration
 
@@ -112,8 +144,9 @@ Recorded before tip documentation commit (feature work `9fb5d79` / report `28c95
 - Production migration apply: **not performed**
 - Review-only file: `supabase/migrations/20261123_payment_utr_registry_and_ocr.sql`
 
-## 10. Remaining blockers
+## 10. Remaining owner-only steps
 
-1. **Install Tesseract OCR + `eng` traineddata** on the runtime that will process live payment screenshots (local agent currently lacks it). Until then, real screenshots fail closed to pending/exception; fixture/parser paths still work.
-2. Owner review of PR #56 before any merge/deploy.
+1. **Preview-deploy verification (recommended before merge):** Deploy this branch to a non-Production Vercel preview and submit a synthetic JPG/PNG payment screenshot through `/api/learn/pay` or registration payment to confirm serverless OCR loads `eng.traineddata.gz` and completes within limits.
+2. Owner review of PR #56 before any merge/deploy to Production.
 3. Separate owner authorisation required before applying the UTR-registry migration to Production.
+4. No Production-only OS package install is required if the bundled `tesseract.js` path is accepted after preview verification.

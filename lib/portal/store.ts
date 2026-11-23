@@ -548,7 +548,7 @@ export async function reportPaymentWithScreenshot(
   if (quote.status !== "payable") return { ok: false, error: "There is no approved e-book fee for this account." };
 
   const { claimUtr, noteUtr, releaseUtr, utrOwner } = await import("@/lib/registration/utr-claim");
-  const { extractPaymentScreenshot } = await import("@/lib/registration/screenshot-ocr");
+  const { extractPaymentScreenshotAsync } = await import("@/lib/registration/screenshot-ocr");
   const { decideScreenshotPayment } = await import("@/lib/registration/payment-decision");
 
   const owner = utrOwner("ebook", `${studentId}:${quote.bookId}`);
@@ -559,7 +559,7 @@ export async function reportPaymentWithScreenshot(
   }
 
   try {
-    const ocr = extractPaymentScreenshot(receipt);
+    const ocr = await extractPaymentScreenshotAsync(receipt);
     const decision = decideScreenshotPayment({
       enteredUtr: reference,
       extractedUtr: ocr.utr,
@@ -570,6 +570,7 @@ export async function reportPaymentWithScreenshot(
       ocrConfidence: ocr.confidence,
       purpose: "ebook",
       utrAlreadyUsed: false,
+      ocrSource: ocr.source,
     });
     const approved = decision.outcome === "automatic";
 

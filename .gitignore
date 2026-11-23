@@ -22,3 +22,7 @@ tejas-*-pass-*.bin
 # Staging copies before catalog ingest
 /content/portal/sources/incoming/
 
+# Keep gzipped eng data; ignore the large uncompressed extract if generated locally
+/vendor/tessdata/eng.traineddata
+
+

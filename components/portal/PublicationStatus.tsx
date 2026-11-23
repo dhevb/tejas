@@ -20,7 +20,7 @@ export async function PublicationStatus() {
     <ul className="space-y-3">
       {publication.books.map((book) => (
         <li key={book.id}>
-          Future Tech Book {book.number}, {book.title} ({classRange(book.classes)}) is {book.published ? "published" : "awaiting organisational approval"}.
+          {book.streamName} Book {book.number}, {book.title} ({classRange(book.classes)}) is {book.published ? "published" : "awaiting organisational approval"}.
           {" "}
           {book.publishedTests} of {book.totalTests} included mock tests are published.
           {book.published ? ` Reading opens in the student portal after the ₹${publication.feeInr} payment for that book is verified.` : " It is not offered for reading while it awaits approval."}

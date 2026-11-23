@@ -25,9 +25,14 @@ export default async function DashboardPage() {
           <p className="text-sm font-semibold uppercase tracking-widest text-tejas-saffron">TEJAS Olympiad</p>
           <h1 className="mt-2 text-3xl font-bold text-tejas-blue">{view.student.fullName}</h1>
           <p className="mt-2 text-tejas-muted">{view.student.streamName} · Class {view.student.classLevel} · {view.student.schoolName}</p>
+          {view.student.contentQa ? (
+            <p className="mt-3 rounded-2xl border border-tejas-saffron/40 bg-tejas-ivory px-4 py-3 text-sm text-tejas-ink" role="status">
+              Authorised content QA testing account. All published English, Mathematics and Future Tech e-books and mock tests are open for preview. This login is not a staff console and does not show other students&apos; records or payment details.
+            </p>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-3 text-sm">
             <Link className="font-semibold text-tejas-blue underline" href="/learn/account">Account details</Link>
-            <Link className="font-semibold text-tejas-blue underline" href="/learn/pay">Payment</Link>
+            {view.student.contentQa ? null : <Link className="font-semibold text-tejas-blue underline" href="/learn/pay">Payment</Link>}
             <form action="/api/learn/logout" method="post"><button className="font-semibold text-tejas-blue underline" type="submit">Sign out</button></form>
           </div>
         </header>
@@ -42,7 +47,7 @@ export default async function DashboardPage() {
           </article>
         ) : view.books.map((book) => (
           <article key={book.id} className="rounded-3xl border border-tejas-border bg-white p-6 shadow-tejas">
-            <p className="text-sm font-semibold text-tejas-saffron">Book {book.bookNumber}</p>
+            <p className="text-sm font-semibold text-tejas-saffron">{book.streamName} · Book {book.bookNumber}</p>
             <h2 className="mt-1 text-2xl font-bold text-tejas-blue">{book.title}</h2>
             <p className="mt-2 text-sm text-tejas-muted">Assigned classes {book.assignedClasses.join(", ")}. Fee {formatInr(book.amountInr)}, including {book.includedMockTests} mock tests at no extra charge.</p>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">

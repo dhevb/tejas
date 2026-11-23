@@ -6,6 +6,7 @@ import { portalDataDir } from "@/lib/portal/paths";
 import { streamById, type StreamId } from "@/lib/registration/schema";
 import { loadCatalog } from "@/lib/portal/catalog.server";
 import {
+  booksForContentQa,
   booksForLearner,
   contentChecked,
   decideAccess,
@@ -19,6 +20,7 @@ import {
   type PublicationStatus,
   type PublicQuestion,
 } from "@/lib/portal/model";
+import { isContentQaAccount } from "@/lib/portal/content-qa";
 import { hashPassword, passwordIsAcceptable, passwordMatches } from "@/lib/portal/session";
 import { durableStorageConfigured } from "@/lib/registration/durable";
 import { PortalUnavailable } from "@/lib/portal/supabase-rest";
@@ -148,6 +150,8 @@ export type PublicStudent = {
   streamId: StreamId;
   streamName: string;
   classLevel: number;
+  /** True only for the allowlisted content-QA testing identity. */
+  contentQa: boolean;
 };
 
 export function toPublicStudent(student: PortalStudent): PublicStudent {
@@ -161,6 +165,7 @@ export function toPublicStudent(student: PortalStudent): PublicStudent {
     streamId: student.streamId,
     streamName: streamById(student.streamId).name,
     classLevel: student.classLevel,
+    contentQa: isContentQaAccount(student.email),
   };
 }
 
@@ -744,6 +749,7 @@ export async function publicBookPublication(): Promise<
         id: string;
         number: number;
         title: string;
+        streamName: string;
         classes: number[];
         published: boolean;
         publishedTests: number;
@@ -768,6 +774,7 @@ export async function publicBookPublication(): Promise<
           id: book.id,
           number: book.bookNumber,
           title: book.title,
+          streamName: book.streamName,
           classes: [...book.assignedClasses],
           published: publicationOf(book.publicationStatus, publication.books[book.id]) === "published",
           publishedTests: tests.filter((test) => publicationOf(test.publicationStatus, publication.tests[test.id]) === "published").length,
@@ -781,6 +788,7 @@ export async function publicBookPublication(): Promise<
 }
 
 export async function accessFor(student: PortalStudent, bookId: string, testId?: string | null) {
+  const contentQa = isContentQaAccount(student.email);
   if (portalPersistence() === "unavailable") {
     const catalog = loadCatalog();
     return decideAccess({
@@ -792,6 +800,7 @@ export async function accessFor(student: PortalStudent, bookId: string, testId?:
       bookPublished: false,
       testPublished: false,
       paid: false,
+      contentQa,
     });
   }
   if (portalPersistence() === "remote") {
@@ -812,13 +821,15 @@ export async function accessFor(student: PortalStudent, bookId: string, testId?:
     testId,
     bookPublished,
     testPublished,
-    paid: paidFor(db, student.id, bookId),
+    paid: contentQa || paidFor(db, student.id, bookId),
+    contentQa,
   });
 }
 
 export type DashboardBook = {
   id: string;
   title: string;
+  streamName: string;
   bookNumber: number;
   assignedClasses: number[];
   publicationStatus: PublicationStatus;
@@ -853,15 +864,18 @@ export async function dashboard(student: PortalStudent): Promise<{
   }
   const db = await readDb();
   const catalog = loadCatalog();
+  const contentQa = isContentQaAccount(student.email);
   const quote = quoteFee(catalog, student.streamId, student.classLevel);
-  const books = booksForLearner(catalog, student.streamId, student.classLevel).map((book) => {
+  const visibleBooks = contentQa ? booksForContentQa(catalog) : booksForLearner(catalog, student.streamId, student.classLevel);
+  const books = visibleBooks.map((book) => {
     const entitlement = activeEntitlement(db, student.id, book.id);
     const bookStatus = publicationOf(book.publicationStatus, db.publication.books[book.id]);
-    const paymentStatus: PaymentState | "none" = entitlement?.status ?? "none";
-    const paid = paymentStatus === "verified";
+    const paymentStatus: PaymentState | "none" = contentQa ? "verified" : entitlement?.status ?? "none";
+    const paid = contentQa || paymentStatus === "verified";
     return {
       id: book.id,
       title: book.title,
+      streamName: book.streamName,
       bookNumber: book.bookNumber,
       assignedClasses: book.assignedClasses,
       publicationStatus: bookStatus,

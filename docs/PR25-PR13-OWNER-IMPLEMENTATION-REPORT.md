@@ -102,7 +102,7 @@ Recorded on the follow-up commit (see section 8):
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit after Class 10 Math follow-up: *(filled after push)*
+- Tip commit after Class 10 Math follow-up: 9fb5d79039603e97b0f30e94b5922b09cd163b2c
 - PR #25 / #13: remain OPEN, unmerged
 
 ## 9. Production / migration

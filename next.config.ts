@@ -4,12 +4,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  serverExternalPackages: ["xlsx", "tesseract.js"],
-  // Bundle local eng.traineddata.gz into serverless functions that run OCR.
+  serverExternalPackages: ["xlsx", "tesseract.js", "tesseract.js-core"],
+  // Include tessdata + WASM cores; Next tracing otherwise omits dynamically opened .wasm files.
   outputFileTracingIncludes: {
-    "/api/register/*/payment": ["./vendor/tessdata/**/*"],
-    "/api/learn/pay": ["./vendor/tessdata/**/*"],
-    "/api/register/ocr-probe": ["./vendor/tessdata/**/*"],
+    "/api/register/*/payment": ["./vendor/tessdata/**/*", "./node_modules/tesseract.js-core/**/*"],
+    "/api/learn/pay": ["./vendor/tessdata/**/*", "./node_modules/tesseract.js-core/**/*"],
+    "/api/register/ocr-probe": ["./vendor/tessdata/**/*", "./node_modules/tesseract.js-core/**/*"],
   },
   async redirects() {
     return [

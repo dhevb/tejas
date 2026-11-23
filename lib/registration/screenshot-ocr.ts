@@ -52,7 +52,8 @@ const FONT: Record<string, string[]> = {
 /** Pixel scale for glyph fixtures. Real OCR tests use renderPaymentScreenshotPng with larger scale. */
 const SCALE = 3;
 const PAYMENT_SCREENSHOT_SCALE = 8;
-const OCR_TIMEOUT_MS = 20_000;
+/** Cold-start WASM load on Vercel can exceed 20s; keep under route maxDuration (60s). */
+const OCR_TIMEOUT_MS = 45_000;
 
 function crc32(bytes: Buffer): number {
   let crc = 0xffffffff;

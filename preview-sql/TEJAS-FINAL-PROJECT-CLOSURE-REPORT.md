@@ -1,4 +1,4 @@
-# TEJAS — Final Project Closure Report
+﻿# TEJAS — Final Project Closure Report
 
 **Date:** 2026-11-23 (Asia/Kolkata)  
 **Repository:** `dhevb/tejas`  
@@ -180,12 +180,12 @@ No new backup/restore/extraction executed. No secrets/archives in Git. Isolated 
 
 ## 13. Push verification
 
-Filled after push:
+Verified:
 
 | Field | Value |
 |-------|-------|
-| Report commit | *(pending push)* |
-| Remote tip of docs branch | *(pending push)* |
+| Report commit | f8fb6c74be865bc310a3db54b4bbf053ff44b737 |
+| Remote tip of docs branch | f8fb6c74be865bc310a3db54b4bbf053ff44b737 |
 | Security branch tip | `52bced777b8a09155e1e3454cdf6a9bfa6593ac0` |
 
 ---

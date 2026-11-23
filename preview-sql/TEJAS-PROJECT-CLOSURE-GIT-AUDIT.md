@@ -125,3 +125,11 @@ Archives were **not** modified by closure.
 - No archive deletion.
 - No force-push, clean, or stash discard.
 - Secrets not printed.
+
+
+## J. Post-publish remote tip
+
+- Branch: `docs/dr-phase37-42-closure` 
+- Tip: `511b244da17c53f5401e4d76fff689453af7fa12` 
+- Publish commit: `0bf7ee0941c4ce9d9c783bbf6bcd6f36b77aa698` 
+

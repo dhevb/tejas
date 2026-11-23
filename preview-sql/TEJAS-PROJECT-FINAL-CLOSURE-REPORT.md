@@ -39,7 +39,7 @@ Certified archive hashes (from master status / certification report; archives re
 
 | Worktree | Branch | HEAD | Upstream | Notes |
 |----------|--------|------|----------|-------|
-| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | `0bf7ee0` | `origin/docs/dr-phase37-42-closure` @ `0bf7ee0` | Publication worktree |
+| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | `511b244` | `origin/docs/dr-phase37-42-closure` @ `511b244` | Publication worktree |
 | `tejas-phase3` | `phase3/free-host-local` | `6da54f6` (+ local dirty DR files) | none | Checkpoint **not pushed** |
 | `tejas` | `docs/dr-windows-verification-20261118` | `d389540` | synced | Untracked `getkey.obj` preserved |
 | `tejas-website` | `fix/faq-separate-pan-fields` | `d9f86d6` | synced | Clean |
@@ -53,6 +53,7 @@ No unrelated worktrees were merged.
 | Commit | Branch | Summary |
 |--------|--------|---------|
 | `0bf7ee0941c4ce9d9c783bbf6bcd6f36b77aa698` (`0bf7ee0`) | `docs/dr-phase37-42-closure` | Document Phase 37–42 DR certification and publish recovery operator scripts |
+| `511b244da17c53f5401e4d76fff689453af7fa12` (`511b244`) | `docs/dr-phase37-42-closure` | Record verified remote commit IDs in the project final closure report |
 
 Unpushed intermediate commit IDs (`90295e5`, `1755f15`) were soft-reset locally before the first successful push solely to remove GitHub push-protection false-positive SelfTest string literals. They never landed on any remote.
 
@@ -62,7 +63,7 @@ Unpushed intermediate commit IDs (`90295e5`, `1755f15`) were soft-reset locally 
 
 | Branch | Action | Remote commit |
 |--------|--------|---------------|
-| `docs/dr-phase37-42-closure` | **Pushed** (new branch) | `0bf7ee0941c4ce9d9c783bbf6bcd6f36b77aa698` |
+| `docs/dr-phase37-42-closure` | **Pushed** (new branch) | tip `511b244da17c53f5401e4d76fff689453af7fa12` (includes `0bf7ee0`) |
 | `phase3/free-host-local` | **Not pushed** | N/A — hosting `_next` checkpoint |
 | `main` | **Not pushed / not merged** | Local `main` = `origin/main` = `fd47ecc` |
 | `docs/dr-windows-verification-20261118` | No new commits | `d389540` |

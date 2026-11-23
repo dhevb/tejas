@@ -137,6 +137,6 @@ SHA-256: `91758B3FB2B53AFA7E549A33A12546DA97604F857BB7F9D2CA15C25628E20E2C`
 - Tests: `lib/registration/utr-claim.test.ts` (+ updated payment-rules); suite **94/94**, `tsc`, lint, build pass locally.
 - Migration file includes `service_role` grants + explicit anon/authenticated REVOKE (still **not applied**).
 - Final migration SHA-256: `91758B3FB2B53AFA7E549A33A12546DA97604F857BB7F9D2CA15C25628E20E2C`.
-- Tip commit: `6150ffac99fca6eb20869538206c4b5512282a79`
+- Tip commit: `2f0c8872438293e7e398b73eda1caf5fdca2fd1a`
 
 **Production unchanged by this work.** PR #56 remains **OPEN / unmerged** until the owner decides.

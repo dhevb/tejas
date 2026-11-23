@@ -9,7 +9,7 @@
 | Prior SHA-256 (pre-REVOKE hardening) | `3EAB546721FF7355B29FF554C7B71B65825823324CBD47CBACAF6F157591CF63` |
 | PR | https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged** |
 | Base (`main`) | `fa1b15e62900d12d1832dcb19b88c67ef1a9935f` |
-| Tip commit | `6150ffac99fca6eb20869538206c4b5512282a79` |
+| Tip commit | `2f0c8872438293e7e398b73eda1caf5fdca2fd1a` |
 | Working-tree note | REVOKE hardening committed to PR #56 feature branch (not applied to any database) |
 | Executed on Production? | **No** |
 | Live schema queried? | **No** |

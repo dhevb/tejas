@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/register/*/payment": ["./vendor/tessdata/**/*"],
     "/api/learn/pay": ["./vendor/tessdata/**/*"],
+    "/api/register/ocr-probe": ["./vendor/tessdata/**/*"],
   },
   async redirects() {
     return [

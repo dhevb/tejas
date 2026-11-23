@@ -9,7 +9,7 @@ export const resourceRegistry: ResourceItem[] = [
   {
     id: "sch-reg-guide",
     title: ls("School registration — TEJAS Olympiad 2026–27", "विद्यालय पंजीकरण"),
-    description: ls("Register the school and upload the student sheet. Registration is open from 3 to 20 November 2026.", "3 से 20 नवंबर 2026 तक पंजीकरण।"),
+    description: ls("Register the school and upload the student sheet. Registration is open from 3 to 30 November 2026.", "3 से 30 नवंबर 2026 तक पंजीकरण।"),
     category: "school",
     type: "article",
     href: "/schools/register",

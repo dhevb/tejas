@@ -29,7 +29,7 @@ export const faqItems: FAQItem[] = [
     category: "Registration",
     question: "How do schools participate?",
     answer:
-      "The invitation letter says registration starts on 3 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120. The letter says the retained ₹30 is for conducting the examination, including the supervisor's remuneration. Printed books are optional at ₹170; the school retains ₹34 and remits ₹136, and the letter says that share is at the school's discretion. The brochure's tentative timeline prints registration as 02–22 November 2026. The website form follows the invitation letter. Write to tejas@dhe.org.in or call +91 99886 90588 or +91 79034 31900.",
+      "Registration starts on 3 November 2026 and the last date is 30 November 2026. That window is the same on the invitation, the brochure timeline, and the school form at /schools/register. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120. The invitation says the retained ₹30 is for conducting the examination, including the supervisor's remuneration. Printed books are optional at ₹170; the school retains ₹34 and remits ₹136, and the invitation says that share is at the school's discretion. Write to tejas@dhe.org.in or call +91 99886 90588 or +91 79034 31900.",
   },
   {
     category: "Exams",

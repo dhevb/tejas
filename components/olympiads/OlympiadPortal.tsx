@@ -394,7 +394,7 @@ export function OlympiadPortal({ olympiad }: Props) {
 
         <section id="register" className="scroll-mt-32 border-t border-stone-200 py-16 text-center">
           <h2 className="text-2xl font-bold text-tejas-ink">School registration</h2>
-          <p className="mt-2 text-tejas-muted">Schools register their students from 3 to 20 November 2026. Write to tejas@dhe.org.in.</p>
+          <p className="mt-2 text-tejas-muted">Schools register their students from 3 to 30 November 2026. Write to tejas@dhe.org.in.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             {isComingSoon ? <Button disabled>Not open for registration</Button> : (
               <Link href="/schools/register"><Button>Register a school</Button></Link>

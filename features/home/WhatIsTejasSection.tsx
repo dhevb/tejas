@@ -30,7 +30,7 @@ export function WhatIsTejasSection() {
             <ul className="mt-6 space-y-2 text-sm text-tejas-muted">
               <li>• TEJAS English and Mathematics, Classes III–X</li>
               <li>• TEJAS Future Tech, Classes VI–X</li>
-              <li>• Registration 3–20 November 2026</li>
+              <li>• Registration 3–30 November 2026</li>
               <li>• Offline examinations on 9, 10, and 11 December 2026</li>
             </ul>
             <Link href="/about" className="mt-8 inline-flex items-center gap-2 font-semibold text-tejas-saffron hover:underline">

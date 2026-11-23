@@ -5,7 +5,7 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { FadeIn } from "@/components/shared/FadeIn";
 
 const benefits = [
-  { icon: Building2, label: "School registration", desc: "Opens 3 November 2026 and closes 20 November 2026" },
+  { icon: Building2, label: "School registration", desc: "Opens 3 November 2026 and closes 30 November 2026" },
   { icon: Users, label: "Student sheet", desc: "The school uploads one sheet and chooses each stream" },
   { icon: Award, label: "School share", desc: "Retain ₹30 of ₹150, and ₹34 of each ₹170 book" },
   { icon: BarChart3, label: "No public ranking", desc: "A 2026–27 school list has not been published" },

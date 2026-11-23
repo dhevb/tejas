@@ -113,8 +113,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     hi: "एक परीक्षा से आगे, युवा विद्यार्थियों को पहचानने और सशक्त करने का राष्ट्रीय मंच।",
   },
   whyThisEdition: {
-    en: "Registration runs from 3 November 2026 to 20 November 2026. Mathematics is on 9 December 2026, English on 10 December 2026, and Future Tech on 11 December 2026. The examinations are offline at the participating schools.",
-    hi: "पंजीकरण 3–20 नवंबर 2026। परीक्षाएँ 9, 10 और 11 दिसंबर 2026।",
+    en: "Registration runs from 3 November 2026 to 30 November 2026. Mathematics is on 9 December 2026, English on 10 December 2026, and Future Tech on 11 December 2026. The examinations are offline at the participating schools.",
+    hi: "पंजीकरण 3–30 नवंबर 2026। परीक्षाएँ 9, 10 और 11 दिसंबर 2026।",
   },
   learningValues: [
     { en: "Improve conceptual understanding", hi: "अवधारणात्मक समझ" },
@@ -124,7 +124,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
   ],
   timeline: [
     { year: 2026, title: { en: "Registration opens", hi: "पंजीकरण शुरू" }, description: { en: "3 November 2026", hi: "3 नवंबर 2026" } },
-    { year: 2026, title: { en: "Last date to register", hi: "अंतिम तिथि" }, description: { en: "20 November 2026", hi: "20 नवंबर 2026" } },
+    { year: 2026, title: { en: "Last date to register", hi: "अंतिम तिथि" }, description: { en: "30 November 2026", hi: "30 नवंबर 2026" } },
     { year: 2026, title: { en: "TEJAS Mathematics", hi: "TEJAS गणित" }, description: { en: "9 December 2026", hi: "9 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" }, description: { en: "10 December 2026", hi: "10 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" }, description: { en: "11 December 2026", hi: "11 दिसंबर 2026" } },
@@ -170,8 +170,8 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     {
       question: { en: "When is registration opening?", hi: "पंजीकरण कब?" },
       answer: {
-        en: "Registration opens on 3 November 2026 and the last date is 20 November 2026. Schools register at /schools/register. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
-        hi: "पंजीकरण 3 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है।",
+        en: "Registration opens on 3 November 2026 and the last date is 30 November 2026. Schools register at /schools/register. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
+        hi: "पंजीकरण 3 नवंबर 2026 से 30 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है।",
       },
     },
   ],

@@ -11,7 +11,8 @@ test("approved programme facts stay the single published record", () => {
   assert.equal(programme.email, "tejas@dhe.org.in");
   assert.deepEqual(programme.phones.map((phone) => phone.display), ["+91 99886 90588", "+91 79034 31900"]);
   assert.equal(programme.registrationOpens, "3 November 2026");
-  assert.equal(programme.registrationCloses, "20 November 2026");
+  assert.equal(programme.registrationCloses, "30 November 2026");
+  assert.equal(programme.brochureRegistration, "3–30 November 2026");
   assert.equal(programme.streams.find((stream) => stream.id === "technology")?.classes, "Classes VI–X");
   assert.equal(programme.registrationGross, 150);
   assert.equal(programme.registrationSchoolShare, 30);
@@ -41,6 +42,9 @@ test("public source does not keep replaced programme claims", () => {
     /February 2027/,
     /National Talent Development Ecosystem/,
     /olympiad@shikshamahakumbh/i,
+    /20 November 2026/,
+    /02[–-]22 November 2026/,
+    /3[–-]20 November 2026/,
   ];
   const hits: string[] = [];
   for (const root of roots) {

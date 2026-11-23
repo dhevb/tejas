@@ -60,8 +60,8 @@ export const mathematicsOlympiad: OlympiadPortalContent = {
     {
       question: ls("When is the examination?", "परीक्षा कब है?"),
       answer: ls(
-        "9 December 2026. Schools register from 3 November 2026 to 20 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
-        "9 दिसंबर 2026। पंजीकरण 3 नवंबर 2026 से 20 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है।",
+        "9 December 2026. Schools register from 3 November 2026 to 30 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.",
+        "9 दिसंबर 2026। पंजीकरण 3 नवंबर 2026 से 30 नवंबर 2026 तक। शुल्क ₹150 प्रति विद्यार्थी प्रति स्ट्रीम। विद्यालय ₹30 रखता है और ₹120 TEJAS को भेजता है।",
       ),
     },
     {

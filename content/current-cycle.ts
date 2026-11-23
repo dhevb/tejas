@@ -22,7 +22,7 @@ export const programme = {
   convenerRole: "Convener, TEJAS Olympiad",
   guidance: "The brochure says TEJAS is administered by the Department of Holistic Education, a unit of Vidya Bharti Institute of Training and Research Trust, under the guidance and support of Vidya Bharti – North Zone.",
   registrationOpens: "3 November 2026",
-  registrationCloses: "20 November 2026",
+  registrationCloses: "30 November 2026",
   streams: [
     { id: "mathematics", name: "TEJAS Mathematics", classes: "Classes III–X", examDate: "9 December 2026" },
     { id: "english", name: "TEJAS English", classes: "Classes III–X", examDate: "10 December 2026" },
@@ -44,7 +44,7 @@ export const programme = {
     "The invitation says the school's ₹34 share of a printed book stays at the school's discretion. Printed books are not compulsory.",
   mockTests:
     "The invitation says the team is working towards making online mock tests available on this website, so students can practise the format before the offline examination. No mock test is open yet.",
-  brochureRegistration: "02–22 November 2026",
+  brochureRegistration: "3–30 November 2026",
   brochureResults: "12 January 2027",
   brochureAwards:
     "The brochure says outstanding students will receive a gold medal, a silver medal and a bronze medal, and that every participant receives an e-certificate.",
@@ -87,7 +87,7 @@ export const currentCycle = {
   } satisfies LocalizedString,
   registrationStatus: {
     en: `Registration opens on ${programme.registrationOpens} and closes on ${programme.registrationCloses}.`,
-    hi: "पंजीकरण 3 नवंबर 2026 को खुलता है और 20 नवंबर 2026 को बंद होता है।",
+    hi: "पंजीकरण 3 नवंबर 2026 को खुलता है और 30 नवंबर 2026 को बंद होता है।",
   } satisfies LocalizedString,
   examDates: {
     en: "Mathematics 9 December 2026, English 10 December 2026, Future Tech 11 December 2026.",

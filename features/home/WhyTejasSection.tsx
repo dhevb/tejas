@@ -38,7 +38,7 @@ const differentiators = [
     icon: Users,
     title: "Schools register",
     titleHi: "विद्यालय पंजीकरण",
-    description: "Registration opens on 3 November 2026 and closes on 20 November 2026.",
+    description: "Registration opens on 3 November 2026 and closes on 30 November 2026.",
   },
   {
     icon: Lightbulb,

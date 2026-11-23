@@ -19,7 +19,7 @@ const documents = [
   },
   {
     title: "Invitation dated 31 October 2026",
-    description: "Letter DHE/TEJAS/26-27/03 from Sonu Agnihotri Sharma, Convener. It states the examination dates, registration from 3 to 20 November 2026, fees, books, and cash prizes.",
+    description: "Letter DHE/TEJAS/26-27/03 from Sonu Agnihotri Sharma, Convener. It states the examination dates, registration from 3 to 30 November 2026, fees, books, and cash prizes.",
     href: "/documents/tejas-olympiad-2026-27-invitation.pdf",
     file: "tejas-olympiad-2026-27-invitation.pdf",
   },
@@ -63,7 +63,7 @@ export default function DocumentsPage() {
             <div className="rounded-2xl border border-tejas-saffron/40 bg-tejas-saffron/5 p-6 text-sm leading-relaxed text-tejas-ink">
               <h2 className="text-lg font-bold">Where the documents differ</h2>
               <ul className="mt-3 list-disc space-y-2 pl-5">
-                <li>The invitation sets registration from {programme.registrationOpens} to {programme.registrationCloses}. The brochure’s tentative timeline prints {programme.brochureRegistration}. The school form follows the invitation.</li>
+                <li>Registration is {programme.registrationOpens} to {programme.registrationCloses} on the invitation, the brochure timeline ({programme.brochureRegistration}), and the school form — per the owner-confirmed closing date of 30 November 2026.</li>
                 <li>{programme.results}</li>
                 <li>{programme.awardNote}</li>
                 <li>The brochure’s QR code opens <a className="font-semibold text-tejas-blue underline" href="https://forms.gle/mfKRAEPLLE5fkDDT6" target="_blank" rel="noopener noreferrer">this Google Form</a>. The invitation’s registration link is the school form on this website: <Link className="font-semibold text-tejas-blue underline" href="/schools/register">/schools/register</Link>.</li>

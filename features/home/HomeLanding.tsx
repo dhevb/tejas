@@ -53,11 +53,11 @@ const reasons = [
   { icon: Lightbulb, title: "Papers sent to the school", text: "Question papers and OMR sheets are dispatched in advance. Completed sheets are couriered the same day." },
   { icon: Sparkles, title: "Prizes already announced", text: "Each class in each stream has prizes of ₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500." },
   { icon: Cpu, title: "Future Tech is Classes VI–X", text: "Classes III–V are not eligible. The examination is offline and uses OMR sheets." },
-  { icon: Users, title: "Take part with the school", text: "Schools register their students from 3 to 20 November 2026. There is no individual online signup." },
+  { icon: Users, title: "Take part with the school", text: "Schools register their students from 3 to 30 November 2026. There is no individual online signup." },
 ] as const;
 
 const steps = [
-  { n: "1", title: "School registration", text: "A school submits the form between 3 and 20 November 2026." },
+  { n: "1", title: "School registration", text: "A school submits the form between 3 and 30 November 2026." },
   { n: "2", title: "Student sheet", text: "The school uploads the student sheet and chooses a stream for each student." },
   { n: "3", title: "Preparation", text: "A syllabus and sample papers have not been published. Printed books are optional. This website does not start an online test." },
   { n: "4", title: "Examination", text: "Mathematics, English, and Future Tech are held offline at the school on 9, 10, and 11 December 2026." },
@@ -136,7 +136,7 @@ export function HomeLanding() {
               ["3", "Olympiad streams", "English, Mathematics, Future Tech"],
               ["III–X", "English and Mathematics", "Future Tech is Classes VI–X"],
               ["₹150", "Registration fee", "School retains ₹30; ₹120 to TEJAS"],
-              ["20 Nov", "Last registration day", "Opens 3 November 2026"],
+              ["30 Nov", "Last registration day", "Opens 3 November 2026"],
             ].map(([value, label, note]) => (
               <div key={label} className="rounded-2xl border border-tejas-border bg-tejas-ivory p-5">
                 <dt className="text-sm font-medium text-tejas-muted">{label}</dt>
@@ -214,8 +214,8 @@ export function HomeLanding() {
           <div className="mt-8 grid gap-4 lg:grid-cols-4">
             <article className="rounded-2xl bg-tejas-blue p-5 text-white lg:col-span-1">
               <p className="text-xs font-semibold uppercase tracking-widest text-tejas-gold">Registration</p>
-              <p className="mt-3 text-2xl font-bold">3–20 November 2026</p>
-              <p className="mt-2 text-sm text-white/75">The school form closes on 20 November 2026.</p>
+              <p className="mt-3 text-2xl font-bold">3–30 November 2026</p>
+              <p className="mt-2 text-sm text-white/75">The school form closes on 30 November 2026.</p>
             </article>
             {[
               ["Mathematics", "9 December 2026"],
@@ -238,7 +238,7 @@ export function HomeLanding() {
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-widest text-tejas-gold">For schools</p>
             <h2 id="join-heading" className="mt-3 text-3xl font-bold md:text-4xl">Be a part of TEJAS Olympiad 2026–27</h2>
-            <p className="mt-4 text-lg text-white/80">Registration is open to schools from 3 November 2026 to 20 November 2026. The school collects ₹150 per student per stream, retains ₹30, and remits ₹120.</p>
+            <p className="mt-4 text-lg text-white/80">Registration is open to schools from 3 November 2026 to 30 November 2026. The school collects ₹150 per student per stream, retains ₹30, and remits ₹120.</p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <Link href="/schools/register">

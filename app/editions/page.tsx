@@ -34,7 +34,7 @@ export default function EditionsPage() {
               <p className="text-sm font-semibold text-tejas-saffron">TEJAS Olympiad 2026–27 · Department of Holistic Education</p>
               <p className="mt-2 text-tejas-muted">
                 TEJAS English and Mathematics for Classes III–X. TEJAS Future Tech for Classes VI–X.
-                Registration 3–20 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.
+                Registration 3–30 November 2026. The fee is ₹150 per student per stream. The school retains ₹30 and remits ₹120 to TEJAS.
               </p>
               <Link href={`/editions/${current.slug}`} className="mt-4 inline-block text-sm font-semibold text-tejas-saffron hover:underline">
                 Explore {current.name} →

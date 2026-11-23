@@ -42,7 +42,7 @@ const pillars = [
   {
     icon: Users,
     title: "Registration through schools",
-    description: "Schools register their students from 3 November 2026 to 20 November 2026. The school collects ₹150, retains ₹30, and remits ₹120.",
+    description: "Schools register their students from 3 November 2026 to 30 November 2026. The school collects ₹150, retains ₹30, and remits ₹120.",
   },
   {
     icon: Mail,
@@ -146,7 +146,7 @@ export default function AboutPage() {
             <FadeIn delay={0.1}>
               <h2 className="text-2xl font-bold text-tejas-ink">For schools</h2>
               <ul className="mt-4 space-y-3 text-tejas-muted">
-                <li>Registration opens on 3 November 2026 and closes on 20 November 2026.</li>
+                <li>Registration opens on 3 November 2026 and closes on 30 November 2026.</li>
                 <li>The school collects ₹150 per student per stream, retains ₹30, and remits ₹120 to TEJAS.</li>
                 <li>Printed books are optional at ₹170. The school retains ₹34 and remits ₹136.</li>
                 <li>The invitation says e-books will be made available at ₹49 per student login. Access is not open yet, and the form does not charge ₹49.</li>

@@ -35,13 +35,21 @@ export const resourceRegistry: ResourceItem[] = [
     href: "/schools/register",
   },
   {
+    id: "dl-official-docs",
+    title: ls("Official TEJAS documents", "आधिकारिक TEJAS दस्तावेज़"),
+    description: ls("Brochure, invitation, and the 2025 English Olympiad brief report.", "ब्रोशर, निमंत्रण पत्र और 2025 अंग्रेज़ी ओलंपियाड संक्षिप्त रिपोर्ट।"),
+    category: "downloads",
+    type: "article",
+    href: "/documents",
+  },
+  {
     id: "dl-eng-2025",
     title: ls("1st DHE English Olympiad — edition archive", "प्रथम DHE English Olympiad संग्रह"),
-    description: ls("Historical names from the 13–16 October 2025 examination. The brief-report PDF is not attached on this website.", "13–16 अक्टूबर 2025 के ऐतिहासिक नाम। रिपोर्ट की PDF यहाँ संलग्न नहीं है।"),
+    description: ls("Historical names from the 13–16 October 2025 examination. The brief-report PDF is available under Official documents.", "13–16 अक्टूबर 2025 के ऐतिहासिक नाम। संक्षिप्त रिपोर्ट आधिकारिक दस्तावेज़ों में उपलब्ध है।"),
     category: "downloads",
     subject: "English",
     type: "article",
-    href: "/hall-of-fame",
+    href: "/documents",
   },
 ];
 

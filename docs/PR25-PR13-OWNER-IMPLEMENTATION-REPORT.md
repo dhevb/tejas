@@ -92,7 +92,7 @@ Implemented:
 
 ## 7. Test / TypeScript / lint / build
 
-Recorded on tip `28c95664334b0dbe0a9879a14c539982fd7cc533`:
+Recorded before tip documentation commit (feature work `9fb5d79` / report `28c9566`):
 
 - `npm test` — **79/79 pass** (includes payment-rules, OCR runtime, access-rules)
 - `npx tsc --noEmit` — pass
@@ -102,8 +102,8 @@ Recorded on tip `28c95664334b0dbe0a9879a14c539982fd7cc533`:
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit after Class 10 Math follow-up: `28c95664334b0dbe0a9879a14c539982fd7cc533`
-- Feature commit: `9fb5d79039603e97b0f30e94b5922b09cd163b2c`
+- Tip commit: `a2715f2325118793a77e609bb90119040347daf8`
+- Feature commit (Class 10 Math + learn-pay OCR): `9fb5d79039603e97b0f30e94b5922b09cd163b2c`
 - PR #25 / #13: remain OPEN, unmerged
 
 ## 9. Production / migration

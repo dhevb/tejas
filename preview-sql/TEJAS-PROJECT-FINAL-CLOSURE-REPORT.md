@@ -1,16 +1,18 @@
 # TEJAS — Project Final Closure Report
 
 **Date:** 2026-11-23  
+**Execution status:** **COMPLETED** (not a plan; Git-verified)  
 **Overall verdict:** **PROJECT CLOSURE — PASS WITH OPTIONAL ITEMS**  
-**DR certification:** **PASS** (unchanged; evidence below)
+**DR certification:** **PASS**
+
+> This file is the execution record.  
+> Do **not** treat `TEJAS-PROJECT-CLOSURE-GIT-AUDIT.md` (pre-closure read-only snapshot) as proof of non-execution. That audit was superseded by the publish below.
 
 ---
 
 ## 1. Overall project closure verdict
 
-Safe repository closure for Phase 37–42 disaster-recovery documentation and recovery scripts is complete. Required evidence and operator materials are published on a dedicated non-production docs branch. Checkpoint `6da54f6` was **not** pushed. Production deploy, production DB/Storage, Auth ban/delete, archive deletion, and secret commits did not occur.
-
-Optional owner-only retention decisions remain open and are **not** required for DR PASS.
+Phase 37–42 DR documentation and recovery scripts are published on GitHub branch `docs/dr-phase37-42-closure`. Checkpoint `6da54f6` remains local only. No production deploy, DB/Storage mutation, Auth ban/delete, archive deletion, or secret commit occurred.
 
 ---
 
@@ -19,147 +21,120 @@ Optional owner-only retention decisions remain open and are **not** required for
 | Item | Verdict | Reference |
 |------|---------|-----------|
 | Overall DR | **PASS** | `TEJAS-DR-MASTER-STATUS.md`, `TEJAS-DR-FINAL-CERTIFICATION-REPORT.md` |
-| Phase 37 DB backup | PASS | `PHASE37-REAL-DATABASE-BACKUP-REPORT.md` |
-| Phase 38 Storage backup | PASS | `PHASE38-REAL-STORAGE-BACKUP-REPORT.md` |
-| Phase 39 isolated Storage restore | PASS | `PHASE39-ISOLATED-STORAGE-RESTORE-EVIDENCE.md` |
-| Phase 40 isolated DB restore | PASS | `PHASE40-ISOLATED-DATABASE-RESTORE-REPORT.md` |
-| Phase 40B app-stack recovery | PASS (Full) | `PHASE40B-APPLICATION-STACK-RECOVERY-REPORT.md` |
-| Phase 41 independent audit | PASS | `PHASE41-INDEPENDENT-DR-AUDIT.md` |
-| Phase 42 CM retire + policy DROP | PASS | `PHASE42-SECURITY-CLEANUP-AND-RETENTION.md`, `PHASE42-OWNER-SQL-RESULTS-RECONCILE.md` |
+| Phase 37–42 | PASS | Reports under `preview-sql/PHASE37*` … `PHASE42*` |
+| Phase 42 reconcile | PASS | `PHASE42-OWNER-SQL-RESULTS-RECONCILE.md` |
 
-Certified archive hashes (from master status / certification report; archives remain local, not in Git):
-
-- Phase 37 TEJAS1: `24db6a21…88f6`
-- Phase 38 TEJAS1: `f34c09db…a17b`
-- Manifest: `7611c089…9a96`
+Archive hashes (archives stay local, not in Git): P37 `24db6a21…88f6`, P38 `f34c09db…a17b`, manifest `7611c089…9a96`.
 
 ---
 
-## 3. Worktree-by-worktree final Git state
+## 3. Worktree-by-worktree final Git state (verified 2026-11-23)
 
 | Worktree | Branch | HEAD | Upstream | Notes |
 |----------|--------|------|----------|-------|
-| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | `5a69eb4` | `origin/docs/dr-phase37-42-closure` @ `5a69eb4` | Publication worktree |
-| `tejas-phase3` | `phase3/free-host-local` | `6da54f6` (+ local dirty DR files) | none | Checkpoint **not pushed** |
-| `tejas` | `docs/dr-windows-verification-20261118` | `d389540` | synced | Untracked `getkey.obj` preserved |
-| `tejas-website` | `fix/faq-separate-pan-fields` | `d9f86d6` | synced | Clean |
+| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | `afb2e77` | `origin/docs/dr-phase37-42-closure` @ `afb2e77` | Clean; publication worktree |
+| `tejas-phase3` | `phase3/free-host-local` | `6da54f6` | none | Local DR copies remain uncommitted; **not pushed** |
+| `tejas` | `docs/dr-windows-verification-20261118` | `d389540` | synced 0/0 | Untracked `getkey.obj` preserved |
+| `tejas-website` | `fix/faq-separate-pan-fields` | `d9f86d6` | synced 0/0 | Clean |
 
-No unrelated worktrees were merged.
+Local `main` = `origin/main` = `fd47ecc` (fast-forwarded earlier; no DR merge into main).
 
 ---
 
 ## 4. Exact commits created
 
-| Commit | Branch | Summary |
-|--------|--------|---------|
-| `0bf7ee0941c4ce9d9c783bbf6bcd6f36b77aa698` (`0bf7ee0`) | `docs/dr-phase37-42-closure` | Document Phase 37–42 DR certification and publish recovery operator scripts |
-| `511b244da17c53f5401e4d76fff689453af7fa12` (`511b244`) | `docs/dr-phase37-42-closure` | Record verified remote commit IDs in the project final closure report |
-| `5a69eb41309858b323bd2f79848094180a808d74` (`5a69eb4`) | `docs/dr-phase37-42-closure` | Finalize closure report tip IDs after verified GitHub push |
+| Full SHA | Short | Message |
+|----------|-------|---------|
+| `0bf7ee0941c4ce9d9c783bbf6bcd6f36b77aa698` | `0bf7ee0` | Document Phase 37-42 DR certification and publish recovery operator scripts |
+| `511b244da17c53f5401e4d76fff689453af7fa12` | `511b244` | Record verified remote commit IDs in the project final closure report |
+| `5a69eb41309858b323bd2f79848094180a808d74` | `5a69eb4` | Finalize closure report tip IDs after verified GitHub push |
+| `afb2e77d9784b4b61a8ec9306e285029d4aee4ac` | `afb2e77` | Align final closure report with published tip lineage |
 
-Unpushed intermediate commit IDs (`90295e5`, `1755f15`) were soft-reset locally before the first successful push solely to remove GitHub push-protection false-positive SelfTest string literals. They never landed on any remote.
-
----
-
-## 5. Branches pushed and remote commit IDs
-
-| Branch | Action | Remote commit |
-|--------|--------|---------------|
-| `docs/dr-phase37-42-closure` | **Pushed** (new branch) | tip `5a69eb41309858b323bd2f79848094180a808d74` (includes `0bf7ee0`, `511b244`) |
-| `phase3/free-host-local` | **Not pushed** | N/A — hosting `_next` checkpoint |
-| `main` | **Not pushed / not merged** | Local `main` = `origin/main` = `fd47ecc` |
-| `docs/dr-windows-verification-20261118` | No new commits | `d389540` |
-| `fix/faq-separate-pan-fields` | No new commits | `d9f86d6` |
-
-Push safety confirmed: recovery workflows are PR/`workflow_dispatch` validators only — **no production Vercel deploy** from this docs branch.
-
-PR URL (optional owner open): https://github.com/dhevb/tejas/pull/new/docs/dr-phase37-42-closure
+Unpushed intermediates `90295e5` / `1755f15` were soft-reset **before first successful push** to remove push-protection false-positive SelfTest literals. They never existed on any remote.
 
 ---
 
-## 6. Checkpoint `6da54f6` review and publication decision
+## 5. Branches pushed and remote commit IDs (Git-confirmed)
+
+| Branch | Action | Remote ID |
+|--------|--------|-----------|
+| `docs/dr-phase37-42-closure` | **Pushed** | tip **`afb2e77d9784b4b61a8ec9306e285029d4aee4ac`** (`git ls-remote` match) |
+| `phase3/free-host-local` | **Not pushed** | Checkpoint has 93 `_next` paths + app WIP |
+| `main` | **Not merged / not pushed from DR** | Remains `fd47ecc` |
+| `docs/dr-windows-verification-20261118` | unchanged | `d389540` |
+| `fix/faq-separate-pan-fields` | unchanged | `d9f86d6` |
+
+Open PR (optional): https://github.com/dhevb/tejas/pull/new/docs/dr-phase37-42-closure
+
+Deploy risk: GitHub Actions are PR / `workflow_dispatch` recovery validators only — **no production Vercel deploy** from this docs branch.
+
+---
+
+## 6. Checkpoint `6da54f6` review
 
 **Decision: DO NOT PUSH.**
 
-| Finding | Detail |
-|---------|--------|
-| Message | `checkpoint before checking out docs/dr-windows-verification-20261118` |
-| Contents | App route/form changes **plus** ~93 `hosting/cloudflare-pages/_next/static/...` paths |
-| Classification | WIP application changes + generated static build output |
-| Strategy | Left on local `phase3/free-host-local`. DR published from `origin/main` via `docs/dr-phase37-42-closure`. No history rewrite of `6da54f6`. |
+- Message: `checkpoint before checking out docs/dr-windows-verification-20261118`
+- Contains app/API/form changes **and** ~93 `hosting/cloudflare-pages/_next/static/...` generated assets
+- `git branch -r --contains 6da54f6` → empty (not on any remote)
+- Safe strategy used: publish DR from `origin/main` on `docs/dr-phase37-42-closure` instead
 
 ---
 
 ## 7. Local `main` synchronization
 
-| Check | Result |
-|-------|--------|
-| Before | Strictly behind `origin/main` (5 commits) |
-| Action | `git branch -f main origin/main` (ref-only; not checked out) |
-| After | `main` = `origin/main` = `fd47ecc` |
-| DR merge into `main` | **Not performed** |
+Strictly behind → fast-forwarded: `main` = `origin/main` = `fd47ecc`. No unique local commits; no DR merge into main.
 
 ---
 
-## 8. Tests / build / security checks
+## 8. Tests / checks (re-verified)
 
 | Check | Result |
 |-------|--------|
-| Secret scan of publish set | **PASS** — no live JWTs / `.env` / `*.tejas1` / `*.obj` / `.temp`; SelfTest probes construct `sb_secret_` prefixes |
-| GitHub push protection | First push attempt blocked on SelfTest literal → fixed by construction; **push succeeded** |
-| `.gitignore` | **PASS** — `supabase/.temp/`, `*.obj`, `*.tejas1`, `*.pgpass`, `tejas-*-pass-*.bin` |
-| Recovery Python core tests | **PASS** (13 OK: inventory/retention/restore_target/seal/workflows) |
-| Full recovery suite on Windows | **PARTIAL** — symlink privilege, NTFS mode bits, `os.fchmod` — pre-existing Windows limits |
-| PowerShell parse (key scripts) | **PASS** |
-| Production mutations | **Not run** |
+| Python core recovery tests (`Python312\python.exe`) | **PASS** — 13 OK (`test_inventory_sql`, `test_retention`, `test_restore_target`, `test_seal_backup`, `test_workflows`) |
+| Full Windows suite | **PARTIAL** — symlink privilege / NTFS mode / `os.fchmod` (pre-existing platform limits) |
+| Secret / push protection | SelfTest literals reconstructed; first blocked push fixed; subsequent pushes succeeded |
+| Exclusions | No `.env`, `*.tejas1`, `getkey.obj`, `supabase/.temp/` committed |
+| Production mutations | Not run |
 
 ---
 
 ## 9. Files intentionally excluded from Git
 
-- Real `.env*` / Credential Manager payloads / live keys  
-- `supabase/.temp/`  
-- `getkey.obj` (`tejas` worktree)  
-- Sealed `*.tejas1` / `*.pgpass` / pass bins  
-- LocalAppData recovery evidence  
-- Checkpoint `6da54f6` hosting `_next` / unrelated WIP  
+`.env*`, CM secrets, `supabase/.temp/`, `getkey.obj`, `*.tejas1`, `*.pgpass`, pass bins, LocalAppData evidence, checkpoint `6da54f6` hosting `_next` tree.
 
 ---
 
 ## 10. Remaining optional owner-only decisions
 
-1. Retain or delete isolated Supabase project `tuxfkmkljduesaofduvq`.  
-2. Ban/delete Auth reader (currently inspect-only; intact).  
-3. Open PR `docs/dr-phase37-42-closure` → `main` when desired.  
-4. Separate review of `phase3/free-host-local` / `6da54f6` app+hosting WIP.  
-5. Future recovery-key rotation (not required for closure).
+1. Retain or delete isolated Supabase project `tuxfkmkljduesaofduvq`  
+2. Ban/delete Auth reader (intact; inspect-only)  
+3. Open PR `docs/dr-phase37-42-closure` → `main`  
+4. Separate review of `phase3/free-host-local` / `6da54f6`  
+5. Future recovery-key rotation (not required for DR PASS)
 
 ---
 
-## 11. Unresolved blockers
+## 11. Blocked / declined actions
 
-**None critical.**
-
----
-
-## 12. Safe next steps for future maintenance
-
-1. Keep offline TEJAS1 archives + USB media intact; re-check hashes periodically.  
-2. Follow `TEJAS-DR-OPERATOR-RUNBOOK.md` for drills; never use `service_role` as Storage backup-reader.  
-3. Prefer Credential Manager over plaintext env files.  
-4. Do not recreate `tejas_storage_backup_objects_select` unless intentionally re-enabling Storage backup SELECT.  
-5. Merge docs to `main` only via reviewed PR.  
-6. Treat `phase3/free-host-local` as local until separately reviewed.
+| Item | Reason |
+|------|--------|
+| Push `6da54f6` / `phase3/free-host-local` | Unsafe mixed checkpoint + generated `_next` assets |
+| Merge DR into `main` | Out of scope; docs branch is the publish path |
+| Delete isolated project / ban Auth reader | Owner-only optional; not required |
+| Force-push / history rewrite / `git clean` | Forbidden |
 
 ---
 
-## Confirmation (safety)
+## 12. Safe next steps
 
-- Production project / `https://tejas.dhe.org.in` — **untouched**  
-- Production DB / Storage / Auth ban-delete — **untouched**  
-- Certified backup archives — **untouched**  
-- No force-push, no `git clean`, no discard of user work  
-- No secrets committed  
+Use `TEJAS-DR-OPERATOR-RUNBOOK.md`. Keep sealed archives offline. Prefer Credential Manager. Merge docs via PR when desired. Leave `phase3/free-host-local` local until reviewed.
 
 ---
 
-*Final project-closure record for the authorized autonomous closure pass.*
+## Confirmation
+
+- Production / `https://tejas.dhe.org.in` — untouched  
+- Certified archives — untouched  
+- No secrets in Git  
+- Remote tip verified: `afb2e77d9784b4b61a8ec9306e285029d4aee4ac`

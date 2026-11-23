@@ -1,135 +1,69 @@
-# TEJAS — Final project closure, Git & pending-work audit
+# TEJAS — Project closure Git audit (POST-EXECUTION)
 
-**Audit mode:** UPDATED after autonomous closure (2026-11-23)
-**Supersedes:** read-only audit issued earlier the same day
-**Primary publication worktree:** `C:\Users\Admin\Desktop\tejas\tejas-dr-closure`
-**Final report:** `preview-sql/TEJAS-PROJECT-FINAL-CLOSURE-REPORT.md`
+**Status:** **SUPERSEDED READ-ONLY AUDIT — EXECUTION COMPLETE**  
+**Issued:** 2026-11-23 (updated after verified GitHub publish)  
+**Authoritative execution record:** `preview-sql/TEJAS-PROJECT-FINAL-CLOSURE-REPORT.md`
+
+The earlier same-day read-only audit that said **STOP and await owner decision** is **obsolete**. It must not be cited as proof that closure was not executed.
 
 ---
 
-## A. Overall closure verdict
+## A. Verdict
 
 ### **PROJECT CLOSURE — PASS WITH OPTIONAL ITEMS**
 
 | Domain | Verdict |
 | --- | --- |
-| Disaster Recovery certification (evidence) | **PASS** — master + final cert + Phase 42 reconcile agree |
-| Git / publish readiness | **PASS** — Phase 37–42 docs/scripts published on `docs/dr-phase37-42-closure`; checkpoint `6da54f6` kept local |
-| Production / secrets / archives | **CLEAN** — no archives/secrets committed; no prod deploy |
+| DR certification | **PASS** |
+| Git publish | **PASS** — `docs/dr-phase37-42-closure` @ `afb2e77` on origin |
+| Checkpoint `6da54f6` | **Kept local** — not pushed |
+| Secrets / archives / production | **CLEAN** |
 
 ---
 
-## B. Worktree-by-worktree Git status (post-closure)
+## B. Git-confirmed publication
 
-All paths are worktrees of `https://github.com/dhevb/tejas`.
-
-### 1) `tejas-dr-closure` (publication)
-
-| Field | Value |
+| Fact | Value |
 | --- | --- |
-| Path | `C:\Users\Admin\Desktop\tejas\tejas-dr-closure` |
-| Branch | `docs/dr-phase37-42-closure` |
-| Base | `origin/main` (`fd47ecc`) |
-| Role | Dedicated DR closure publish branch (docs/scripts only) |
-
-### 2) `tejas-phase3`
-
-| Field | Value |
-| --- | --- |
-| Path | `C:\Users\Admin\Desktop\tejas\tejas-phase3` |
-| Branch | `phase3/free-host-local` |
-| HEAD | `6da54f6` (local checkpoint; **not pushed**) |
-| Upstream | None |
-| Note | DR corpus also present locally; hosting `_next` remains local only |
-
-### 3) `tejas`
-
-| Field | Value |
-| --- | --- |
-| Branch | `docs/dr-windows-verification-20261118` |
-| HEAD | `d389540` — synced with origin |
-| Dirty | Untracked `getkey.obj` preserved; never committed |
-
-### 4) `tejas-website`
-
-| Field | Value |
-| --- | --- |
-| Branch | `fix/faq-separate-pan-fields` |
-| HEAD | `d9f86d6` — synced with origin |
-| Dirty | Clean |
-
-### Related
-
-| Branch | State |
-| --- | --- |
-| Local `main` | Fast-forwarded to `origin/main` = `fd47ecc` |
-| `phase3/free-host-local` | Remains local; do not push blindly |
+| Remote branch | `origin/docs/dr-phase37-42-closure` |
+| Remote tip (`git ls-remote`) | `afb2e77d9784b4b61a8ec9306e285029d4aee4ac` |
+| Publish commit (corpus) | `0bf7ee0941c4ce9d9c783bbf6bcd6f36b77aa698` |
+| Follow-ups | `511b244`, `5a69eb4`, `afb2e77` |
+| Base | `origin/main` = `fd47ecc` |
+| `6da54f6` on remotes | **none** |
 
 ---
 
-## C. Publication decisions
+## C. Worktrees (current)
 
-| Item | Decision |
+| Path | Branch | HEAD | Note |
+| --- | --- | --- | --- |
+| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | `afb2e77` | synced with origin |
+| `tejas-phase3` | `phase3/free-host-local` | `6da54f6` | local DR copies; not pushed |
+| `tejas` | `docs/dr-windows-verification-20261118` | `d389540` | `getkey.obj` untracked only |
+| `tejas-website` | `fix/faq-separate-pan-fields` | `d9f86d6` | clean |
+
+---
+
+## D. Still excluded (never commit)
+
+`supabase/.temp/`, `getkey.obj`, `.env*`, secrets, `*.tejas1`, `*.pgpass`, pass bins, sealed archives.
+
+---
+
+## E. Optional owner-only
+
+1. Isolated project retain/delete  
+2. Auth reader ban/delete  
+3. PR docs → `main`  
+4. Review `6da54f6` separately  
+
+---
+
+## F. Declined
+
+| Action | Reason |
 | --- | --- |
-| Phase 37–42 DR docs/scripts | **Committed + pushed** on `docs/dr-phase37-42-closure` |
-| Checkpoint `6da54f6` | **Do not push** — mixed app WIP + hosting `_next` static assets |
-| Merge DR into `main` | **Not done** — owner may open PR later |
-| `getkey.obj` / `*.tejas1` / `.temp` | **Excluded** |
-
----
-
-## D. Must not commit (still)
-
-| Path | Reason |
-| --- | --- |
-| `supabase/.temp/` | Generated CLI cache (now gitignored) |
-| `getkey.obj` / `*.obj` | Build artifacts (now gitignored) |
-| `*.tejas1` / `*.pgpass` / pass bins | Recovery material (now gitignored) |
-| Real `.env*` / CM secrets | Never commit |
-
----
-
-## E. Open items (optional only)
-
-1. Retain or delete isolated Supabase project `tuxfkmkljduesaofduvq`.
-2. Ban/delete Auth reader (inspect-only today).
-3. Open PR `docs/dr-phase37-42-closure` → `main` when desired.
-4. Separate review of `phase3/free-host-local` / `6da54f6` hosting/app WIP.
-
----
-
-## F. DR certification evidence status
-
-Unchanged **PASS**. See `TEJAS-DR-MASTER-STATUS.md` and `TEJAS-DR-FINAL-CERTIFICATION-REPORT.md`.
-
-Archives were **not** modified by closure.
-
----
-
-## G. Security / production
-
-| Risk | Status |
-| --- | --- |
-| Pushing `6da54f6` | Avoided |
-| Secrets in Git | Avoided (scanned) |
-| Production deploy from docs push | Not triggered (workflows are PR/dispatch validate only) |
-| Force-push / history rewrite | Not used |
-
----
-
-## Audit boundaries honored
-
-- No production / Vercel / DNS / billing changes.
-- No production DB/Storage mutations.
-- No Auth ban/delete.
-- No archive deletion.
-- No force-push, clean, or stash discard.
-- Secrets not printed.
-
-
-## J. Post-publish remote tip
-
-- Branch: `docs/dr-phase37-42-closure` 
-- Tip: `511b244da17c53f5401e4d76fff689453af7fa12` 
-- Publish commit: `0bf7ee0941c4ce9d9c783bbf6bcd6f36b77aa698` 
-
+| Push `6da54f6` | 93 `_next` assets + mixed WIP |
+| Merge into `main` now | Docs branch is the publish path |
+| Force-push / clean / stash discard | Forbidden |

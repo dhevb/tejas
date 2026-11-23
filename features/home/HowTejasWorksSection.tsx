@@ -23,7 +23,7 @@ const steps = [
   {
     year: 4,
     title: "Celebrate",
-    description: "The invitation sets class-wise cash prizes. The brochure describes medals and an e-certificate, and the documents do not say whether the medals are additional. The brochure prints a tentative results date of 12 January 2027. The invitation says the declaration will be communicated separately.",
+    description: "Awards include cash prizes, medals and e-certificates. Class-wise cash prizes are ₹3,100, ₹2,100, ₹1,500 and ten consolation prizes of ₹500. Outstanding students receive gold, silver and bronze medals. Every participant receives an e-certificate. Results will be declared on 12 January 2027.",
   },
 ];
 

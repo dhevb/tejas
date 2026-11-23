@@ -61,7 +61,7 @@ const steps = [
   { n: "2", title: "Student sheet", text: "The school uploads the student sheet and chooses a stream for each student." },
   { n: "3", title: "Preparation", text: "A syllabus and sample papers have not been published. Printed books are optional. This website does not start an online test." },
   { n: "4", title: "Examination", text: "Mathematics, English, and Future Tech are held offline at the school on 9, 10, and 11 December 2026." },
-  { n: "5", title: "Results", text: "The brochure prints a tentative date of 12 January 2027. The invitation says the declaration will be communicated separately." },
+  { n: "5", title: "Results", text: "Results will be declared on 12 January 2027." },
 ] as const;
 
 const learning = [

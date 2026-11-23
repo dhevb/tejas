@@ -47,7 +47,7 @@ export const faqItems: FAQItem[] = [
     category: "Awards",
     question: "What awards do winners receive?",
     answer:
-      "The invitation awards, for each class in each stream, ₹3,100, ₹2,100, ₹1,500, and ten consolation prizes of ₹500. The school with the highest participation is recognised, and its principal receives a Certificate of Appreciation. The brochure says outstanding students will receive a gold medal, a silver medal and a bronze medal, and that every participant receives an e-certificate. The documents do not say whether those medals are in addition to the cash prizes.",
+      "Awards include cash prizes, medals and e-certificates. For each class in each stream the cash prizes are ₹3,100, ₹2,100, ₹1,500 and ten consolation prizes of ₹500. Outstanding students receive gold, silver and bronze medals. Every participant receives an e-certificate. Schools with the highest participation are recognised, and the principal receives a Certificate of Appreciation.",
   },
   {
     category: "Preparation",

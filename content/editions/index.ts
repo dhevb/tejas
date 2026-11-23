@@ -128,7 +128,7 @@ export const apjAbdulKalam2026Edition: EditionFullContent = {
     { year: 2026, title: { en: "TEJAS Mathematics", hi: "TEJAS गणित" }, description: { en: "9 December 2026", hi: "9 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS English", hi: "TEJAS अंग्रेज़ी" }, description: { en: "10 December 2026", hi: "10 दिसंबर 2026" } },
     { year: 2026, title: { en: "TEJAS Future Tech", hi: "TEJAS फ्यूचर टेक" }, description: { en: "11 December 2026", hi: "11 दिसंबर 2026" } },
-    { year: 2027, title: { en: "Results", hi: "परिणाम" }, description: { en: "The brochure prints a tentative date of 12 January 2027. The invitation says the declaration of results will be communicated separately.", hi: "ब्रोशर में 12 जनवरी 2027 संभावित है। निमंत्रण कहता है कि घोषणा अलग से होगी।" } },
+    { year: 2027, title: { en: "Results", hi: "परिणाम" }, description: { en: "Results will be declared on 12 January 2027.", hi: "परिणाम 12 जनवरी 2027 को घोषित किए जाएंगे।" } },
   ],
   quotes: [],
   majorContributions: [

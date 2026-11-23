@@ -13,6 +13,11 @@ test("approved programme facts stay the single published record", () => {
   assert.equal(programme.registrationOpens, "3 November 2026");
   assert.equal(programme.registrationCloses, "30 November 2026");
   assert.equal(programme.brochureRegistration, "3–30 November 2026");
+  assert.equal(programme.brochureResults, "12 January 2027");
+  assert.equal(programme.results, "Results will be declared on 12 January 2027.");
+  assert.match(programme.awardNote, /cash prizes, medals and e-certificates/i);
+  assert.match(programme.awards, /gold, silver and bronze medals/i);
+  assert.match(programme.awards, /e-certificate/i);
   assert.equal(programme.streams.find((stream) => stream.id === "technology")?.classes, "Classes VI–X");
   assert.equal(programme.registrationGross, 150);
   assert.equal(programme.registrationSchoolShare, 30);
@@ -45,6 +50,9 @@ test("public source does not keep replaced programme claims", () => {
     /20 November 2026/,
     /02[–-]22 November 2026/,
     /3[–-]20 November 2026/,
+    /forms\.gle/i,
+    /do not say whether those medals/i,
+    /declaration of results will be communicated separately/i,
   ];
   const hits: string[] = [];
   for (const root of roots) {

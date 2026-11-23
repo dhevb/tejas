@@ -47,18 +47,17 @@ export const programme = {
   brochureRegistration: "3–30 November 2026",
   brochureResults: "12 January 2027",
   brochureAwards:
-    "The brochure says outstanding students will receive a gold medal, a silver medal and a bronze medal, and that every participant receives an e-certificate.",
+    "Outstanding students receive a gold medal, a silver medal and a bronze medal. Every participant receives an e-certificate. Class-wise and stream-wise cash prizes are also awarded.",
   awardNote:
-    "The invitation sets the cash prizes. The brochure describes medals and an e-certificate. The documents do not say whether the medals are in addition to the cash prizes.",
+    "Awards include cash prizes, medals and e-certificates. For each class in each stream the cash prizes are ₹3,100, ₹2,100, ₹1,500 and ten consolation prizes of ₹500. Outstanding students receive gold, silver and bronze medals. Every participant receives an e-certificate.",
   letterResults:
-    "The invitation says detailed instructions, including the declaration of results, will be communicated separately.",
+    "Results will be declared on 12 January 2027. Detailed instructions regarding the conduct of the examination, evaluation process and technical requirements will be communicated separately.",
   posterLaunch:
     "The brochure says the TEJAS poster was launched at the 6th Edition of Shiksha Mahakumbh in 2026.",
   prizes: { first: 3100, second: 2100, third: 1500, consolation: 500, consolationCount: 10 },
   awards:
-    "For each class in each of the three streams, the first prize is ₹3,100, the second prize is ₹2,100, the third prize is ₹1,500, and there are ten consolation prizes of ₹500 each. Participating schools with the highest participation receive recognition, and the Principal receives a Certificate of Appreciation.",
-  results:
-    "The brochure prints a tentative results date of 12 January 2027. The invitation says the declaration of results will be communicated separately.",
+    "For each class in each of the three streams, the first prize is ₹3,100, the second prize is ₹2,100, the third prize is ₹1,500, and there are ten consolation prizes of ₹500 each. Outstanding students receive gold, silver and bronze medals. Every participant receives an e-certificate. Participating schools with the highest participation receive recognition, and the Principal receives a Certificate of Appreciation.",
+  results: "Results will be declared on 12 January 2027.",
   syllabus: "The syllabus, question count, duration, and section pattern will be announced officially.",
   examProcess: [
     "Examinations are conducted offline at participating schools.",
@@ -99,11 +98,11 @@ export const currentCycle = {
   } satisfies LocalizedString,
   felicitation: {
     en: programme.awards,
-    hi: "प्रत्येक स्ट्रीम की प्रत्येक कक्षा में प्रथम पुरस्कार ₹3,100, द्वितीय ₹2,100, तृतीय ₹1,500, और दस सांत्वना पुरस्कार ₹500 प्रत्येक। सर्वाधिक भागीदारी वाले विद्यालयों को मान्यता मिलती है और प्रधानाचार्य को प्रशस्ति पत्र मिलता है।",
+    hi: "पुरस्कारों में नकद पुरस्कार, पदक और ई-प्रमाणपत्र शामिल हैं। प्रत्येक स्ट्रीम की प्रत्येक कक्षा में प्रथम पुरस्कार ₹3,100, द्वितीय ₹2,100, तृतीय ₹1,500, और दस सांत्वना पुरस्कार ₹500 प्रत्येक। उत्कृष्ट विद्यार्थियों को स्वर्ण, रजत और कांस्य पदक मिलते हैं। प्रत्येक प्रतिभागी को ई-प्रमाणपत्र मिलता है। सर्वाधिक भागीदारी वाले विद्यालयों को मान्यता मिलती है और प्रधानाचार्य को प्रशस्ति पत्र मिलता है।",
   } satisfies LocalizedString,
   results: {
     en: programme.results,
-    hi: "ब्रोशर में संभावित परिणाम तिथि 12 जनवरी 2027 है। निमंत्रण पत्र कहता है कि परिणाम की घोषणा अलग से बताई जाएगी।",
+    hi: "परिणाम 12 जनवरी 2027 को घोषित किए जाएंगे।",
   } satisfies LocalizedString,
   officeAddress: programme.officeAddress,
   convener: programme.convener,

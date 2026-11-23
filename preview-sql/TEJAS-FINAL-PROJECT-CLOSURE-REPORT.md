@@ -32,7 +32,7 @@ Fresh evidence from `git fetch` / `gh pr list` / local merge simulation. This re
 | PR | Draft | Base ← Head | Head SHA | Mergeability |
 |----|-------|-------------|----------|--------------|
 | **#54** | yes | `main` ← `security/npm-audit-20261123` | `52bced7` | MERGEABLE / CLEAN |
-| **#53** | yes | `main` ← `docs/final-project-closure-20261123` | *(this branch tip after push)* | MERGEABLE / CLEAN |
+| **#53** | yes | `main` ← `docs/final-project-closure-20261123` | `b7fb2cc` | MERGEABLE / CLEAN |
 | **#25** | no | `main` ← `cursor/registration-payment-verification-2878` | `fff8cd2` | **CONFLICTING / DIRTY** |
 | **#13** | no | `cursor/official-documents-6ad0` ← `cursor/separate-orders-ebook-6ad0` | `9af0437` | MERGEABLE / CLEAN *(stacked)* |
 | **#12** | no | `cursor/website-accuracy-audit-6ad0` ← `cursor/official-documents-6ad0` | `a8184c6` | MERGEABLE / CLEAN *(stacked)* |
@@ -220,7 +220,7 @@ Recovery archives, secrets, Auth reader, isolated project: **untouched**.
 | Path | `preview-sql/TEJAS-FINAL-PROJECT-CLOSURE-REPORT.md` |
 | Branch | `docs/final-project-closure-20261123` |
 | Draft PR | https://github.com/dhevb/tejas/pull/53 |
-| Tip SHA | 0faf1d7b5c58e78619e33e8337d762c76084d4ad |
+| Tip SHA | `b7fb2cc213eba60af537f8b2044afef77d55f193` (correction series; see git log on branch) |
 
 ---
 

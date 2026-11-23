@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/documents",
     "/schools",
     "/schools/register",
+    "/schools/register/individual",
     "/rankings",
     "/hall-of-fame",
     "/scholarships",

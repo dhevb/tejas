@@ -18,7 +18,7 @@ export default function PreparePage() {
       <PageHero
         eyebrow="Prepare"
         title="Preparation"
-        subtitle="This page does not show a learner's progress. Published Future Tech e-books and mock tests open from the student portal after payment is verified. English and Mathematics files have not been supplied."
+        subtitle="This page does not show a learner's progress. Published e-books and mock tests open from the student portal after the ₹49-per-stream payment is verified. Printed-book orders are not offered in this release."
         primaryCta={{ label: "Student portal", href: "/learn" }}
         secondaryCta={{ label: "E-book status", href: "/prepare/ebook" }}
       />

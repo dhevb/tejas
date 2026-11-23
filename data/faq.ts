@@ -53,7 +53,7 @@ export const faqItems: FAQItem[] = [
     category: "Preparation",
     question: "Are mock tests and resources free?",
     answer:
-      "No public download library is published on this website. Future Tech e-books and their mock tests open from the student portal after the payment is verified and the item is published. English and Mathematics files have not been supplied.",
+      "No public download library is published on this website. E-books and their five mock tests open from the student portal after the ₹49-per-stream payment is verified and the item is published. Mathematics Class 10 mock tests are not yet supplied.",
   },
   {
     category: "Future",

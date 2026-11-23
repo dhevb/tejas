@@ -5,13 +5,14 @@ import { STREAMS, streamById, type StreamId } from "@/lib/registration/schema";
 export const PORTAL_EBOOK_FEE_INR = 49;
 
 /**
- * English and Mathematics fees are not approved.
- * A later upload for those streams must not reuse the Future Tech price on its own.
+ * Owner-approved ₹49 fee applies per selected stream when that stream has
+ * an e-book and five mock tests for the learner's class.
+ * Mathematics Class 10 mocks are still missing from the supplied pack.
  */
 export const PORTAL_FEE_APPROVED: Record<StreamId, boolean> = {
   technology: true,
-  english: false,
-  mathematics: false,
+  english: true,
+  mathematics: true,
 };
 
 export const PUBLICATION_STATUSES = ["awaiting_approval", "published"] as const;
@@ -169,7 +170,21 @@ export function quoteFee(catalog: PortalCatalog, streamId: StreamId, classLevel:
     };
   }
   const book = books[0];
+  if (book.mappingStatus === "mocks_missing") {
+    return {
+      status: "fee_not_approved",
+      ...empty,
+      reason: "Five mock tests for this class have not been supplied yet, so purchase is closed.",
+    };
+  }
   const included = testsForBook(catalog, book.id).length;
+  if (included !== 5) {
+    return {
+      status: "fee_not_approved",
+      ...empty,
+      reason: `This e-book must include exactly five mock tests; found ${included}.`,
+    };
+  }
   if (book.feeInr !== PORTAL_EBOOK_FEE_INR || book.mockTestFeeInr !== 0) {
     return {
       status: "fee_not_approved",

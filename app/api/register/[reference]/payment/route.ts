@@ -1,10 +1,13 @@
 import { clientKey, noStore, rateLimit, sameOrigin } from "@/lib/registration/http";
+import { decideScreenshotPayment } from "@/lib/registration/payment-decision";
 import { readPaymentConfig } from "@/lib/registration/payment";
 import { detectReceipt } from "@/lib/registration/receipt";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { readPaymentSubmission } from "@/lib/registration/school";
 import { MAX_RECEIPT_BYTES } from "@/lib/registration/schema";
+import { extractPaymentScreenshot } from "@/lib/registration/screenshot-ocr";
 import { attachReceipt, readRegistration, toPublicSummary, transactionSeenBefore } from "@/lib/registration/store";
+import { claimUtr, noteUtr, releaseUtr, utrOwner } from "@/lib/registration/utr-claim";
 
 export const runtime = "nodejs";
 
@@ -27,7 +30,7 @@ export async function POST(request: Request, context: { params: Promise<{ refere
   const paid = readPaymentSubmission(form, amountDue);
   const receiptFile = form.get("receipt");
   if (!paid.value || !(receiptFile instanceof File)) {
-    return noStore({ ok: false, fieldErrors: paid.errors, formErrors: ["Enter the payment details and upload the proof. This does not by itself confirm payment."] }, 400);
+    return noStore({ ok: false, fieldErrors: paid.errors, formErrors: ["Enter the payment details and upload the proof. Both the screenshot and the UTR are required."] }, 400);
   }
   if (await transactionSeenBefore(paid.value.transactionReference)) {
     return noStore({ ok: false, formErrors: ["This transaction reference is already recorded."] }, 409);
@@ -36,15 +39,74 @@ export async function POST(request: Request, context: { params: Promise<{ refere
   const bytes = Buffer.from(await receiptFile.arrayBuffer());
   const ext = detectReceipt(bytes, receiptFile.name);
   if (!ext) return noStore({ ok: false, formErrors: ["Upload the receipt as a JPG, PNG, or PDF."] }, 400);
+  if (ext === "pdf") {
+    return noStore({ ok: false, formErrors: ["Upload a JPG or PNG payment screenshot for automatic verification. PDF proofs stay pending staff review in a later release."] }, 400);
+  }
+
+  const channel = record.channel === "individual-registration" ? "individual-registration" : "school-registration";
+  const owner = utrOwner(channel, reference);
+  const claimed = await claimUtr(paid.value.transactionReference, channel, owner);
+  if (!claimed.ok) {
+    if (claimed.error === "duplicate") {
+      return noStore({ ok: false, formErrors: ["This UTR is already used for another payment."] }, 409);
+    }
+    return noStore({ ok: false, formErrors: ["The UTR could not be reserved. Try again."] }, 503);
+  }
+
   try {
+    const ocr = extractPaymentScreenshot(bytes);
+    const decision = decideScreenshotPayment({
+      enteredUtr: paid.value.transactionReference,
+      extractedUtr: ocr.utr,
+      extractedBeneficiary: ocr.beneficiary,
+      extractedAmount: ocr.amountInr,
+      paymentStatus: ocr.paymentStatus,
+      expectedAmount: amountDue,
+      ocrConfidence: ocr.confidence,
+      purpose: "registration",
+      utrAlreadyUsed: false,
+    });
+
+    const approved = decision.outcome === "automatic";
     const updated = await attachReceipt(reference, paid.value.transactionReference, bytes, ext, {
       mode: paid.value.mode,
       paidOn: paid.value.paidOn,
       payerName: paid.value.payerName,
+      status: approved ? "confirmed" : "reported",
+      enteredUtr: paid.value.transactionReference,
+      extractedUtr: ocr.utr,
+      approvalMethod: decision.approvalMethod,
+      verificationLabel: decision.verificationLabel,
+      beneficiaryMatch: decision.checks.beneficiary,
+      amountMatch: decision.checks.amount === "match",
+      reviewNote: decision.reason,
     });
-    if (!updated) return noStore({ ok: false, formErrors: ["The receipt could not be saved."] }, 409);
-    return noStore({ ok: true, registration: toPublicSummary(updated) });
+    if (!updated) {
+      await releaseUtr(paid.value.transactionReference, owner);
+      return noStore({ ok: false, formErrors: ["The receipt could not be saved."] }, 409);
+    }
+
+    await noteUtr(paid.value.transactionReference, owner, {
+      extractedUtr: ocr.utr,
+      reviewReason: decision.reason,
+      proofExt: ext,
+      amountDue,
+      paymentStatus: updated.payment.status,
+      approvalMethod: decision.approvalMethod,
+    });
+
+    return noStore({
+      ok: true,
+      registration: toPublicSummary(updated),
+      paymentDecision: {
+        outcome: decision.outcome,
+        approvalMethod: decision.approvalMethod,
+        reason: decision.reason,
+        verificationLabel: decision.verificationLabel,
+      },
+    });
   } catch {
+    await releaseUtr(paid.value.transactionReference, owner);
     console.error("payment proof save failed");
     return noStore({ ok: false, formErrors: ["The payment proof could not be saved. The payment was not marked as verified."] }, 503);
   }

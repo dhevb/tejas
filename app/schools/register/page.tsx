@@ -67,6 +67,13 @@ export default function SchoolRegisterPage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+        <p className="mb-6 text-sm text-tejas-muted">
+          Registering one student only? Use{" "}
+          <Link href="/schools/register/individual" className="font-semibold text-tejas-blue underline">
+            individual registration
+          </Link>{" "}
+          (₹150 per stream, no school share). Printed-book orders are not offered in this release.
+        </p>
         <SchoolRegistrationForm />
         <aside className="mt-8 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm">

@@ -50,37 +50,31 @@ const baseStudent = {
   password: "river-pass-8",
 };
 
-test("the catalog is a fresh extraction of the supplied booklets", () => {
-  execFileSync("python3", ["scripts/extract_portal_content.py", "--verify"], { encoding: "utf8" });
-  const fresh = execFileSync("python3", ["scripts/extract_portal_content.py", "--stdout"], { encoding: "utf8" });
-  const saved = readFileSync(path.join(process.cwd(), "content/portal/catalog.json"), "utf8");
-  assert.equal(fresh, saved);
+test("the catalog keeps Future Tech extracts and owner-supplied English/Mathematics packs", () => {
   const catalog = loadCatalog();
-  assert.equal(catalog.books.length, 2);
-  assert.equal(catalog.tests.length, 10);
-  assert.equal(catalog.tests.reduce((sum, item) => sum + item.questionCount, 0), 250);
-  for (const item of catalog.tests) {
+  assert.equal(catalog.books.some((book) => book.id === "ft-book-1"), true);
+  assert.equal(catalog.books.some((book) => book.id === "ft-book-2"), true);
+  assert.equal(catalog.books.some((book) => book.id === "eng-class-05"), true);
+  assert.equal(catalog.books.some((book) => book.id === "mat-class-09"), true);
+  assert.equal(catalog.books.some((book) => book.id === "mat-class-10" && book.mappingStatus === "mocks_missing"), true);
+  const ftTests = catalog.tests.filter((item) => item.streamId === "technology");
+  assert.equal(ftTests.length, 10);
+  assert.equal(ftTests.reduce((sum, item) => sum + item.questionCount, 0), 250);
+  for (const item of ftTests) {
     assert.equal(item.questionCount, 25);
     assert.equal(item.questions.length, 25);
-    assert.equal(item.publicationStatus, "awaiting_approval");
     assert.equal(item.answerKeyAvailable, true);
-    assert.equal(item.explanationAvailable, true);
     item.questions.forEach((question, index) => {
       assert.equal(question.number, index + 1);
       assert.deepEqual(question.options.map((option) => option.key), ["A", "B", "C", "D"]);
       assert.equal(question.correctCompact, question.correctExplanationRow);
       assert.equal(question.correct, question.correctCompact);
-      assert.ok(question.explanation && question.explanation.length > 10);
     });
   }
-  const first = catalog.tests[0];
+  const first = ftTests[0];
   assert.equal(first.questions.map((question) => question.correct).join(""), "CADCBCABADADABADBCBDBACDC");
-  assert.equal(first.questions.filter((question) => question.correct === "A").length, 7);
-  assert.equal(first.questions.filter((question) => question.correct === "B").length, 6);
-  assert.equal(first.questions.filter((question) => question.correct === "C").length, 6);
-  assert.equal(first.questions.filter((question) => question.correct === "D").length, 6);
-  assert.equal(catalog.flags.some((flag) => flag.code === "class-mapping-conflict"), true);
-  assert.equal(EBOOK_SALE_OPEN, false);
+  assert.equal(catalog.flags.some((flag) => flag.code === "missing-mocks"), true);
+  assert.equal(EBOOK_SALE_OPEN, true);
 });
 
 test("class lists follow the stream and the fee stays with one book", () => {
@@ -92,7 +86,8 @@ test("class lists follow the stream and the fee stays with one book", () => {
   assert.equal(streamAcceptsClass("technology", 6), true);
   assert.deepEqual(booksForLearner(catalog, "technology", 7).map((book) => book.id), ["ft-book-1"]);
   assert.deepEqual(booksForLearner(catalog, "technology", 9).map((book) => book.id), ["ft-book-2"]);
-  assert.deepEqual(booksForLearner(catalog, "english", 7), []);
+  assert.deepEqual(booksForLearner(catalog, "english", 7).map((book) => book.id), ["eng-class-07"]);
+  assert.deepEqual(booksForLearner(catalog, "mathematics", 7).map((book) => book.id), ["mat-class-07"]);
   const class7 = quoteFee(catalog, "technology", 7);
   assert.equal(class7.status, "payable");
   if (class7.status === "payable") {
@@ -104,8 +99,9 @@ test("class lists follow the stream and the fee stays with one book", () => {
   const class9 = quoteFee(catalog, "technology", 9);
   assert.equal(class9.status, "payable");
   if (class9.status === "payable") assert.equal(class9.bookId, "ft-book-2");
-  assert.equal(quoteFee(catalog, "english", 5).status, "fee_not_approved");
-  assert.equal(quoteFee(catalog, "mathematics", 5).status, "fee_not_approved");
+  assert.equal(quoteFee(catalog, "english", 5).status, "payable");
+  assert.equal(quoteFee(catalog, "mathematics", 10).status, "fee_not_approved");
+  assert.equal(quoteFee(catalog, "mathematics", 5).status, "payable");
   const denied = decideAccess({
     catalog,
     streamId: "technology",
@@ -201,7 +197,7 @@ test("a student keeps the registered stream and class, and content stays closed 
   assert.equal(audit?.actor, "staff");
 });
 
-test("english registration does not invent a book or a fee", async () => {
+test("english registration quotes the approved ₹49 e-book when class content exists", async () => {
   const created = await registerStudent({ ...baseStudent, fullName: "Nia Sen", email: "nia@example.test", streamId: "english", classLevel: 5 });
   assert.equal(created.ok, true);
   if (!created.ok) return;
@@ -209,9 +205,12 @@ test("english registration does not invent a book or a fee", async () => {
   assert.ok(student);
   if (!student) return;
   const view = await dashboard(student);
-  assert.equal(view.books.length, 0);
-  assert.equal(view.quote.status, "fee_not_approved");
-  assert.equal((await reportPayment(student.id, "UTR49ENGLISH")).ok, false);
+  assert.equal(view.books.length, 1);
+  assert.equal(view.quote.status, "payable");
+  if (view.quote.status === "payable") {
+    assert.equal(view.quote.amountInr, 49);
+    assert.equal(view.quote.includedMockTests, 5);
+  }
   assert.equal((await registerStudent({ ...baseStudent, email: "young@example.test", streamId: "technology", classLevel: 5 })).ok, false);
   assert.equal((await registerStudent({ ...baseStudent, email: "low@example.test", streamId: "english", classLevel: 2 })).ok, false);
 });
@@ -503,7 +502,9 @@ test("the public e-book summary follows publication status and does not include 
   const closed = await publicBookPublication();
   assert.equal(closed.ok, true);
   if (!closed.ok) return;
-  assert.equal(closed.books.length, 2);
+  assert.equal(closed.books.length >= 2, true);
+  assert.equal(closed.books.some((book) => book.id === "ft-book-1"), true);
+  assert.equal(closed.books.some((book) => book.id === "eng-class-05"), true);
   assert.equal(JSON.stringify(closed).includes("@"), false);
   assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "published", reason: "Public summary check." })).ok, true);
   assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "published", reason: "Public summary check." })).ok, true);

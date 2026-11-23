@@ -141,8 +141,10 @@ export function readSchoolForm(source: FormData | Record<string, string>): { val
     } else previousReference = previousReferenceRaw;
   }
   // Printed-book ordering is not part of school registration. A submitted quantity is ignored.
-  const ebookChoice: "yes" | "no" = EBOOK_SALE_OPEN && ebookAccess === "yes" ? "yes" : "no";
-  if (EBOOK_SALE_OPEN && ebookAccess !== "yes" && ebookAccess !== "no") errors.ebookAccess = "Choose whether the school wants e-book access.";
+  // School registration never sells the e-book. Portal / e-book purchase is separate.
+  const ebookChoice: "yes" | "no" = "no";
+  void EBOOK_SALE_OPEN;
+  void ebookAccess;
 
   if (
     Object.keys(errors).length ||

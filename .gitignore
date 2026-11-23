@@ -18,3 +18,7 @@ supabase/.temp/
 *.tejas1
 *.pgpass
 tejas-*-pass-*.bin
+
+# Staging copies before catalog ingest
+/content/portal/sources/incoming/
+

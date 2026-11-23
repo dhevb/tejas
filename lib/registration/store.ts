@@ -41,6 +41,7 @@ export type RegistrationRecord = {
   school: SchoolForm;
   students: StudentRecord[];
   fee: FeeBreakdown;
+  channel?: "school-registration" | "individual-registration";
   payment: {
     status: PaymentStatus;
     transactionReference: string | null;
@@ -49,6 +50,12 @@ export type RegistrationRecord = {
     paidOn?: string | null;
     payerName?: string | null;
     history?: PaymentEvent[];
+    enteredUtr?: string | null;
+    extractedUtr?: string | null;
+    approvalMethod?: "screenshot_ocr_automatic" | "pending_exception" | "staff" | null;
+    verificationLabel?: "screenshot_ocr_match" | "screenshot_ocr_exception" | null;
+    beneficiaryMatch?: string | null;
+    amountMatch?: boolean | null;
   };
   uploadExt: "xlsx" | "xls" | "csv";
   receiptExt: "pdf" | "jpg" | "png" | "webp" | null;
@@ -157,10 +164,12 @@ export async function saveRegistration(input: {
   receiptExt: RegistrationRecord["receiptExt"];
   idempotencyKey?: string;
   payloadHash?: string;
+  channel?: RegistrationRecord["channel"];
 }): Promise<RegistrationRecord> {
   const record: RegistrationRecord = {
     reference: input.reference,
     createdAt: new Date().toISOString(),
+    channel: input.channel ?? "school-registration",
     school: input.school,
     students: input.students,
     fee: input.fee,
@@ -276,28 +285,58 @@ export async function attachReceipt(
   transactionReference: string,
   receipt: Buffer,
   receiptExt: NonNullable<RegistrationRecord["receiptExt"]>,
-  meta: { mode: string; paidOn: string; payerName: string },
+  meta: {
+    mode: string;
+    paidOn: string;
+    payerName: string;
+    status?: PaymentStatus;
+    enteredUtr?: string | null;
+    extractedUtr?: string | null;
+    approvalMethod?: RegistrationRecord["payment"]["approvalMethod"];
+    verificationLabel?: RegistrationRecord["payment"]["verificationLabel"];
+    beneficiaryMatch?: string | null;
+    amountMatch?: boolean | null;
+    reviewNote?: string | null;
+  },
 ): Promise<RegistrationRecord | null> {
   const record = await readRegistration(reference);
   if (!record) return null;
   if (record.payment.status === "confirmed" || record.payment.status === "reported" || record.payment.status === "refund_pending") return null;
-  record.payment.status = "reported";
+  const nextStatus = meta.status ?? "reported";
+  record.payment.status = nextStatus;
   record.payment.transactionReference = transactionReference;
   record.payment.mode = meta.mode;
   record.payment.paidOn = meta.paidOn;
   record.payment.payerName = meta.payerName;
-  const purpose = record.fee.printedBooks > 0 ? "Registration fee and printed books" : "Registration fee";
-  record.payment.history = [...(record.payment.history ?? []), { at: new Date().toISOString(), status: "reported", note: purpose, actor: "school" }];
+  record.payment.enteredUtr = meta.enteredUtr ?? transactionReference;
+  record.payment.extractedUtr = meta.extractedUtr ?? null;
+  record.payment.approvalMethod = meta.approvalMethod ?? null;
+  record.payment.verificationLabel = meta.verificationLabel ?? null;
+  record.payment.beneficiaryMatch = meta.beneficiaryMatch ?? null;
+  record.payment.amountMatch = meta.amountMatch ?? null;
+  record.payment.reviewNote = meta.reviewNote ?? record.payment.reviewNote;
+  const purpose = "Registration fee";
+  record.payment.history = [
+    ...(record.payment.history ?? []),
+    {
+      at: new Date().toISOString(),
+      status: nextStatus,
+      note: meta.approvalMethod === "screenshot_ocr_automatic"
+        ? `${purpose}; screenshot OCR automatic approval (not bank-statement confirmation)`
+        : purpose,
+      actor: "school",
+    },
+  ];
   record.receiptExt = receiptExt;
   if (remoteConfigured()) {
     await attachRemoteReceipt(reference, record, receipt);
-    console.info(`payment reported ${reference} durable=yes`);
+    console.info(`payment ${nextStatus} ${reference} durable=yes`);
     return record;
   }
   if (process.env.VERCEL === "1") throw new Error("Registration storage is not configured.");
   await writePrivate(path.join(regDir(reference), "record.json"), sealBytes(Buffer.from(JSON.stringify(record))));
   await writePrivate(path.join(regDir(reference), `receipt.${receiptExt}`), sealBytes(receipt));
-  console.info(`payment reported ${reference} durable=no`);
+  console.info(`payment ${nextStatus} ${reference} durable=no`);
   return record;
 }
 

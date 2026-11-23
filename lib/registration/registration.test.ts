@@ -77,7 +77,7 @@ test("new registrations remit the school share split from the invitation", () =>
   assert.equal(BOOK_SCHOOL_SHARE, 34);
   assert.equal(BOOK_TEJAS, 136);
   assert.equal(EBOOK_FEE, 49);
-  assert.equal(EBOOK_SALE_OPEN, false);
+  assert.equal(EBOOK_SALE_OPEN, true);
 
   const one = calculateFee(1);
   assert.deepEqual([one.totalStudentFees, one.registrationSchoolShare, one.payableToTejas, one.amountDue], [150, 30, 120, 120]);
@@ -88,17 +88,18 @@ test("new registrations remit the school share split from the invitation", () =>
   const ten = calculateFee(10);
   assert.deepEqual([ten.totalStudentFees, ten.registrationSchoolShare, ten.amountDue], [1500, 300, 1200]);
 
+  // Printed-book extras are withdrawn from this release and must not change registration dues.
   const oneBook = calculateFee(0, { printedBooks: 1 });
-  assert.deepEqual([oneBook.printedBookAmount, oneBook.bookSchoolShare, oneBook.bookPayable, oneBook.amountDue], [170, 34, 136, 136]);
+  assert.deepEqual([oneBook.printedBookAmount, oneBook.bookSchoolShare, oneBook.bookPayable, oneBook.amountDue], [0, 0, 0, 0]);
 
   const fiveBooks = calculateFee(0, { printedBooks: 5 });
-  assert.deepEqual([fiveBooks.printedBookAmount, fiveBooks.bookSchoolShare, fiveBooks.bookPayable, fiveBooks.amountDue], [850, 170, 680, 680]);
+  assert.deepEqual([fiveBooks.printedBookAmount, fiveBooks.bookSchoolShare, fiveBooks.bookPayable, fiveBooks.amountDue], [0, 0, 0, 0]);
 
   const mixed = calculateFee(2, { printedBooks: 1, ebookAccess: 4 });
   assert.equal(mixed.ebookAmount, 0);
-  assert.equal(mixed.grossTotal, 470);
-  assert.equal(mixed.schoolShare, 94);
-  assert.equal(mixed.amountDue, 376);
+  assert.equal(mixed.grossTotal, 300);
+  assert.equal(mixed.schoolShare, 60);
+  assert.equal(mixed.amountDue, 240);
   assert.equal(presentFee(mixed).amountDue, mixed.amountDue);
 });
 
@@ -894,6 +895,8 @@ test("a payment proof is stored as verification pending and is not marked verifi
   assert.ok(school);
   const reference = "TEJAS-2026-ABCDEFGHJKLMNPQRSTU2";
   const fee = calculateFee(1, { printedBooks: 2, ebookAccess: 5 });
+  assert.equal(fee.amountDue, 120);
+  assert.equal(fee.printedBookAmount, 0);
   const record = {
     reference,
     createdAt: "2026-11-01T00:00:00.000Z",
@@ -944,8 +947,8 @@ test("a payment proof is stored as verification pending and is not marked verifi
     else process.env.SUPABASE_SERVICE_ROLE_KEY = previous.key;
   };
   try {
-    assert.equal(fee.amountDue, 392);
-    assert.equal(fee.grossTotal, 490);
+    assert.equal(fee.amountDue, 120);
+    assert.equal(fee.grossTotal, 150);
     const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1]);
     const bad = new FormData();
     bad.set("paymentMode", "UPI");
@@ -989,7 +992,7 @@ test("a payment proof is stored as verification pending and is not marked verifi
     assert.equal(payload.registration?.paymentLabel, "Payment Submitted / Verification Pending");
     assert.equal(JSON.stringify(payload).includes("/storage/"), false);
     assert.equal(calls.some((call) => call.includes("/storage/v1/object/tejas-payment-proofs/")), true);
-    assert.equal(bodies.some((body) => body.includes("\"status\":\"reported\"") && body.includes("Registration fee and printed books")), true);
+    assert.equal(bodies.some((body) => body.includes("\"status\":\"reported\"") && body.includes("Registration fee")), true);
     assert.equal(bodies.some((body) => body.includes("\"status\":\"confirmed\"")), false);
   } finally {
     restore();

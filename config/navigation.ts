@@ -72,6 +72,11 @@ export const mainNav: NavItem[] = [
     href: "/resources",
   },
   {
+    label: "Documents",
+    labelHi: "दस्तावेज़",
+    href: "/documents",
+  },
+  {
     label: "Schools",
     labelHi: "विद्यालय",
     href: "/schools",
@@ -115,6 +120,7 @@ export const footerNav = {
     { label: "Prepare Hub", href: "/prepare" },
     { label: "Mock Tests", href: "/prepare/mock-tests" },
     { label: "Resources", href: "/resources" },
+    { label: "Official documents", href: "/documents" },
     { label: "Hall of Fame", href: "/hall-of-fame" },
   ],
   support: [
@@ -122,6 +128,7 @@ export const footerNav = {
     { label: "Contact", href: "/contact" },
     { label: "For Schools", href: "/schools" },
     { label: "School registration", href: "/schools/register" },
+    { label: "Official documents", href: "/documents" },
   ],
   dhe: [
     { label: "DHE Website", href: "https://www.dhe.org.in", external: true },

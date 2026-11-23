@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/learn/register",
     "/learn/login",
     "/resources",
+    "/documents",
     "/schools",
     "/schools/register",
     "/rankings",

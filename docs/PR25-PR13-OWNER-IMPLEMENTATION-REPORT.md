@@ -58,41 +58,75 @@ Fee examples (server-side only):
 | Item | Finding |
 |---|---|
 | Application host | **Vercel Node.js serverless** (Next.js `runtime = "nodejs"` API routes) |
-| Routes | `/api/register/[reference]/payment`, `/api/learn/pay` → `extractPaymentScreenshotAsync` |
-| Not the OCR host | Cursor agent Windows host (system `tesseract` binary is irrelevant for Production) |
-| Engine chosen | **`tesseract.js` v5** (WASM), not a system Tesseract executable |
-
-System Tesseract cannot be installed persistently on Vercel serverless. OCR therefore uses the Node-compatible WASM engine bundled with the app.
+| Payment routes | `/api/register/[reference]/payment`, `/api/learn/pay` → `extractPaymentScreenshotAsync` |
+| Preview acceptance route | `/api/register/ocr-probe` (Preview/dev only; **404 on Production**; `writesData: false`) |
+| Engine | **`tesseract.js` v5** WASM + `tesseract.js-core` |
+| Not the OCR host | Cursor agent Windows host |
 
 ### 4.2 Installation method (deployment-compatible)
 
 | Component | Method |
 |---|---|
-| OCR engine | npm dependency `tesseract.js@^5.1.1` (`serverExternalPackages`) |
+| OCR engine | npm `tesseract.js@^5.1.1` + `tesseract.js-core` (`serverExternalPackages`) |
 | English data | Committed `vendor/tessdata/eng.traineddata.gz` (~10.9 MB) |
-| Uncompressed extract | Gitignored (`eng.traineddata`) — not required at runtime (`gzip: true`) |
-| Path | Plain filesystem `vendor/tessdata` (not `file://`; Node adapter uses `fs`) |
-| Serverless tracing | `outputFileTracingIncludes` for payment API routes includes `./vendor/tessdata/**/*` |
-| Permissions | No shell; image bytes only — no filename-based command execution |
+| WASM cores | Traced into functions via `outputFileTracingIncludes` → `./node_modules/tesseract.js-core/**/*` |
+| Tessdata path on Preview | `/var/task/vendor/tessdata` |
+| Timeouts | Worker start + recognize each **45s** (route `maxDuration` 60s on probe) |
+| Permissions | Image bytes only — no shell / no filename command injection |
 
-### 4.3 Real screenshot OCR test results (local Node, bundled engine)
+### 4.3 Local Node OCR (pre-Preview)
 
-Synthetic Arial-font payment screenshots (fake UTRs, no real account secrets) in `lib/registration/fixtures/`:
+Synthetic fixtures in `lib/registration/fixtures/` passed locally (UTR/amount/beneficiary/status + fail-closed cases).
 
-| Fixture | Result |
+### 4.4 Vercel Preview serverless OCR acceptance (completed)
+
+| Field | Value |
 |---|---|
-| `payment-success-49.png` | UTR `AXISCN777001`, beneficiary Trust full name, amount ₹49, status success → **auto-approve** |
-| `payment-success-120-truncated.png` | UTR + truncated beneficiary allowlist + ₹120 → **auto-approve** on match; wrong entered UTR → **exception** |
-| `payment-pending-49.png` | Status pending → **exception** (no auto-approve) |
-| `payment-unreadable.png` | Low confidence → **exception** |
-| Glyph-only `renderUtrPng` | `source=fixture` → **never auto-approves** |
-| Corrupt/tiny bytes | `source=none` / low confidence → **exception** |
+| Preview URL | https://tejas-227wv130d-dhe-projects.vercel.app |
+| Deployment ID | `dpl_7Kts76rypFvHMCiaZVwXkVkZBE4G` |
+| Inspect | https://vercel.com/dhe-projects/tejas/7Kts76rypFvHMCiaZVwXkVkZBE4G |
+| Environment | **Preview** (`target: preview` / `VERCEL_ENV=preview`) |
+| Commit deployed | working tree at `cfd807fdf1cc0fff05fa4298047f9cdcd679f7a5` (OCR probe + WASM tracing) |
+| Access | Vercel Deployment Protection; exercised via `vercel curl` |
 
-Timeouts: worker start and recognize each capped at **20s**; failures reset the worker and return pending/exception.
+**Runtime evidence (GET `/api/register/ocr-probe`):**
 
-### 4.4 Production readiness claim
+```json
+{
+  "ok": true,
+  "vercelEnv": "preview",
+  "executionEnvironment": "vercel-node-serverless",
+  "ocr": {
+    "available": true,
+    "engine": "tesseractjs",
+    "engDataPresent": true,
+    "tessdataPath": "/var/task/vendor/tessdata",
+    "detail": "Bundled tesseract.js with local eng.traineddata.gz is ready for Node/Vercel OCR."
+  }
+}
+```
 
-**Not claimed.** Local Node verification of bundled `tesseract.js` + `eng.traineddata.gz` passed. Live Vercel serverless OCR has **not** been exercised against Production or a preview deploy of this branch. Fail-closed behaviour remains until that runtime is verified.
+**Synthetic screenshot POST results** (no DB/UTR/proof writes — probe only):
+
+| Case | Outcome | Notes |
+|---|---|---|
+| Success ₹49 Trust full name | **automatic** / `screenshot_ocr_match` | UTR `AXISCN777001`, amt 49, success; ~388–986 ms |
+| Truncated beneficiary ₹120 | **automatic** / `screenshot_ocr_match` | UTR `AXISCN777002` |
+| Wrong entered UTR | **exception** | Fail-safe held |
+| Wrong expected amount | **exception** | Fail-safe held |
+| Pending screenshot | **exception** | status pending |
+| Unreadable screenshot | **exception** | low confidence / no fields |
+| Duplicate UTR flag | **exception** | `utrAlreadyUsed=true` |
+| Registration purpose vs ebook beneficiary | **exception** | allowlist mismatch |
+
+**First Preview attempt** (`dpl_D3s4bW7AbmyxteHjNCKTYPbAm5R4`): OCR timed out; logs showed missing `tesseract-core-simd.wasm`. Fail-safe returned **exception** (never auto-approved). Fixed by tracing `tesseract.js-core` WASM into the function bundle; redeployed.
+
+**Limitation (documented, intentional):** Full `/api/learn/pay` and registration payment routes were **not** exercised on Preview against live Durable/Supabase, because Preview may share Production credentials and must not write Production payment data. Acceptance used the isolated Preview-only probe that runs the same OCR + `decideScreenshotPayment` path with `writesData: false`.
+
+### 4.5 Production readiness claim
+
+**Serverless OCR on Vercel Preview is verified operational** for synthetic screenshots via the probe.  
+**Production deploy of this branch was not performed.** Owner merge + Production deploy + migration remain separate decisions.
 
 ## 5. Payment verification policy status
 
@@ -104,38 +138,34 @@ Implemented:
 - Successful payment status required
 - Atomic UTR claim across school / individual / ebook channels
 - Transparent labelling: screenshot OCR match, not bank-verified
-- **`ocrSource` gate:** `fixture` and `none` can never auto-approve (even if other fields look perfect)
+- **`ocrSource` gate:** `fixture` and `none` can never auto-approve
+- Preview probe hard-disabled when `VERCEL_ENV=production`
 
 ## 6. Security review findings
 
 | Area | Status |
 |---|---|
-| Server-side fee calculation | Enforced (`calculateFee`, `calculateIndividualRegistration`, `calculateEbookPurchase`, `quoteFee`) |
+| Server-side fee calculation | Enforced |
 | UTR uniqueness / race | Filesystem `O_EXCL` claims; DB migration prepared for Production later |
 | Paid-stream-only access | `decideAccess` enforces stream/class/paid/publication |
-| Cross-student leakage | Book/test file routes require session + entitlement checks (existing portal model) |
-| Upload validation | MIME/signature + 5 MB limit; JPG/PNG for OCR path |
-| Command injection | OCR receives image **bytes only**; no shell, no filename interpolation into commands |
-| Timeouts / resources | 20s OCR startup + recognize timeouts; worker reset on failure |
-| Secrets in logs | No UTRs/account details/screenshot text logged; routes log generic failures only |
-| Package size | ~10.9 MB tessdata.gz + tesseract.js WASM — within typical Vercel function limits; confirm on first preview deploy |
-| Printed-book historical rows | Not deleted; new printed-book extras ignored |
-| Learn pay previously UTR-only | Fixed — requires screenshot + UTR with OCR auto-approve |
+| Upload validation | MIME/signature + 5 MB; JPG/PNG for OCR |
+| Command injection | Bytes-only OCR |
+| Timeouts / resources | 45s OCR timeouts; Preview logs clean after WASM fix |
+| Secrets in logs | No UTRs/screenshot text logged by probe responses beyond structured OCR fields needed for acceptance |
+| Preview isolation | Probe does not write registrations, entitlements, UTR claims, or proofs |
+| Production | Unchanged — Production deployment remains `dpl_EWNdXmoAQYdS9HdcU4oviWAnZg8n` (created ~2h before Preview OCR work) |
 
 ## 7. Test / TypeScript / lint / build
 
-Recorded for this OCR-runtime follow-up:
-
-- `npm test` — **84/84 pass** (includes real bundled OCR fixture tests)
-- `npx tsc --noEmit` — pass
-- `npm run lint` — pass (existing `<img>` warnings only)
-- `npm run build` — pass
+- Local: OCR runtime tests + probe Production-disable test pass; prior suite green
+- Preview build: Next.js 15.5.20 build succeeded; `/api/register/ocr-probe` present as Node function
+- Preview acceptance: 2 automatic + 6 exception cases as tabulated above
 
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit: `52c0c98be30fb40f39e214bacb6395eb6856c322`
-- OCR feature commit: `ef83dc7ddc143013ae5afd1d7aac4b3c3d61a107`
+- Tip commit: *(filled after push)*
+- Key commits: `ef83dc7` (tesseract.js + eng data), `963acf6` (preview OCR probe), `cfd807f` (WASM tracing + 45s timeout)
 - PR #25 / #13: remain OPEN, unmerged
 - Production: **unchanged**
 
@@ -147,7 +177,8 @@ Recorded for this OCR-runtime follow-up:
 
 ## 10. Remaining owner-only steps
 
-1. **Preview-deploy verification (recommended before merge):** Deploy this branch to a non-Production Vercel preview and submit a synthetic JPG/PNG payment screenshot through `/api/learn/pay` or registration payment to confirm serverless OCR loads `eng.traineddata.gz` and completes within limits.
-2. Owner review of PR #56 before any merge/deploy to Production.
-3. Separate owner authorisation required before applying the UTR-registry migration to Production.
-4. No Production-only OS package install is required if the bundled `tesseract.js` path is accepted after preview verification.
+1. **Owner review of PR #56** — Preview serverless OCR acceptance is complete; ready for final merge decision.
+2. After merge, **Production deploy** is a separate owner action (do not promote Preview casually without reviewing env).
+3. Separate owner authorisation before applying the UTR-registry migration to Production.
+4. Optionally remove or further lock down `/api/register/ocr-probe` after acceptance (already 404 on Production).
+5. Optional: end-to-end Preview payment with an isolated non-Production Supabase project (not done here to avoid shared Production credentials).

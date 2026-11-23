@@ -134,7 +134,8 @@ Recorded for this OCR-runtime follow-up:
 ## 8. Commit / PR status
 
 - Review PR: https://github.com/dhevb/tejas/pull/56 — **OPEN, unmerged**
-- Tip commit: `ef83dc7ddc143013ae5afd1d7aac4b3c3d61a107` (OCR runtime feature; docs tip alignment may sit above this)
+- Tip commit: `52c0c98be30fb40f39e214bacb6395eb6856c322`
+- OCR feature commit: `ef83dc7ddc143013ae5afd1d7aac4b3c3d61a107`
 - PR #25 / #13: remain OPEN, unmerged
 - Production: **unchanged**
 

@@ -32,7 +32,7 @@ Archive hashes (archives stay local, not in Git): P37 `24db6a21…88f6`, P38 `f3
 
 | Worktree | Branch | HEAD | Upstream | Notes |
 |----------|--------|------|----------|-------|
-| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | `afb2e77` | `origin/docs/dr-phase37-42-closure` @ `afb2e77` | Clean; publication worktree |
+| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | see §5 tip | synced with origin | Clean; publication worktree |
 | `tejas-phase3` | `phase3/free-host-local` | `6da54f6` | none | Local DR copies remain uncommitted; **not pushed** |
 | `tejas` | `docs/dr-windows-verification-20261118` | `d389540` | synced 0/0 | Untracked `getkey.obj` preserved |
 | `tejas-website` | `fix/faq-separate-pan-fields` | `d9f86d6` | synced 0/0 | Clean |
@@ -49,6 +49,7 @@ Local `main` = `origin/main` = `fd47ecc` (fast-forwarded earlier; no DR merge in
 | `511b244da17c53f5401e4d76fff689453af7fa12` | `511b244` | Record verified remote commit IDs in the project final closure report |
 | `5a69eb41309858b323bd2f79848094180a808d74` | `5a69eb4` | Finalize closure report tip IDs after verified GitHub push |
 | `afb2e77d9784b4b61a8ec9306e285029d4aee4ac` | `afb2e77` | Align final closure report with published tip lineage |
+| `ac102fb187421833f29198cf5f8f721b0061d73e` | `ac102fb` | Mark closure audit as post-execution; lock report to verified remote evidence |
 
 Unpushed intermediates `90295e5` / `1755f15` were soft-reset **before first successful push** to remove push-protection false-positive SelfTest literals. They never existed on any remote.
 
@@ -58,7 +59,7 @@ Unpushed intermediates `90295e5` / `1755f15` were soft-reset **before first succ
 
 | Branch | Action | Remote ID |
 |--------|--------|-----------|
-| `docs/dr-phase37-42-closure` | **Pushed** | tip **`afb2e77d9784b4b61a8ec9306e285029d4aee4ac`** (`git ls-remote` match) |
+| `docs/dr-phase37-42-closure` | **Pushed** | tip **`ac102fb187421833f29198cf5f8f721b0061d73e`** (lineage includes `0bf7ee0`…`afb2e77`) |
 | `phase3/free-host-local` | **Not pushed** | Checkpoint has 93 `_next` paths + app WIP |
 | `main` | **Not merged / not pushed from DR** | Remains `fd47ecc` |
 | `docs/dr-windows-verification-20261118` | unchanged | `d389540` |
@@ -137,4 +138,4 @@ Use `TEJAS-DR-OPERATOR-RUNBOOK.md`. Keep sealed archives offline. Prefer Credent
 - Production / `https://tejas.dhe.org.in` — untouched  
 - Certified archives — untouched  
 - No secrets in Git  
-- Remote tip verified: `afb2e77d9784b4b61a8ec9306e285029d4aee4ac`
+- Remote tip verified after latest push: `ac102fb187421833f29198cf5f8f721b0061d73e`

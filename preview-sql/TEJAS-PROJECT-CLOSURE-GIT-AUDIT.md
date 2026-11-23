@@ -15,7 +15,7 @@ The earlier same-day read-only audit that said **STOP and await owner decision**
 | Domain | Verdict |
 | --- | --- |
 | DR certification | **PASS** |
-| Git publish | **PASS** — `docs/dr-phase37-42-closure` @ `afb2e77` on origin |
+| Git publish | **PASS** — `docs/dr-phase37-42-closure` @ `ac102fb` on origin |
 | Checkpoint `6da54f6` | **Kept local** — not pushed |
 | Secrets / archives / production | **CLEAN** |
 
@@ -26,9 +26,9 @@ The earlier same-day read-only audit that said **STOP and await owner decision**
 | Fact | Value |
 | --- | --- |
 | Remote branch | `origin/docs/dr-phase37-42-closure` |
-| Remote tip (`git ls-remote`) | `afb2e77d9784b4b61a8ec9306e285029d4aee4ac` |
+| Remote tip (`git ls-remote`) | `ac102fb187421833f29198cf5f8f721b0061d73e` |
 | Publish commit (corpus) | `0bf7ee0941c4ce9d9c783bbf6bcd6f36b77aa698` |
-| Follow-ups | `511b244`, `5a69eb4`, `afb2e77` |
+| Follow-ups | `511b244`, `5a69eb4`, `afb2e77`, `ac102fb` |
 | Base | `origin/main` = `fd47ecc` |
 | `6da54f6` on remotes | **none** |
 
@@ -38,7 +38,7 @@ The earlier same-day read-only audit that said **STOP and await owner decision**
 
 | Path | Branch | HEAD | Note |
 | --- | --- | --- | --- |
-| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | `afb2e77` | synced with origin |
+| `tejas-dr-closure` | `docs/dr-phase37-42-closure` | `ac102fb` | synced with origin |
 | `tejas-phase3` | `phase3/free-host-local` | `6da54f6` | local DR copies; not pushed |
 | `tejas` | `docs/dr-windows-verification-20261118` | `d389540` | `getkey.obj` untracked only |
 | `tejas-website` | `fix/faq-separate-pan-fields` | `d9f86d6` | clean |

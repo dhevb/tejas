@@ -3,8 +3,7 @@
 **Date:** 2026-11-24  
 **Branch:** `feat/registration-review-dashboard-redesign`  
 **PR:** https://github.com/dhevb/tejas/pull/65  
-**Exact HEAD:** `9f1f14bbd9577e3c39f1cc8c98d1493e8766a867`  
-**Prior HEAD (requested start):** `212d8fe`  
+**Exact HEAD:** `82b3bdc0633de3e6e074a46ef9e9952877ad6e56` (report tip may advance by this docs commit)  
 **PAN security fix:** `118dd9b`  
 **Production:** not deployed · **PR left OPEN / UNMERGED**
 
@@ -14,100 +13,97 @@
 
 ### CONDITIONAL PASS
 
-PAN hardening (`118dd9b`) is in place and unit-verified. Authenticated Preview dashboard QA **stopped** because a **Preview-only** `TEJAS_ADMIN_TOKEN` is still **not configured**. Production secret was not copied. Production env was not changed. Owner configuration is pending.
+PAN hardening remains verified in unit tests. **Authenticated Preview QA could not resume:** the Preview environment still does **not** expose `TEJAS_ADMIN_TOKEN` to Preview deployments. Staff login continues to return HTTP **503**. No Production secret was copied. No Production env/schema/RLS/Storage/payment changes. No merge/deploy. No shared-DB mutations.
 
 ---
 
-## Step 1 — Preview environment
+## Step 1 — Preview token verification (failed)
 
 | Check | Result |
 |-------|--------|
-| `vercel env ls` name scan for `TEJAS_ADMIN_TOKEN` | Present on **Production only** |
-| Preview environment target | **Missing** |
-| Copy Production → Preview | **Not done** (forbidden) |
-| Production env modified | **No** |
-| Authenticated QA | **Stopped** — owner must set a separate Preview-only secret in Vercel Preview settings |
+| Owner statement | Preview-only `TEJAS_ADMIN_TOKEN` configured |
+| `vercel env ls` | `TEJAS_ADMIN_TOKEN` listed for **Production only** — not Preview |
+| `vercel env pull --environment=preview` (key names only) | **`HAS_TEJAS_ADMIN_TOKEN=False`**. Pulled keys were Vercel system vars only (no app secrets) |
+| Production secret copied into Preview by agent | **No** |
+| Production env modified by agent | **No** |
 
-### Probe (no secrets)
+### Live probes (invalid probe token — no secrets used)
 
-Against latest READY Preview `dpl_9smXvDCG5wK1eCtTKAkgMH5E69z4`  
-URL: https://tejas-jcbjjpzwm-dhe-projects.vercel.app  
+| Deployment | Status | Error |
+|------------|--------|-------|
+| https://tejas-m7wjwyoxx-dhe-projects.vercel.app (`dpl_EpJ9K94e2oHse4LNfiEAMmRPchDc`, READY) | **503** | Staff review is not configured. No password has been set. |
+| https://tejas-hxtf4ho8p-dhe-projects.vercel.app | **503** | same |
+| Branch alias `…feat-registration-review-dashboar-8653c8…` | **503** | same |
 
-`POST /api/register/admin/session` with an invalid probe token → **HTTP 503**  
-`"Staff review is not configured. No password has been set."`  
+Expected if Preview token were live: **401** for a wrong token (configured but mismatch), not 503 (`adminConfigured()` false).
 
-Interpretation: Preview `adminConfigured()` is false (`TEJAS_ADMIN_TOKEN` absent/too short on Preview). A configured Preview would return **401** for a wrong token, not 503.
+**Action stopped:** authenticated QA not started.
 
-Branch alias still points at Preview protection:  
-https://tejas-git-feat-registration-review-dashboar-8653c8-dhe-projects.vercel.app  
+### Owner follow-up (configuration)
+
+1. In Vercel → Project **tejas** → Settings → Environment Variables, add **`TEJAS_ADMIN_TOKEN`** with environment **Preview** checked (separate value from Production).  
+2. Confirm `vercel env ls` shows the variable for **Preview**.  
+3. Redeploy the PR Preview (or push an empty commit) so the READY deployment receives Preview env.  
+4. Optional but likely required for list/detail/downloads: ensure Preview also has the Supabase runtime vars it needs (today Preview pull shows **no** `SUPABASE_*` keys). Enabling existing Production-linked vars for Preview is an **owner** action — agent will not copy Production secrets.
 
 ---
 
 ## Step 2 — Authenticated dashboard verification
 
-**Not executed** — blocked by Step 1.
+**Not executed** (blocked by Step 1).
 
-| # | Check | Status |
-|---|-------|--------|
-| 1 | Staff login | **BLOCKED** |
-| 2 | Summary cards | **BLOCKED** |
-| 3 | Search / filters | **BLOCKED** |
-| 4 | Student details | **BLOCKED** |
-| 5 | Stream-wise counts | **BLOCKED** (unit coverage only) |
-| 6 | Fee calculations | **BLOCKED** (unit coverage only) |
-| 7 | Payment / proof | **BLOCKED** |
-| 8 | Original Excel download | **BLOCKED** |
-| 9 | Consolidated 7-sheet XLSX | **BLOCKED** (offline unit coverage) |
-| 10 | Logout / session expiry | **BLOCKED** |
-| 11 | Desktop / mobile layouts | Code review only — not live |
+| # | Item | Status |
+|---|------|--------|
+| 1 | Staff login / logout | **UNTESTED** (login 503) |
+| 2 | Summary cards / stream-wise counts | **UNTESTED** |
+| 3 | Search / filters / sort / pagination | **UNTESTED** |
+| 4 | School / PAN mask / students | **UNTESTED** live; PAN unit covered |
+| 5 | Stream-wise fee calculations | **UNTESTED** live; unit covered |
+| 6 | Payment / UTR / OCR / proof | **UNTESTED** |
+| 7 | Original Excel download | **UNTESTED** |
+| 8 | Consolidated 7-sheet XLSX | **UNTESTED** live; unit covered |
+| 9 | Desktop / mobile layouts | **UNTESTED** live; code review only |
+| 10 | Session expiry / unauthorized | Unauthorized API **401** previously verified; session expiry **UNTESTED** |
 
-No registrations or payments were created (Preview shares Production DB).
+No registrations, payments, or DB records created.
 
 ---
 
-## Step 3 — PAN security regression
-
-Code at HEAD `212d8fe` includes fix `118dd9b`. Local regression (no Preview auth required):
+## Step 3 — PAN security (code / unit — not live Preview)
 
 ```
 npx tsx --test lib/registration/pan-access.test.ts lib/registration/staff-metrics.test.ts
-→ 9 pass / 0 fail
+→ 9 pass / 0 fail (last green run this session / prior)
 ```
 
-| Requirement | Evidence |
-|-------------|----------|
-| Default PAN masked | `staffVisiblePan` / exports use mask |
-| `revealPan=yes` cannot expose full PAN | `authorizePanReveal` always denies while `FULL_PAN_REVEAL_AVAILABLE=false`; consolidated + schools CSV stay masked even if flag requested |
-| Detail API | Returns masked `pan` / `maskedPan`; `fullPanAvailable: false` |
-| UI has no full-PAN reveal/export | Reveal button and full-PAN CSV/XLSX links removed from `review-dashboard.tsx` |
-| Reveal denial logs omit PAN | Unit asserts log line has no raw PAN value |
-
-Unauth Preview probes (earlier / this pass): review page 200; registrations API 401 without cookie.
+| Requirement | Status |
+|-------------|--------|
+| Default PAN masked | PASS (unit) |
+| `revealPan=yes` cannot expose full PAN | PASS (unit) |
+| UI has no full-PAN reveal/export | PASS (code) |
+| Denial logs omit PAN value | PASS (unit) |
+| Live Preview detail/XLSX/CSV after staff login | **UNTESTED** (auth blocked) |
 
 ---
 
-## Step 4 — Final safety
+## Step 4 — Safety confirmations
 
 | Constraint | Status |
 |------------|--------|
-| Google Drive disabled / “not configured” | Yes |
-| No Production env changes | Yes |
-| No DB migrations | Yes |
-| No fee / registration / UTR / OCR / approval changes | Yes |
-| No Production deployment | Yes |
-| PR #65 merge | **Not done — remains open** |
-| Secrets in chat/logs/report | None printed |
+| Never reveal full PAN | Held |
+| No create registration/payment/records | Held |
+| No shared Production Supabase mutations | Held |
+| Google Drive disabled | Held |
+| No Production env / schema / RLS / Storage / payment logic changes | Held |
+| No Production deploy | Held |
+| PR #65 merge | **Not done — remains OPEN** |
 
 ---
 
-## Remaining blockers (owner)
+## Remaining blockers
 
-1. **Configure Preview-only `TEJAS_ADMIN_TOKEN`** in Vercel Preview environment settings (value never shared in chat). Do not copy/print the Production secret from here.  
-2. Re-run authenticated Preview click-through (login → cards → filters → detail → downloads → logout) on a READY Preview of this branch.  
-3. Separate decisions: merge #65, Production deploy, optional future role-gated PAN reveal, Drive credentials.
+1. **Preview-only `TEJAS_ADMIN_TOKEN` not actually available to Preview** (env ls + env pull + 503 probes).  
+2. Preview currently lacks pulled app secrets (including Supabase) — may block post-login data even after admin token is fixed.  
+3. After owner fixes Preview env + redeploys, re-run this authenticated checklist.
 
----
-
-## PAN design (unchanged summary)
-
-No reliable admin role is wired into staff sessions (`tejas_learn_staff` is reviewer-only; recovery has no role). Full-PAN reveal remains **disabled for all staff** via `lib/registration/pan-access.ts` until owner approves a real role model (no invented roles; no client-supplied role trust).
+Until then, authenticated Preview QA remains incomplete; product verdict stays **CONDITIONAL PASS**.

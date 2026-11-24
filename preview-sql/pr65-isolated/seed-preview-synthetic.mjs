@@ -7,6 +7,11 @@
  *   node preview-sql/pr65-isolated/seed-preview-synthetic.mjs
  *
  * Refuses Production project ref zapccpipwxduzlnvjdmy.
+ * Does not print credentials.
+ * Does not create public Storage links (private buckets + service_role upload only).
+ *
+ * Re-run behavior: if a registration reference already exists, that row is SKIPPED
+ * (safe to re-run). It does not delete or overwrite existing Preview rows.
  */
 import * as XLSX from "xlsx";
 
@@ -53,9 +58,15 @@ async function rest(path, init = {}) {
 }
 
 function alphabetRef(suffix) {
-  // 20 chars from allowed alphabet
+  // Must match referenceIsValid: TEJAS-2026- + 20 chars from this alphabet (no 0/1/I/O).
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = `TESTDATA${suffix}`.replace(/[^A-Z0-9]/g, "");
+  let out = `TESTDATA${suffix}`.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  out = out
+    .replace(/0/g, "2")
+    .replace(/1/g, "3")
+    .replace(/I/g, "J")
+    .replace(/O/g, "P");
+  out = [...out].filter((ch) => alphabet.includes(ch)).join("");
   while (out.length < 20) out += alphabet[out.length % alphabet.length];
   return `TEJAS-2026-${out.slice(0, 20)}`;
 }
@@ -148,7 +159,18 @@ async function upload(bucket, objectPath, bytes, contentType) {
   }
 }
 
+async function registrationExists(reference) {
+  const result = await rest(
+    `/rest/v1/tejas_registrations?reference=eq.${encodeURIComponent(reference)}&select=reference`,
+    { method: "GET" },
+  );
+  return result.status === 200 && Array.isArray(result.json) && result.json.length > 0;
+}
+
 async function insertRegistration(spec) {
+  if (await registrationExists(spec.reference)) {
+    return { reference: spec.reference, status: "skipped_existing", streams: null };
+  }
   const fee = feeForStreams(spec.students.reduce((n, s) => n + s.streams.length, 0));
   const createdAt = spec.createdAt || new Date().toISOString();
   const record = {

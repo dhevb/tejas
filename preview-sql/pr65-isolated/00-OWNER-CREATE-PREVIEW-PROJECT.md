@@ -2,9 +2,12 @@
 
 **Status:** Agent stopped at Phase 2 (Option B). Creating a new Supabase project needs your login, organization selection, and possibly billing confirmation.
 
+**Full checklist:** `TEJAS-PR65-PREVIEW-OWNER-SETUP-CHECKLIST.md` (dashboard steps, SQL success checks, Vercel Preview env, resume handoff).
+
 **Do not** use Production project `zapccpipwxduzlnvjdmy`.  
 **Do not** restore Production backups into Preview.  
-**Do not** paste Production service-role keys into Vercel Preview.
+**Do not** paste Production service-role keys into Vercel Preview.  
+**Do not** create this project via CLI — Dashboard only.
 
 ---
 

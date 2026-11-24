@@ -126,22 +126,8 @@ alter table tejas_payments
   add column if not exists review_note text,
   add column if not exists history jsonb not null default '[]'::jsonb;
 
-alter table tejas_schools
-  add column if not exists pan_holder text;
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint
-    where conname = 'tejas_schools_pan_holder_check'
-  ) then
-    alter table tejas_schools
-      add constraint tejas_schools_pan_holder_check
-      check (pan_holder is null or pan_holder in ('school', 'authorised-staff'));
-  end if;
-exception when duplicate_object then
-  null;
-end $$;
+-- pan_holder is defined on CREATE TABLE above (fresh Preview).
+-- Do not re-add a second check constraint here.
 
 create table if not exists tejas_idempotency (
   idempotency_key text primary key,

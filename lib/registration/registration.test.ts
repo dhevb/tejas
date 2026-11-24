@@ -693,7 +693,9 @@ test("a second school with the same PAN is flagged, and listings mask it", async
   assert.equal(listed.includes("AAACB****H"), true);
   const csv = registrationsToCsv([record!], "schools", false);
   assert.equal(csv.includes(PAN), false);
-  assert.equal(registrationsToCsv([record!], "schools", true).includes(PAN), true);
+  // Full PAN reveal stays disabled until a trusted owner role model is enabled.
+  assert.equal(registrationsToCsv([record!], "schools", true).includes(PAN), false);
+  assert.equal(registrationsToCsv([record!], "schools", true).includes("AAACB****H"), true);
   assert.equal(listed.includes("School PAN"), true);
   const staffBytes = sheet([student({ fullName: "Nisha Rao", parentName: "Kiran Rao", dob: "11-03-2014", rollNumber: "11" })]);
   const staffBody = new FormData();
@@ -1179,7 +1181,7 @@ test("schema status requires a staff session and does not describe the database 
 test("storage status requires a staff session before any storage inspection", async () => {
   const source = readFileSync("app/api/register/storage-status/route.ts", "utf8");
   const handler = source.slice(source.indexOf("export async function GET"));
-  const authAt = handler.indexOf("staffRequestAuthorised");
+  const authAt = handler.indexOf("registrationOwnerRequestAuthorised");
   const inspectAt = handler.indexOf("testSupabaseConnection");
   const probeAt = handler.indexOf("probeNamedServerKey");
   assert.ok(authAt > 0 && inspectAt > authAt && probeAt > authAt);
@@ -1222,7 +1224,7 @@ test("storage status requires a staff session before any storage inspection", as
     assert.equal(denied.status, 401);
     const deniedBody = await denied.json() as Record<string, unknown>;
     assert.equal(deniedBody.ok, false);
-    assert.equal(deniedBody.error, "Staff sign-in is required.");
+    assert.equal(deniedBody.error, "Owner sign-in is required.");
     for (const key of hidden) assert.equal(deniedBody[key], undefined);
     assert.equal(calls.length, 0);
 

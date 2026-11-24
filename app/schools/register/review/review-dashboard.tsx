@@ -55,6 +55,13 @@ type Row = {
   transactionReference?: string | null;
   driveSyncLabel?: string;
   driveSyncStatus?: string;
+  schoolAddress?: string;
+  derivedState?: string | null;
+  derivedDistrict?: string | null;
+  stateKey?: string;
+  districtKey?: string;
+  locationLabel?: string;
+  locationIdentified?: boolean;
 };
 
 type Detail = {
@@ -91,6 +98,10 @@ type Detail = {
     printedBooks?: string;
     bookQuantity?: number;
     ebookAccess?: string;
+    derivedState?: string | null;
+    derivedDistrict?: string | null;
+    locationLabel?: string;
+    locationNotes?: string[];
   };
   students: {
     fullName: string;
@@ -188,15 +199,16 @@ function classTally(students: Detail["students"]) {
 
 const PAGE_SIZE = 20;
 
+const UNIDENTIFIED = "State/District Not Identified";
+const UNIDENTIFIED_DISTRICT = "District Not Identified";
+
 export function ReviewDashboard() {
   const [token, setToken] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState("");
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [overview, setOverview] = useState<Overview | null>(null);
+  const [, setOverview] = useState<Overview | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [note, setNote] = useState("");
@@ -205,6 +217,8 @@ export function ReviewDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [streamFilter, setStreamFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [districtFilter, setDistrictFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
@@ -240,15 +254,14 @@ export function ReviewDashboard() {
     const response = await fetch("/api/register/admin/session", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password, token }),
+      body: JSON.stringify({ token }),
     });
     const body = (await response.json()) as { error?: string };
     if (!response.ok) {
-      setMessage(body.error ?? "Staff review could not be opened.");
+      setMessage(body.error ?? "Owner review could not be opened.");
       return;
     }
     setToken("");
-    setPassword("");
     await load();
   }
 
@@ -311,6 +324,29 @@ export function ReviewDashboard() {
     }
   }
 
+  const stateOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const row of rows) set.add(row.stateKey ?? UNIDENTIFIED);
+    return [...set].sort((a, b) => {
+      if (a === UNIDENTIFIED) return 1;
+      if (b === UNIDENTIFIED) return -1;
+      return a.localeCompare(b);
+    });
+  }, [rows]);
+
+  const districtOptions = useMemo(() => {
+    if (stateFilter === "all") return [] as string[];
+    const set = new Set<string>();
+    for (const row of rows) {
+      if ((row.stateKey ?? UNIDENTIFIED) === stateFilter) set.add(row.districtKey ?? UNIDENTIFIED);
+    }
+    return [...set].sort((a, b) => {
+      if (a === UNIDENTIFIED || a === UNIDENTIFIED_DISTRICT) return 1;
+      if (b === UNIDENTIFIED || b === UNIDENTIFIED_DISTRICT) return -1;
+      return a.localeCompare(b);
+    });
+  }, [rows, stateFilter]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const from = dateFrom ? new Date(dateFrom).getTime() : null;
@@ -323,7 +359,9 @@ export function ReviewDashboard() {
           row.reference.toLowerCase().includes(needle) ||
           (row.principalName ?? "").toLowerCase().includes(needle) ||
           (row.coordinatorName ?? "").toLowerCase().includes(needle) ||
-          (row.transactionReference ?? "").toLowerCase().includes(needle);
+          (row.transactionReference ?? "").toLowerCase().includes(needle) ||
+          (row.schoolAddress ?? "").toLowerCase().includes(needle) ||
+          (row.locationLabel ?? "").toLowerCase().includes(needle);
         const matchesStatus =
           statusFilter === "all" ||
           row.paymentStatus === statusFilter ||
@@ -335,10 +373,21 @@ export function ReviewDashboard() {
           (streamFilter === "mathematics" && (row.mathematicsCount ?? 0) > 0) ||
           (streamFilter === "technology" && (row.technologyCount ?? 0) > 0);
         const matchesChannel = channelFilter === "all" || (row.channel ?? "school-registration") === channelFilter;
+        const matchesState = stateFilter === "all" || (row.stateKey ?? UNIDENTIFIED) === stateFilter;
+        const matchesDistrict = districtFilter === "all" || (row.districtKey ?? UNIDENTIFIED) === districtFilter;
         const created = new Date(row.createdAt).getTime();
         const matchesFrom = from == null || (!Number.isNaN(created) && created >= from);
         const matchesTo = to == null || (!Number.isNaN(created) && created <= to);
-        return matchesQuery && matchesStatus && matchesStream && matchesChannel && matchesFrom && matchesTo;
+        return (
+          matchesQuery &&
+          matchesStatus &&
+          matchesStream &&
+          matchesChannel &&
+          matchesState &&
+          matchesDistrict &&
+          matchesFrom &&
+          matchesTo
+        );
       })
       .sort((a, b) => {
         const dir = sortDir === "asc" ? 1 : -1;
@@ -346,7 +395,97 @@ export function ReviewDashboard() {
         if (sortKey === "amountDue") return (a.amountDue - b.amountDue) * dir;
         return (a.createdAt < b.createdAt ? -1 : 1) * dir;
       });
-  }, [rows, query, statusFilter, streamFilter, channelFilter, dateFrom, dateTo, sortKey, sortDir]);
+  }, [rows, query, statusFilter, streamFilter, channelFilter, stateFilter, districtFilter, dateFrom, dateTo, sortKey, sortDir]);
+
+  const filteredOverview = useMemo(() => {
+    const payments: Record<string, number> = {};
+    let amountDue = 0;
+    let grossCollected = 0;
+    let schoolShare = 0;
+    let amountReceived = 0;
+    let pendingPayable = 0;
+    let rejectedOrRefund = 0;
+    let uniqueStudents = 0;
+    let studentStreams = 0;
+    let englishEntries = 0;
+    let mathematicsEntries = 0;
+    let technologyEntries = 0;
+    let schoolRegistrations = 0;
+    let individualRegistrations = 0;
+    for (const row of filtered) {
+      payments[row.paymentStatus] = (payments[row.paymentStatus] ?? 0) + 1;
+      amountDue += row.amountDue;
+      grossCollected += row.grossTotal;
+      schoolShare += row.schoolShare;
+      uniqueStudents += row.uniqueStudentCount ?? row.studentCount;
+      studentStreams += row.studentStreamRegistrations;
+      englishEntries += row.englishCount ?? 0;
+      mathematicsEntries += row.mathematicsCount ?? 0;
+      technologyEntries += row.technologyCount ?? 0;
+      if (row.channel === "individual-registration") individualRegistrations += 1;
+      else schoolRegistrations += 1;
+      if (row.paymentStatus === "confirmed") amountReceived += row.amountDue;
+      if (row.paymentStatus === "pending_instructions" || row.paymentStatus === "awaiting_payment" || row.paymentStatus === "reported") {
+        pendingPayable += row.amountDue;
+      }
+      if (row.paymentStatus === "rejected" || row.paymentStatus === "refund_pending") rejectedOrRefund += 1;
+    }
+    return {
+      schools: filtered.length,
+      schoolRegistrations,
+      individualRegistrations,
+      students: uniqueStudents,
+      uniqueStudents,
+      studentStreams,
+      englishEntries,
+      mathematicsEntries,
+      technologyEntries,
+      amountDue,
+      grossCollected,
+      schoolShare,
+      amountReceived,
+      pendingPayable,
+      rejectedOrRefund,
+      payments,
+    };
+  }, [filtered]);
+
+  const stateGroups = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of filtered) {
+      const key = row.stateKey ?? UNIDENTIFIED;
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return [...map.entries()].sort((a, b) => {
+      if (a[0] === UNIDENTIFIED) return 1;
+      if (b[0] === UNIDENTIFIED) return -1;
+      return b[1] - a[1] || a[0].localeCompare(b[0]);
+    });
+  }, [filtered]);
+
+  const districtGroups = useMemo(() => {
+    if (stateFilter === "all") return [] as Array<[string, number]>;
+    const map = new Map<string, number>();
+    for (const row of filtered) {
+      const key = row.districtKey ?? UNIDENTIFIED;
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return [...map.entries()].sort((a, b) => {
+      if (a[0] === UNIDENTIFIED || a[0] === UNIDENTIFIED_DISTRICT) return 1;
+      if (b[0] === UNIDENTIFIED || b[0] === UNIDENTIFIED_DISTRICT) return -1;
+      return b[1] - a[1] || a[0].localeCompare(b[0]);
+    });
+  }, [filtered, stateFilter]);
+
+  const exportQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    if (stateFilter !== "all") params.set("state", stateFilter);
+    if (districtFilter !== "all") params.set("district", districtFilter);
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (query.trim()) params.set("q", query.trim());
+    const suffix = params.toString();
+    return suffix ? `&${suffix}` : "";
+  }, [stateFilter, districtFilter, statusFilter, query]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -354,25 +493,21 @@ export function ReviewDashboard() {
   if (!ready) {
     return (
       <form onSubmit={signIn} className="mx-auto max-w-md space-y-3">
-        <p className="text-sm text-tejas-muted">Staff review has no default password. Use a staff email and password when an individual account exists. The recovery token configured on the server still opens this page.</p>
+        <p className="text-sm text-tejas-muted">
+          Registration review is owner-only. School staff do not receive accounts or dashboard access. Use the owner access token configured on the server.
+        </p>
         <label className="block text-sm">
-          <span className="font-medium">Email</span>
-          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" autoComplete="username" />
-        </label>
-        <label className="block text-sm">
-          <span className="font-medium">Password</span>
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" autoComplete="current-password" />
-        </label>
-        <label className="block text-sm">
-          <span className="font-medium">Recovery token</span>
+          <span className="font-medium">Owner access token</span>
           <input type="password" value={token} onChange={(event) => setToken(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" autoComplete="off" />
         </label>
         {message ? <p className="text-sm text-red-700" role="alert">{message}</p> : null}
         {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
-        <button type="submit" className="rounded-xl bg-tejas-blue px-4 py-2 text-sm font-semibold text-white">Open review</button>
+        <button type="submit" className="rounded-xl bg-tejas-blue px-4 py-2 text-sm font-semibold text-white">Open owner review</button>
       </form>
     );
   }
+
+  const displayOverview = filteredOverview;
 
   const detailStreams = detail ? streamTally(detail.students) : null;
   const detailClasses = detail ? classTally(detail.students) : null;
@@ -387,7 +522,7 @@ export function ReviewDashboard() {
             {loading ? "Refreshing…" : "Refresh"}
           </button>
           <button type="button" onClick={() => signOut()} className="rounded-lg border border-tejas-border bg-white px-3 py-2 text-sm font-semibold">
-            Staff logout
+            Owner logout
           </button>
         </div>
       </div>
@@ -395,44 +530,122 @@ export function ReviewDashboard() {
       {message ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{message}</p> : null}
       {success ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{success}</p> : null}
 
-      {overview ? (
-        <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3 xl:grid-cols-4">
-          {[
-            ["Total registrations", overview.schools],
-            ["School channel", overview.schoolRegistrations ?? overview.schools],
-            ["Individual channel", overview.individualRegistrations ?? 0],
-            ["Unique student entries", overview.uniqueStudents ?? overview.students],
-            ["Student-stream registrations", overview.studentStreams],
-            ["English entries", overview.englishEntries ?? overview.streamCounts["TEJAS English"] ?? 0],
-            ["Mathematics entries", overview.mathematicsEntries ?? overview.streamCounts["TEJAS Mathematics"] ?? 0],
-            ["Future Tech entries", overview.technologyEntries ?? overview.streamCounts["TEJAS Future Tech"] ?? 0],
-            ["Gross registration amount", inr.format(overview.grossCollected)],
-            ["School share", inr.format(overview.schoolShare)],
-            ["Payable to TEJAS", inr.format(overview.amountDue)],
-            ["Payment received / verified", inr.format(overview.amountReceived)],
-            ["Payment pending payable", inr.format(overview.pendingPayable)],
-            ["Rejected / refund-pending", overview.rejectedOrRefund ?? (overview.payments.rejected ?? 0) + (overview.payments.refund_pending ?? 0)],
-            ["Verified count", overview.payments.confirmed ?? 0],
-            ["Submitted / verification pending", overview.payments.reported ?? 0],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm">
-              <dt className="text-tejas-muted">{label}</dt>
-              <dd className="mt-1 text-lg font-semibold text-tejas-ink">{value}</dd>
-            </div>
-          ))}
-        </dl>
+      <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3 xl:grid-cols-4">
+        {[
+          ["Filtered registrations", displayOverview.schools],
+          ["School channel", displayOverview.schoolRegistrations],
+          ["Individual channel", displayOverview.individualRegistrations],
+          ["Unique student entries", displayOverview.uniqueStudents],
+          ["Student-stream registrations", displayOverview.studentStreams],
+          ["English entries", displayOverview.englishEntries],
+          ["Mathematics entries", displayOverview.mathematicsEntries],
+          ["Future Tech entries", displayOverview.technologyEntries],
+          ["Gross registration amount", inr.format(displayOverview.grossCollected)],
+          ["School share", inr.format(displayOverview.schoolShare)],
+          ["Payable to TEJAS", inr.format(displayOverview.amountDue)],
+          ["Payment received / verified", inr.format(displayOverview.amountReceived)],
+          ["Payment pending payable", inr.format(displayOverview.pendingPayable)],
+          ["Rejected / refund-pending", displayOverview.rejectedOrRefund],
+          ["Verified count", displayOverview.payments.confirmed ?? 0],
+          ["Submitted / verification pending", displayOverview.payments.reported ?? 0],
+        ].map(([label, value]) => (
+          <div key={String(label)} className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm">
+            <dt className="text-tejas-muted">{label}</dt>
+            <dd className="mt-1 text-lg font-semibold text-tejas-ink">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {stateGroups.length > 0 ? (
+        <section className="rounded-2xl border border-tejas-border bg-white p-4 text-sm" aria-label="State grouping">
+          <h2 className="font-semibold text-tejas-ink">State-wise (filtered)</h2>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {stateGroups.map(([state, count]) => (
+              <li key={state}>
+                <button
+                  type="button"
+                  className={`rounded-lg border px-2 py-1 ${stateFilter === state ? "border-tejas-blue bg-tejas-blue/5 font-semibold text-tejas-blue" : "border-tejas-border"}`}
+                  onClick={() => {
+                    setStateFilter(state);
+                    setDistrictFilter("all");
+                    setPage(1);
+                  }}
+                >
+                  {state} ({count})
+                </button>
+              </li>
+            ))}
+            {stateFilter !== "all" ? (
+              <li>
+                <button type="button" className="rounded-lg border border-tejas-border px-2 py-1 text-tejas-muted" onClick={() => { setStateFilter("all"); setDistrictFilter("all"); setPage(1); }}>
+                  Clear state
+                </button>
+              </li>
+            ) : null}
+          </ul>
+          {districtGroups.length > 0 ? (
+            <>
+              <h3 className="mt-4 font-semibold text-tejas-ink">Districts in {stateFilter}</h3>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {districtGroups.map(([district, count]) => (
+                  <li key={district}>
+                    <button
+                      type="button"
+                      className={`rounded-lg border px-2 py-1 ${districtFilter === district ? "border-tejas-blue bg-tejas-blue/5 font-semibold text-tejas-blue" : "border-tejas-border"}`}
+                      onClick={() => { setDistrictFilter(district); setPage(1); }}
+                    >
+                      {district} ({count})
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+        </section>
       ) : null}
 
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=schools" prefetch={false}>Schools CSV (masked PAN)</Link>
-        <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=students" prefetch={false}>Students CSV</Link>
-        <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=payments" prefetch={false}>Payments CSV</Link>
+        <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=schools${exportQuery}`} prefetch={false}>Schools CSV (masked PAN, filtered)</Link>
+        <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=students${exportQuery}`} prefetch={false}>Students CSV (filtered)</Link>
+        <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=payments${exportQuery}`} prefetch={false}>Payments CSV (filtered)</Link>
+        <span className="text-tejas-muted">Export row counts follow the selected State, District, search and payment filters ({filtered.length} registrations).</span>
       </div>
 
       <div className="grid gap-3 rounded-2xl border border-tejas-border bg-white p-4 text-sm md:grid-cols-2 lg:grid-cols-3">
         <label>
           <span className="font-medium">Search</span>
-          <input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="School, reference, student contact, UTR" className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" />
+          <input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="School, reference, address, UTR" className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" />
+        </label>
+        <label>
+          <span className="font-medium">State</span>
+          <select
+            value={stateFilter}
+            onChange={(event) => {
+              setStateFilter(event.target.value);
+              setDistrictFilter("all");
+              setPage(1);
+            }}
+            className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2"
+          >
+            <option value="all">All states</option>
+            {stateOptions.map((state) => (
+              <option key={state} value={state}>{state}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span className="font-medium">District</span>
+          <select
+            value={districtFilter}
+            onChange={(event) => { setDistrictFilter(event.target.value); setPage(1); }}
+            disabled={stateFilter === "all"}
+            className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2 disabled:opacity-60"
+          >
+            <option value="all">{stateFilter === "all" ? "Select a state first" : "All districts in state"}</option>
+            {districtOptions.map((district) => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+          </select>
         </label>
         <label>
           <span className="font-medium">Payment status</span>
@@ -501,6 +714,7 @@ export function ReviewDashboard() {
                 <tr className="border-b border-stone-200">
                   <th className="px-3 py-3">Date</th>
                   <th className="px-3 py-3">School / reference</th>
+                  <th className="px-3 py-3">State / District</th>
                   <th className="px-3 py-3">Principal / coordinator</th>
                   <th className="px-3 py-3">Students</th>
                   <th className="px-3 py-3">Streams</th>
@@ -517,6 +731,10 @@ export function ReviewDashboard() {
                       <button type="button" className="text-left font-semibold text-tejas-blue underline" onClick={() => openRow(row.reference)}>{row.schoolName}</button>
                       <div className="text-tejas-muted">{row.reference}</div>
                       <div className="text-xs text-tejas-muted">{row.channel === "individual-registration" ? "Individual" : "School"} · {row.maskedPan}{row.panDuplicate ? " · PAN review" : ""}</div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div>{row.derivedState ?? UNIDENTIFIED}</div>
+                      <div className="text-tejas-muted">{row.derivedDistrict ?? (row.derivedState ? UNIDENTIFIED_DISTRICT : "—")}</div>
                     </td>
                     <td className="px-3 py-3">
                       <div>{row.principalName ?? "—"}</div>
@@ -544,6 +762,7 @@ export function ReviewDashboard() {
               <li key={row.reference} className="rounded-2xl border border-tejas-border bg-white p-4 text-sm shadow-sm">
                 <button type="button" className="text-left font-semibold text-tejas-blue underline" onClick={() => openRow(row.reference)}>{row.schoolName}</button>
                 <p className="mt-1 text-tejas-muted">{row.reference} · {formatDate(row.createdAt)}</p>
+                <p className="mt-1 text-tejas-muted">{row.locationLabel ?? UNIDENTIFIED}</p>
                 <p className="mt-2">Students {row.uniqueStudentCount ?? row.studentCount} · Streams {row.studentStreamRegistrations}</p>
                 <p>E {row.englishCount ?? 0} · M {row.mathematicsCount ?? 0} · FT {row.technologyCount ?? 0}</p>
                 <p className="mt-1">TEJAS {inr.format(row.amountDue)} · Share {inr.format(row.schoolShare)}</p>
@@ -580,6 +799,10 @@ export function ReviewDashboard() {
 
           <DetailBlock title="2. School details">
             <p>{detail.school.schoolAddress}</p>
+            <p className="mt-2">Derived location: {detail.school.locationLabel ?? UNIDENTIFIED}</p>
+            {detail.school.locationNotes && detail.school.locationNotes.length > 0 ? (
+              <p className="mt-1 text-tejas-muted">{detail.school.locationNotes.join(" ")}</p>
+            ) : null}
             <p>Category: {detail.school.schoolCategory || "—"}</p>
             <p>School email: {detail.school.schoolEmail || "—"} · Mobile: {detail.school.schoolMobile || "—"}</p>
             <p>Previous participation: {detail.school.previousParticipation ? "yes" : "no"}{detail.school.previousReference ? ` · ${detail.school.previousReference}` : ""}</p>

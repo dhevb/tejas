@@ -1,18 +1,18 @@
 import { noStore } from "@/lib/registration/http";
 import { paymentConfigErrors, readPaymentConfig, writePaymentConfig, type PaymentConfig } from "@/lib/registration/payment";
-import { staffAuthorised } from "@/lib/registration/staff";
+import { registrationOwnerAuthorised } from "@/lib/registration/staff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!(await staffAuthorised())) return noStore({ ok: false }, 401);
+  if (!(await registrationOwnerAuthorised())) return noStore({ ok: false }, 401);
   const config = await readPaymentConfig();
   return noStore({ ok: true, config });
 }
 
 export async function PUT(request: Request) {
-  if (!(await staffAuthorised())) return noStore({ ok: false }, 401);
+  if (!(await registrationOwnerAuthorised())) return noStore({ ok: false }, 401);
   const body = (await request.json().catch(() => null)) as Partial<PaymentConfig> | null;
   if (!body) return noStore({ ok: false, error: "The payment settings could not be read." }, 400);
   const config: PaymentConfig = {

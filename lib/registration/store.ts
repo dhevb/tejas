@@ -8,6 +8,7 @@ import { panHolderLabel } from "@/lib/registration/school";
 import type { SchoolForm } from "@/lib/registration/school";
 import { streamById } from "@/lib/registration/schema";
 import type { StudentRecord } from "@/lib/registration/sheet";
+import { parseIndiaAddress, locationLabel } from "@/lib/registration/india-address";
 import {
   countStreamRegistrations,
   countUniqueStudents,
@@ -403,6 +404,16 @@ export type StaffRow = PublicSummary & {
   driveSyncStatus: DriveSyncStatus;
   driveSyncLabel: string;
   approvalMethod: RegistrationRecord["payment"]["approvalMethod"];
+  /** Original school address — never rewritten by geo parsing. */
+  schoolAddress: string;
+  /** Derived from address only; empty stored school.state/district are not used. */
+  derivedState: string | null;
+  derivedDistrict: string | null;
+  stateKey: string;
+  districtKey: string;
+  locationLabel: string;
+  locationIdentified: boolean;
+  locationNotes: string[];
 };
 
 export type StaffOverview = {
@@ -500,6 +511,7 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
         streamCounts[name] = (streamCounts[name] ?? 0) + 1;
       }
     }
+    const location = parseIndiaAddress(record.school.schoolAddress);
     registrations.push({
       ...toPublicSummary(record),
       channel,
@@ -525,6 +537,14 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       driveSyncStatus,
       driveSyncLabel: driveSyncLabel(driveSyncStatus),
       approvalMethod: record.payment.approvalMethod ?? null,
+      schoolAddress: record.school.schoolAddress,
+      derivedState: location.state,
+      derivedDistrict: location.district,
+      stateKey: location.stateKey,
+      districtKey: location.districtKey,
+      locationLabel: locationLabel(location),
+      locationIdentified: location.fullyIdentified,
+      locationNotes: location.notes,
     });
   }
   registrations.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));

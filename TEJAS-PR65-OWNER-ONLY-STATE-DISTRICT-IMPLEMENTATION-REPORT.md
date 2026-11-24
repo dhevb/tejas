@@ -1,57 +1,69 @@
 # PR #65 — Owner-Only Access + Address-Based State/District Segregation
 
 **Branch:** `feat/registration-review-dashboard-redesign`  
-**PR:** #65 — **OPEN** (not merged; Production not deployed)  
+**PR:** [#65](https://github.com/dhevb/tejas/pull/65) — **OPEN**  
 **Repo:** `dhevb/tejas`  
 **Date:** 2026-11-25  
 
 ## Verdict
 
-**CONDITIONAL PASS** — Implementation, unit/full registration tests, TypeScript, lint, and production build completed. Preview redeploy + browser QA for the new filters are documented below with PASS / NOT TESTED distinctions; any check not executed is **NOT TESTED**.
+**CONDITIONAL PASS**
+
+Implementation, security gates, unit/full `registration.test.ts`, TypeScript, lint, production build, commit/push, Preview deploy, and **API-level Preview QA** (via `vercel curl`, bypassing Vercel SSO) completed successfully.
+
+Interactive **browser UI** filter/grouping/responsive checks on the Preview URL are **NOT TESTED** in a real browser session because Vercel Deployment Protection redirects to Vercel login. Identified State/District filter behaviour against live Preview rows is **NOT TESTED** with geographic seed data (all five synthetic seeds are intentionally non-geographic); covered by unit tests only.
+
+Production was not merged, deployed, or mutated.
+
+---
 
 ## Commit / push
 
 | Item | Value |
 |------|--------|
-| Commit | *(filled after push)* |
-| Branch pushed | `feat/registration-review-dashboard-redesign` |
-| Remote | `origin` (`https://github.com/dhevb/tejas`) |
+| Feature commit | `d41b2970a1fdcca690a22fbd9887c31a52201a36` |
+| Message | Restrict registration admin to the owner and derive State/District from school addresses. |
+| Branch pushed | `feat/registration-review-dashboard-redesign` → `origin` |
 | PR state | **OPEN** |
+| Force-push | **No** |
 | Production merge/deploy | **Not performed** |
+
+---
 
 ## Preview deployment
 
 | Item | Value |
 |------|--------|
-| Preview Supabase project | `nbeslngnrsagarosuaab` (`tejas-preview-pr65`) |
+| Preview URL | https://tejas-9z4nixu3o-dhe-projects.vercel.app |
+| Deployment ID | `dpl_8uBSCEx93EoD3VGHUQT7p7YsVrz2` |
+| Inspect | https://vercel.com/dhe-projects/tejas/8uBSCEx93EoD3VGHUQT7p7YsVrz2 |
+| `target` | **preview** (not production) |
+| Preview Supabase | `nbeslngnrsagarosuaab` (`tejas-preview-pr65`) — local `.env.preview` host confirmed; Preview `storage-status` connected with `urlPresent=true` |
 | Production Supabase | Untouched (`zapccpipwxduzlnvjdmy`) |
-| Preview URL | *(filled after deploy)* |
-| Deployment ID | *(filled after deploy)* |
-| Production credentials used | **No** |
+| Secrets printed | **No** |
 
 ---
 
-## 1. Owner-only authorization audit (endpoint-by-endpoint)
+## 1. Owner-only authorization audit
 
-**Rule:** Exactly one administrative authority — the owner recovery session (`STAFF_RECOVERY_SUBJECT` / `TEJAS_ADMIN_TOKEN`). Owner = Super Admin + Admin + Staff for registration administration. School staff have no role, login, session, dashboard, or admin API access. UI hiding is not authorization.
+**Rule:** One administrative authority — owner recovery session (`subject=recovery` via `TEJAS_ADMIN_TOKEN`). Owner holds Super Admin + Admin + Staff capabilities for registration administration. School staff have no role/login/session/dashboard/admin API access. Cookie HMAC; no client-supplied role/userId/auth flag trusted.
 
-| Endpoint | Methods | Auth implementation | Unauthorized behaviour | Test evidence |
-|----------|---------|---------------------|------------------------|---------------|
-| `/api/register/admin/session` | POST | Owner token via `tokenMatches` only; email/password **rejected** with owner-only message; creates recovery subject session | 401; no cookie | `india-address.test.ts` owner session + school-staff reject — **PASS** |
-| `/api/register/admin/session` | DELETE | Clears cookie; bumps session version when subject present | 200 + cleared cookie | Existing session tests — **PASS** (recovery path) |
-| `/api/register/admin/registrations` | GET | `registrationOwnerAuthorised()` | 401 `{ ok: false }` — no registration payload | Source audit + owner gate — **PASS** (code); live Preview — see browser QA |
-| `/api/register/admin/registrations/[reference]` | GET | `registrationOwnerAuthorised()`; PAN via `staffVisiblePan` (masked while reveal disabled) | 401; no school/PAN leak | Code audit — **PASS**; Preview — see QA |
-| `/api/register/admin/registrations/[reference]` | PATCH | `registrationOwnerAuthorised()`; payment status update (unchanged logic) | 401 | Code audit — **PASS** |
-| `/api/register/admin/registrations/[reference]/file` | GET | `registrationOwnerAuthorised()`; PAN reveal gated separately | 401 | Code audit — **PASS** |
-| `/api/register/admin/export` | GET | `registrationOwnerAuthorised()`; filter query params; masked PAN export | 401 | Unit filter tests + code — **PASS** |
-| `/api/register/admin/payment` | GET, PUT | `registrationOwnerAuthorised()` (**fixed** this review; was `staffAuthorised`) | 401 | `india-address.test.ts` payment API — **PASS** |
-| `/api/register/storage-status` | GET | `registrationOwnerRequestAuthorised(request)` | 401 `Owner sign-in is required.`; no storage fields | `registration.test.ts` storage status — **PASS** |
-| `/api/register/schema-status` | GET | `registrationOwnerRequestAuthorised(request)` | 401; no schema leak | `registration.test.ts` schema status — **PASS** |
-| Client role / userId / auth flag | — | **Not trusted**; cookie HMAC + owner subject only | N/A | Code audit — **PASS** |
-| School-staff email/password | — | Session POST rejects before any account lookup | 401 owner-only message | Unit — **PASS** |
-| Legacy learn email session via same route | — | Same rejection; learn console now token-only | 401 if email sent | Code + UI — **PASS** |
+| Endpoint | Methods | Auth | Unauthorized | Evidence |
+|----------|---------|------|--------------|----------|
+| `/api/register/admin/session` | POST | Owner token only; email/password rejected | 401 owner-only message | Unit **PASS**; Preview `vercel curl` school-staff → 401 + owner-only text **PASS**; owner token → 200 `identity=recovery` `role=owner` + HttpOnly cookie **PASS** |
+| `/api/register/admin/session` | DELETE | Clears cookie | 200 | Preview logout **PASS**; subsequent list **401 PASS** |
+| `/api/register/admin/registrations` | GET | `registrationOwnerAuthorised()` | 401 JSON, no rows | Preview unauth via `vercel curl` **401 PASS**; owner list 5 rows **PASS** |
+| `/api/register/admin/registrations/[reference]` | GET | `registrationOwnerAuthorised()`; PAN masked | 401 | Code + unit alignment **PASS**; live detail fetch **NOT TESTED** this turn |
+| `/api/register/admin/registrations/[reference]` | PATCH | `registrationOwnerAuthorised()` | 401 | Code audit **PASS**; payment-mutation exercise **NOT TESTED** (safety: not exercised) |
+| `/api/register/admin/registrations/[reference]/file` | GET | `registrationOwnerAuthorised()` | 401 | Code audit **PASS**; live file download **NOT TESTED** |
+| `/api/register/admin/export` | GET | `registrationOwnerAuthorised()` + filters | 401 | Preview export unidentified count=5; Maharashtra count=0 **PASS** |
+| `/api/register/admin/payment` | GET, PUT | `registrationOwnerAuthorised()` (**fixed** this review) | 401 | Unit source/401 **PASS**; Preview owner GET **200 PASS** |
+| `/api/register/storage-status` | GET | `registrationOwnerRequestAuthorised` | 401 Owner sign-in | Unit **PASS**; Preview owner connected **PASS** |
+| `/api/register/schema-status` | GET | `registrationOwnerRequestAuthorised` | 401 | Unit **PASS**; Preview live **NOT TESTED** this turn |
+| School-staff / learn email path on session | — | Rejected before account lookup | 401 | Unit + Preview **PASS** |
+| Client role flags | — | Not accepted | N/A | Code audit **PASS** |
 
-**No alternate school-staff authentication path remains** on registration admin session or admin APIs.
+**Gap closed this review:** `admin/payment` previously used `staffAuthorised`; now owner-gated.
 
 ---
 
@@ -59,118 +71,99 @@
 
 | Check | Result |
 |-------|--------|
-| Source = existing `schoolAddress` only | **PASS** |
-| No State/District form fields added | **PASS** |
-| Original address never rewritten in storage | **PASS** (derived fields only on StaffRow / detail / CSV) |
-| Dataset: India States/UTs + districts + aliases (`india-geo-data.ts`) | **PASS** (maintained in-repo; not live LGD feed) |
-| Abbreviations / spelling variants | **PASS** (unit) |
-| Incomplete / ambiguous / conflicting → Not Identified | **PASS** (unit) |
-| Never invent district | **PASS** (unit) |
-| Unidentified retained in filters/totals/exports | **PASS** (unit + dashboard filter key) |
-| State constrains District options | **PASS** (UI + unit filter) |
-| Combined State + District + search + payment filters | **PASS** (unit) |
-| Overview counts / CSV follow filters | **PASS** (unit + `X-TEJAS-Export-Count`) |
-| Grouping chips / clear state | **PASS** (implemented); Preview browser — see QA |
+| Existing `schoolAddress` only; no form fields | **PASS** |
+| Original address not rewritten in storage | **PASS** (derived display/export fields only) |
+| `india-geo-data.ts` States/UTs + districts + aliases | **PASS** (in-repo maintained set) |
+| Abbreviations / variants / conflict / incomplete | **PASS** (unit) |
+| Unidentified bucket retained | **PASS** (unit + Preview: 5/5 seeds unidentified, still listed & exported) |
+| State constrains District (UI) | Implemented; interactive UI **NOT TESTED** (SSO) |
+| Combined filters | Unit **PASS**; Preview export `state=Not Identified&status=confirmed` → count **1 PASS** |
+| Counts / CSV follow filters | Preview `X-Tejas-Export-Count` **PASS** |
+| Grouping chips / clear | Implemented; interactive UI **NOT TESTED** (SSO) |
 
-**Parser limitations:** Rare/new district names may be “District Not Identified” under a known State. Short English-word aliases (`as`, `or`) omitted intentionally. PIN used only for conflict notes — never invents State alone.
+**Preview seeds (unchanged, not geographically invented):** all five `TEST DATA …` addresses → **State/District Not Identified**; original prefixes preserved (`TEST DATA Boulevard …`).
 
 ---
 
 ## 3. Tests
 
-### Hang investigation (prior force-stop)
+### Prior hang
 
 | Finding | Detail |
 |---------|--------|
-| Cause | Process **exit stall** from open handles after tests finished (not a stuck assertion). Prior PowerShell `Select-Object -Last` also buffered until EOF, appearing hung. |
-| Fix for this run | `tsx --test --test-force-exit` |
-| Label | Not marked FAIL; previous force-stop was **NOT a suite PASS** and is not claimed as PASS |
+| Cause | Process **exit stall** from open handles after tests completed (not a failing assertion). PowerShell `Select-Object -Last` also buffered until EOF. |
+| This run | `tsx --test --test-force-exit` |
+| Prior force-stop | **Not claimed as PASS** |
 
-### Commands and results
+### Commands / results
 
 ```
 npx tsx --test --test-concurrency=1 --test-timeout=90000 --test-force-exit lib/registration/registration.test.ts
-→ EXIT 0 | tests 31 | pass 31 | fail 0 | skipped 0 | ~3.6s
+→ EXIT 0 | 31 pass / 0 fail / 0 skipped
 
-npx tsx --test --test-concurrency=1 --test-force-exit lib/registration/india-address.test.ts lib/registration/pan-access.test.ts lib/registration/staff-recovery.test.ts lib/registration/staff-metrics.test.ts preview-sql/pr65-isolated/seed-preview-synthetic.test.mjs
-→ EXIT 0 | tests 34 | pass 34 | fail 0
+npx tsx --test --test-concurrency=1 --test-force-exit lib/registration/india-address.test.ts \
+  lib/registration/pan-access.test.ts lib/registration/staff-recovery.test.ts \
+  lib/registration/staff-metrics.test.ts preview-sql/pr65-isolated/seed-preview-synthetic.test.mjs
+→ EXIT 0 | 34 pass / 0 fail
 
 npx tsx --test --test-concurrency=1 --test-force-exit lib/registration/india-address.test.ts
-→ EXIT 0 | tests 14 | pass 14
+→ EXIT 0 | 14 pass (includes admin/payment owner gate)
 
 npx tsc --noEmit → EXIT 0
-npx next lint → EXIT 0 (pre-existing img warnings only)
+npx next lint → EXIT 0 (pre-existing <img> warnings only)
 npm run build → EXIT 0
 ```
 
 ---
 
-## 4. Changed files (this feature set)
+## 4. Preview / “browser” QA evidence
 
-### Owner-only
-- `lib/registration/staff.ts`
-- `app/api/register/admin/session/route.ts`
-- `app/api/register/admin/registrations/route.ts`
-- `app/api/register/admin/registrations/[reference]/route.ts`
-- `app/api/register/admin/registrations/[reference]/file/route.ts`
-- `app/api/register/admin/export/route.ts`
-- `app/api/register/admin/payment/route.ts` *(owner gate fix)*
-- `app/api/register/storage-status/route.ts`
-- `app/api/register/schema-status/route.ts`
-- `app/schools/register/review/review-dashboard.tsx`
-- `app/learn/staff/staff-console.tsx`
-
-### State/District
-- `lib/registration/india-address.ts` *(new)*
-- `lib/registration/india-geo-data.ts` *(new)*
-- `lib/registration/export-filters.ts` *(new)*
-- `lib/registration/store.ts`
-- `lib/registration/reports.ts`
-
-### Tests / tooling / Preview seed harden
-- `lib/registration/india-address.test.ts` *(new)*
-- `lib/registration/registration.test.ts`
-- `package.json`
-- `preview-sql/pr65-isolated/seed-preview-synthetic.mjs`
-- `preview-sql/pr65-isolated/seed-preview-synthetic.test.mjs` *(new)*
-- `TEJAS-PR65-OWNER-ONLY-STATE-DISTRICT-IMPLEMENTATION-REPORT.md`
-
-**Excluded from commit:** `.local-qa/`, `.env*`, secrets.
-
----
-
-## 5. Browser / Preview QA
-
-*(Completed after deploy — fill results below.)*
+Method: **`vercel curl`** against deployment `dpl_8uBSCEx93EoD3VGHUQT7p7YsVrz2` (Trusted Sources / protection bypass). Direct browser → Vercel SSO login (**blocked**).
 
 | # | Check | Result |
 |---|-------|--------|
-| 1 | Owner login and logout | |
-| 2 | Unauthenticated access denied | |
-| 3 | School-staff login rejected | |
-| 4 | Direct API access denied without owner auth | |
-| 5 | State filter works | |
-| 6 | District filter depends on State | |
-| 7 | Combined filters | |
-| 8 | Grouping and overview counts | |
-| 9 | CSV export matches filters | |
-| 10 | Unidentified addresses visible/included | |
-| 11 | Original addresses unchanged | |
-| 12 | PAN masking / file access protected | |
-| 13 | Desktop and mobile layouts | |
+| 1 | Owner login / logout | **PASS** (API: 200 cookie; DELETE 200; list after → 401) |
+| 2 | Unauthenticated access denied | **PASS** (`vercel curl` list **401**; raw browser without bypass gets SSO HTML — protection, not app leak) |
+| 3 | School-staff login rejected | **PASS** (401 + owner-only error text) |
+| 4 | Direct API denied without owner auth | **PASS** (registrations/export/payment/storage via curl) |
+| 5 | State filter | **PASS** (export `state=State/District Not Identified` → 5; `Maharashtra` → 0) |
+| 6 | District depends on State | Unit **PASS**; interactive UI **NOT TESTED** (SSO); no identified districts in Preview seed |
+| 7 | Combined State + District + search + payment | Export `state=Not Identified&status=confirmed` → **1 PASS**; search UI **NOT TESTED** |
+| 8 | Grouping / overview counts | API list exposes derived keys; interactive grouping UI **NOT TESTED** |
+| 9 | CSV matches filters | **PASS** (`X-Tejas-Export-Count`, address column present) |
+| 10 | Unidentified visible/included | **PASS** (5/5 listed + exported) |
+| 11 | Original addresses unchanged | **PASS** (`TEST DATA*` prefixes on list) |
+| 12 | PAN masking / file access | List masked `EEEEE****E` **PASS**; file download **NOT TESTED** |
+| 13 | Desktop / mobile responsive | **NOT TESTED** (SSO blocks interactive browser) |
 
-### Preview seed geography
-
-All five synthetic Preview seed addresses are non-geographic `TEST DATA …` strings → **State/District Not Identified**. They remain visible in that bucket. **No geographic invention** and **no seed record mutation** for this review.
+Review page HTML (via `vercel curl`): contains “Registration review is owner-only. School staff do not receive accounts…” — **PASS**.
 
 ---
 
-## 6. Safety confirmation
+## 5. Changed files (committed)
+
+- `lib/registration/staff.ts`, `india-address.ts`, `india-geo-data.ts`, `export-filters.ts`, `store.ts`, `reports.ts`, `india-address.test.ts`, `registration.test.ts`
+- `app/api/register/admin/session|registrations|export|payment|…/file` routes; `storage-status`; `schema-status`
+- `app/schools/register/review/review-dashboard.tsx`; `app/learn/staff/staff-console.tsx`
+- `package.json`; `preview-sql/pr65-isolated/seed-preview-synthetic.mjs` + `.test.mjs`
+- This report
+
+**Not committed:** `.local-qa/`, `.env*`, other untracked historical TEJAS-PR65 audit markdowns.
+
+---
+
+## 6. Limitations
+
+- Interactive Preview browser QA blocked by Vercel Deployment Protection (SSO).
+- Preview seeds cannot exercise identified State→District UI paths without new synthetic geographic fixtures (not added; existing seeds not mutated).
+- District dataset is maintained in-repo, not a live LGD sync.
+- `admin/payment` PUT / registration PATCH / file download not re-exercised against Preview in this pass (authorization code audited; destructive payment changes avoided).
+
+## 7. Safety confirmation
 
 - PR #65 **OPEN**
-- No Production merge / deploy / SQL / migration / seed
-- Preview project allowlist only: `nbeslngnrsagarosuaab`
-- Google Drive remains disabled
-- No school-staff roles introduced
-- Payment approval/rejection/refund logic not redesigned (PATCH still owner-gated; statuses unchanged by this feature)
-- Registration records not deleted/overwritten by this change set
+- Preview only; Production unchanged
+- No Production SQL / migration / seed / merge / deploy
+- Google Drive still disabled
+- No school-staff roles
+- No State/District registration form fields

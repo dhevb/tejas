@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadCatalog } from "@/lib/portal/catalog.server";
-import { isContentQaAccount } from "@/lib/portal/content-qa";
+import { isContentQaAccount, isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import { booksForContentQa, booksForLearner, decideAccess } from "@/lib/portal/model";
 
 test("content QA allowlist is exact-email only", () => {
@@ -81,4 +81,22 @@ test("content QA dashboard lists every catalog book while learners stay stream-l
   assert.equal(booksForLearner(catalog, "english", 5).length, 1);
   assert.equal(booksForLearner(catalog, "english", 5)[0]?.id, "eng-class-05");
   assert.equal(booksForLearner(catalog, "mathematics", 5).every((book) => book.streamId === "mathematics"), true);
+});
+
+test("content QA student helper falls back to server email when ID unset", () => {
+  const previousEmail = process.env.TEJAS_CONTENT_QA_EMAIL;
+  const previousId = process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+  delete process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+  process.env.TEJAS_CONTENT_QA_EMAIL = "tejas-content-qa@dhe.org.in";
+  delete process.env.TEJAS_PORTAL_RETAKES;
+  try {
+    assert.equal(isContentQaStudent({ id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", email: "tejas-content-qa@dhe.org.in" }), true);
+    assert.equal(retakesAllowedFor({ id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", email: "tejas-content-qa@dhe.org.in" }), true);
+    assert.equal(retakesAllowedFor({ id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", email: "student@example.test" }), false);
+  } finally {
+    if (previousEmail === undefined) delete process.env.TEJAS_CONTENT_QA_EMAIL;
+    else process.env.TEJAS_CONTENT_QA_EMAIL = previousEmail;
+    if (previousId === undefined) delete process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+    else process.env.TEJAS_CONTENT_QA_STUDENT_ID = previousId;
+  }
 });

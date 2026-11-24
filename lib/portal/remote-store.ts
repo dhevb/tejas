@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { loadCatalog } from "@/lib/portal/catalog.server";
-import { isContentQaAccount } from "@/lib/portal/content-qa";
+import { isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import {
   booksForContentQa,
   booksForLearner,
@@ -38,7 +38,7 @@ function publicStudent(student: PortalStudent): PublicStudent {
     streamId: student.streamId,
     streamName: streamById(student.streamId).name,
     classLevel: student.classLevel,
-    contentQa: isContentQaAccount(student.email),
+    contentQa: isContentQaStudent(student),
   };
 }
 
@@ -258,7 +258,7 @@ async function verified(studentId: string, bookId: string): Promise<boolean> {
 export async function remoteAccessFor(student: PortalStudent, bookId: string, testId?: string | null) {
   const catalog = loadCatalog();
   const publication = await remotePublicationMap();
-  const contentQa = isContentQaAccount(student.email);
+  const contentQa = isContentQaStudent(student);
   const bookPublished = publicationOf(catalog.books.find((book) => book.id === bookId)?.publicationStatus ?? "awaiting_approval", publication.books[bookId]) === "published";
   const testPublished = testId
     ? publicationOf(catalog.tests.find((test) => test.id === testId)?.publicationStatus ?? "awaiting_approval", publication.tests[testId]) === "published"
@@ -316,7 +316,7 @@ export async function remoteDashboard(student: PortalStudent) {
   const entitlements = await supabaseRest(`/rest/v1/tejas_learn_entitlements?student_id=eq.${encodeURIComponent(student.id)}&select=book_id,status,amount_inr`, { method: "GET" });
   const attempts = await supabaseRest(`/rest/v1/tejas_learn_attempts?student_id=eq.${encodeURIComponent(student.id)}&select=id,test_id,status,score,max_score,submitted_at`, { method: "GET" });
   if (entitlements.status !== 200 || attempts.status !== 200) throw new PortalUnavailable();
-  const contentQa = isContentQaAccount(student.email);
+  const contentQa = isContentQaStudent(student);
   const quote = quoteFee(catalog, student.streamId, student.classLevel);
   const entitlementRows = rows(entitlements.json);
   const attemptRows = rows(attempts.json);
@@ -376,6 +376,7 @@ export async function remoteDashboard(student: PortalStudent) {
   };
 }
 
+/** @deprecated Use retakesAllowedFor(student) — global flag alone must not be the QA path. */
 export function retakesAllowed(): boolean {
   return process.env.TEJAS_PORTAL_RETAKES === "allow";
 }
@@ -391,8 +392,16 @@ export async function remoteStartAttempt(student: PortalStudent, testId: string)
   const attempts = rows(existing.json).map(attemptFrom).filter((item): item is AttemptRow => item !== null);
   const open = attempts.find((item) => item.status === "open" && new Date(item.expiresAt).getTime() > Date.now());
   if (open) return { ok: true as const, attemptId: open.id, expiresAt: open.expiresAt, questions: test.questions.map(toPublicQuestion), timeMinutes: test.timeMinutes };
-  if (!retakesAllowed() && attempts.some((item) => item.status === "submitted" || item.status === "expired" || item.status === "open")) {
+  if (!retakesAllowedFor(student) && attempts.some((item) => item.status === "submitted" || item.status === "expired" || item.status === "open")) {
     return { ok: false as const, error: "Another attempt is not open. A retake has not been approved." };
+  }
+  // Close stale open rows before inserting a new attempt (retake / time-expired open).
+  for (const stale of attempts.filter((item) => item.status === "open")) {
+    await supabaseRest(`/rest/v1/tejas_learn_attempts?id=eq.${encodeURIComponent(stale.id)}&student_id=eq.${encodeURIComponent(student.id)}&status=eq.open`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", prefer: "return=minimal" },
+      body: JSON.stringify({ status: "expired" }),
+    });
   }
   const now = Date.now();
   const id = randomUUID();

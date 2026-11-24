@@ -7,7 +7,7 @@
     "build": "node scripts/copy-pdfjs-assets.mjs && next build",
     "start": "next start -p 3001",
     "lint": "next lint",
-    "test": "tsx --test --test-concurrency=1 content/current-cycle.test.ts lib/registration/registration.test.ts lib/registration/database.test.ts lib/registration/supabase-inspect.test.ts lib/registration/staff-recovery.test.ts lib/registration/payment-rules.test.ts lib/registration/utr-claim.test.ts lib/registration/ocr-runtime.test.ts lib/registration/ocr-probe.test.ts lib/portal/portal.test.ts lib/portal/access-rules.test.ts lib/portal/content-qa.test.ts",
+    "test": "tsx --test --test-concurrency=1 content/current-cycle.test.ts lib/registration/registration.test.ts lib/registration/database.test.ts lib/registration/supabase-inspect.test.ts lib/registration/staff-recovery.test.ts lib/registration/payment-rules.test.ts lib/registration/utr-claim.test.ts lib/registration/ocr-runtime.test.ts lib/registration/ocr-probe.test.ts lib/portal/portal.test.ts lib/portal/access-rules.test.ts lib/portal/content-qa.test.ts lib/portal/qa-retake.test.ts",
     "post-launch": "node scripts/post-launch.mjs",
     "launch-audit": "node scripts/launch-audit.mjs"
   },

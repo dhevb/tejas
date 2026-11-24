@@ -20,7 +20,7 @@ import {
   type PublicationStatus,
   type PublicQuestion,
 } from "@/lib/portal/model";
-import { isContentQaAccount } from "@/lib/portal/content-qa";
+import { isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import { hashPassword, passwordIsAcceptable, passwordMatches } from "@/lib/portal/session";
 import { durableStorageConfigured } from "@/lib/registration/durable";
 import { PortalUnavailable } from "@/lib/portal/supabase-rest";
@@ -165,7 +165,7 @@ export function toPublicStudent(student: PortalStudent): PublicStudent {
     streamId: student.streamId,
     streamName: streamById(student.streamId).name,
     classLevel: student.classLevel,
-    contentQa: isContentQaAccount(student.email),
+    contentQa: isContentQaStudent(student),
   };
 }
 
@@ -788,7 +788,7 @@ export async function publicBookPublication(): Promise<
 }
 
 export async function accessFor(student: PortalStudent, bookId: string, testId?: string | null) {
-  const contentQa = isContentQaAccount(student.email);
+  const contentQa = isContentQaStudent(student);
   if (portalPersistence() === "unavailable") {
     const catalog = loadCatalog();
     return decideAccess({
@@ -864,7 +864,7 @@ export async function dashboard(student: PortalStudent): Promise<{
   }
   const db = await readDb();
   const catalog = loadCatalog();
-  const contentQa = isContentQaAccount(student.email);
+  const contentQa = isContentQaStudent(student);
   const quote = quoteFee(catalog, student.streamId, student.classLevel);
   const visibleBooks = contentQa ? booksForContentQa(catalog) : booksForLearner(catalog, student.streamId, student.classLevel);
   const books = visibleBooks.map((book) => {
@@ -927,7 +927,7 @@ export async function startAttempt(student: PortalStudent, testId: string): Prom
       return { ok: true as const, attemptId: open.id, expiresAt: open.expiresAt, questions: test.questions.map(toPublicQuestion), timeMinutes: test.timeMinutes };
     }
     if (open) open.status = "expired";
-    if (process.env.TEJAS_PORTAL_RETAKES !== "allow" && mine.length > 0) {
+    if (!retakesAllowedFor(student) && mine.length > 0) {
       await writeDb(db);
       return { ok: false as const, error: "Another attempt is not open. A retake has not been approved." };
     }

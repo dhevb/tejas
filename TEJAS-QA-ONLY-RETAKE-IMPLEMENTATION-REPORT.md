@@ -154,5 +154,6 @@ After owner merge + deploy approval:
 ## 9. PR / commit
 
 - Branch: `feat/qa-account-only-retakes`  
-- PR URL: *(filled after `gh pr create`)*  
-- Commit: *(filled after commit)*  
+- Commit: `d33f0e3e3bbdf9304736dc95dd1430627cec1f65`  
+- PR URL: https://github.com/dhevb/tejas/pull/62  
+

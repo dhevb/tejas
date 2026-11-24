@@ -7,9 +7,9 @@
 
 ## Verdict
 
-**PASS**
+**CONDITIONAL PASS** — pending Preview deploy + Preview UI/filter verification of the PIN-prefix / short-alias fix below. Automated parser/unit/type/lint/build checks for that fix are complete.
 
-All required checks for owner-only administration, address-derived State/District behaviour, automated tests, Preview API verification, interactive browser UI QA (Trusted Sources OIDC), geographic fixture integration (insert → filter QA → cleanup), and open-handle investigation were completed. Production was not merged, deployed, or mutated.
+All prior required checks for owner-only administration, address-derived State/District behaviour, Preview API verification, interactive browser UI QA (Trusted Sources OIDC), geographic fixture integration (insert → filter QA → cleanup), and open-handle investigation remain complete. Production was not merged, deployed, or mutated.
 
 ---
 
@@ -18,19 +18,73 @@ All required checks for owner-only administration, address-derived State/Distric
 | Item | Value |
 |------|--------|
 | Feature commit | `d41b2970a1fdcca690a22fbd9887c31a52201a36` |
-| Prior report commit | `e615ec1a418c4cbed698e4d26660ef33dc332b7e` |
-| This report update | *(after push)* |
+| Prior report commits | `e615ec1` / `95c5116` |
+| PIN / short-alias fix | *(this push — see git log)* |
 | Branch | `feat/registration-review-dashboard-redesign` |
 | PR state | **OPEN** |
-| Preview URL | https://tejas-9z4nixu3o-dhe-projects.vercel.app |
-| Deployment ID | `dpl_8uBSCEx93EoD3VGHUQT7p7YsVrz2` |
-| Deploy target | **preview** |
+| Prior Preview URL | https://tejas-9z4nixu3o-dhe-projects.vercel.app |
+| Prior Deployment ID | `dpl_8uBSCEx93EoD3VGHUQT7p7YsVrz2` |
+| Post-fix Preview | *(pending deploy)* |
+| Deploy target | **preview only** |
 | Preview Supabase | `nbeslngnrsagarosuaab` only |
 | Production | Untouched |
 
 ---
 
-## A. API verification
+## G. Defect: PIN-prefix false conflicts & short State alias matching
+
+### Defect
+
+1. **PIN prefix veto** — `PIN_PREFIX_TO_STATE` mapped the first two PIN digits to a single State and rejected text-derived States that disagreed. Two-digit postal prefixes are ambiguous across States/UTs, causing false conflicts:
+   - Mohali, Punjab `160055` (prefix `16` previously → Chandigarh)
+   - Dehradun, Uttarakhand `248001` (prefix `24` previously → Uttar Pradesh)
+   - Dhanbad, Jharkhand `826001` (prefix `82` previously → Bihar)
+   - Ladakh PINs beginning `194` (prefix `19` previously → Jammu and Kashmir)
+
+2. **Short aliases** — Comments claimed ambiguous short codes were excluded, but matching still treated normalised whole tokens (including lowercase ordinary words) as State abbreviations.
+
+### Fix
+
+| File | Change |
+|------|--------|
+| `lib/registration/india-geo-data.ts` | Emptied `PIN_PREFIX_TO_STATE` with an explicit comment that two-digit prefixes must not invent or veto State/District without a verified six-digit dataset. |
+| `lib/registration/india-address.ts` | Removed PIN-prefix import/veto. PIN may only add a diagnostic note when identification fails; never invents District from PIN. Bare ≤2-letter State codes match only as **ALL-CAPS** standalone tokens in the **original** address; punctuated forms (`U.P.`, `T.N.`) continue via normalisation (`u p`, `t n`). Fail-closed on conflicting/ambiguous addresses. |
+| `lib/registration/india-address.test.ts` | Mandatory regressions for Mohali / Dehradun / Dhanbad / Leh; `U.P.` / `T.N.` / `TN`; ordinary short-token negatives; ambiguous shared districts; PIN-alone no District; original address unmutated; ambiguous PIN no longer vetoes explicit State. |
+
+### Required behaviour confirmed
+
+- Never reject an explicitly identified State because an ambiguous two-digit PIN prefix maps elsewhere.
+- Do not infer State from an ambiguous PIN prefix.
+- Prefer removing PIN-prefix veto entirely (done) vs inventing a six-digit map.
+- If PIN cannot verify State, retain text-derived State.
+- Never invent a District from a PIN prefix.
+- Preserve `U.P.` / `T.N.`; bare short codes only when uppercase abbreviations; ordinary words do not identify States.
+- Deterministic, fail-closed; full State names and established unambiguous aliases retained.
+
+### Automated retest (this fix)
+
+| Command | Exit | Result |
+|---------|------|--------|
+| `npx tsx --test --test-concurrency=1 lib/registration/india-address.test.ts` | **0** | 18/18 PASS (incl. PIN false-conflict + short-alias suites) |
+| `npx tsx --test --test-concurrency=1 lib/registration/registration.test.ts` (**no** `--test-force-exit`) | **0** | 31/31 PASS |
+| Focused: `staff-recovery` / `payment-rules` / `pan-access` / `staff-metrics` | **0** | 24/24 PASS |
+| `npx tsc --noEmit` | **0** | PASS |
+| `npm run lint` | **0** | PASS (existing `<img>` warnings only) |
+| `npm run build` | **0** | PASS |
+
+### Preview verification (PIN regressions)
+
+| Check | Status |
+|-------|--------|
+| Parser unit tests for four regression addresses | **PASS** (local) |
+| Preview deploy of fix | **PENDING** |
+| Temporary Preview fixtures for four addresses (no seed mutation) | **PENDING** |
+| State → District / combined filters / counts / CSV on Preview | **PENDING** |
+| Deployment Protection left enabled | Required |
+
+---
+
+## A. API verification (prior — still valid on previous Preview)
 
 | Check | Result |
 |-------|--------|
@@ -46,95 +100,77 @@ All required checks for owner-only administration, address-derived State/Distric
 
 ---
 
-## B. Automated test verification
+## B. Automated test verification (prior + this fix)
 
 | Command | Result |
 |---------|--------|
-| `registration.test.ts` with `--test-force-exit` (earlier) | 31/31 PASS |
-| `registration.test.ts` **without** `--test-force-exit` (this pass) | **EXIT 0**, 31/31 PASS, ~2.9s test time, ~5.9s wall — clean process exit |
-| `india-address.test.ts` + related focused suites | PASS (prior) |
-| `tsc --noEmit` / `next lint` / `npm run build` | EXIT 0 (prior) |
+| `registration.test.ts` **without** `--test-force-exit` | **EXIT 0**, 31/31 PASS |
+| `india-address.test.ts` + owner/filter suites | **EXIT 0**, 18/18 PASS |
+| `tsc --noEmit` / `next lint` / `npm run build` | **EXIT 0** |
 
 ### Open-handle investigation
 
 | Finding | Detail |
 |---------|--------|
-| Prior hang | Process appeared stuck; earlier force-stop / PowerShell `Select-Object -Last` buffering contributed to false “hang” signals |
-| This run (no `--test-force-exit`) | Suite completed and process exited **0** under a 120s cap |
-| Forced exit misrepresented as clean? | **No** — this run is a clean exit; earlier force-exit is not claimed as clean termination |
-| Code change for hang | **None** (no defect demonstrated in app/test infra requiring a fix) |
+| Prior hang | PowerShell buffering / force-stop contributed to false “hang” signals |
+| This run (no `--test-force-exit`) | Suite completed and process exited **0** |
+| Code change for hang | **None** |
 
 ---
 
-## C. Actual browser UI verification
+## C. Actual browser UI verification (prior Preview `dpl_8uBSCEx…`)
 
-**Method:** Playwright + fresh `vercel project token` → `x-vercel-trusted-oidc-idp-token` (Trusted Sources). Deployment Protection **not** disabled. Tokens not printed.
+**Method:** Playwright + fresh `vercel project token` → `x-vercel-trusted-oidc-idp-token` (Trusted Sources). Deployment Protection **not** disabled.
 
-**Script / evidence:** `.local-qa/pr65-browser-geo-qa.mjs` → `.local-qa/pr65-browser-geo-qa-results.json`  
-**Summary:** **24 PASS / 0 FAIL / 0 NOT TESTED** (browser suite)
-
-| # | Check | Result |
-|---|-------|--------|
-| 1 | Owner login / logout | **PASS** |
-| 2 | Unauthenticated login form (owner-only copy; no email field) | **PASS** |
-| 3 | School-staff UI path absent + bad token rejected | **PASS** |
-| 4 | Direct API denial | **PASS** (API section) |
-| 5 | State filter (Maharashtra) | **PASS** |
-| 6 | District depends on State (Pune/Nagpur options) | **PASS** |
-| 7 | Combined State + District + search + payment | **PASS** |
-| 8 | Grouping chips + Clear/reset | **PASS** |
-| 9 | Overview filtered counts | **PASS** (baseline 9 with fixtures) |
-| 10 | CSV href filters + fetch (`X-Tejas-Export-Count` / body) | **PASS** |
-| 11 | Unidentified-address filter | **PASS** |
-| 12 | PAN masking | **PASS** |
-| 13 | Detail / file controls + protected file API | **PASS** |
-| 14 | Desktop / tablet / mobile viewports | **PASS** |
+**Summary:** **24 PASS / 0 FAIL** (browser suite on prior deployment). Re-run against post-fix Preview is still required for full PASS on this defect arc.
 
 ---
 
-## D. Geographic fixture integration verification
+## D. Geographic fixture integration verification (prior)
 
 | Item | Detail |
 |------|--------|
-| Script | `.local-qa/pr65-geo-fixtures.mjs` (`insert` / `cleanup` / `status`) |
-| Project | Preview `nbeslngnrsagarosuaab` only (allowlist) |
-| Existing five seeds | **Not modified**; preserved before/after (**5**) |
-| Fixtures created | 4 synthetic schools — MH/Pune, MH/Nagpur, TN/Chennai, TN/Madurai |
-| Refs | `TEJAS-2026-TESTDATAGEPQA65PUNEX`, `…NAGPX`, `…CHENX`, `…MADUX` |
-| Labels | All names/addresses prefixed `TEST DATA GEO QA` |
-| Real PII | None |
+| Project | Preview `nbeslngnrsagarosuaab` only |
+| Existing five seeds | **Not modified**; preserved |
+| Prior fixtures | MH/Pune, MH/Nagpur, TN/Chennai, TN/Madurai — cleaned up |
 | Production writes | None |
-| Browser + API filter QA with fixtures | **PASS** |
-| Cleanup | All 4 deleted; `geoRemaining=0`; `seedsPreserved=true`; API `api_count=5 geo_left=0 seeds=5` |
 
 ---
 
-## E. Owner-only endpoint audit (unchanged from prior)
+## E. Owner-only endpoint audit (unchanged)
 
-Owner recovery subject only. School-staff email path rejected. `registrationOwnerAuthorised` on registrations/export/payment/file; request-scoped owner gate on storage/schema-status. `admin/payment` owner-gate fix included in feature commit. See prior endpoint table in git history / feature commit message scope.
-
----
-
-## F. State/District parser (unchanged)
-
-Address-only derivation; no form fields; original address preserved; unidentified bucket retained. Unit coverage PASS.
+Owner recovery subject only. School-staff email path rejected. `registrationOwnerAuthorised` on registrations/export/payment/file; request-scoped owner gate on storage/schema-status.
 
 ---
 
-## Changed files (feature — already on branch)
+## F. State/District parser
 
-See commits `d41b297` / report commits. Local QA scripts under `.local-qa/` are **not** application code and remain untracked (contain no secrets in scripts; results JSON has no tokens).
+Address-only derivation; no form fields; original address preserved; unidentified bucket retained. PIN prefixes are **not** used for State veto or District invention. Short bare codes are ALL-CAPS-only; punctuated abbreviations preserved.
+
+---
+
+## Changed files (this fix)
+
+- `lib/registration/india-geo-data.ts`
+- `lib/registration/india-address.ts`
+- `lib/registration/india-address.test.ts`
+- `TEJAS-PR65-OWNER-ONLY-STATE-DISTRICT-IMPLEMENTATION-REPORT.md`
+
+Local QA scripts under `.local-qa/` remain untracked.
 
 ---
 
 ## Remaining gaps
 
-**None required for this scope.** Optional future: live LGD feed sync (not required).
+1. Preview-only deploy of the PIN/short-alias fix.
+2. Preview UI/filter verification for Mohali / Dehradun / Dhanbad / Leh (temporary fixtures; do not mutate the five seeds).
+3. Recheck State → District, combined filters, counts, CSV on the new Preview deployment.
+4. Record new Preview URL / deployment ID here and flip verdict to **PASS** when complete.
 
 ## Safety confirmation
 
 - PR #65 **OPEN** — no merge  
 - No Production deploy / SQL / migration  
-- No payment approval mutations; no real registration mutation beyond temporary Preview GEO QA fixtures (removed)  
+- No payment approval mutations; no real registration mutation beyond temporary Preview GEO/PIN QA fixtures  
 - Google Drive disabled  
 - Deployment Protection left enabled  

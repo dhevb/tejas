@@ -63,10 +63,59 @@ describe("Indian address State/District extraction", () => {
     assert.match(parsed.notes.join(" "), /Conflict/i);
   });
 
-  test("PIN conflicting with named state stays unidentified", () => {
+  test("ambiguous PIN prefix does not veto an explicit State", () => {
+    // 560001 is a Karnataka-range prefix; text says Rajasthan — text wins (no PIN veto).
     const parsed = parseIndiaAddress("City School, Jaipur, Rajasthan 560001");
-    assert.equal(parsed.stateKey, UNIDENTIFIED_LOCATION);
-    assert.match(parsed.notes.join(" "), /PIN/);
+    assert.equal(parsed.state, "Rajasthan");
+    assert.equal(parsed.district, "Jaipur");
+    assert.equal(parsed.fullyIdentified, true);
+  });
+
+  test("PIN-prefix false conflicts: Mohali / Dehradun / Dhanbad / Leh", () => {
+    const mohali = parseIndiaAddress("School, Mohali, Punjab 160055");
+    assert.equal(mohali.state, "Punjab");
+    assert.equal(mohali.district, "Sahibzada Ajit Singh Nagar");
+    assert.equal(mohali.fullyIdentified, true);
+
+    const dehradun = parseIndiaAddress("School, Dehradun, Uttarakhand 248001");
+    assert.equal(dehradun.state, "Uttarakhand");
+    assert.equal(dehradun.district, "Dehradun");
+    assert.equal(dehradun.fullyIdentified, true);
+
+    const dhanbad = parseIndiaAddress("School, Dhanbad, Jharkhand 826001");
+    assert.equal(dhanbad.state, "Jharkhand");
+    assert.equal(dhanbad.district, "Dhanbad");
+    assert.equal(dhanbad.fullyIdentified, true);
+
+    const leh = parseIndiaAddress("School, Leh, Ladakh 194101");
+    assert.equal(leh.state, "Ladakh");
+    assert.equal(leh.district, "Leh");
+    assert.equal(leh.fullyIdentified, true);
+  });
+
+  test("explicit U.P. and T.N. abbreviations continue working", () => {
+    const up = parseIndiaAddress("Model School, Lucknow, U.P. 226001");
+    assert.equal(up.state, "Uttar Pradesh");
+    assert.equal(up.district, "Lucknow");
+
+    const tn = parseIndiaAddress("St. Mary's, T. Nagar, Chennai, T.N. 600017");
+    assert.equal(tn.state, "Tamil Nadu");
+    assert.equal(tn.district, "Chennai");
+
+    const tnCaps = parseIndiaAddress("St. Mary's, T. Nagar, Chennai, TN 600017");
+    assert.equal(tnCaps.state, "Tamil Nadu");
+    assert.equal(tnCaps.district, "Chennai");
+  });
+
+  test("ordinary short tokens do not falsely identify States", () => {
+    const climb = parseIndiaAddress("School near the up hill temple ward 4");
+    assert.equal(climb.stateKey, UNIDENTIFIED_LOCATION);
+
+    const inRoad = parseIndiaAddress("Campus on the main in road circle");
+    assert.equal(inRoad.stateKey, UNIDENTIFIED_LOCATION);
+
+    const lowerTn = parseIndiaAddress("Workshop tn tools lane without city");
+    assert.equal(lowerTn.stateKey, UNIDENTIFIED_LOCATION);
   });
 
   test("never rewrites the original address string", () => {
@@ -85,11 +134,16 @@ describe("Indian address State/District extraction", () => {
   });
 
   test("ambiguous shared district names without state stay unidentified", () => {
-    // Aurangabad exists in Bihar and (historically) Maharashtra lists
-    const parsed = parseIndiaAddress("Public School, Aurangabad 431001");
-    // Either unidentified, or Maharashtra if PIN 431 maps to MH and district unique within corroboration —
-    // our rule: without unique district→state and without state text, unidentified unless unique district.
+    // Pratapgarh exists in both Uttar Pradesh and Rajasthan — no State text → fail closed.
+    const parsed = parseIndiaAddress("Public School, Pratapgarh 230001");
     assert.equal(parsed.fullyIdentified, false);
+    assert.equal(parsed.stateKey, UNIDENTIFIED_LOCATION);
+  });
+
+  test("PIN alone never invents a District", () => {
+    const parsed = parseIndiaAddress("Some School Campus 411001");
+    assert.equal(parsed.district, null);
+    assert.notEqual(parsed.districtKey, "Pune");
   });
 });
 

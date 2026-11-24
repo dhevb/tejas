@@ -2,7 +2,8 @@
 
 **Date:** 2026-11-24 (IST)  
 **PR:** https://github.com/dhevb/tejas/pull/63 (`docs/open-attempt-atomicity-migration-proposal`)  
-**Reviewed head (before this review commit):** `3de2ef3e3618cc69a6a79a95df253f97d73b54e5`  
+**Reviewed proposal head:** `3de2ef3e3618cc69a6a79a95df253f97d73b54e5`  
+**Review commit (this report + ENSURE harden):** `15229ff66849d4dbc2722332df4ca0bfdfc0cf73`  
 **Scope:** Documentation + ENSURE/ROLLBACK SQL files only  
 
 **This review did not:** apply either SQL file · mutate Production · expire the nine open attempts · merge PR #63 · create attempts · change Auth/RLS/Storage/payment/env.

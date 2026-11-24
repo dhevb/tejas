@@ -2,8 +2,11 @@
 
 **Date:** 24 November 2026 (IST)  
 **Related:** PR #62 (QA-account-only retakes) — https://github.com/dhevb/tejas/pull/62  
+**Docs PR:** https://github.com/dhevb/tejas/pull/63 (open; do not merge from this task)  
 **Mode:** READ-ONLY investigation + proposal files only  
-**Production mutations / deploy / merge of PR #62:** **None**
+**This task:** No SQL mutations, no migration apply, no config changes, no attempt creates  
+
+**Context note:** PR #62 was later owner-merged to `main` (`2fdeca0`) outside this docs task. This proposal still does **not** apply schema changes. Production index state was re-verified read-only after that merge.
 
 ### Executive recommendation
 
@@ -12,10 +15,10 @@
 `UNIQUE (student_id, test_id) WHERE status = 'open'`  
 Index name: `tejas_learn_attempts_one_open`
 
-**Live Production finding:** This index is **already present**. Duplicate open groups today: **0**.  
+**Live Production finding (re-verified 2026-11-24):** This index is **already present**. Duplicate open groups: **0**.  
 Therefore Production does **not** need a new structural migration for atomicity unless an environment is missing the index. Prefer the idempotent ENSURE script only where needed.
 
-A separate transactional RPC is **not** required for insert atomicity when this index exists; optional later for UX (map `23505` → return existing open). App-side reconcile in PR #62 remains complementary, not a substitute for the index.
+A separate transactional RPC is **not** required for insert atomicity when this index exists. App-side `23505` → canonical-open reuse (shipped with PR #62) complements the index; it is not a substitute for it.
 
 ---
 
@@ -49,15 +52,16 @@ Also adds `book_id`, `expires_at`, and `tejas_learn_attempts_student_idx`.
 
 **No attempt-start RPC** exists in current migrations — starts use PostgREST `INSERT` from the app (`remoteStartAttempt`).
 
-### 1.3 Live Production indexes (read-only, 2026-11-24)
+### 1.3 Live Production indexes (read-only re-verify, 2026-11-24)
 
 | Index | Definition (summary) |
 |-------|----------------------|
-| `tejas_learn_attempts_one_open` | **PRESENT** — `UNIQUE (student_id, test_id) WHERE (status = 'open')` |
+| `tejas_learn_attempts_one_open` | **PRESENT** — `CREATE UNIQUE INDEX … ON public.tejas_learn_attempts USING btree (student_id, test_id) WHERE (status = 'open'::text)` |
 | `tejas_learn_attempts_pkey` | UNIQUE (`id`) |
 | `tejas_learn_attempts_student_idx` | btree (`student_id`) |
 
-Partial unique indexes are supported and compatible with this Supabase Postgres project (index already live).
+Partial unique indexes are supported and compatible with this Supabase Postgres project (index already live).  
+**Attempt-like RPCs in `public`:** **0** (no `start_attempt` / attempt RPC found).
 
 ### 1.4 Live columns confirmed
 
@@ -66,6 +70,8 @@ Includes `book_id` (nullable text), `expires_at` (nullable timestamptz), plus ba
 ---
 
 ## 2. Duplicate audit results (read-only, no PII)
+
+Re-run aggregates via Supabase SQL Editor (`SELECT` only). No student identifiers returned.
 
 | Metric | Value |
 |--------|------:|
@@ -100,7 +106,7 @@ Interpretation:
 
 With the live index, **atomic exclusion of a second open row is already enforced by Postgres**.
 
-App gap (optional follow-up on PR #62, not this docs PR): on insert `23505`, re-SELECT the existing open attempt and return it (same as reuse path) instead of generic “could not be started.”
+App conflict handling (now on `main` via PR #62): on insert `23505`, re-SELECT and return the canonical time-valid open attempt (or fail closed). That UX path depends on the index remaining in place.
 
 ---
 
@@ -150,7 +156,7 @@ These live under `preview-sql/` as **reviewed proposals**, not auto-applied Supa
 5. Deploy app that handles `23505` gracefully (PR #62 + optional conflict reuse).  
 6. Do **not** enable `TEJAS_PORTAL_RETAKES` globally.
 
-**Production (this project):** Steps 3–4 are already satisfied for the index. Remaining optional owner work: timer-elapsed open hygiene + app conflict handling after PR #62 merge/deploy.
+**Production (this project):** Steps 3–4 are already satisfied for the index. App `23505` reuse shipped with merged PR #62. Remaining optional owner work: timer-elapsed open hygiene (nine rows) under a **separate** mutation approval.
 
 ### Locking notes
 
@@ -181,8 +187,9 @@ These live under `preview-sql/` as **reviewed proposals**, not auto-applied Supa
 | Apply ENSURE on Production when index already present | Optional no-op; low value |
 | Drop index (rollback) on Production | **Strongly discourage** |
 | Mutate 9 timer-elapsed `open` → `expired` | **Yes — separate** data mutation approval |
-| Merge / deploy PR #62 | **Yes — separate** (out of scope here) |
+| Merge / deploy PR #62 | Owner already merged/deployed separately; **out of scope for this docs task** |
 | New start-attempt RPC | **Yes — separate** (not recommended now) |
+| Merge docs PR #63 | Owner review only; do not treat as a schema apply |
 
 ---
 
@@ -224,7 +231,7 @@ Optional integration test (non-Production): attempt two concurrent opens for sam
 | Migration apply | **Not executed** |
 | Index drop | **Not executed** |
 | Attempt row updates/deletes | **Not executed** |
-| PR #62 merge / Production deploy | **Not performed** |
 | Env / Auth / RLS / Storage / payment changes | **None** |
+| Create Production attempts | **None** |
 
-Only read-only `SELECT`s were run for the audit above.
+Only read-only `SELECT`s were run for the audit above. **Production schema and attempt rows remain unchanged by this documentation task.**

@@ -1,7 +1,8 @@
 -- REVIEW-ONLY / OWNER-APPROVED APPLY ONLY.
 -- Purpose: Idempotently ensure at most one open attempt per (student_id, test_id).
--- Production precheck (2026-11-24, read-only): index tejas_learn_attempts_one_open
--- was ALREADY PRESENT. Running this on Production is a no-op if the index exists.
+-- Production precheck (2026-11-24, read-only, re-verified): index
+-- tejas_learn_attempts_one_open was ALREADY PRESENT; duplicate_open_groups = 0.
+-- Running this on Production is a no-op if the index exists.
 --
 -- Does NOT:
 --   - modify or delete attempt rows

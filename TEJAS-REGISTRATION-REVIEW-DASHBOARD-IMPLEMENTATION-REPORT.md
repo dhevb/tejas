@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-24  
 **Branch:** `feat/registration-review-dashboard-redesign`  
-**PR:** *(filled after open)*  
+**PR:** https://github.com/dhevb/tejas/pull/65 (`0c9b980`)  
 **Production:** not deployed · not merged  
 
 ---

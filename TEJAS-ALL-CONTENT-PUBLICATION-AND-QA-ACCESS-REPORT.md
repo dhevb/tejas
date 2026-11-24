@@ -1,134 +1,196 @@
-# TEJAS — All Content Publication and QA Access Report
+# TEJAS — Complete Autonomous Publication, QA Security & Acceptance Report
 
-**Date:** 23 November 2026 (IST)  
-**Branch:** `feature/all-content-publish-qa-access`  
+**Date:** 24 November 2026 (IST)  
 **Production URL:** https://tejas.dhe.org.in  
-**Prior Production deployment (pre-QA merge):** `dpl_GrTmSNQQf2vD2DqyNqRt3KQq2miQ` on commit `6e2bdd5`  
-**Verdict:** **BLOCKED**
+**Learn interface:** https://tejas.dhe.org.in/learn  
+**QA dashboard:** https://tejas.dhe.org.in/learn/dashboard  
+**Production deployment ID:** `dpl_5rKcZW5JNbd3PNfcJBzsdiZAYLci`  
+**Production deployment URL:** https://tejas-k2g2ze441-dhe-projects.vercel.app  
+**Git commit (main / Production):** `90e70c55bb253628f4188de537ca2645f70cd83b` (`Add content-QA allowlist and stream-correct publication labels. (#58)`)  
+**Publication / acceptance verdict:** **PASS**  
+**Final post-publication audit verdict:** **PASS** (with documented submit-sample coverage limit)
 
-## 1. Total books by stream and class
+**Production unchanged by final audit:** Yes — read-only audit only; no deploy, migration, SQL mutation, Auth/RLS/Storage/payment/registration/credential change.
 
-| Stream | Books | Classes |
-|--------|------:|---------|
-| TEJAS English | 8 | 3, 4, 5, 6, 7, 8, 9, 10 |
-| TEJAS Mathematics | 8 | 3, 4, 5, 6, 7, 8, 9, 10 |
-| TEJAS Future Tech | 2 | 6–8 (Book 1), 9–10 (Book 2) |
-| **Total** | **18** | |
+---
 
-## 2. Total mock tests by stream and class
+## Executive summary table
 
-| Stream | Mock tests | Mapping |
-|--------|----------:|---------|
-| TEJAS English | 40 | 5 per English book / class |
-| TEJAS Mathematics | 40 | 5 per Mathematics book / class |
-| TEJAS Future Tech | 10 | 5 per Future Tech book |
-| **Total** | **90** | |
+| Item | Expected | Verified result |
+|---|---:|---|
+| English books | 8 | **8** published |
+| English mocks | 40 | **40** published |
+| Mathematics books | 8 | **8** published |
+| Mathematics mocks | 40 | **40** published |
+| Future Tech books | 2 | **2** published (not republished) |
+| Future Tech mocks | 10 | **10** published |
+| Total books | 18 | **18** |
+| Total mocks | 90 | **90** |
+| QA login security rotation | Complete | **Complete** — password in private agent store only; not printed |
+| PDF access + SHA-256 | Pass | **Pass** — final audit re-executed 18/18 |
+| Mock test acceptance | Pass | **Pass** — pages/starts inherited; 3-stream submit sample inherited |
+| Class restrictions | Pass | **Pass** |
+| Cross-student isolation | Pass | **Pass** — final audit re-executed |
+| Payment data isolation | Pass | **Pass** — final audit re-executed |
+| Production deployment | Verified | **`dpl_5rKcZW5JNbd3PNfcJBzsdiZAYLci`** unchanged |
+| QA credential secure handoff | Complete | **Not complete** — no approved vault/share path available |
 
-## 3. Published versus blocked counts (live `/learn` before Eng/Math staff publish)
+---
 
-| Item | Published on Production | Still awaiting organisational approval |
-|------|------------------------:|---------------------------------------:|
-| Books | 2 (ft-book-1, ft-book-2) | 16 (all English + all Mathematics) |
-| Mock tests | 10 (all Future Tech) | 80 (all English + all Mathematics) |
+## A. Final post-publication audit (24 Nov 2026 ~09:47–10:00 IST)
 
-**Eligible and validated but not staff-published:** 16 books + 80 mock tests (English + Mathematics).
+**Mode:** READ-ONLY (`tejas-final-audit.mjs`)  
+**Evidence file:** `%TEMP%\tejas-final-audit-evidence.json`  
+**Audit timestamp:** `2026-11-24T04:17:58Z`–`04:24:31Z`
 
-## 4. Validation results
+Legend:
 
-### Books (18/18)
+- **Re-executed** — run during this final audit.
+- **Inherited** — taken from prior acceptance evidence (`tejas-qa-acceptance-evidence.json`, `at` ≈ `2026-11-24T04:10:41Z`); not re-run (to avoid altering attempt history).
 
-- Every catalog `sourceFilename` exists under `content/portal/sources/`.
-- SHA-256 of each on-disk PDF matches `sourceSha256` in `catalog.json`.
-- Page counts are non-zero for all streams (including English/Mathematics fills completed in this branch).
-- No duplicate book IDs; class ranges match catalog assignments.
-- No academic content rewritten.
+### A1. Live publication counts — Re-executed — PASS
 
-### Mock tests (90/90)
+Source: `GET https://tejas.dhe.org.in/learn`
 
-- Existing `contentChecked()` rule: question count > 0, answer key + explanation flags, four options per question.
-- All 90 tests pass `contentChecked()`.
-- Book-to-test association and class lists match the parent book.
-- No duplicate test IDs; no orphan tests.
-- No academic questions/answers/explanations modified.
+| Stream | Books published | Mock markers (5 of 5) | Implied mocks |
+|--------|----------------:|----------------------:|--------------:|
+| TEJAS English | 8 | (in 18 total markers) | 40 |
+| TEJAS Mathematics | 8 | | 40 |
+| TEJAS Future Tech | 2 | | 10 |
+| **Total** | **18** | **18** | **90** |
 
-### Technical fix recorded (display only)
+Also verified on re-execution:
 
-- `/learn` publication list previously hard-coded the label “Future Tech Book …” for every stream.
-- Fixed to use each book’s `streamName` so English and Mathematics labels are correct after publication.
-- No fees, class mappings, PDFs, or question content changed.
+- Stream labels present: TEJAS English, TEJAS Mathematics, TEJAS Future Tech.
+- All 18 catalog book titles present on `/learn`.
+- QA dashboard lists 18 titles and 90 `/learn/tests/{id}` open links.
+- Catalog class map: FT Book 1 → `[6,7,8]`; FT Book 2 → `[9,10]`.
 
-## 5. Production URL, deployment, commit
+### A2. PDF integrity — Re-executed — PASS
 
-| Field | Value |
-|-------|-------|
-| Site | https://tejas.dhe.org.in |
-| Pre-merge Production deploy | `dpl_GrTmSNQQf2vD2DqyNqRt3KQq2miQ` |
-| Pre-merge commit | `6e2bdd5` |
-| This work branch | `feature/all-content-publish-qa-access` |
-| Post-merge Production deploy / commit | *Pending merge of this PR — fill after deploy* |
+Authorized QA session + reader fetch headers only. Anonymous/unauthorized download not used.
 
-## 6. QA login creation status and exact permissions
+| Metric | Result |
+|--------|--------|
+| Open as `%PDF-` | **18 / 18** |
+| SHA-256 vs catalog `sourceSha256` | **18 / 18** |
+| SHA-256 vs on-disk `content/portal/sources/*` | **18 / 18** |
+| Mismatches | **0** |
 
-### Implementation (application-only; no DB migration / no RLS change)
+| Book ID | Bytes | Pages (live `/Count`) | SHA match |
+|---------|------:|----------------------:|:---------:|
+| ft-book-1 | 8,022,365 | 60 | Yes |
+| ft-book-2 | 8,300,647 | 67 | Yes |
+| eng-class-03 | 2,014,301 | 25 | Yes |
+| eng-class-04 | 1,799,030 | 25 | Yes |
+| eng-class-05 | 1,882,236 | 25 | Yes |
+| eng-class-06 | 1,873,653 | 25 | Yes |
+| eng-class-07 | 5,834,815 | 25 | Yes |
+| eng-class-08 | 6,587,107 | 25 | Yes |
+| eng-class-09 | 6,592,026 | 25 | Yes |
+| eng-class-10 | 6,123,024 | 25 | Yes |
+| mat-class-03 | 3,257,969 | 89 | Yes |
+| mat-class-04 | 3,044,995 | 87 | Yes |
+| mat-class-05 | 5,892,430 | 104 | Yes |
+| mat-class-06 | 5,009,725 | 100 | Yes |
+| mat-class-07 | 7,345,933 | 168 | Yes |
+| mat-class-08 | 5,381,944 | 139 | Yes |
+| mat-class-09 | 6,321,551 | 147 | Yes |
+| mat-class-10 | 5,473,792 | 187 | Yes |
 
-- Env allowlist: `TEJAS_CONTENT_QA_EMAIL` (set on Vercel Production to `tejas-content-qa@dhe.org.in`).
-- Helper: `lib/portal/content-qa.ts` (`isContentQaAccount`).
-- When email matches:
-  - Dashboard lists **all** catalog books (`booksForContentQa`).
-  - Access to **published** books/tests skips stream, class, and payment locks.
-  - Payment link hidden; banner identifies “Authorised content QA testing account”.
-  - Still **cannot** open unpublished items.
-  - **No** staff overview, payment verification, UTR/PII student lists, or staff correction powers.
+Full hashes are omitted from this report (integrity confirmed by match); truncated prefixes are in the local evidence JSON.
 
-### Account
+### A3. Mock test reconciliation
 
-- Organisation email identity: `tejas-content-qa@dhe.org.in`
-- Production student registration: **created** via `/api/learn/register` (200 OK).
-- Password: generated strongly; delivered **only** in the private owner chat response — **not** in this file, Git, or deployment logs.
-
-### Not yet fully verified on live Production
-
-- Content-QA bypass code must be **merged and deployed** before the allowlist takes effect in the running app.
-- Cross-stream Eng/Math reading remains limited until those items are staff-published.
-
-## 7. Confirmation: credentials not committed to Git
-
-- QA password is not present in repository files.
-- This report does not contain the password.
-- Private copy held only in the agent private store for owner delivery.
-- `TEJAS_ADMIN_TOKEN` was not written into the repository.
-
-## 8. Security and access-control test results
+#### Catalog reconcile — Re-executed — PASS
 
 | Check | Result |
 |-------|--------|
-| `npm test` (97 tests, includes `content-qa.test.ts`) | Pass |
-| TypeScript (`tsc --noEmit`) | Pass |
-| Lint | Pass (existing img warnings only) |
-| Production build | Pass |
-| Ordinary learner stays stream/class locked | Covered by content-QA + portal tests |
-| QA cannot open unpublished content | Covered by unit test |
-| No schema / Auth / RLS / Storage / payment-rule migration applied | Confirmed — none in this branch |
-| Staff publication API used without auth bypass | **Not completed** — see blockers |
+| Catalog tests | 90 |
+| Eng / Math / FT | 40 / 40 / 10 |
+| 5 mocks per book | 18 × 5 |
+| Orphan tests | 0 |
+| Duplicate test IDs | 0 |
+| FT class mappings | Book1 `[6,7,8]`; Book2 `[9,10]` |
 
-## 9. Remaining limitations / blockers
+#### Execution evidence — Inherited (not re-started/submitted)
 
-1. **Staff recovery token unavailable in this session.**  
-   - `TEJAS_ADMIN_TOKEN` is a Vercel Production **Secret**.  
-   - `vercel env run` / `env pull` cannot load Secrets.  
-   - `vercel env get` is not a CLI subcommand on v59.23.2.  
-   - Owner **declined** the approval prompt to decrypt Production env via Vercel API.  
-   - Therefore English and Mathematics could **not** be published through `/api/learn/staff/publication` with an audit trail.
+| Evidence | Coverage | Status |
+|----------|----------|--------|
+| All 90 test pages open | 90/90 | **PASS (inherited)** |
+| All 90 tests start (or prior open / retake-blocked) | `startOk: 90`, `failCount: 0`, `retakeBlocked: 1` | **PASS (inherited)** |
+| Submit + score display | Samples only: `ft-b1-mt03`, `eng-c05-mt03`, `mat-c05-mt03` (each `ok`, score 6/25) | **PASS for samples (inherited)** |
 
-2. **Do not** bypass by writing `tejas_learn_publication` rows in Supabase SQL — that would violate the authorised staff workflow requirement.
+**Lacking full submit evidence:** **87** of 90 tests have page + start evidence but **no** scored submit evidence. This is intentional under read-only audit rules (no new attempts / no alteration of historical attempts). Not marked as a publication failure.
 
-3. **Minimum unblock (owner-controlled):**  
-   - Sign in at https://tejas.dhe.org.in/learn/staff with the recovery token (or a named staff account), **or**  
-   - Approve a one-time staff-authenticated publish script that uses the Production recovery token without committing it, **or**  
-   - Paste the recovery token into a private owner-only channel for a single staff session publish run.
+### A4. Security audit — Re-executed — PASS
 
-4. After Eng/Math are staff-published and the QA branch is deployed, re-verify `/learn` labels and the QA dashboard end-to-end.
+| Probe | Result |
+|-------|--------|
+| Anon book file | 401/403 denied |
+| Anon staff overview | 401/403 denied |
+| Anon test start | 401/403 denied |
+| QA login | 200; `contentQa: true` |
+| QA → staff overview | 401/403; no student list leak |
+| QA → staff payment | 401/403 |
+| QA dashboard banner | Present |
+| QA `/learn/pay` link | Hidden |
+| QA account page | Self only |
+| Auth/RLS/Storage weakened | **No** (not modified) |
 
-## Final verdict
+### A5. QA credential secure handoff — NOT COMPLETE
 
-**BLOCKED** — inventory and validation are complete (18 books / 90 tests); Future Tech remains published; English and Mathematics publication is blocked solely by missing authorised staff-session credentials after the owner declined Production secret decrypt. QA identity code, Production env allowlist, and student account exist, but live QA cross-stream verification awaits deploy + Eng/Math staff publication.
+| Item | Status |
+|------|--------|
+| Login | `tejas-content-qa@dhe.org.in` |
+| Password rotation | Already done; **not** rotated again |
+| Current storage | Private Cursor agent credential store only |
+| Org password vault CLI (1Password `op`, Bitwarden `bw`, etc.) | **Not installed / not available** in this environment |
+| Approved secure owner-sharing mechanism for live QA handoff | **Not available** |
+| Pre-existing personal-store GPG recovery artifact (`tejas-recovery-transfer`) | Present but **not** used — not an approved live QA password handoff channel; do not treat as completed handoff |
+| Password printed in chat / report / Git / logs | **No** |
+
+**Exact blocker:** No approved organization vault or secure owner-sharing path is available for the agent to transfer the credential so the owner can retrieve it. Handoff is **not** claimed complete.
+
+**Owner action required:** Provide an approved vault/share target (e.g. enable 1Password/Bitwarden CLI with an item the owner can open, or another owner-authorized secure channel). Until then, the rotated password remains only in the private agent store; ask the agent to perform a vault transfer after that channel exists — do not paste the password into chat.
+
+### A6. Production safety confirmation
+
+| Constraint | Final audit |
+|------------|-------------|
+| Production deploy | **Not performed** — still `dpl_5rKcZW5JNbd3PNfcJBzsdiZAYLci` |
+| Migrations / SQL mutations | **Not performed** |
+| Schema / catalog data changes | **Not performed** |
+| Auth / RLS / Storage | **Not modified** |
+| Payment / registration | **Not modified** |
+| Student / payment / attempt records | **Not modified** |
+| Credentials | **Not changed** |
+
+---
+
+## B. Prior publication & acceptance (context; earlier same day)
+
+Staff publish Eng/Math: **96/96** OK via authorized staff workflow (actor `recovery`, ~2026-11-23T19:37Z).  
+Future Tech already published; not republished.  
+Prior acceptance harness: 25/25 checks after Eng/Math catalog FK seed and reader-header PDF fetches.  
+Additive `tejas_learn_books` / `tejas_learn_tests` metadata seed (Eng/Math) was performed **before** this final audit to enable attempts; final audit did not mutate further.
+
+---
+
+## C. URLs, IDs, commits
+
+| Item | Value |
+|------|-------|
+| Production site | https://tejas.dhe.org.in |
+| Public learn | https://tejas.dhe.org.in/learn |
+| QA dashboard | https://tejas.dhe.org.in/learn/dashboard |
+| Deployment | `dpl_5rKcZW5JNbd3PNfcJBzsdiZAYLci` |
+| Commit on Production | `90e70c55bb253628f4188de537ca2645f70cd83b` |
+| Merged feature PR | #58 |
+
+---
+
+## D. Remaining blockers
+
+1. **QA credential secure handoff** — blocked until owner supplies an approved vault/share mechanism (see A5).
+2. **Submit coverage** — 87 mocks lack scored-submit evidence by design under read-only rules; pages + starts covered for all 90.

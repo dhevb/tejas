@@ -3,9 +3,10 @@
 **Date:** 2026-11-24  
 **Branch:** `feat/registration-review-dashboard-redesign`  
 **PR:** https://github.com/dhevb/tejas/pull/65  
-**Exact HEAD:** `82b3bdc0633de3e6e074a46ef9e9952877ad6e56` (report tip may advance by this docs commit)  
+**Exact HEAD:** `dc2efde` (safety audit docs) · prior `a8dd2c8`  
 **PAN security fix:** `118dd9b`  
-**Production:** not deployed · **PR left OPEN / UNMERGED**
+**Production:** not deployed · **PR left OPEN / UNMERGED**  
+**Preview env safety:** `TEJAS-PR65-PREVIEW-ENVIRONMENT-SAFETY-AUDIT.md` → **NOT SAFE TO CONFIGURE PREVIEW** with Production Supabase service-role credentials
 
 ---
 
@@ -13,7 +14,7 @@
 
 ### CONDITIONAL PASS
 
-PAN hardening remains verified in unit tests. **Authenticated Preview QA could not resume:** the Preview environment still does **not** expose `TEJAS_ADMIN_TOKEN` to Preview deployments. Staff login continues to return HTTP **503**. No Production secret was copied. No Production env/schema/RLS/Storage/payment changes. No merge/deploy. No shared-DB mutations.
+PAN hardening remains verified in unit tests. **Authenticated Preview QA remains blocked.** Preview still lacks `TEJAS_ADMIN_TOKEN` and `SUPABASE_URL`. Copying Production privileged Supabase credentials into Preview is **not safe** (login writes staff sessions; payment PATCH writes Production). Prefer a separate Preview Supabase project or login-only smoke with Preview-only admin token. No Production secret was copied. No env/schema/RLS/Storage/payment changes by the agent. No merge/deploy.
 
 ---
 

@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { loadCatalog } from "@/lib/portal/catalog.server";
-import { isContentQaAccount } from "@/lib/portal/content-qa";
+import {
+  decideOpenAttemptInsertConflict,
+  interpretExpireOpenPatch,
+  pickCanonicalOpenAttempt,
+  timeValidOpenAttempts,
+} from "@/lib/portal/attempt-open-integrity";
+import { isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import {
   booksForContentQa,
   booksForLearner,
@@ -38,7 +44,7 @@ function publicStudent(student: PortalStudent): PublicStudent {
     streamId: student.streamId,
     streamName: streamById(student.streamId).name,
     classLevel: student.classLevel,
-    contentQa: isContentQaAccount(student.email),
+    contentQa: isContentQaStudent(student),
   };
 }
 
@@ -258,7 +264,7 @@ async function verified(studentId: string, bookId: string): Promise<boolean> {
 export async function remoteAccessFor(student: PortalStudent, bookId: string, testId?: string | null) {
   const catalog = loadCatalog();
   const publication = await remotePublicationMap();
-  const contentQa = isContentQaAccount(student.email);
+  const contentQa = isContentQaStudent(student);
   const bookPublished = publicationOf(catalog.books.find((book) => book.id === bookId)?.publicationStatus ?? "awaiting_approval", publication.books[bookId]) === "published";
   const testPublished = testId
     ? publicationOf(catalog.tests.find((test) => test.id === testId)?.publicationStatus ?? "awaiting_approval", publication.tests[testId]) === "published"
@@ -316,7 +322,7 @@ export async function remoteDashboard(student: PortalStudent) {
   const entitlements = await supabaseRest(`/rest/v1/tejas_learn_entitlements?student_id=eq.${encodeURIComponent(student.id)}&select=book_id,status,amount_inr`, { method: "GET" });
   const attempts = await supabaseRest(`/rest/v1/tejas_learn_attempts?student_id=eq.${encodeURIComponent(student.id)}&select=id,test_id,status,score,max_score,submitted_at`, { method: "GET" });
   if (entitlements.status !== 200 || attempts.status !== 200) throw new PortalUnavailable();
-  const contentQa = isContentQaAccount(student.email);
+  const contentQa = isContentQaStudent(student);
   const quote = quoteFee(catalog, student.streamId, student.classLevel);
   const entitlementRows = rows(entitlements.json);
   const attemptRows = rows(attempts.json);
@@ -376,8 +382,54 @@ export async function remoteDashboard(student: PortalStudent) {
   };
 }
 
+/** @deprecated Use retakesAllowedFor(student) — global flag alone must not be the QA path. */
 export function retakesAllowed(): boolean {
   return process.env.TEJAS_PORTAL_RETAKES === "allow";
+}
+
+async function expireRemoteOpenAttempt(studentId: string, attemptId: string): Promise<"expired" | "already_closed" | "failed"> {
+  const result = await supabaseRest(
+    `/rest/v1/tejas_learn_attempts?id=eq.${encodeURIComponent(attemptId)}&student_id=eq.${encodeURIComponent(studentId)}&status=eq.open`,
+    {
+      method: "PATCH",
+      headers: { "content-type": "application/json", prefer: "return=representation" },
+      body: JSON.stringify({ status: "expired" }),
+    },
+  );
+  return interpretExpireOpenPatch(result.status, result.json);
+}
+
+async function loadAttemptsForTest(studentId: string, testId: string): Promise<AttemptRow[]> {
+  const existing = await supabaseRest(
+    `/rest/v1/tejas_learn_attempts?student_id=eq.${encodeURIComponent(studentId)}&test_id=eq.${encodeURIComponent(testId)}&select=id,student_id,test_id,book_id,status,score,max_score,answers,started_at,submitted_at,expires_at`,
+    { method: "GET" },
+  );
+  if (existing.status !== 200) throw new PortalUnavailable();
+  return rows(existing.json).map(attemptFrom).filter((item): item is AttemptRow => item !== null);
+}
+
+/**
+ * Best-effort: after insert, collapse multiple time-valid opens to one canonical row.
+ * Does not replace a DB unique partial index for true atomicity.
+ */
+async function reconcileRemoteOpenAttempts(
+  studentId: string,
+  testId: string,
+  preferredId: string,
+): Promise<{ ok: true; attempt: AttemptRow } | { ok: false; error: string }> {
+  const attempts = await loadAttemptsForTest(studentId, testId);
+  const valid = timeValidOpenAttempts(attempts);
+  const canonical = pickCanonicalOpenAttempt(valid);
+  if (!canonical) return { ok: false, error: "This mock test could not be started." };
+  for (const extra of valid.filter((item) => item.id !== canonical.id)) {
+    const expired = await expireRemoteOpenAttempt(studentId, extra.id);
+    if (expired === "failed") {
+      return { ok: false, error: "This mock test could not be started." };
+    }
+  }
+  // Prefer returning the canonical survivor (may differ from preferredId after a race).
+  void preferredId;
+  return { ok: true, attempt: canonical };
 }
 
 export async function remoteStartAttempt(student: PortalStudent, testId: string) {
@@ -386,13 +438,39 @@ export async function remoteStartAttempt(student: PortalStudent, testId: string)
   if (!test) return { ok: false as const, error: "This mock test is not available.", reason: "unknown" };
   const decision = await remoteAccessFor(student, test.bookId, test.id);
   if (!decision.ok) return { ok: false as const, error: "This mock test is not available for this account.", reason: decision.reason };
-  const existing = await supabaseRest(`/rest/v1/tejas_learn_attempts?student_id=eq.${encodeURIComponent(student.id)}&test_id=eq.${encodeURIComponent(test.id)}&select=id,student_id,test_id,book_id,status,score,max_score,answers,started_at,submitted_at,expires_at`, { method: "GET" });
-  if (existing.status !== 200) throw new PortalUnavailable();
-  const attempts = rows(existing.json).map(attemptFrom).filter((item): item is AttemptRow => item !== null);
-  const open = attempts.find((item) => item.status === "open" && new Date(item.expiresAt).getTime() > Date.now());
-  if (open) return { ok: true as const, attemptId: open.id, expiresAt: open.expiresAt, questions: test.questions.map(toPublicQuestion), timeMinutes: test.timeMinutes };
-  if (!retakesAllowed() && attempts.some((item) => item.status === "submitted" || item.status === "expired" || item.status === "open")) {
+  const attempts = await loadAttemptsForTest(student.id, test.id);
+  const validOpen = timeValidOpenAttempts(attempts);
+  const existingOpen = pickCanonicalOpenAttempt(validOpen);
+  if (existingOpen) {
+    // Heal pre-existing duplicates before handing the attempt to the client.
+    if (validOpen.length > 1) {
+      const healed = await reconcileRemoteOpenAttempts(student.id, test.id, existingOpen.id);
+      if (!healed.ok) return { ok: false as const, error: healed.error };
+      return {
+        ok: true as const,
+        attemptId: healed.attempt.id,
+        expiresAt: healed.attempt.expiresAt,
+        questions: test.questions.map(toPublicQuestion),
+        timeMinutes: test.timeMinutes,
+      };
+    }
+    return {
+      ok: true as const,
+      attemptId: existingOpen.id,
+      expiresAt: existingOpen.expiresAt,
+      questions: test.questions.map(toPublicQuestion),
+      timeMinutes: test.timeMinutes,
+    };
+  }
+  if (!retakesAllowedFor(student) && attempts.some((item) => item.status === "submitted" || item.status === "expired" || item.status === "open")) {
     return { ok: false as const, error: "Another attempt is not open. A retake has not been approved." };
+  }
+  // Close stale (timer-elapsed) open rows before inserting a new attempt.
+  for (const stale of attempts.filter((item) => item.status === "open")) {
+    const expired = await expireRemoteOpenAttempt(student.id, stale.id);
+    if (expired === "failed") {
+      return { ok: false as const, error: "This mock test could not be started." };
+    }
   }
   const now = Date.now();
   const id = randomUUID();
@@ -412,8 +490,31 @@ export async function remoteStartAttempt(student: PortalStudent, testId: string)
       expires_at: expiresAt,
     }),
   });
-  if (inserted.status !== 201 && inserted.status !== 200) return { ok: false as const, error: "This mock test could not be started." };
-  return { ok: true as const, attemptId: id, expiresAt, questions: test.questions.map(toPublicQuestion), timeMinutes: test.timeMinutes };
+  if (inserted.status !== 201 && inserted.status !== 200) {
+    // Losing race against tejas_learn_attempts_one_open (23505): adopt canonical open.
+    const afterConflict = await loadAttemptsForTest(student.id, test.id);
+    if (decideOpenAttemptInsertConflict(inserted.status, inserted.json, afterConflict) === "reuse") {
+      const healed = await reconcileRemoteOpenAttempts(student.id, test.id, id);
+      if (!healed.ok) return { ok: false as const, error: healed.error };
+      return {
+        ok: true as const,
+        attemptId: healed.attempt.id,
+        expiresAt: healed.attempt.expiresAt,
+        questions: test.questions.map(toPublicQuestion),
+        timeMinutes: test.timeMinutes,
+      };
+    }
+    return { ok: false as const, error: "This mock test could not be started." };
+  }
+  const reconciled = await reconcileRemoteOpenAttempts(student.id, test.id, id);
+  if (!reconciled.ok) return { ok: false as const, error: reconciled.error };
+  return {
+    ok: true as const,
+    attemptId: reconciled.attempt.id,
+    expiresAt: reconciled.attempt.expiresAt,
+    questions: test.questions.map(toPublicQuestion),
+    timeMinutes: test.timeMinutes,
+  };
 }
 
 export async function remoteSubmitAttempt(student: PortalStudent, attemptId: string, answers: Record<string, string>) {

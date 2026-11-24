@@ -11,6 +11,7 @@ import { POST as registerPost } from "@/app/api/learn/register/route";
 import { POST as publicationPost } from "@/app/api/learn/staff/publication/route";
 import { authResult } from "@/lib/portal/auth-result";
 import { loadCatalog } from "@/lib/portal/catalog.server";
+import { isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import { booksForLearner, decideAccess, quoteFee, streamAcceptsClass } from "@/lib/portal/model";
 import { openSession, sealSession, sessionKey } from "@/lib/portal/session";
 import {
@@ -552,4 +553,197 @@ test("the student library and staff inventory use TEJAS Olympiad branding", () =
   const footer = readFileSync(path.join(process.cwd(), "components/layout/TejasFooter.tsx"), "utf8");
   assert.equal(footer.includes("brand.parentOrg"), true);
   assert.equal(footer.includes("DHE Ecosystem"), true);
+});
+
+test("QA-account-only retake: QA may retake, ordinary student cannot, scores isolated", async () => {
+  const previousRetakes = process.env.TEJAS_PORTAL_RETAKES;
+  const previousQaEmail = process.env.TEJAS_CONTENT_QA_EMAIL;
+  const previousQaId = process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+  delete process.env.TEJAS_PORTAL_RETAKES;
+  process.env.TEJAS_CONTENT_QA_EMAIL = "tejas-content-qa@dhe.org.in";
+  delete process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+
+  try {
+    assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-2", status: "published", reason: "QA-only retake book." })).ok, true);
+    assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b2-mt01", status: "published", reason: "QA-only retake test." })).ok, true);
+
+    const qaReg = await registerStudent({
+      ...baseStudent,
+      fullName: "TEJAS Content QA",
+      email: "tejas-content-qa@dhe.org.in",
+      streamId: "technology",
+      classLevel: 7,
+    });
+    assert.equal(qaReg.ok, true);
+    if (!qaReg.ok) return;
+    const ordinaryReg = await registerStudent({
+      ...baseStudent,
+      fullName: "Ordinary Retake Learner",
+      email: "ordinary-retake@example.test",
+      mobile: "9876543211",
+      streamId: "technology",
+      classLevel: 10,
+    });
+    assert.equal(ordinaryReg.ok, true);
+    if (!ordinaryReg.ok) return;
+
+    const qa = await readStudent(qaReg.student.id);
+    const ordinary = await readStudent(ordinaryReg.student.id);
+    assert.ok(qa && ordinary);
+    if (!qa || !ordinary) return;
+
+    // Bind privilege to authenticated account UUID (preferred Production setting).
+    process.env.TEJAS_CONTENT_QA_STUDENT_ID = qa.id;
+    assert.equal(isContentQaStudent(qa), true);
+    assert.equal(isContentQaStudent({ id: ordinary.id, email: "tejas-content-qa@dhe.org.in" }), false);
+    assert.equal(retakesAllowedFor(qa), true);
+    assert.equal(retakesAllowedFor(ordinary), false);
+
+    // Profile updates cannot change email to impersonate QA.
+    assert.equal((await updateProfile(ordinary.id, { fullName: "Ordinary Retake Learner" })).ok, true);
+    assert.equal((await readStudent(ordinary.id))?.email, "ordinary-retake@example.test");
+
+    assert.equal((await reportPayment(ordinary.id, "UTR49RETAKE1")).ok, true);
+    assert.equal(
+      (await reviewPayment({ actor: "staff", studentId: ordinary.id, bookId: "ft-book-2", decision: "verified", note: "Matched test credit." })).ok,
+      true,
+    );
+
+    const ordinaryStart = await startAttempt(ordinary, "ft-b2-mt01");
+    assert.equal(ordinaryStart.ok, true);
+    if (!ordinaryStart.ok) return;
+    const ordinarySubmit = await submitAttempt(ordinary, ordinaryStart.attemptId, { "1": "A" });
+    assert.equal(ordinarySubmit.ok, true);
+    if (!ordinarySubmit.ok) return;
+    const ordinaryScore = ordinarySubmit.score;
+    assert.equal((await startAttempt(ordinary, "ft-b2-mt01")).ok, false);
+    assert.equal((await submitAttempt(ordinary, ordinaryStart.attemptId, { "1": "B" })).ok, false);
+    assert.equal((await readOwnAttempt(ordinary.id, ordinaryStart.attemptId))?.attempt.score, ordinaryScore);
+
+    const qaStart = await startAttempt(qa, "ft-b2-mt01");
+    assert.equal(qaStart.ok, true);
+    if (!qaStart.ok) return;
+    const qaSubmit = await submitAttempt(qa, qaStart.attemptId, { "1": "A" });
+    assert.equal(qaSubmit.ok, true);
+    if (!qaSubmit.ok) return;
+
+    const qaRetake = await startAttempt(qa, "ft-b2-mt01");
+    assert.equal(qaRetake.ok, true);
+    if (!qaRetake.ok) return;
+    assert.notEqual(qaRetake.attemptId, qaStart.attemptId);
+    assert.equal((await submitAttempt(qa, qaRetake.attemptId, { "1": "A" })).ok, true);
+    assert.equal((await readOwnAttempt(qa.id, qaStart.attemptId))?.attempt.score, qaSubmit.score);
+
+    assert.equal(await readOwnAttempt(ordinary.id, qaStart.attemptId), null);
+    assert.equal(await readOwnAttempt(qa.id, ordinaryStart.attemptId), null);
+    assert.equal((await startAttempt(ordinary, "ft-b2-mt01")).ok, false);
+    assert.equal(process.env.TEJAS_PORTAL_RETAKES, undefined);
+
+    const qaDash = await dashboard(qa);
+    const ordinaryDash = await dashboard(ordinary);
+    assert.equal(qaDash.student.contentQa, true);
+    assert.equal(ordinaryDash.student.contentQa, false);
+    assert.equal(ordinaryDash.history.some((item) => item.id === qaStart.attemptId), false);
+
+    const wrongClass = await accessFor(ordinary, "ft-book-1", "ft-b1-mt01");
+    assert.equal(wrongClass.ok, false);
+    if (!wrongClass.ok) assert.equal(wrongClass.reason, "wrong_class");
+
+    // Staff overview remains a separate staff path; QA flag does not expand payment powers in student APIs.
+    const overview = await staffOverview();
+    assert.ok(Array.isArray(overview.students));
+  } finally {
+    if (previousRetakes === undefined) delete process.env.TEJAS_PORTAL_RETAKES;
+    else process.env.TEJAS_PORTAL_RETAKES = previousRetakes;
+    if (previousQaEmail === undefined) delete process.env.TEJAS_CONTENT_QA_EMAIL;
+    else process.env.TEJAS_CONTENT_QA_EMAIL = previousQaEmail;
+    if (previousQaId === undefined) delete process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+    else process.env.TEJAS_CONTENT_QA_STUDENT_ID = previousQaId;
+  }
+});
+
+test("file-store concurrent QA starts collapse to one open attempt under withLock", async () => {
+  const previousRetakes = process.env.TEJAS_PORTAL_RETAKES;
+  const previousQaEmail = process.env.TEJAS_CONTENT_QA_EMAIL;
+  const previousQaId = process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+  delete process.env.TEJAS_PORTAL_RETAKES;
+  process.env.TEJAS_CONTENT_QA_EMAIL = "tejas-content-qa-concurrent@dhe.org.in";
+  delete process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+
+  try {
+    assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-2", status: "published", reason: "Concurrent start book." })).ok, true);
+    assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b2-mt02", status: "published", reason: "Concurrent start test." })).ok, true);
+
+    const qaReg = await registerStudent({
+      ...baseStudent,
+      fullName: "TEJAS Content QA Concurrent",
+      email: "tejas-content-qa-concurrent@dhe.org.in",
+      mobile: "9876543299",
+      streamId: "technology",
+      classLevel: 7,
+    });
+    assert.equal(qaReg.ok, true);
+    if (!qaReg.ok) return;
+    const qa = await readStudent(qaReg.student.id);
+    assert.ok(qa);
+    if (!qa) return;
+    process.env.TEJAS_CONTENT_QA_STUDENT_ID = qa.id;
+
+    const ordinaryReg = await registerStudent({
+      ...baseStudent,
+      fullName: "Ordinary Concurrent",
+      email: "ordinary-concurrent@example.test",
+      mobile: "9876543298",
+      streamId: "technology",
+      classLevel: 10,
+    });
+    assert.equal(ordinaryReg.ok, true);
+    if (!ordinaryReg.ok) return;
+    const ordinary = await readStudent(ordinaryReg.student.id);
+    assert.ok(ordinary);
+    if (!ordinary) return;
+    assert.equal((await reportPayment(ordinary.id, "UTR49CONCUR1")).ok, true);
+    assert.equal(
+      (await reviewPayment({ actor: "staff", studentId: ordinary.id, bookId: "ft-book-2", decision: "verified", note: "Concurrent credit." })).ok,
+      true,
+    );
+
+    const ordinaryFirst = await startAttempt(ordinary, "ft-b2-mt02");
+    assert.equal(ordinaryFirst.ok, true);
+    if (!ordinaryFirst.ok) return;
+    const ordinarySubmit = await submitAttempt(ordinary, ordinaryFirst.attemptId, { "1": "A" });
+    assert.equal(ordinarySubmit.ok, true);
+    if (!ordinarySubmit.ok) return;
+    const preservedScore = ordinarySubmit.score;
+
+    const concurrentOrdinary = await Promise.all([startAttempt(ordinary, "ft-b2-mt02"), startAttempt(ordinary, "ft-b2-mt02"), startAttempt(ordinary, "ft-b2-mt02")]);
+    assert.equal(concurrentOrdinary.every((item) => item.ok === false), true);
+    assert.equal((await readOwnAttempt(ordinary.id, ordinaryFirst.attemptId))?.attempt.score, preservedScore);
+
+    const qaStarts = await Promise.all([startAttempt(qa, "ft-b2-mt02"), startAttempt(qa, "ft-b2-mt02"), startAttempt(qa, "ft-b2-mt02"), startAttempt(qa, "ft-b2-mt02")]);
+    assert.equal(qaStarts.every((item) => item.ok), true);
+    if (!qaStarts.every((item) => item.ok)) return;
+    const openIds = new Set(qaStarts.map((item) => (item.ok ? item.attemptId : "")));
+    assert.equal(openIds.size, 1);
+
+    const attemptId = qaStarts[0].ok ? qaStarts[0].attemptId : "";
+    const submitted = await submitAttempt(qa, attemptId, { "1": "A" });
+    assert.equal(submitted.ok, true);
+    if (!submitted.ok) return;
+    const replay = await Promise.all([submitAttempt(qa, attemptId, { "1": "B" }), submitAttempt(qa, attemptId, { "1": "C" })]);
+    assert.equal(replay.every((item) => item.ok === false), true);
+    assert.equal((await readOwnAttempt(qa.id, attemptId))?.attempt.score, submitted.score);
+
+    // Spoof: ordinary student object with QA email but wrong id remains denied.
+    assert.equal(retakesAllowedFor({ id: ordinary.id, email: "tejas-content-qa-concurrent@dhe.org.in" }), false);
+    assert.equal(await readOwnAttempt(ordinary.id, attemptId), null);
+    assert.equal(await readOwnAttempt(qa.id, ordinaryFirst.attemptId), null);
+  } finally {
+    if (previousRetakes === undefined) delete process.env.TEJAS_PORTAL_RETAKES;
+    else process.env.TEJAS_PORTAL_RETAKES = previousRetakes;
+    if (previousQaEmail === undefined) delete process.env.TEJAS_CONTENT_QA_EMAIL;
+    else process.env.TEJAS_CONTENT_QA_EMAIL = previousQaEmail;
+    if (previousQaId === undefined) delete process.env.TEJAS_CONTENT_QA_STUDENT_ID;
+    else process.env.TEJAS_CONTENT_QA_STUDENT_ID = previousQaId;
+  }
 });

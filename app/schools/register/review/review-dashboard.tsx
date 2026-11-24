@@ -77,6 +77,8 @@ type Detail = {
     previousParticipation?: boolean;
     previousReference?: string | null;
     pan: string;
+    maskedPan?: string;
+    fullPanAvailable?: boolean;
     panHolder?: string | null;
     panDuplicate: boolean;
     principalName: string;
@@ -208,7 +210,6 @@ export function ReviewDashboard() {
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<"createdAt" | "schoolName" | "amountDue">("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [revealPan, setRevealPan] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -273,7 +274,6 @@ export function ReviewDashboard() {
       const body = (await response.json()) as { registration: Detail };
       setDetail(body.registration);
       setNote("");
-      setRevealPan(false);
     } finally {
       setLoading(false);
     }
@@ -424,10 +424,9 @@ export function ReviewDashboard() {
       ) : null}
 
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=schools" prefetch={false}>Schools CSV</Link>
+        <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=schools" prefetch={false}>Schools CSV (masked PAN)</Link>
         <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=students" prefetch={false}>Students CSV</Link>
         <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=payments" prefetch={false}>Payments CSV</Link>
-        <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=schools&revealPan=yes" prefetch={false}>Schools CSV with full PAN (sensitive)</Link>
       </div>
 
       <div className="grid gap-3 rounded-2xl border border-tejas-border bg-white p-4 text-sm md:grid-cols-2 lg:grid-cols-3">
@@ -589,13 +588,13 @@ export function ReviewDashboard() {
           <DetailBlock title="3. PAN details">
             <p>
               {panHolderLabel(detail.school.panHolder)}:{" "}
-              <span className="font-mono">{revealPan ? detail.school.pan : `${detail.school.pan.slice(0, 5)}****${detail.school.pan.slice(-1)}`}</span>
+              <span className="font-mono">{detail.school.maskedPan || detail.school.pan || "—"}</span>
               {detail.school.panDuplicate ? " (duplicate, needs review)" : ""}
             </p>
-            <p className="text-tejas-muted">Full PAN is sensitive. Restrict export and screen reveal to authorised staff.</p>
-            <button type="button" className="mt-2 rounded-lg border border-tejas-border px-3 py-1.5 font-semibold" onClick={() => setRevealPan((value) => !value)}>
-              {revealPan ? "Mask PAN" : "Reveal full PAN"}
-            </button>
+            <p className="text-tejas-muted">
+              Full PAN reveal and unmasked export are disabled until a trusted staff role model is approved.
+              The API returns only the masked value to every staff session.
+            </p>
           </DetailBlock>
 
           <DetailBlock title="4. Principal details">
@@ -686,9 +685,11 @@ export function ReviewDashboard() {
               <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=upload`}>Original uploaded spreadsheet</a>
               <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file`}>Students workbook</a>
               <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=consolidated`}>Consolidated workbook (masked PAN)</a>
-              <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=consolidated&revealPan=yes`}>Consolidated workbook with full PAN (sensitive)</a>
             </div>
-            <p className="mt-3 text-tejas-muted">Google Drive folder link and sync history: not configured. See TEJAS-GOOGLE-DRIVE-BACKUP-DESIGN.md. Retry is unavailable until owner approves Drive credentials and schema.</p>
+            <p className="mt-3 text-tejas-muted">
+              Consolidated export always masks PAN. Requests with revealPan=yes are denied server-side while no trusted role exists.
+              Google Drive: not configured. See TEJAS-GOOGLE-DRIVE-BACKUP-DESIGN.md.
+            </p>
           </DetailBlock>
         </section>
       ) : null}

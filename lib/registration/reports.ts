@@ -1,5 +1,5 @@
 import { presentFee } from "@/lib/registration/fee";
-import { maskPan } from "@/lib/registration/fields";
+import { panValueForExport } from "@/lib/registration/pan-access";
 import { panHolderLabel } from "@/lib/registration/school";
 import { streamById } from "@/lib/registration/schema";
 import { statusLabel, type RegistrationRecord } from "@/lib/registration/store";
@@ -26,7 +26,7 @@ export function registrationsToCsv(records: RegistrationRecord[], kind: ReportKi
       rows.push(line([
         record.reference,
         record.school.schoolName,
-        revealPan ? record.school.pan : maskPan(record.school.pan ?? ""),
+        panValueForExport(record.school.pan, revealPan),
         panHolderLabel(record.school.panHolder),
         record.school.state,
         record.school.district,

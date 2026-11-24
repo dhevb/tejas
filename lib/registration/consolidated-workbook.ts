@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { presentFee } from "@/lib/registration/fee";
-import { maskPan } from "@/lib/registration/fields";
+import { panValueForExport } from "@/lib/registration/pan-access";
 import { panHolderLabel } from "@/lib/registration/school";
 import { streamById } from "@/lib/registration/schema";
 import {
@@ -33,7 +33,7 @@ export function consolidatedRegistrationWorkbook(record: RegistrationRecord, opt
   const streamFees = streamFeeLines(streams);
   const reconcile = reconcileFeeWithSaved(streams, record.fee);
   const driveStatus = driveSyncStatusForRegistration(record.reference);
-  const pan = options?.revealPan ? record.school.pan : maskPan(record.school.pan ?? "");
+  const pan = panValueForExport(record.school.pan, options?.revealPan === true);
 
   const schoolDetails = [
     ["Field", "Value"],

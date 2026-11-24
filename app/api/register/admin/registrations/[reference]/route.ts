@@ -1,4 +1,5 @@
 import { noStore } from "@/lib/registration/http";
+import { staffVisiblePan } from "@/lib/registration/pan-access";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { streamById } from "@/lib/registration/schema";
 import { staffAuthorised, staffIdentity } from "@/lib/registration/staff";
@@ -15,12 +16,16 @@ export async function GET(_request: Request, context: { params: Promise<{ refere
   if (!referenceIsValid(reference)) return noStore({ ok: false }, 404);
   const record = await readRegistration(reference);
   if (!record) return noStore({ ok: false }, 404);
+  const pan = staffVisiblePan(record.school.pan);
   return noStore({
     ok: true,
     registration: {
       ...record,
       school: {
         ...record.school,
+        pan: pan.pan,
+        maskedPan: pan.maskedPan,
+        fullPanAvailable: pan.fullPanAvailable,
         principalDesignation: undefined,
         representativeName: undefined,
         representativeDesignation: undefined,

@@ -3,10 +3,11 @@
 **Date:** 2026-11-24  
 **Branch:** `feat/registration-review-dashboard-redesign`  
 **PR:** https://github.com/dhevb/tejas/pull/65  
-**Exact HEAD:** `dc2efde` (safety audit docs) · prior `a8dd2c8`  
+**Exact HEAD:** see tip after isolated-Preview kit push  
 **PAN security fix:** `118dd9b`  
 **Production:** not deployed · **PR left OPEN / UNMERGED**  
-**Preview env safety:** `TEJAS-PR65-PREVIEW-ENVIRONMENT-SAFETY-AUDIT.md` → **NOT SAFE TO CONFIGURE PREVIEW** with Production Supabase service-role credentials
+**Preview env safety:** `TEJAS-PR65-PREVIEW-ENVIRONMENT-SAFETY-AUDIT.md` → **NOT SAFE** with Production service-role on Preview  
+**Isolated Preview kit / QA status:** `TEJAS-PR65-ISOLATED-PREVIEW-SUPABASE-AND-QA-REPORT.md` → **CONDITIONAL PASS** (stopped: owner must create Preview Supabase project)
 
 ---
 

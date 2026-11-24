@@ -1,7 +1,8 @@
 /**
  * Helpers for keeping at most one time-valid open attempt per student/test.
- * Application-level reconciliation is best-effort; Production still needs a
- * partial unique index / RPC for true atomicity under concurrency.
+ * Production enforces atomicity via partial unique index
+ * `tejas_learn_attempts_one_open` (UNIQUE (student_id, test_id) WHERE status = 'open').
+ * Application reconciliation complements that index (reuse / heal / map 23505).
  */
 
 export type OpenAttemptRef = {
@@ -24,6 +25,33 @@ export function pickCanonicalOpenAttempt<T extends OpenAttemptRef>(opens: T[]): 
     if (byStart !== 0) return byStart;
     return a.id.localeCompare(b.id);
   })[0] ?? null;
+}
+
+/**
+ * Detect PostgreSQL unique_violation (23505) from PostgREST insert responses.
+ * Matches `tejas_learn_attempts_one_open` races and other unique conflicts.
+ */
+export function isPostgresUniqueViolation(status: number, json: unknown): boolean {
+  if (status !== 409 && status !== 400) return false;
+  if (!json || typeof json !== "object") return false;
+  const code = (json as { code?: unknown }).code;
+  return code === "23505";
+}
+
+/**
+ * After a failed open-attempt INSERT, decide whether the loser may safely
+ * adopt an existing time-valid open (unique-index conflict) or must fail closed.
+ * - reuse: HTTP indicates unique violation AND a time-valid open exists
+ * - fail: any other insert failure, or unique violation with no recoverable open
+ */
+export function decideOpenAttemptInsertConflict(
+  status: number,
+  json: unknown,
+  attempts: OpenAttemptRef[],
+  now = Date.now(),
+): "reuse" | "fail" {
+  if (!isPostgresUniqueViolation(status, json)) return "fail";
+  return pickCanonicalOpenAttempt(timeValidOpenAttempts(attempts, now)) ? "reuse" : "fail";
 }
 
 /**

@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { loadCatalog } from "@/lib/portal/catalog.server";
-import { interpretExpireOpenPatch, pickCanonicalOpenAttempt, timeValidOpenAttempts } from "@/lib/portal/attempt-open-integrity";
+import {
+  decideOpenAttemptInsertConflict,
+  interpretExpireOpenPatch,
+  pickCanonicalOpenAttempt,
+  timeValidOpenAttempts,
+} from "@/lib/portal/attempt-open-integrity";
 import { isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import {
   booksForContentQa,
@@ -485,7 +490,22 @@ export async function remoteStartAttempt(student: PortalStudent, testId: string)
       expires_at: expiresAt,
     }),
   });
-  if (inserted.status !== 201 && inserted.status !== 200) return { ok: false as const, error: "This mock test could not be started." };
+  if (inserted.status !== 201 && inserted.status !== 200) {
+    // Losing race against tejas_learn_attempts_one_open (23505): adopt canonical open.
+    const afterConflict = await loadAttemptsForTest(student.id, test.id);
+    if (decideOpenAttemptInsertConflict(inserted.status, inserted.json, afterConflict) === "reuse") {
+      const healed = await reconcileRemoteOpenAttempts(student.id, test.id, id);
+      if (!healed.ok) return { ok: false as const, error: healed.error };
+      return {
+        ok: true as const,
+        attemptId: healed.attempt.id,
+        expiresAt: healed.attempt.expiresAt,
+        questions: test.questions.map(toPublicQuestion),
+        timeMinutes: test.timeMinutes,
+      };
+    }
+    return { ok: false as const, error: "This mock test could not be started." };
+  }
   const reconciled = await reconcileRemoteOpenAttempts(student.id, test.id, id);
   if (!reconciled.ok) return { ok: false as const, error: reconciled.error };
   return {

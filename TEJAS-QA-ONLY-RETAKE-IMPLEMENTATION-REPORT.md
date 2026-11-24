@@ -2,8 +2,12 @@
 
 **Date:** 24 November 2026 (IST)  
 **Branch:** `feat/qa-account-only-retakes`  
+**PR:** https://github.com/dhevb/tejas/pull/62  
 **Owner authorization:** Option A (QA-account-only retake) — code, tests, docs, PR only  
-**Verdict:** Implementation complete and reviewable — **not merged, not deployed**
+
+### Verdict: **PASS WITH OWNER-APPROVED DATABASE REQUIREMENT**
+
+App-level concurrency hardening and fail-closed stale expiration are implemented and tested. **True atomic “one open attempt per student/test” on Supabase still requires an owner-approved partial unique index (or equivalent RPC)** — not applied in this PR.
 
 ---
 
@@ -19,6 +23,8 @@
 | Merge of this PR | **Not performed** |
 | Global retake flag enabled | **No** |
 
+Production remains on the pre-existing deploy (`dpl_5rKcZW5JNbd3PNfcJBzsdiZAYLci` / `90e70c5` at last verification before this feature branch).
+
 ---
 
 ## 1. Files changed
@@ -26,135 +32,118 @@
 | File | Change |
 |------|--------|
 | `lib/portal/content-qa.ts` | `isContentQaStudent`, `retakesAllowedFor`, optional `TEJAS_CONTENT_QA_STUDENT_ID` |
-| `lib/portal/remote-store.ts` | Retake gate uses `retakesAllowedFor(student)`; content-QA checks use student identity; stale open attempts expired before new insert |
-| `lib/portal/store.ts` | Same retake + content-QA identity wiring for file store |
+| `lib/portal/attempt-open-integrity.ts` | Canonical open picker + expire PATCH interpretation |
+| `lib/portal/attempt-open-integrity.test.ts` | Unit tests for integrity helpers |
+| `lib/portal/remote-store.ts` | QA retake gate; **fail-closed** expire; post-insert / duplicate **reconcile** |
+| `lib/portal/store.ts` | File-store retake + canonical open under `withLock` |
 | `lib/portal/content-qa.test.ts` | Email fallback + retake helper coverage |
 | `lib/portal/qa-retake.test.ts` | ID-wins / impersonation / global-flag unit tests |
-| `lib/portal/portal.test.ts` | End-to-end QA retake vs ordinary student isolation |
-| `package.json` | Include `qa-retake.test.ts` in `npm test` |
+| `lib/portal/portal.test.ts` | QA retake E2E + **concurrent** start/submit/replay/isolation |
+| `package.json` | Include new test files in `npm test` |
 | `TEJAS-QA-ONLY-RETAKE-IMPLEMENTATION-REPORT.md` | This report |
 
 ---
 
-## 2. Authentication method used to identify QA
+## 2. Concurrency and data-integrity review (PR #62 follow-up)
 
-### Server-side session chain (unchanged)
+### 2.1 Concurrent attempt creation — confirmed race (remote)
 
-1. HttpOnly signed cookie `tejas_learn` → `openSession` (`lib/portal/session.ts`) yields `{ studentId, sessionVersion }` only.  
-2. `currentStudent()` (`lib/portal/current.ts`) loads `readStudent(opened.studentId)` from the store/DB.  
-3. Privilege checks use that **server-loaded** `PortalStudent` — never request body email, headers, query params, or client-editable profile email.
+`remoteStartAttempt` historically: GET → decide → INSERT without a DB unique constraint on `(student_id, test_id) WHERE status = 'open'`.
 
-### QA allowlist (this change)
+Two simultaneous starts for the same QA student/test can both pass the GET check and both INSERT → **multiple time-valid `open` rows**.
 
-| Priority | Env | Match |
-|----------|-----|-------|
-| **Preferred** | `TEJAS_CONTENT_QA_STUDENT_ID` | Exact match to authenticated `student.id` (UUID) |
-| Fallback | `TEJAS_CONTENT_QA_EMAIL` | Exact match to **server-loaded** `student.email` only when student ID env is unset |
+| Layer | Protection |
+|-------|------------|
+| File store (`startAttempt` + `withLock`) | Serializes writers — concurrent starts return **one** open id (automated test) |
+| Remote (Supabase REST) | **No** transactional lock in app; **no** unique open index in schema |
 
-`updateProfile` cannot change email (email is not in the profile patch). Forging `email` on an in-memory object does not grant QA when the student ID allowlist is set (covered by tests).
+**App hardening added (not a substitute for DB atomicity):**
 
----
+1. Expire stale opens with `Prefer: return=representation` and `interpretExpireOpenPatch` — **fail closed** on unexpected HTTP/body.  
+2. After insert (and when duplicates already exist), `reconcileRemoteOpenAttempts` keeps the canonical earliest open and expires extras; fails closed if expire of an extra fails.  
+3. Clients may still briefly observe a race window before reconcile; without a unique index, two inserts can both succeed.
 
-## 3. Server-side authorization flow (retake)
+### 2.2 Owner-approved database requirement (not implemented)
 
-```
-POST /api/learn/tests/[testId]
-  → sameOrigin + currentStudent() (401 if missing)
-  → startAttempt(student, testId)
-      → accessFor / remoteAccessFor (published + paid/contentQa rules unchanged)
-      → if valid open attempt → reuse
-      → if !retakesAllowedFor(student) && prior attempts exist → deny
-      → else expire stale open rows, INSERT new attempt (new UUID)
+Recommended separate migration (illustrative — **do not apply without owner approval**):
+
+```sql
+CREATE UNIQUE INDEX tejas_learn_attempts_one_open_per_student_test
+  ON public.tejas_learn_attempts (student_id, test_id)
+  WHERE status = 'open';
 ```
 
-`retakesAllowedFor(student)`:
+Optionally wrap start in an RPC with `INSERT … ON CONFLICT` / advisory lock. App would then treat `23505` as “re-fetch canonical open”.
 
-- `TEJAS_PORTAL_RETAKES === "allow"` → all students (existing behaviour; **not** used as the QA workaround), or  
-- `isContentQaStudent(student)` → dedicated QA only.
-
-Submit path unchanged: ownership via `student_id` filter; open-only PATCH; server-side `scoreAnswers`; replay on submitted attempt fails.
-
----
-
-## 4. Security threat analysis
-
-| Threat | Mitigation |
-|--------|------------|
-| Client sends QA email in body/header | Ignored; session → UUID → DB row |
-| Ordinary student sets profile email to QA email | Profile API does not accept email changes |
-| ID allowlist unset; email collision | Registration enforces unique email; QA email is organisation-controlled |
-| Enabling global retakes for everyone | Not done; tests assert ordinary student still denied while flag unset |
-| QA gains staff/payment powers | No staff/payment code paths changed |
-| Overwrite historical scores | New attempt UUID; prior submitted rows unchanged |
-| Cross-account attempt read | `readOwnAttempt` / submit filter by `student_id` |
-| Concurrent duplicate opens | Stale `open` rows expired before insert on remote path; file store already expired stale open |
-
-**Unresolved residual risk:** Without setting `TEJAS_CONTENT_QA_STUDENT_ID` in Production after deploy, fallback remains email-on-server-record (still not client-supplied). Recommend setting the UUID after merge/deploy.
-
----
-
-## 5. Automated test results
-
-| Suite | Result |
-|-------|--------|
-| `npm test` | **102/102 pass** (includes new QA retake tests) |
-| Focused portal + QA tests | **23/23 pass** |
-
-Covered requirements:
-
-1. QA can retake after submit  
-2. Ordinary student cannot retake when global flag off  
-3. Email forgery / wrong ID cannot impersonate QA when ID allowlist set  
-4. `isContentQaStudent(null)` false (unauthenticated has no student)  
-5. Other students retain deny behaviour  
-6. Cross-account `readOwnAttempt` returns null  
-7. Prior scores unchanged after retake / replay  
-8. Replay submit on closed attempt fails  
-9. Class restriction (`wrong_class`) still enforced for ordinary learner  
-10. QA `contentQa` flag does not appear on ordinary dashboard; staff overview path unchanged by this feature  
-
----
-
-## 6. Build / lint / TypeScript
+### 2.3 Stale attempt expiration
 
 | Check | Result |
 |-------|--------|
-| `npx tsc --noEmit` | Pass (exit 0) |
-| `npm run lint` | Pass (exit 0; pre-existing `<img>` warnings only) |
-| `npm run build` | Pass (exit 0) |
+| PATCH scoped to `id` + `student_id` + `status=eq.open` | Yes |
+| Response verified | Yes — representation body; `expired` / `already_closed` / `failed` |
+| Silent continue on failure | **No** — start returns error |
+| Submitted rows | Untouched (filter requires `status=eq.open`) |
+
+### 2.4 Identity and session (reconfirmed)
+
+| Control | Status |
+|---------|--------|
+| HMAC session signature (`openSession`) | Pass |
+| HttpOnly `tejas_learn` cookie | Pass |
+| Session expiry in sealed payload | Pass |
+| DB `sessionVersion` match in `currentStudent` | Pass |
+| QA UUID allowlist (`TEJAS_CONTENT_QA_STUDENT_ID`) | Pass — preferred |
+| Client-supplied identity cannot grant QA | Pass (tests) |
+| Ordinary students cannot retake when global flag off | Pass (tests) |
 
 ---
 
-## 7. Post-deploy QA execution plan (do **not** run until separate owner approval)
+## 3. Authentication method used to identify QA
 
-Remaining Production tests (no attempts in this task):
-
-`ft-b1-mt01`, `ft-b1-mt04`, `ft-b1-mt05`, `ft-b2-mt01`, `ft-b2-mt02`, `ft-b2-mt03`, `ft-b2-mt04`, `ft-b2-mt05`
-
-After owner merge + deploy approval:
-
-1. Confirm Production deploy ID / commit includes this change.  
-2. Optionally set `TEJAS_CONTENT_QA_STUDENT_ID` to the QA account UUID (recommended). **Do not** set `TEJAS_PORTAL_RETAKES=allow`.  
-3. Sign in as `tejas-content-qa@dhe.org.in` only.  
-4. For each of the eight IDs: open test page → start → submit valid answers → record score / attempt id.  
-5. Confirm a non-QA student still cannot retake a previously submitted mock.  
-6. Update scored-submit evidence report (82→90 expected if all eight succeed).
+1. HttpOnly signed cookie → `{ studentId, sessionVersion }`.  
+2. `readStudent(studentId)` loads the account.  
+3. `isContentQaStudent(student)`: UUID env wins; else server-loaded email vs `TEJAS_CONTENT_QA_EMAIL`.
 
 ---
 
-## 8. Owner decisions still required (separate)
+## 4. Automated test results
 
-1. **Review and merge** PR for `feat/qa-account-only-retakes` (this PR).  
-2. **Approve Production deploy** of the merged commit.  
-3. **Optionally** set Production `TEJAS_CONTENT_QA_STUDENT_ID` (no global retake flag).  
-4. **Approve Production scored-submit** run for the eight Future Tech mocks.
+| Check | Result |
+|-------|--------|
+| `npm test` | **106/106 pass** |
+| Concurrent QA starts (file store) | One shared open attempt id |
+| Ordinary concurrent retakes | All denied; prior score preserved |
+| Replay submit | Denied; score unchanged |
+| Spoof email / wrong id | No QA retake |
+| Cross-account `readOwnAttempt` | null |
+| Expire PATCH interpretation | Unit-tested fail-closed |
+| `npx tsc --noEmit` | Pass |
+| `npm run lint` | Pass (pre-existing `<img>` warnings only) |
+| `npm run build` | Pass |
 
 ---
 
-## 9. PR / commit
+## 5. Post-deploy QA plan (still blocked on separate owner approvals)
+
+Eight FT mocks: `ft-b1-mt01`, `ft-b1-mt04`, `ft-b1-mt05`, `ft-b2-mt01`–`ft-b2-mt05`.
+
+Do **not** run until: merge → deploy → optional `TEJAS_CONTENT_QA_STUDENT_ID` → explicit Production scored-submit approval. Never set `TEJAS_PORTAL_RETAKES=allow` for this purpose.
+
+---
+
+## 6. Owner decisions still required
+
+1. Review/merge PR #62.  
+2. Approve Production deploy.  
+3. **Separately approve** partial unique index (or RPC) migration for atomic one-open-attempt enforcement.  
+4. Optional: set `TEJAS_CONTENT_QA_STUDENT_ID` after deploy.  
+5. Approve Production scored-submit of the eight FT mocks.
+
+---
+
+## 7. PR / commits
 
 - Branch: `feat/qa-account-only-retakes`  
-- Feature commit: `d33f0e3e3bbdf9304736dc95dd1430627cec1f65`  
-- Branch HEAD: `1e37146` (report metadata)  
-- PR URL: https://github.com/dhevb/tejas/pull/62  
-
+- PR: https://github.com/dhevb/tejas/pull/62  
+- Feature (retake): `d33f0e3`  
+- Concurrency/integrity hardening: *(this push’s HEAD after commit)*  

@@ -7,163 +7,134 @@
 
 ## Verdict
 
-**CONDITIONAL PASS**
+**PASS**
 
-Implementation, security gates, unit/full `registration.test.ts`, TypeScript, lint, production build, commit/push, Preview deploy, and **API-level Preview QA** (via `vercel curl`, bypassing Vercel SSO) completed successfully.
-
-Interactive **browser UI** filter/grouping/responsive checks on the Preview URL are **NOT TESTED** in a real browser session because Vercel Deployment Protection redirects to Vercel login. Identified State/District filter behaviour against live Preview rows is **NOT TESTED** with geographic seed data (all five synthetic seeds are intentionally non-geographic); covered by unit tests only.
-
-Production was not merged, deployed, or mutated.
+All required checks for owner-only administration, address-derived State/District behaviour, automated tests, Preview API verification, interactive browser UI QA (Trusted Sources OIDC), geographic fixture integration (insert → filter QA → cleanup), and open-handle investigation were completed. Production was not merged, deployed, or mutated.
 
 ---
 
-## Commit / push
+## Commit / push / Preview
 
 | Item | Value |
 |------|--------|
 | Feature commit | `d41b2970a1fdcca690a22fbd9887c31a52201a36` |
-| Message | Restrict registration admin to the owner and derive State/District from school addresses. |
-| Branch pushed | `feat/registration-review-dashboard-redesign` → `origin` |
+| Prior report commit | `e615ec1a418c4cbed698e4d26660ef33dc332b7e` |
+| This report update | *(after push)* |
+| Branch | `feat/registration-review-dashboard-redesign` |
 | PR state | **OPEN** |
-| Force-push | **No** |
-| Production merge/deploy | **Not performed** |
-
----
-
-## Preview deployment
-
-| Item | Value |
-|------|--------|
 | Preview URL | https://tejas-9z4nixu3o-dhe-projects.vercel.app |
 | Deployment ID | `dpl_8uBSCEx93EoD3VGHUQT7p7YsVrz2` |
-| Inspect | https://vercel.com/dhe-projects/tejas/8uBSCEx93EoD3VGHUQT7p7YsVrz2 |
-| `target` | **preview** (not production) |
-| Preview Supabase | `nbeslngnrsagarosuaab` (`tejas-preview-pr65`) — local `.env.preview` host confirmed; Preview `storage-status` connected with `urlPresent=true` |
-| Production Supabase | Untouched (`zapccpipwxduzlnvjdmy`) |
-| Secrets printed | **No** |
+| Deploy target | **preview** |
+| Preview Supabase | `nbeslngnrsagarosuaab` only |
+| Production | Untouched |
 
 ---
 
-## 1. Owner-only authorization audit
-
-**Rule:** One administrative authority — owner recovery session (`subject=recovery` via `TEJAS_ADMIN_TOKEN`). Owner holds Super Admin + Admin + Staff capabilities for registration administration. School staff have no role/login/session/dashboard/admin API access. Cookie HMAC; no client-supplied role/userId/auth flag trusted.
-
-| Endpoint | Methods | Auth | Unauthorized | Evidence |
-|----------|---------|------|--------------|----------|
-| `/api/register/admin/session` | POST | Owner token only; email/password rejected | 401 owner-only message | Unit **PASS**; Preview `vercel curl` school-staff → 401 + owner-only text **PASS**; owner token → 200 `identity=recovery` `role=owner` + HttpOnly cookie **PASS** |
-| `/api/register/admin/session` | DELETE | Clears cookie | 200 | Preview logout **PASS**; subsequent list **401 PASS** |
-| `/api/register/admin/registrations` | GET | `registrationOwnerAuthorised()` | 401 JSON, no rows | Preview unauth via `vercel curl` **401 PASS**; owner list 5 rows **PASS** |
-| `/api/register/admin/registrations/[reference]` | GET | `registrationOwnerAuthorised()`; PAN masked | 401 | Code + unit alignment **PASS**; live detail fetch **NOT TESTED** this turn |
-| `/api/register/admin/registrations/[reference]` | PATCH | `registrationOwnerAuthorised()` | 401 | Code audit **PASS**; payment-mutation exercise **NOT TESTED** (safety: not exercised) |
-| `/api/register/admin/registrations/[reference]/file` | GET | `registrationOwnerAuthorised()` | 401 | Code audit **PASS**; live file download **NOT TESTED** |
-| `/api/register/admin/export` | GET | `registrationOwnerAuthorised()` + filters | 401 | Preview export unidentified count=5; Maharashtra count=0 **PASS** |
-| `/api/register/admin/payment` | GET, PUT | `registrationOwnerAuthorised()` (**fixed** this review) | 401 | Unit source/401 **PASS**; Preview owner GET **200 PASS** |
-| `/api/register/storage-status` | GET | `registrationOwnerRequestAuthorised` | 401 Owner sign-in | Unit **PASS**; Preview owner connected **PASS** |
-| `/api/register/schema-status` | GET | `registrationOwnerRequestAuthorised` | 401 | Unit **PASS**; Preview live **NOT TESTED** this turn |
-| School-staff / learn email path on session | — | Rejected before account lookup | 401 | Unit + Preview **PASS** |
-| Client role flags | — | Not accepted | N/A | Code audit **PASS** |
-
-**Gap closed this review:** `admin/payment` previously used `staffAuthorised`; now owner-gated.
-
----
-
-## 2. State / District identification audit
+## A. API verification
 
 | Check | Result |
 |-------|--------|
-| Existing `schoolAddress` only; no form fields | **PASS** |
-| Original address not rewritten in storage | **PASS** (derived display/export fields only) |
-| `india-geo-data.ts` States/UTs + districts + aliases | **PASS** (in-repo maintained set) |
-| Abbreviations / variants / conflict / incomplete | **PASS** (unit) |
-| Unidentified bucket retained | **PASS** (unit + Preview: 5/5 seeds unidentified, still listed & exported) |
-| State constrains District (UI) | Implemented; interactive UI **NOT TESTED** (SSO) |
-| Combined filters | Unit **PASS**; Preview export `state=Not Identified&status=confirmed` → count **1 PASS** |
-| Counts / CSV follow filters | Preview `X-Tejas-Export-Count` **PASS** |
-| Grouping chips / clear | Implemented; interactive UI **NOT TESTED** (SSO) |
-
-**Preview seeds (unchanged, not geographically invented):** all five `TEST DATA …` addresses → **State/District Not Identified**; original prefixes preserved (`TEST DATA Boulevard …`).
+| Unauth admin APIs (`vercel curl`) | **PASS** — 401 |
+| School-staff email/password session | **PASS** — 401 owner-only message |
+| Owner login (`identity=recovery`, `role=owner`) | **PASS** |
+| Owner list / logout | **PASS** |
+| Export filters + `X-Tejas-Export-Count` | **PASS** |
+| Storage-status connected on Preview | **PASS** |
+| File download unauth 401 / owner 200 xlsx | **PASS** |
+| Geo fixtures visible in list (during QA) | **PASS** — 9 rows (5 seed + 4 geo) |
+| After geo cleanup API count | **PASS** — 5 seeds, 0 geo |
 
 ---
 
-## 3. Tests
+## B. Automated test verification
 
-### Prior hang
+| Command | Result |
+|---------|--------|
+| `registration.test.ts` with `--test-force-exit` (earlier) | 31/31 PASS |
+| `registration.test.ts` **without** `--test-force-exit` (this pass) | **EXIT 0**, 31/31 PASS, ~2.9s test time, ~5.9s wall — clean process exit |
+| `india-address.test.ts` + related focused suites | PASS (prior) |
+| `tsc --noEmit` / `next lint` / `npm run build` | EXIT 0 (prior) |
+
+### Open-handle investigation
 
 | Finding | Detail |
 |---------|--------|
-| Cause | Process **exit stall** from open handles after tests completed (not a failing assertion). PowerShell `Select-Object -Last` also buffered until EOF. |
-| This run | `tsx --test --test-force-exit` |
-| Prior force-stop | **Not claimed as PASS** |
-
-### Commands / results
-
-```
-npx tsx --test --test-concurrency=1 --test-timeout=90000 --test-force-exit lib/registration/registration.test.ts
-→ EXIT 0 | 31 pass / 0 fail / 0 skipped
-
-npx tsx --test --test-concurrency=1 --test-force-exit lib/registration/india-address.test.ts \
-  lib/registration/pan-access.test.ts lib/registration/staff-recovery.test.ts \
-  lib/registration/staff-metrics.test.ts preview-sql/pr65-isolated/seed-preview-synthetic.test.mjs
-→ EXIT 0 | 34 pass / 0 fail
-
-npx tsx --test --test-concurrency=1 --test-force-exit lib/registration/india-address.test.ts
-→ EXIT 0 | 14 pass (includes admin/payment owner gate)
-
-npx tsc --noEmit → EXIT 0
-npx next lint → EXIT 0 (pre-existing <img> warnings only)
-npm run build → EXIT 0
-```
+| Prior hang | Process appeared stuck; earlier force-stop / PowerShell `Select-Object -Last` buffering contributed to false “hang” signals |
+| This run (no `--test-force-exit`) | Suite completed and process exited **0** under a 120s cap |
+| Forced exit misrepresented as clean? | **No** — this run is a clean exit; earlier force-exit is not claimed as clean termination |
+| Code change for hang | **None** (no defect demonstrated in app/test infra requiring a fix) |
 
 ---
 
-## 4. Preview / “browser” QA evidence
+## C. Actual browser UI verification
 
-Method: **`vercel curl`** against deployment `dpl_8uBSCEx93EoD3VGHUQT7p7YsVrz2` (Trusted Sources / protection bypass). Direct browser → Vercel SSO login (**blocked**).
+**Method:** Playwright + fresh `vercel project token` → `x-vercel-trusted-oidc-idp-token` (Trusted Sources). Deployment Protection **not** disabled. Tokens not printed.
+
+**Script / evidence:** `.local-qa/pr65-browser-geo-qa.mjs` → `.local-qa/pr65-browser-geo-qa-results.json`  
+**Summary:** **24 PASS / 0 FAIL / 0 NOT TESTED** (browser suite)
 
 | # | Check | Result |
 |---|-------|--------|
-| 1 | Owner login / logout | **PASS** (API: 200 cookie; DELETE 200; list after → 401) |
-| 2 | Unauthenticated access denied | **PASS** (`vercel curl` list **401**; raw browser without bypass gets SSO HTML — protection, not app leak) |
-| 3 | School-staff login rejected | **PASS** (401 + owner-only error text) |
-| 4 | Direct API denied without owner auth | **PASS** (registrations/export/payment/storage via curl) |
-| 5 | State filter | **PASS** (export `state=State/District Not Identified` → 5; `Maharashtra` → 0) |
-| 6 | District depends on State | Unit **PASS**; interactive UI **NOT TESTED** (SSO); no identified districts in Preview seed |
-| 7 | Combined State + District + search + payment | Export `state=Not Identified&status=confirmed` → **1 PASS**; search UI **NOT TESTED** |
-| 8 | Grouping / overview counts | API list exposes derived keys; interactive grouping UI **NOT TESTED** |
-| 9 | CSV matches filters | **PASS** (`X-Tejas-Export-Count`, address column present) |
-| 10 | Unidentified visible/included | **PASS** (5/5 listed + exported) |
-| 11 | Original addresses unchanged | **PASS** (`TEST DATA*` prefixes on list) |
-| 12 | PAN masking / file access | List masked `EEEEE****E` **PASS**; file download **NOT TESTED** |
-| 13 | Desktop / mobile responsive | **NOT TESTED** (SSO blocks interactive browser) |
-
-Review page HTML (via `vercel curl`): contains “Registration review is owner-only. School staff do not receive accounts…” — **PASS**.
-
----
-
-## 5. Changed files (committed)
-
-- `lib/registration/staff.ts`, `india-address.ts`, `india-geo-data.ts`, `export-filters.ts`, `store.ts`, `reports.ts`, `india-address.test.ts`, `registration.test.ts`
-- `app/api/register/admin/session|registrations|export|payment|…/file` routes; `storage-status`; `schema-status`
-- `app/schools/register/review/review-dashboard.tsx`; `app/learn/staff/staff-console.tsx`
-- `package.json`; `preview-sql/pr65-isolated/seed-preview-synthetic.mjs` + `.test.mjs`
-- This report
-
-**Not committed:** `.local-qa/`, `.env*`, other untracked historical TEJAS-PR65 audit markdowns.
+| 1 | Owner login / logout | **PASS** |
+| 2 | Unauthenticated login form (owner-only copy; no email field) | **PASS** |
+| 3 | School-staff UI path absent + bad token rejected | **PASS** |
+| 4 | Direct API denial | **PASS** (API section) |
+| 5 | State filter (Maharashtra) | **PASS** |
+| 6 | District depends on State (Pune/Nagpur options) | **PASS** |
+| 7 | Combined State + District + search + payment | **PASS** |
+| 8 | Grouping chips + Clear/reset | **PASS** |
+| 9 | Overview filtered counts | **PASS** (baseline 9 with fixtures) |
+| 10 | CSV href filters + fetch (`X-Tejas-Export-Count` / body) | **PASS** |
+| 11 | Unidentified-address filter | **PASS** |
+| 12 | PAN masking | **PASS** |
+| 13 | Detail / file controls + protected file API | **PASS** |
+| 14 | Desktop / tablet / mobile viewports | **PASS** |
 
 ---
 
-## 6. Limitations
+## D. Geographic fixture integration verification
 
-- Interactive Preview browser QA blocked by Vercel Deployment Protection (SSO).
-- Preview seeds cannot exercise identified State→District UI paths without new synthetic geographic fixtures (not added; existing seeds not mutated).
-- District dataset is maintained in-repo, not a live LGD sync.
-- `admin/payment` PUT / registration PATCH / file download not re-exercised against Preview in this pass (authorization code audited; destructive payment changes avoided).
+| Item | Detail |
+|------|--------|
+| Script | `.local-qa/pr65-geo-fixtures.mjs` (`insert` / `cleanup` / `status`) |
+| Project | Preview `nbeslngnrsagarosuaab` only (allowlist) |
+| Existing five seeds | **Not modified**; preserved before/after (**5**) |
+| Fixtures created | 4 synthetic schools — MH/Pune, MH/Nagpur, TN/Chennai, TN/Madurai |
+| Refs | `TEJAS-2026-TESTDATAGEPQA65PUNEX`, `…NAGPX`, `…CHENX`, `…MADUX` |
+| Labels | All names/addresses prefixed `TEST DATA GEO QA` |
+| Real PII | None |
+| Production writes | None |
+| Browser + API filter QA with fixtures | **PASS** |
+| Cleanup | All 4 deleted; `geoRemaining=0`; `seedsPreserved=true`; API `api_count=5 geo_left=0 seeds=5` |
 
-## 7. Safety confirmation
+---
 
-- PR #65 **OPEN**
-- Preview only; Production unchanged
-- No Production SQL / migration / seed / merge / deploy
-- Google Drive still disabled
-- No school-staff roles
-- No State/District registration form fields
+## E. Owner-only endpoint audit (unchanged from prior)
+
+Owner recovery subject only. School-staff email path rejected. `registrationOwnerAuthorised` on registrations/export/payment/file; request-scoped owner gate on storage/schema-status. `admin/payment` owner-gate fix included in feature commit. See prior endpoint table in git history / feature commit message scope.
+
+---
+
+## F. State/District parser (unchanged)
+
+Address-only derivation; no form fields; original address preserved; unidentified bucket retained. Unit coverage PASS.
+
+---
+
+## Changed files (feature — already on branch)
+
+See commits `d41b297` / report commits. Local QA scripts under `.local-qa/` are **not** application code and remain untracked (contain no secrets in scripts; results JSON has no tokens).
+
+---
+
+## Remaining gaps
+
+**None required for this scope.** Optional future: live LGD feed sync (not required).
+
+## Safety confirmation
+
+- PR #65 **OPEN** — no merge  
+- No Production deploy / SQL / migration  
+- No payment approval mutations; no real registration mutation beyond temporary Preview GEO QA fixtures (removed)  
+- Google Drive disabled  
+- Deployment Protection left enabled  

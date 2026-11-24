@@ -3,7 +3,8 @@
 **Date:** 2026-11-24  
 **Branch:** `feat/registration-review-dashboard-redesign`  
 **PR:** https://github.com/dhevb/tejas/pull/65  
-**Latest HEAD:** `e2dcac8bc51c233e1f42538cbb73008c44e76bd4` (PAN hardening `118dd9b`)  
+**Latest HEAD:** `3d04afdb0f3b1487e423c09baf7a1ecb728848d6`  
+**PAN hardening commit:** `118dd9b`  
 **Prior reported HEAD:** `9f3ad4d`  
 **Production:** not deployed · not merged  
 

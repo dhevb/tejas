@@ -166,7 +166,7 @@ Owner awareness (not a review failure): after merge/deploy, a QA retake start on
 |------|-----|
 | Prior concurrency harden (on PR #62) | `7edf6ad123d0952bc424b802d6cc92b18f2ea9b5` |
 | Head before this review | `665182cb24010cdc782902fb9febad0e509cb70b` |
-| This review fix + report (push to PR #62) | *see latest commit on `feat/qa-account-only-retakes` after push* |
+| This review fix + report (push to PR #62) | 3bd32311857bb151d1957251b5b2831c873d6b44 |
 
 ---
 

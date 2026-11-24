@@ -146,4 +146,5 @@ Do **not** run until: merge → deploy → optional `TEJAS_CONTENT_QA_STUDENT_ID
 - Branch: `feat/qa-account-only-retakes`  
 - PR: https://github.com/dhevb/tejas/pull/62  
 - Feature (retake): `d33f0e3`  
-- Concurrency/integrity hardening: *(this push’s HEAD after commit)*  
+- Concurrency/integrity hardening: `7edf6ad123d0952bc424b802d6cc92b18f2ea9b5`  
+

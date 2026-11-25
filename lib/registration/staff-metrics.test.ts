@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  addPaymentBucket,
+  classKeyForStudent,
+  classMetricsForRegistration,
   classWiseCounts,
   countStreamRegistrations,
   countUniqueStudents,
+  emptyPaymentBuckets,
+  finalizeClassBreakdown,
+  mergeClassMetricIntoBreakdown,
   reconcileFeeWithSaved,
   studentIdentityKey,
   streamFeeLines,
+  summarizeFilterableRows,
 } from "@/lib/registration/staff-metrics";
 import type { StudentRecord } from "@/lib/registration/sheet";
 
@@ -77,4 +84,92 @@ test("reconcileFeeWithSaved matches approved share breakdown", () => {
     grossTotal: 450,
   });
   assert.equal(result.ok, true);
+});
+
+test("classKeyForStudent uses stored classNumber/label only", () => {
+  assert.equal(classKeyForStudent({ classNumber: 7, classLabel: "VII" }).key, "class-7");
+  assert.equal(classKeyForStudent({ classNumber: null as unknown as number, classLabel: "" }).label, "Class Not Identified");
+});
+
+test("classMetrics allocates amountDue by stream weight without double-counting unique students", () => {
+  const students = [
+    student({ fullName: "Ada", streams: ["english", "mathematics"], classLabel: "V", classNumber: 5 }),
+    student({ fullName: "Ben", streams: ["english"], classLabel: "VI", classNumber: 6, rollNumber: "2", parentMobile: "9999999999" }),
+  ];
+  // Ada has 2 streams in class 5, Ben 1 in class 6 → 240 + 120 = 360
+  const metrics = classMetricsForRegistration(students, 360);
+  assert.equal(metrics.length, 2);
+  const five = metrics.find((row) => row.classKey === "class-5");
+  const six = metrics.find((row) => row.classKey === "class-6");
+  assert.equal(five?.uniqueStudents, 1);
+  assert.equal(five?.studentStreams, 2);
+  assert.equal(five?.allocatedAmountDue, 240);
+  assert.equal(six?.allocatedAmountDue, 120);
+  assert.equal(metrics.reduce((sum, row) => sum + row.allocatedAmountDue, 0), 360);
+});
+
+test("payment buckets keep confirmed, reported, pending and rejected separate", () => {
+  const buckets = emptyPaymentBuckets();
+  addPaymentBucket(buckets, "confirmed", 1200);
+  addPaymentBucket(buckets, "reported", 600);
+  addPaymentBucket(buckets, "awaiting_payment", 240);
+  addPaymentBucket(buckets, "rejected", 960);
+  assert.equal(buckets.confirmedAmount, 1200);
+  assert.equal(buckets.reportedAmount, 600);
+  assert.equal(buckets.awaitingAmount, 240);
+  assert.equal(buckets.pendingPayable, 840);
+  assert.equal(buckets.rejectedAmount, 960);
+  assert.equal(buckets.confirmedAmount + buckets.pendingPayable + buckets.rejectedAmount, 3000);
+});
+
+test("summarizeFilterableRows reconciles class totals with overall buckets", () => {
+  const studentsA = [
+    student({ fullName: "A", streams: ["english"], classNumber: 5, classLabel: "V" }),
+  ];
+  const studentsB = [
+    student({ fullName: "B", streams: ["mathematics"], classNumber: 5, classLabel: "V", parentMobile: "9000000001" }),
+  ];
+  const metricsA = classMetricsForRegistration(studentsA, 120);
+  const metricsB = classMetricsForRegistration(studentsB, 120);
+  const summary = summarizeFilterableRows([
+    {
+      schoolName: "School A",
+      channel: "school-registration",
+      paymentStatus: "confirmed",
+      amountDue: 120,
+      grossTotal: 150,
+      schoolShare: 30,
+      uniqueStudentCount: 1,
+      studentCount: 1,
+      studentStreamRegistrations: 1,
+      englishCount: 1,
+      classMetrics: metricsA,
+    },
+    {
+      schoolName: "School B",
+      channel: "school-registration",
+      paymentStatus: "reported",
+      amountDue: 120,
+      grossTotal: 150,
+      schoolShare: 30,
+      uniqueStudentCount: 1,
+      studentCount: 1,
+      studentStreamRegistrations: 1,
+      mathematicsCount: 1,
+      classMetrics: metricsB,
+    },
+  ]);
+  assert.equal(summary.confirmedCount, 1);
+  assert.equal(summary.amountReceived, 120);
+  assert.equal(summary.reportedCount, 1);
+  assert.equal(summary.reportedAmount, 120);
+  assert.equal(summary.pendingPayable, 120);
+  const class5 = summary.classBreakdown.find((row) => row.classKey === "class-5");
+  assert.ok(class5);
+  assert.equal(class5!.uniqueStudents, 2);
+  assert.equal(class5!.studentStreams, 2);
+  assert.equal(class5!.confirmedAmount + class5!.pendingAmount + class5!.rejectedAmount, 240);
+  const map = new Map();
+  for (const metric of [...metricsA, ...metricsB]) mergeClassMetricIntoBreakdown(map, metric, "confirmed");
+  assert.equal(finalizeClassBreakdown(map).length >= 1, true);
 });

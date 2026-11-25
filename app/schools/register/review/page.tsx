@@ -12,7 +12,7 @@ export const metadata = createMetadata({
 export default function ReviewPage() {
   return (
     <>
-      <PageHero eyebrow="Owner" title="Registration review" subtitle="Payment stays pending until the owner verifies it. Uploaded proof is not confirmation." />
+      <PageHero eyebrow="Owner" title="Registration review" subtitle="Verified amounts are confirmed payments only. Proof submitted is not bank confirmation. Pending and rejected are shown separately." />
       <section className="py-12">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <ReviewDashboard />

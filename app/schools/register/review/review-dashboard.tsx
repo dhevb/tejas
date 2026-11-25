@@ -1,12 +1,19 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
 import { presentFee } from "@/lib/registration/fee";
 import { panHolderLabel } from "@/lib/registration/school";
+import {
+  CLASS_NOT_IDENTIFIED,
+  paymentStatusLabel,
+  summarizeFilterableRows,
+  type ClassBreakdownRow,
+  type ClassMetric,
+} from "@/lib/registration/staff-metrics";
 
 type Overview = {
   schools: number;
+  uniqueSchools?: number;
   schoolRegistrations?: number;
   individualRegistrations?: number;
   students: number;
@@ -20,14 +27,17 @@ type Overview = {
   schoolShare: number;
   amountReceived: number;
   pendingPayable: number;
+  awaitingPaymentCount?: number;
+  awaitingPaymentAmount?: number;
+  reportedCount?: number;
+  reportedAmount?: number;
+  confirmedCount?: number;
+  rejectedCount?: number;
+  rejectedPayable?: number;
+  refundPendingCount?: number;
+  refundPendingAmount?: number;
   rejectedOrRefund?: number;
-  bookGross: number;
-  bookSchoolShare: number;
-  bookPayable: number;
-  classCounts: Record<string, number>;
-  streamCounts: Record<string, number>;
-  printedBooks: number;
-  ebookAccess: number;
+  classBreakdown?: ClassBreakdownRow[];
   payments: Record<string, number>;
 };
 
@@ -54,30 +64,25 @@ type Row = {
   coordinatorName?: string;
   transactionReference?: string | null;
   driveSyncLabel?: string;
-  driveSyncStatus?: string;
   schoolAddress?: string;
   derivedState?: string | null;
   derivedDistrict?: string | null;
   stateKey?: string;
   districtKey?: string;
   locationLabel?: string;
-  locationIdentified?: boolean;
+  classMetrics?: ClassMetric[];
+  lastUpdatedAt?: string;
 };
 
 type Detail = {
   reference: string;
   createdAt?: string;
   channel?: string;
-  uploadExt?: string | null;
   receiptExt: string | null;
   paymentLabel?: string;
   school: {
     schoolName: string;
     schoolAddress: string;
-    state?: string;
-    district?: string;
-    city?: string;
-    pin?: string;
     schoolEmail?: string;
     schoolMobile?: string;
     schoolCategory?: string;
@@ -85,7 +90,6 @@ type Detail = {
     previousReference?: string | null;
     pan: string;
     maskedPan?: string;
-    fullPanAvailable?: boolean;
     panHolder?: string | null;
     panDuplicate: boolean;
     principalName: string;
@@ -95,9 +99,6 @@ type Detail = {
     coordinatorMobile: string;
     coordinatorEmail: string;
     coordinatorDesignation?: string;
-    printedBooks?: string;
-    bookQuantity?: number;
-    ebookAccess?: string;
     derivedState?: string | null;
     derivedDistrict?: string | null;
     locationLabel?: string;
@@ -146,19 +147,6 @@ type Detail = {
   };
 };
 
-const PAYMENT_LABEL: Record<string, string> = {
-  pending_instructions: "Payment Pending",
-  awaiting_payment: "Payment Pending",
-  reported: "Payment Submitted / Verification Pending",
-  confirmed: "Verified",
-  rejected: "Rejected",
-  refund_pending: "Refund/Adjustment Pending",
-};
-
-function paymentLabel(status: string): string {
-  return PAYMENT_LABEL[status] ?? status;
-}
-
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
 function badgeClass(status: string): string {
@@ -198,7 +186,6 @@ function classTally(students: Detail["students"]) {
 }
 
 const PAGE_SIZE = 20;
-
 const UNIDENTIFIED = "State/District Not Identified";
 const UNIDENTIFIED_DISTRICT = "District Not Identified";
 
@@ -213,12 +200,14 @@ export function ReviewDashboard() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showParentContacts, setShowParentContacts] = useState(false);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [streamFilter, setStreamFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
   const [stateFilter, setStateFilter] = useState("all");
   const [districtFilter, setDistrictFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
@@ -287,6 +276,7 @@ export function ReviewDashboard() {
       const body = (await response.json()) as { registration: Detail };
       setDetail(body.registration);
       setNote("");
+      setShowParentContacts(false);
     } finally {
       setLoading(false);
     }
@@ -347,6 +337,16 @@ export function ReviewDashboard() {
     });
   }, [rows, stateFilter]);
 
+  const classOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of rows) {
+      for (const metric of row.classMetrics ?? []) {
+        map.set(metric.classKey, metric.classLabel);
+      }
+    }
+    return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [rows]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const from = dateFrom ? new Date(dateFrom).getTime() : null;
@@ -366,7 +366,11 @@ export function ReviewDashboard() {
           statusFilter === "all" ||
           row.paymentStatus === statusFilter ||
           (statusFilter === "pending_group" &&
-            (row.paymentStatus === "pending_instructions" || row.paymentStatus === "awaiting_payment"));
+            (row.paymentStatus === "pending_instructions" || row.paymentStatus === "awaiting_payment")) ||
+          (statusFilter === "unfinished" &&
+            row.paymentStatus !== "confirmed" &&
+            row.paymentStatus !== "rejected" &&
+            row.paymentStatus !== "refund_pending");
         const matchesStream =
           streamFilter === "all" ||
           (streamFilter === "english" && (row.englishCount ?? 0) > 0) ||
@@ -375,6 +379,8 @@ export function ReviewDashboard() {
         const matchesChannel = channelFilter === "all" || (row.channel ?? "school-registration") === channelFilter;
         const matchesState = stateFilter === "all" || (row.stateKey ?? UNIDENTIFIED) === stateFilter;
         const matchesDistrict = districtFilter === "all" || (row.districtKey ?? UNIDENTIFIED) === districtFilter;
+        const matchesClass =
+          classFilter === "all" || (row.classMetrics ?? []).some((metric) => metric.classKey === classFilter);
         const created = new Date(row.createdAt).getTime();
         const matchesFrom = from == null || (!Number.isNaN(created) && created >= from);
         const matchesTo = to == null || (!Number.isNaN(created) && created <= to);
@@ -385,6 +391,7 @@ export function ReviewDashboard() {
           matchesChannel &&
           matchesState &&
           matchesDistrict &&
+          matchesClass &&
           matchesFrom &&
           matchesTo
         );
@@ -395,60 +402,34 @@ export function ReviewDashboard() {
         if (sortKey === "amountDue") return (a.amountDue - b.amountDue) * dir;
         return (a.createdAt < b.createdAt ? -1 : 1) * dir;
       });
-  }, [rows, query, statusFilter, streamFilter, channelFilter, stateFilter, districtFilter, dateFrom, dateTo, sortKey, sortDir]);
+  }, [rows, query, statusFilter, streamFilter, channelFilter, stateFilter, districtFilter, classFilter, dateFrom, dateTo, sortKey, sortDir]);
 
-  const filteredOverview = useMemo(() => {
-    const payments: Record<string, number> = {};
-    let amountDue = 0;
-    let grossCollected = 0;
-    let schoolShare = 0;
-    let amountReceived = 0;
-    let pendingPayable = 0;
-    let rejectedOrRefund = 0;
-    let uniqueStudents = 0;
-    let studentStreams = 0;
-    let englishEntries = 0;
-    let mathematicsEntries = 0;
-    let technologyEntries = 0;
-    let schoolRegistrations = 0;
-    let individualRegistrations = 0;
-    for (const row of filtered) {
-      payments[row.paymentStatus] = (payments[row.paymentStatus] ?? 0) + 1;
-      amountDue += row.amountDue;
-      grossCollected += row.grossTotal;
-      schoolShare += row.schoolShare;
-      uniqueStudents += row.uniqueStudentCount ?? row.studentCount;
-      studentStreams += row.studentStreamRegistrations;
-      englishEntries += row.englishCount ?? 0;
-      mathematicsEntries += row.mathematicsCount ?? 0;
-      technologyEntries += row.technologyCount ?? 0;
-      if (row.channel === "individual-registration") individualRegistrations += 1;
-      else schoolRegistrations += 1;
-      if (row.paymentStatus === "confirmed") amountReceived += row.amountDue;
-      if (row.paymentStatus === "pending_instructions" || row.paymentStatus === "awaiting_payment" || row.paymentStatus === "reported") {
-        pendingPayable += row.amountDue;
-      }
-      if (row.paymentStatus === "rejected" || row.paymentStatus === "refund_pending") rejectedOrRefund += 1;
-    }
-    return {
-      schools: filtered.length,
-      schoolRegistrations,
-      individualRegistrations,
-      students: uniqueStudents,
-      uniqueStudents,
-      studentStreams,
-      englishEntries,
-      mathematicsEntries,
-      technologyEntries,
-      amountDue,
-      grossCollected,
-      schoolShare,
-      amountReceived,
-      pendingPayable,
-      rejectedOrRefund,
-      payments,
-    };
-  }, [filtered]);
+  const displayOverview = useMemo(
+    () =>
+      summarizeFilterableRows(
+        filtered.map((row) => ({
+          schoolName: row.schoolName,
+          channel: row.channel,
+          paymentStatus: row.paymentStatus,
+          amountDue: row.amountDue,
+          grossTotal: row.grossTotal,
+          schoolShare: row.schoolShare,
+          uniqueStudentCount: row.uniqueStudentCount ?? row.studentCount,
+          studentCount: row.studentCount,
+          studentStreamRegistrations: row.studentStreamRegistrations,
+          englishCount: row.englishCount,
+          mathematicsCount: row.mathematicsCount,
+          technologyCount: row.technologyCount,
+          classMetrics: row.classMetrics ?? [],
+        })),
+      ),
+    [filtered],
+  );
+
+  const visibleClassBreakdown = useMemo(() => {
+    if (classFilter === "all") return displayOverview.classBreakdown;
+    return displayOverview.classBreakdown.filter((row) => row.classKey === classFilter);
+  }, [displayOverview.classBreakdown, classFilter]);
 
   const stateGroups = useMemo(() => {
     const map = new Map<string, number>();
@@ -477,16 +458,6 @@ export function ReviewDashboard() {
     });
   }, [filtered, stateFilter]);
 
-  const exportQuery = useMemo(() => {
-    const params = new URLSearchParams();
-    if (stateFilter !== "all") params.set("state", stateFilter);
-    if (districtFilter !== "all") params.set("district", districtFilter);
-    if (statusFilter !== "all") params.set("status", statusFilter);
-    if (query.trim()) params.set("q", query.trim());
-    const suffix = params.toString();
-    return suffix ? `&${suffix}` : "";
-  }, [stateFilter, districtFilter, statusFilter, query]);
-
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -507,8 +478,6 @@ export function ReviewDashboard() {
     );
   }
 
-  const displayOverview = filteredOverview;
-
   const detailStreams = detail ? streamTally(detail.students) : null;
   const detailClasses = detail ? classTally(detail.students) : null;
   const shownFee = detail ? presentFee(detail.fee) : null;
@@ -516,7 +485,9 @@ export function ReviewDashboard() {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-tejas-muted">PAN numbers are masked in the list. Amounts come from the server-saved fee breakdown. Google Drive backup is not configured yet.</p>
+        <p className="text-sm text-tejas-muted">
+          Amounts use server-saved fee fields. Screenshot OCR match is not bank verification. Eligible received revenue is confirmed payments only.
+        </p>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => load()} className="rounded-lg border border-tejas-border bg-white px-3 py-2 text-sm font-semibold text-tejas-blue disabled:opacity-60" disabled={loading}>
             {loading ? "Refreshing…" : "Refresh"}
@@ -530,24 +501,59 @@ export function ReviewDashboard() {
       {message ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{message}</p> : null}
       {success ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{success}</p> : null}
 
-      <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          title="Total registrations"
+          tone="blue"
+          onClick={() => { setStatusFilter("all"); setPage(1); }}
+          lines={[
+            `Records ${displayOverview.schools}`,
+            `Unique schools ${displayOverview.uniqueSchools}`,
+            `Unique students ${displayOverview.uniqueStudents}`,
+            `Student-streams ${displayOverview.studentStreams}`,
+          ]}
+        />
+        <SummaryCard
+          title="Verified payments"
+          tone="emerald"
+          onClick={() => { setStatusFilter("confirmed"); setPage(1); }}
+          lines={[
+            `Count ${displayOverview.confirmedCount}`,
+            `Received ${inr.format(displayOverview.amountReceived)}`,
+            "Confirmed TEJAS share only",
+            "Excludes pending / rejected",
+          ]}
+        />
+        <SummaryCard
+          title="Rejected / adjustment"
+          tone="red"
+          onClick={() => { setStatusFilter("rejected"); setPage(1); }}
+          lines={[
+            `Rejected ${displayOverview.rejectedCount} · ${inr.format(displayOverview.rejectedPayable)}`,
+            `Refund/adj. ${displayOverview.refundPendingCount} · ${inr.format(displayOverview.refundPendingAmount)}`,
+            "Not counted as received",
+            "Historical amounts retained",
+          ]}
+        />
+        <SummaryCard
+          title="Pending payments"
+          tone="amber"
+          onClick={() => { setStatusFilter("unfinished"); setPage(1); }}
+          lines={[
+            `Awaiting ${displayOverview.awaitingPaymentCount} · ${inr.format(displayOverview.awaitingPaymentAmount)}`,
+            `Proof submitted ${displayOverview.reportedCount} · ${inr.format(displayOverview.reportedAmount)}`,
+            `Pending total ${inr.format(displayOverview.pendingPayable)}`,
+            "Not added to received",
+          ]}
+        />
+      </div>
+
+      <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
         {[
-          ["Filtered registrations", displayOverview.schools],
-          ["School channel", displayOverview.schoolRegistrations],
-          ["Individual channel", displayOverview.individualRegistrations],
-          ["Unique student entries", displayOverview.uniqueStudents],
-          ["Student-stream registrations", displayOverview.studentStreams],
-          ["English entries", displayOverview.englishEntries],
-          ["Mathematics entries", displayOverview.mathematicsEntries],
-          ["Future Tech entries", displayOverview.technologyEntries],
-          ["Gross registration amount", inr.format(displayOverview.grossCollected)],
-          ["School share", inr.format(displayOverview.schoolShare)],
-          ["Payable to TEJAS", inr.format(displayOverview.amountDue)],
-          ["Payment received / verified", inr.format(displayOverview.amountReceived)],
-          ["Payment pending payable", inr.format(displayOverview.pendingPayable)],
-          ["Rejected / refund-pending", displayOverview.rejectedOrRefund],
-          ["Verified count", displayOverview.payments.confirmed ?? 0],
-          ["Submitted / verification pending", displayOverview.payments.reported ?? 0],
+          ["Gross calculated (all listed)", inr.format(displayOverview.grossCollected)],
+          ["School share (all listed)", inr.format(displayOverview.schoolShare)],
+          ["TEJAS payable (all listed)", inr.format(displayOverview.amountDue)],
+          ["Eligible received (= verified)", inr.format(displayOverview.amountReceived)],
         ].map(([label, value]) => (
           <div key={String(label)} className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm">
             <dt className="text-tejas-muted">{label}</dt>
@@ -555,6 +561,65 @@ export function ReviewDashboard() {
           </div>
         ))}
       </dl>
+
+      <section className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm" aria-label="Class-wise registration">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-tejas-ink">Class-wise registration</h2>
+            <p className="text-sm text-tejas-muted">Unique students and student-streams are separate. Amounts allocate each registration’s saved TEJAS payable by stream weight in the class.</p>
+          </div>
+          <label className="text-sm">
+            <span className="font-medium">Class filter</span>
+            <select
+              value={classFilter}
+              onChange={(event) => { setClassFilter(event.target.value); setPage(1); }}
+              className="mt-1 block rounded-lg border border-tejas-border bg-white px-3 py-2"
+            >
+              <option value="all">All classes</option>
+              {[3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={`class-${n}`}>Class {n}</option>
+              ))}
+              {classOptions
+                .filter(([key]) => !/^class-([3-9]|10)$/.test(key))
+                .map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+            </select>
+          </label>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-stone-50">
+              <tr className="border-b border-stone-200">
+                <th className="px-3 py-2">Class</th>
+                <th className="px-3 py-2">Registrations</th>
+                <th className="px-3 py-2">Unique students</th>
+                <th className="px-3 py-2">Student-streams</th>
+                <th className="px-3 py-2">Confirmed</th>
+                <th className="px-3 py-2">Pending</th>
+                <th className="px-3 py-2">Rejected</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleClassBreakdown.length === 0 ? (
+                <tr><td className="px-3 py-4 text-tejas-muted" colSpan={7}>No class rows under the current filters.</td></tr>
+              ) : (
+                visibleClassBreakdown.map((row) => (
+                  <tr key={row.classKey} className="border-b border-stone-100">
+                    <td className="px-3 py-2 font-medium">{row.classLabel || CLASS_NOT_IDENTIFIED}</td>
+                    <td className="px-3 py-2">{row.registrationRecords}</td>
+                    <td className="px-3 py-2">{row.uniqueStudents}</td>
+                    <td className="px-3 py-2">{row.studentStreams}</td>
+                    <td className="px-3 py-2">{row.confirmedCount}<br /><span className="text-tejas-muted">{inr.format(row.confirmedAmount)}</span></td>
+                    <td className="px-3 py-2">{row.pendingCount}<br /><span className="text-tejas-muted">{inr.format(row.pendingAmount)}</span></td>
+                    <td className="px-3 py-2">{row.rejectedCount}<br /><span className="text-tejas-muted">{inr.format(row.rejectedAmount)}</span></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {stateGroups.length > 0 ? (
         <section className="rounded-2xl border border-tejas-border bg-white p-4 text-sm" aria-label="State grouping">
@@ -565,11 +630,7 @@ export function ReviewDashboard() {
                 <button
                   type="button"
                   className={`rounded-lg border px-2 py-1 ${stateFilter === state ? "border-tejas-blue bg-tejas-blue/5 font-semibold text-tejas-blue" : "border-tejas-border"}`}
-                  onClick={() => {
-                    setStateFilter(state);
-                    setDistrictFilter("all");
-                    setPage(1);
-                  }}
+                  onClick={() => { setStateFilter(state); setDistrictFilter("all"); setPage(1); }}
                 >
                   {state} ({count})
                 </button>
@@ -604,57 +665,34 @@ export function ReviewDashboard() {
         </section>
       ) : null}
 
-      <div className="flex flex-wrap gap-3 text-sm">
-        <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=schools${exportQuery}`} prefetch={false}>Schools CSV (masked PAN, filtered)</Link>
-        <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=students${exportQuery}`} prefetch={false}>Students CSV (filtered)</Link>
-        <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=payments${exportQuery}`} prefetch={false}>Payments CSV (filtered)</Link>
-        <span className="text-tejas-muted">Export row counts follow the selected State, District, search and payment filters ({filtered.length} registrations).</span>
-      </div>
-
-      <div className="grid gap-3 rounded-2xl border border-tejas-border bg-white p-4 text-sm md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 rounded-2xl border border-tejas-border bg-white p-4 text-sm md:grid-cols-2 xl:grid-cols-4">
         <label>
-          <span className="font-medium">Search</span>
-          <input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="School, reference, address, UTR" className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" />
+          <span className="font-medium">Search school / reference</span>
+          <input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2" placeholder="School, reference, UTR…" />
         </label>
         <label>
           <span className="font-medium">State</span>
-          <select
-            value={stateFilter}
-            onChange={(event) => {
-              setStateFilter(event.target.value);
-              setDistrictFilter("all");
-              setPage(1);
-            }}
-            className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2"
-          >
+          <select value={stateFilter} onChange={(event) => { setStateFilter(event.target.value); setDistrictFilter("all"); setPage(1); }} className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2">
             <option value="all">All states</option>
-            {stateOptions.map((state) => (
-              <option key={state} value={state}>{state}</option>
-            ))}
+            {stateOptions.map((state) => <option key={state} value={state}>{state}</option>)}
           </select>
         </label>
         <label>
           <span className="font-medium">District</span>
-          <select
-            value={districtFilter}
-            onChange={(event) => { setDistrictFilter(event.target.value); setPage(1); }}
-            disabled={stateFilter === "all"}
-            className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2 disabled:opacity-60"
-          >
+          <select value={districtFilter} onChange={(event) => { setDistrictFilter(event.target.value); setPage(1); }} disabled={stateFilter === "all"} className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2 disabled:opacity-60">
             <option value="all">{stateFilter === "all" ? "Select a state first" : "All districts in state"}</option>
-            {districtOptions.map((district) => (
-              <option key={district} value={district}>{district}</option>
-            ))}
+            {districtOptions.map((district) => <option key={district} value={district}>{district}</option>)}
           </select>
         </label>
         <label>
           <span className="font-medium">Payment status</span>
           <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }} className="mt-1 block w-full rounded-lg border border-tejas-border bg-white px-3 py-2">
             <option value="all">All</option>
-            <option value="pending_group">Payment Pending</option>
-            <option value="reported">Submitted / Verification Pending</option>
             <option value="confirmed">Verified</option>
             <option value="rejected">Rejected</option>
+            <option value="pending_group">Payment Pending</option>
+            <option value="reported">Proof Submitted</option>
+            <option value="unfinished">All unfinished</option>
             <option value="refund_pending">Refund or adjustment pending</option>
           </select>
         </label>
@@ -708,49 +746,49 @@ export function ReviewDashboard() {
         <p className="rounded-2xl border border-dashed border-tejas-border bg-white px-4 py-10 text-center text-sm text-tejas-muted">No registrations match these filters.</p>
       ) : (
         <>
-          <div className="hidden md:block overflow-x-auto rounded-2xl border border-tejas-border bg-white">
+          <div className="hidden overflow-x-auto rounded-2xl border border-tejas-border bg-white md:block">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-stone-50">
                 <tr className="border-b border-stone-200">
-                  <th className="px-3 py-3">Date</th>
+                  <th className="px-3 py-3">Updated</th>
                   <th className="px-3 py-3">School / reference</th>
                   <th className="px-3 py-3">State / District</th>
-                  <th className="px-3 py-3">Principal / coordinator</th>
-                  <th className="px-3 py-3">Students</th>
-                  <th className="px-3 py-3">Streams</th>
-                  <th className="px-3 py-3">Fees</th>
+                  <th className="px-3 py-3">Students / streams</th>
+                  <th className="px-3 py-3">Classes</th>
+                  <th className="px-3 py-3">Fees (TEJAS)</th>
                   <th className="px-3 py-3">Payment</th>
-                  <th className="px-3 py-3">Drive</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map((row) => (
                   <tr key={row.reference} className="border-b border-stone-100 align-top">
-                    <td className="px-3 py-3 whitespace-nowrap">{formatDate(row.createdAt)}</td>
+                    <td className="whitespace-nowrap px-3 py-3">{formatDate(row.lastUpdatedAt ?? row.createdAt)}</td>
                     <td className="px-3 py-3">
                       <button type="button" className="text-left font-semibold text-tejas-blue underline" onClick={() => openRow(row.reference)}>{row.schoolName}</button>
                       <div className="text-tejas-muted">{row.reference}</div>
-                      <div className="text-xs text-tejas-muted">{row.channel === "individual-registration" ? "Individual" : "School"} · {row.maskedPan}{row.panDuplicate ? " · PAN review" : ""}</div>
+                      <div className="text-xs text-tejas-muted">{row.channel === "individual-registration" ? "Individual" : "School"}</div>
                     </td>
                     <td className="px-3 py-3">
                       <div>{row.derivedState ?? UNIDENTIFIED}</div>
                       <div className="text-tejas-muted">{row.derivedDistrict ?? (row.derivedState ? UNIDENTIFIED_DISTRICT : "—")}</div>
                     </td>
                     <td className="px-3 py-3">
-                      <div>{row.principalName ?? "—"}</div>
-                      <div className="text-tejas-muted">{row.coordinatorName ?? "—"}</div>
+                      {row.uniqueStudentCount ?? row.studentCount} unique<br />
+                      <span className="text-tejas-muted">{row.studentStreamRegistrations} streams · E {row.englishCount ?? 0} · M {row.mathematicsCount ?? 0} · FT {row.technologyCount ?? 0}</span>
                     </td>
-                    <td className="px-3 py-3">{row.uniqueStudentCount ?? row.studentCount} unique<br /><span className="text-tejas-muted">{row.studentStreamRegistrations} streams</span></td>
-                    <td className="px-3 py-3">E {row.englishCount ?? 0} · M {row.mathematicsCount ?? 0} · FT {row.technologyCount ?? 0}</td>
+                    <td className="px-3 py-3 text-tejas-muted">
+                      {(row.classMetrics ?? []).map((metric) => `${metric.classLabel}: ${metric.uniqueStudents}`).join(" · ") || "—"}
+                    </td>
                     <td className="px-3 py-3">
                       Gross {inr.format(row.grossTotal)}<br />
                       Share {inr.format(row.schoolShare)}<br />
                       TEJAS {inr.format(row.amountDue)}
                     </td>
                     <td className="px-3 py-3">
-                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClass(row.paymentStatus)}`}>{row.paymentLabel}</span>
+                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClass(row.paymentStatus)}`}>
+                        {row.paymentLabel || paymentStatusLabel(row.paymentStatus)}
+                      </span>
                     </td>
-                    <td className="px-3 py-3 text-tejas-muted">{row.driveSyncLabel ?? "Drive not configured"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -761,11 +799,10 @@ export function ReviewDashboard() {
             {pageRows.map((row) => (
               <li key={row.reference} className="rounded-2xl border border-tejas-border bg-white p-4 text-sm shadow-sm">
                 <button type="button" className="text-left font-semibold text-tejas-blue underline" onClick={() => openRow(row.reference)}>{row.schoolName}</button>
-                <p className="mt-1 text-tejas-muted">{row.reference} · {formatDate(row.createdAt)}</p>
+                <p className="mt-1 text-tejas-muted">{row.reference} · {formatDate(row.lastUpdatedAt ?? row.createdAt)}</p>
                 <p className="mt-1 text-tejas-muted">{row.locationLabel ?? UNIDENTIFIED}</p>
                 <p className="mt-2">Students {row.uniqueStudentCount ?? row.studentCount} · Streams {row.studentStreamRegistrations}</p>
-                <p>E {row.englishCount ?? 0} · M {row.mathematicsCount ?? 0} · FT {row.technologyCount ?? 0}</p>
-                <p className="mt-1">TEJAS {inr.format(row.amountDue)} · Share {inr.format(row.schoolShare)}</p>
+                <p>TEJAS {inr.format(row.amountDue)}</p>
                 <p className="mt-2"><span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClass(row.paymentStatus)}`}>{row.paymentLabel}</span></p>
               </li>
             ))}
@@ -791,46 +828,34 @@ export function ReviewDashboard() {
             <button type="button" className="rounded-lg border border-tejas-border px-3 py-2 font-semibold" onClick={() => setDetail(null)}>Close detail</button>
           </div>
 
-          <DetailBlock title="1. Registration summary">
-            <p>Payment: <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClass(detail.payment.status)}`}>{detail.paymentLabel ?? paymentLabel(detail.payment.status)}</span></p>
+          <DetailBlock title="Registration summary">
+            <p>Payment: <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClass(detail.payment.status)}`}>{detail.paymentLabel ?? paymentStatusLabel(detail.payment.status)}</span></p>
             <p>Student rows {detail.students.length}. Stream entries E {detailStreams?.english ?? 0} · M {detailStreams?.mathematics ?? 0} · FT {detailStreams?.technology ?? 0}.</p>
             <p>Saved fee: gross {inr.format(shownFee?.totalStudentFees ?? 0)}, school share {inr.format(shownFee?.registrationSchoolShare ?? 0)}, TEJAS payable {inr.format(shownFee?.registrationPayable ?? 0)}.</p>
+            <p className="text-tejas-muted">Learn-portal access is separate from this payment status. Rejection here does not delete students or disable /learn accounts.</p>
           </DetailBlock>
 
-          <DetailBlock title="2. School details">
+          <DetailBlock title="School details">
             <p>{detail.school.schoolAddress}</p>
             <p className="mt-2">Derived location: {detail.school.locationLabel ?? UNIDENTIFIED}</p>
             {detail.school.locationNotes && detail.school.locationNotes.length > 0 ? (
               <p className="mt-1 text-tejas-muted">{detail.school.locationNotes.join(" ")}</p>
             ) : null}
-            <p>Category: {detail.school.schoolCategory || "—"}</p>
-            <p>School email: {detail.school.schoolEmail || "—"} · Mobile: {detail.school.schoolMobile || "—"}</p>
-            <p>Previous participation: {detail.school.previousParticipation ? "yes" : "no"}{detail.school.previousReference ? ` · ${detail.school.previousReference}` : ""}</p>
           </DetailBlock>
 
-          <DetailBlock title="3. PAN details">
-            <p>
-              {panHolderLabel(detail.school.panHolder)}:{" "}
-              <span className="font-mono">{detail.school.maskedPan || detail.school.pan || "—"}</span>
-              {detail.school.panDuplicate ? " (duplicate, needs review)" : ""}
-            </p>
-            <p className="text-tejas-muted">
-              Full PAN reveal and unmasked export are disabled until a trusted role model beyond the owner recovery token is approved.
-              The API returns only the masked value to every owner session.
-            </p>
+          <DetailBlock title="PAN / principal / coordinator">
+            <p>{panHolderLabel(detail.school.panHolder)}: <span className="font-mono">{detail.school.maskedPan || "—"}</span>{detail.school.panDuplicate ? " (duplicate)" : ""}</p>
+            <p>Principal: {detail.school.principalName}</p>
+            <p>Coordinator: {detail.school.coordinatorName}{detail.school.coordinatorDesignation ? ` · ${detail.school.coordinatorDesignation}` : ""}</p>
           </DetailBlock>
 
-          <DetailBlock title="4. Principal details">
-            <p>{detail.school.principalName}</p>
-            <p>{detail.school.principalMobile} · {detail.school.principalEmail}</p>
-          </DetailBlock>
-
-          <DetailBlock title="5. Coordinator details">
-            <p>{detail.school.coordinatorName}{detail.school.coordinatorDesignation ? ` · ${detail.school.coordinatorDesignation}` : ""}</p>
-            <p>{detail.school.coordinatorMobile} · {detail.school.coordinatorEmail}</p>
-          </DetailBlock>
-
-          <DetailBlock title="6. All student records">
+          <DetailBlock title="Students">
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+              <p className="text-tejas-muted">Parent contacts are hidden by default.</p>
+              <button type="button" className="rounded-lg border border-tejas-border px-2 py-1 text-xs font-semibold" onClick={() => setShowParentContacts((value) => !value)}>
+                {showParentContacts ? "Hide parent contacts" : "Show parent contacts"}
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left">
                 <thead>
@@ -839,9 +864,8 @@ export function ReviewDashboard() {
                     <th className="py-2 pr-2">Class</th>
                     <th className="py-2 pr-2">Section</th>
                     <th className="py-2 pr-2">Roll</th>
-                    <th className="py-2 pr-2">DOB</th>
                     <th className="py-2 pr-2">Streams</th>
-                    <th className="py-2 pr-2">Parent</th>
+                    {showParentContacts ? <th className="py-2 pr-2">Parent</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -851,36 +875,24 @@ export function ReviewDashboard() {
                       <td className="py-2 pr-2">{student.classLabel}</td>
                       <td className="py-2 pr-2">{student.section}</td>
                       <td className="py-2 pr-2">{student.rollNumber}</td>
-                      <td className="py-2 pr-2">{student.dateOfBirth ?? "—"}</td>
                       <td className="py-2 pr-2">{student.streams.join(", ")}</td>
-                      <td className="py-2 pr-2">{student.parentName ?? "—"}<br /><span className="text-tejas-muted">{student.parentMobile ?? ""} {student.parentEmail ?? ""}</span></td>
+                      {showParentContacts ? (
+                        <td className="py-2 pr-2">{student.parentName ?? "—"}<br /><span className="text-tejas-muted">{student.parentMobile ?? ""} {student.parentEmail ?? ""}</span></td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            <p className="mt-3 text-tejas-muted">Class counts: {detailClasses ? Object.entries(detailClasses).map(([label, count]) => `${label}: ${count}`).join(" · ") || "None" : "None"}</p>
           </DetailBlock>
 
-          <DetailBlock title="7. Class-wise student counts">
-            <p>{detailClasses ? Object.entries(detailClasses).map(([label, count]) => `${label}: ${count}`).join(" · ") || "None" : "None"}</p>
-          </DetailBlock>
-
-          <DetailBlock title="8–9. Stream-wise counts and fee calculation">
-            <ul className="space-y-1">
-              <li>English: {detailStreams?.english ?? 0} × ₹150 = {inr.format((detailStreams?.english ?? 0) * 150)} (share {(detailStreams?.english ?? 0) * 30}, TEJAS {(detailStreams?.english ?? 0) * 120})</li>
-              <li>Mathematics: {detailStreams?.mathematics ?? 0} × ₹150 = {inr.format((detailStreams?.mathematics ?? 0) * 150)} (share {(detailStreams?.mathematics ?? 0) * 30}, TEJAS {(detailStreams?.mathematics ?? 0) * 120})</li>
-              <li>Future Tech: {detailStreams?.technology ?? 0} × ₹150 = {inr.format((detailStreams?.technology ?? 0) * 150)} (share {(detailStreams?.technology ?? 0) * 30}, TEJAS {(detailStreams?.technology ?? 0) * 120})</li>
-            </ul>
-            <p className="mt-2">Saved registration payable to TEJAS {inr.format(shownFee?.registrationPayable ?? 0)}. Browser figures above are illustrative; owner decisions use the saved server fee.</p>
-            {detail.fee.schoolShareApproved === true ? null : <p className="text-amber-800">These amounts are the figures saved with this registration. They have not been recalculated at today’s rates.</p>}
-          </DetailBlock>
-
-          <DetailBlock title="10–13. Payment details, proof, OCR evidence, history">
+          <DetailBlock title="Payment details">
             <p>Mode {detail.payment.mode ?? "—"} · Paid on {detail.payment.paidOn ?? "—"} · Payer {detail.payment.payerName ?? "—"}</p>
             <p>Entered UTR / reference: {detail.payment.enteredUtr ?? detail.payment.transactionReference ?? "—"}</p>
             <p>Extracted UTR: {detail.payment.extractedUtr ?? "—"}</p>
             <p>Approval method: {detail.payment.approvalMethod ?? "—"} · Verification: {detail.payment.verificationLabel ?? "—"}</p>
-            <p>Beneficiary match: {detail.payment.beneficiaryMatch ?? "—"} · Amount match: {detail.payment.amountMatch == null ? "—" : String(detail.payment.amountMatch)}</p>
+            <p className="text-amber-900">Screenshot OCR match is not bank-statement confirmation.</p>
             <p>Review note: {detail.payment.reviewNote ?? "—"}</p>
             {detail.receiptExt ? (
               <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=receipt`}>Open payment proof</a>
@@ -889,7 +901,7 @@ export function ReviewDashboard() {
             )}
             <ul className="mt-3 space-y-1">
               {(detail.payment.history ?? []).map((event) => (
-                <li key={`${event.at}-${event.status}-${event.note ?? ""}`}>{event.at} · {paymentLabel(event.status)}{event.actor ? ` · ${event.actor}` : ""}{event.note ? ` · ${event.note}` : ""}</li>
+                <li key={`${event.at}-${event.status}-${event.note ?? ""}`}>{event.at} · {paymentStatusLabel(event.status)}{event.actor ? ` · ${event.actor}` : ""}{event.note ? ` · ${event.note}` : ""}</li>
               ))}
             </ul>
             <label className="mt-4 block">
@@ -903,20 +915,42 @@ export function ReviewDashboard() {
             </div>
           </DetailBlock>
 
-          <DetailBlock title="14–16. Files and Drive backup">
+          <DetailBlock title="Files">
             <div className="flex flex-wrap gap-3">
               <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=upload`}>Original uploaded spreadsheet</a>
               <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file`}>Students workbook</a>
               <a className="font-semibold text-tejas-blue underline" href={`/api/register/admin/registrations/${detail.reference}/file?kind=consolidated`}>Consolidated workbook (masked PAN)</a>
             </div>
-            <p className="mt-3 text-tejas-muted">
-              Consolidated export always masks PAN. Requests with revealPan=yes are denied server-side while no trusted role exists.
-              Google Drive: not configured. See TEJAS-GOOGLE-DRIVE-BACKUP-DESIGN.md.
-            </p>
           </DetailBlock>
         </section>
       ) : null}
     </div>
+  );
+}
+
+function SummaryCard({
+  title,
+  lines,
+  tone,
+  onClick,
+}: {
+  title: string;
+  lines: string[];
+  tone: "blue" | "emerald" | "red" | "amber";
+  onClick: () => void;
+}) {
+  const toneClass =
+    tone === "emerald" ? "border-emerald-200 bg-emerald-50/60" :
+    tone === "red" ? "border-red-200 bg-red-50/60" :
+    tone === "amber" ? "border-amber-200 bg-amber-50/60" :
+    "border-tejas-blue/30 bg-tejas-blue/5";
+  return (
+    <button type="button" onClick={onClick} className={`rounded-2xl border p-4 text-left shadow-sm transition hover:shadow ${toneClass}`}>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-tejas-muted">{title}</h2>
+      <ul className="mt-2 space-y-1 text-sm text-tejas-ink">
+        {lines.map((line) => <li key={line} className="font-medium">{line}</li>)}
+      </ul>
+    </button>
   );
 }
 

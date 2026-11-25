@@ -19,8 +19,9 @@ export type CompleteWorkbookOptions = {
   /** Scope label written into the workbook banner row. */
   scopeLabel?: string;
   /**
-   * Per-reference file existence. When omitted, upload is assumed present and
-   * receipt follows receiptExt only (legacy tests). Production export always passes checks.
+   * Per-reference Storage existence. Required for hyperlinks.
+   * When omitted or missing a reference, both upload and receipt are treated as unavailable
+   * (fail closed — never invent links from filename/metadata alone).
    */
   fileAvailability?: Record<string, CompleteFileAvailability>;
 };
@@ -152,10 +153,8 @@ function availabilityFor(
   map: CompleteWorkbookOptions["fileAvailability"],
 ): CompleteFileAvailability {
   if (map?.[record.reference]) return map[record.reference]!;
-  return {
-    uploadAvailable: true,
-    receiptAvailable: Boolean(record.receiptExt),
-  };
+  // Fail closed: snapshot fields / filenames alone must never create download links.
+  return { uploadAvailable: false, receiptAvailable: false };
 }
 
 /**

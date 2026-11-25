@@ -153,7 +153,16 @@ async function downloadObject(bucket: string, objectPath: string): Promise<Buffe
   return Buffer.from(await response.arrayBuffer());
 }
 
-/** Existence check without downloading object bytes (HEAD, with ranged GET fallback). */
+/** True when Storage reports the object is missing (Supabase often uses 400, not only 404). */
+function storageMissingStatus(status: number): boolean {
+  return status === 404 || status === 400;
+}
+
+/**
+ * Existence check against the actual Storage object path.
+ * Does not treat DB metadata / filenames as proof. Does not load full object bytes.
+ * HEAD first; ranged GET (bytes=0-0) only when HEAD is inconclusive (e.g. 405).
+ */
 async function objectExists(bucket: string, objectPath: string): Promise<boolean> {
   const headers = authHeaders();
   const response = await fetch(`${originOrThrow()}/storage/v1/object/${bucket}/${objectPath}`, {
@@ -163,8 +172,12 @@ async function objectExists(bucket: string, objectPath: string): Promise<boolean
     signal: AbortSignal.timeout(10000),
   });
   await response.body?.cancel();
-  if (response.status === 404) return false;
-  if (response.ok) return true;
+  if (storageMissingStatus(response.status)) return false;
+  if (response.ok) {
+    // Empty object is not a usable upload/receipt.
+    if (response.headers.get("content-length") === "0") return false;
+    return true;
+  }
   // Some Storage gateways reject HEAD; fall back to a ranged GET that stops after headers.
   const rangedHeaders = authHeaders();
   rangedHeaders.set("range", "bytes=0-0");
@@ -175,8 +188,10 @@ async function objectExists(bucket: string, objectPath: string): Promise<boolean
     signal: AbortSignal.timeout(10000),
   });
   await ranged.body?.cancel();
-  if (ranged.status === 404) return false;
-  return ranged.ok || ranged.status === 206;
+  if (storageMissingStatus(ranged.status)) return false;
+  if (!(ranged.ok || ranged.status === 206)) return false;
+  if (ranged.headers.get("content-length") === "0") return false;
+  return true;
 }
 
 async function compensate(created: Created) {

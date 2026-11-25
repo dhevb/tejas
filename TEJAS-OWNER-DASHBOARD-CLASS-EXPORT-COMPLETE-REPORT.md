@@ -150,16 +150,37 @@ Main columns now: Class · Registration records · Unique students · Student-st
 
 ---
 
-## 10. Remaining limitations
+## 10. Preview file-existence investigation (5 TEST DATA refs)
+
+Probed Preview Supabase `nbeslngnrsagarosuaab` Storage objects directly (HEAD / ranged GET / `uploadExists` / `receiptExists`). **No fake files created. No registration rows changed. No file contents exposed.**
+
+| Reference | Upload metadata | Actual upload object | Workbook upload link | Proof metadata | Actual proof object | Workbook proof link |
+|-----------|-----------------|----------------------|----------------------|----------------|---------------------|---------------------|
+| `TEJAS-2026-TESTDATAAAAA23PENDUV` | yes (`…/upload.xlsx`) | **yes** (~18KB, HEAD 200) | **yes** (correct) | no | no (`receiptExt=null`) | **no** → unavailable |
+| `TEJAS-2026-TESTDATABBBB22REPTUV` | yes | **yes** (~16KB) | **yes** | no | no | **no** → unavailable |
+| `TEJAS-2026-TESTDATACCCC23CPNFUV` | yes | **yes** (~16KB) | **yes** | no | no | **no** → unavailable |
+| `TEJAS-2026-TESTDATADDDD24REJTUV` | yes | **yes** (~16KB) | **yes** | no | no | **no** → unavailable |
+| `TEJAS-2026-TESTDATAEEEE25REFTUV` | yes | **yes** (~16KB) | **yes** | no | no | **no** → unavailable |
+
+**Verdict:** Workbook upload links match real Storage objects. Payment-proof “unavailable” matches missing objects (`receiptExt` null; seed proofs were opt-in and not present). Discrepancy vs Owner “no uploads available” is **not** a false-positive link generator for these five — Storage has the XLSX objects. Opening workbook links still requires an active Owner session on the Preview host (SSO/Owner gate otherwise blocks download).
+
+### Hardening shipped with this pass
+- `objectExists`: treat Storage **400** like missing; reject empty (`content-length: 0`) objects; HEAD-first without full download.
+- Workbook `fileAvailability` **fail closed** when map omitted (no links from filename/`receiptExt` alone).
+- Tests: metadata≠existence, wrong registration path, empty object, omitted map, no public Storage URLs.
+
+---
+
+## 11. Remaining limitations
 
 - Workbook file hyperlinks require an **active Owner browser session** on the same host (by design; not public Storage links).
 - Full PAN reveal remains **disabled** (`FULL_PAN_REVEAL_AVAILABLE = false`) until a trusted role model is approved.
 - Existence checks use HEAD (with ranged GET fallback); extremely unusual Storage gateways that reject both may mark a present file unavailable (safe failure → no link).
 - Preview Deployment Protection may return SSO **302** before app **401** for unauthenticated browser hits.
-- End-to-end Owner-authenticated Complete Excel download on this Preview was not re-run in-browser after sessions expired; structure/security covered by unit tests + `vercel curl` Owner-gate checks. Owner can re-verify after signing in on the Preview URL above.
+- Detail-panel dashboard still shows an upload shortcut from the detail UI without a separate Storage existence gate (workbook export path is gated).
 
 ---
 
-## 11. Stop
+## 12. Stop
 
 Stopped after Preview QA. PR left **OPEN** for Owner review. **No merge** and **no Production deploy** without separate explicit Owner approval.

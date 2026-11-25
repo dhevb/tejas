@@ -228,3 +228,41 @@ test("blank stored geo fields stay blank and are not invented from address", () 
   assert.equal(row[header.indexOf("Stored PIN (original)")], "");
   assert.ok(String(row[header.indexOf("State (derived from address)")]).length > 0);
 });
+
+test("omitted fileAvailability fails closed — no hyperlinks from metadata alone", () => {
+  const record = fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA9", status: "confirmed", receiptExt: "jpg" });
+  const bytes = buildCompleteRegistrationWorkbook([record], { origin: "https://tejas.dhe.org.in" });
+  const book = XLSX.read(bytes, { type: "buffer" });
+  const sheet = book.Sheets[COMPLETE_WORKBOOK_SHEET_NAME]!;
+  const uploadCol = COMPLETE_REGISTRATION_COLUMNS.indexOf("Student upload download");
+  const receiptCol = COMPLETE_REGISTRATION_COLUMNS.indexOf("Payment proof download");
+  const uploadCell = sheet[XLSX.utils.encode_cell({ r: 2, c: uploadCol })] as XLSX.CellObject;
+  const receiptCell = sheet[XLSX.utils.encode_cell({ r: 2, c: receiptCol })] as XLSX.CellObject;
+  assert.equal(String(uploadCell.v), "Student upload unavailable");
+  assert.equal(uploadCell.l, undefined);
+  assert.equal(String(receiptCell.v), "Payment proof unavailable");
+  assert.equal(receiptCell.l, undefined);
+  const rows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1 }) as string[][];
+  const header = rows[1]!;
+  const row = rows[2]!;
+  assert.equal(row[header.indexOf("Student upload file name")], "");
+  assert.equal(row[header.indexOf("Payment proof file name")], "");
+});
+
+test("metadata-like receiptExt does not create a proof link unless availability says present", () => {
+  const record = fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAB", status: "reported", receiptExt: "png" });
+  const bytes = buildCompleteRegistrationWorkbook([record], {
+    origin: "https://tejas.dhe.org.in",
+    fileAvailability: {
+      "TEJAS-2026-AAAAAAAAAAAAAAB": { uploadAvailable: false, receiptAvailable: false },
+    },
+  });
+  const book = XLSX.read(bytes, { type: "buffer" });
+  const sheet = book.Sheets[COMPLETE_WORKBOOK_SHEET_NAME]!;
+  const uploadCol = COMPLETE_REGISTRATION_COLUMNS.indexOf("Student upload download");
+  const receiptCol = COMPLETE_REGISTRATION_COLUMNS.indexOf("Payment proof download");
+  assert.equal(String((sheet[XLSX.utils.encode_cell({ r: 2, c: uploadCol })] as XLSX.CellObject).v), "Student upload unavailable");
+  assert.equal((sheet[XLSX.utils.encode_cell({ r: 2, c: uploadCol })] as XLSX.CellObject).l, undefined);
+  assert.equal(String((sheet[XLSX.utils.encode_cell({ r: 2, c: receiptCol })] as XLSX.CellObject).v), "Payment proof unavailable");
+  assert.equal((sheet[XLSX.utils.encode_cell({ r: 2, c: receiptCol })] as XLSX.CellObject).l, undefined);
+});

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { calculateFee } from "@/lib/registration/fee";
-import { insertRegistration, readRegistration, updatePayment } from "@/lib/registration/database";
+import { insertRegistration, readRegistration, receiptExists, updatePayment, uploadExists } from "@/lib/registration/database";
 import type { RegistrationRecord } from "@/lib/registration/store";
 
 const REFERENCE = "TEJAS-2026-ABCDEFGHJKLMNPQRSTU2";
@@ -235,5 +235,67 @@ test("verifying a payment that is already verified does not write another histor
     assert.equal(audits, 1);
   } finally {
     restore();
+  }
+});
+
+test("uploadExists checks the registration Storage object — missing/stale paths are false", async () => {
+  const previous = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
+  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-test-key-0123456789";
+  const original = globalThis.fetch;
+  const calls: string[] = [];
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const method = (init?.method ?? "GET").toUpperCase();
+    calls.push(`${method} ${url}`);
+    if (url.includes("/TEJAS-2026-ABCDEFGHJKLMNPQRSTU2/upload.xlsx")) {
+      if (method === "HEAD") return new Response(null, { status: 200, headers: { "content-length": "1200" } });
+      return new Response(new Uint8Array([1]), { status: 206, headers: { "content-length": "1" } });
+    }
+    // Stale metadata path / wrong registration / missing object — Supabase-style 400
+    if (method === "HEAD" || method === "GET") {
+      return new Response(JSON.stringify({ statusCode: "404", error: "not_found", message: "Object not found" }), {
+        status: 400,
+        headers: { "content-type": "application/json", "content-length": "88" },
+      });
+    }
+    return jsonResponse([], 200);
+  }) as typeof fetch;
+  try {
+    assert.equal(await uploadExists(REFERENCE, "xlsx"), true);
+    assert.equal(await uploadExists("TEJAS-2026-OTHERREG00000000001", "xlsx"), false);
+    assert.equal(await uploadExists(REFERENCE, "xls"), false);
+    assert.equal(await receiptExists(REFERENCE, "png"), false);
+    assert.ok(calls.some((c) => c.includes("HEAD") && c.includes(`${REFERENCE}/upload.xlsx`)));
+    assert.ok(calls.every((c) => !c.includes("service_role")));
+    // Existence path must not issue a full unrestricted GET for the present object (HEAD succeeded).
+    assert.equal(calls.some((c) => c.startsWith("GET ") && c.includes(`${REFERENCE}/upload.xlsx`)), false);
+  } finally {
+    globalThis.fetch = original;
+    if (previous.url === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = previous.url;
+    if (previous.key === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = previous.key;
+  }
+});
+
+test("uploadExists treats empty Storage objects as missing", async () => {
+  const previous = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
+  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-test-key-0123456789";
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (method === "HEAD") return new Response(null, { status: 200, headers: { "content-length": "0" } });
+    return new Response(null, { status: 200, headers: { "content-length": "0" } });
+  }) as typeof fetch;
+  try {
+    assert.equal(await uploadExists(REFERENCE, "xlsx"), false);
+  } finally {
+    globalThis.fetch = original;
+    if (previous.url === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = previous.url;
+    if (previous.key === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = previous.key;
   }
 });

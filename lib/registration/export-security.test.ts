@@ -7,6 +7,9 @@ test("export and file routes keep owner auth and no-store cache", () => {
   const fileSource = readFileSync("app/api/register/admin/registrations/[reference]/file/route.ts", "utf8");
   assert.ok(exportSource.includes("registrationOwnerAuthorised"));
   assert.ok(exportSource.includes("resolveOwnerExportOrigin"));
+  assert.ok(exportSource.includes("uploadExists"));
+  assert.ok(exportSource.includes("receiptExists"));
+  assert.ok(exportSource.includes("fileAvailability"));
   assert.ok(exportSource.includes('"Cache-Control": "no-store"') || exportSource.includes("Cache-Control\": \"no-store\""));
   assert.ok(!exportSource.includes("x-forwarded-host"));
   assert.ok(fileSource.includes("registrationOwnerAuthorised"));

@@ -104,7 +104,7 @@ export default function SchoolRegisterPage() {
               The confirmation page shows the registration reference and the net amount payable to TEJAS. The school retains its share. Payment proof, when that step is open, is uploaded against that net amount. Submitting this form does not by itself mark a payment as verified.
             </p>
             <p className="mt-4 text-sm">
-              <Link href="/schools/register/review" className="font-semibold text-tejas-blue underline">Staff review</Link>
+              <Link href="/schools/register/review" className="font-semibold text-tejas-blue underline">Owner review</Link>
             </p>
           </div>
         </aside>

@@ -815,8 +815,8 @@ export function ReviewDashboard() {
               {detail.school.panDuplicate ? " (duplicate, needs review)" : ""}
             </p>
             <p className="text-tejas-muted">
-              Full PAN reveal and unmasked export are disabled until a trusted staff role model is approved.
-              The API returns only the masked value to every staff session.
+              Full PAN reveal and unmasked export are disabled until a trusted role model beyond the owner recovery token is approved.
+              The API returns only the masked value to every owner session.
             </p>
           </DetailBlock>
 
@@ -871,7 +871,7 @@ export function ReviewDashboard() {
               <li>Mathematics: {detailStreams?.mathematics ?? 0} × ₹150 = {inr.format((detailStreams?.mathematics ?? 0) * 150)} (share {(detailStreams?.mathematics ?? 0) * 30}, TEJAS {(detailStreams?.mathematics ?? 0) * 120})</li>
               <li>Future Tech: {detailStreams?.technology ?? 0} × ₹150 = {inr.format((detailStreams?.technology ?? 0) * 150)} (share {(detailStreams?.technology ?? 0) * 30}, TEJAS {(detailStreams?.technology ?? 0) * 120})</li>
             </ul>
-            <p className="mt-2">Saved registration payable to TEJAS {inr.format(shownFee?.registrationPayable ?? 0)}. Browser figures above are illustrative; staff decisions use the saved server fee.</p>
+            <p className="mt-2">Saved registration payable to TEJAS {inr.format(shownFee?.registrationPayable ?? 0)}. Browser figures above are illustrative; owner decisions use the saved server fee.</p>
             {detail.fee.schoolShareApproved === true ? null : <p className="text-amber-800">These amounts are the figures saved with this registration. They have not been recalculated at today’s rates.</p>}
           </DetailBlock>
 
@@ -893,7 +893,7 @@ export function ReviewDashboard() {
               ))}
             </ul>
             <label className="mt-4 block">
-              <span className="font-medium">Staff note</span>
+              <span className="font-medium">Owner note</span>
               <textarea value={note} onChange={(event) => setNote(event.target.value)} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2 text-tejas-ink focus-visible:border-tejas-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tejas-blue/30" rows={3} />
             </label>
             <div className="mt-3 flex flex-wrap gap-2">

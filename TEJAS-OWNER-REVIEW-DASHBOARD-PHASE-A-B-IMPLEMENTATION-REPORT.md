@@ -76,9 +76,12 @@ Example for one confirmed school student-stream: Gross ₹150 · School ₹30 ·
 
 | Field | Value |
 |-------|--------|
-| Preview URL | *(filled after Vercel Ready)* |
+| Preview URL | https://tejas-kqbuim41r-dhe-projects.vercel.app |
 | Stable alias | https://tejas-git-feat-owner-review-dashboard-phase-a-b-dhe-projects.vercel.app |
+| Deployment ID | `dpl_YvQDvPxP58cHDaaDB8m1P9XnoaRd` |
+| Status | **Ready** (Preview) |
 | Review path | `/schools/register/review` |
+| Commit | `84fbefb` |
 | Preview Supabase hostname | Remains **UNVERIFIED**; no migration |
 
 ---

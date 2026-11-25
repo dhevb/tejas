@@ -7,9 +7,9 @@
 
 ## Verdict
 
-**CONDITIONAL PASS** — pending Preview deploy + Preview UI/filter verification of the PIN-prefix / short-alias fix below. Automated parser/unit/type/lint/build checks for that fix are complete.
+**PASS**
 
-All prior required checks for owner-only administration, address-derived State/District behaviour, Preview API verification, interactive browser UI QA (Trusted Sources OIDC), geographic fixture integration (insert → filter QA → cleanup), and open-handle investigation remain complete. Production was not merged, deployed, or mutated.
+All required checks for owner-only administration, address-derived State/District behaviour, PIN-prefix false-conflict fix, short State alias hardening, automated suites, TypeScript/lint/build, Preview-only deploy, Preview API + browser UI/filter verification (Trusted Sources OIDC), temporary PIN fixtures (insert → verify → cleanup), and seed preservation are complete. Production was not merged, deployed, or mutated. Deployment Protection remained enabled.
 
 ---
 
@@ -19,12 +19,13 @@ All prior required checks for owner-only administration, address-derived State/D
 |------|--------|
 | Feature commit | `d41b2970a1fdcca690a22fbd9887c31a52201a36` |
 | Prior report commits | `e615ec1` / `95c5116` |
-| PIN / short-alias fix | *(this push — see git log)* |
+| PIN / short-alias fix | `19a463b7718ae3f75bd4fb1578b8836f50cc57ba` |
 | Branch | `feat/registration-review-dashboard-redesign` |
 | PR state | **OPEN** |
+| Post-fix Preview URL | https://tejas-bc42nmsdp-dhe-projects.vercel.app |
+| Post-fix Deployment ID | `dpl_YtTGDjMftE7xX5zJWK7jyoqUPikH` |
 | Prior Preview URL | https://tejas-9z4nixu3o-dhe-projects.vercel.app |
 | Prior Deployment ID | `dpl_8uBSCEx93EoD3VGHUQT7p7YsVrz2` |
-| Post-fix Preview | *(pending deploy)* |
 | Deploy target | **preview only** |
 | Preview Supabase | `nbeslngnrsagarosuaab` only |
 | Production | Untouched |
@@ -69,34 +70,39 @@ All prior required checks for owner-only administration, address-derived State/D
 | `npx tsx --test --test-concurrency=1 lib/registration/registration.test.ts` (**no** `--test-force-exit`) | **0** | 31/31 PASS |
 | Focused: `staff-recovery` / `payment-rules` / `pan-access` / `staff-metrics` | **0** | 24/24 PASS |
 | `npx tsc --noEmit` | **0** | PASS |
-| `npm run lint` | **0** | PASS (existing `<img>` warnings only) |
-| `npm run build` | **0** | PASS |
+| `npx next lint` | **0** | PASS (existing `<img>` warnings only) |
+| `npx next build` | **0** | PASS |
 
 ### Preview verification (PIN regressions)
 
 | Check | Status |
 |-------|--------|
-| Parser unit tests for four regression addresses | **PASS** (local) |
-| Preview deploy of fix | **PENDING** |
-| Temporary Preview fixtures for four addresses (no seed mutation) | **PENDING** |
-| State → District / combined filters / counts / CSV on Preview | **PENDING** |
-| Deployment Protection left enabled | Required |
+| Parser unit tests for four regression addresses | **PASS** (local, EXIT 0) |
+| Preview deploy of fix (`19a463b`) | **PASS** — `dpl_YtTGDjMftE7xX5zJWK7jyoqUPikH` / `tejas-bc42nmsdp-dhe-projects.vercel.app` |
+| Temporary Preview fixtures (Mohali / Dehradun / Dhanbad / Leh) | **PASS** — inserted on `nbeslngnrsagarosuaab` only; five seeds untouched |
+| List derived State/District + address unchanged | **PASS** — all four fixtures |
+| State → District / combined filters (`q=PIN QA`) | **PASS** — each filter hit its fixture |
+| Schools CSV (`state=Punjab`, `district=Sahibzada Ajit Singh Nagar`, `q=Mohali`) | **PASS** — HTTP 200, `X-TEJAS-Export-Count: 1`, body contains Mohali |
+| Browser UI (OIDC Trusted Sources; Protection enabled) | **PASS** — login shows four PIN fixtures + Alpha seed; Punjab → SAS Nagar filters; counts + CSV href |
+| Fixture cleanup | **PASS** — 4 deleted; after status: total 5, seeds 5, pinFixtures 0 |
+| Deployment Protection | **Left enabled** (OIDC / `vercel curl` / Playwright header only) |
+
+Evidence artifacts (local, untracked): `.local-qa/pr65-pin-preview-api-verify-results.json`, `.local-qa/pr65-pin-preview-verify-results.json`.
 
 ---
 
-## A. API verification (prior — still valid on previous Preview)
+## A. API verification (prior — still valid; reconfirmed on post-fix Preview)
 
 | Check | Result |
 |-------|--------|
 | Unauth admin APIs (`vercel curl`) | **PASS** — 401 |
 | School-staff email/password session | **PASS** — 401 owner-only message |
-| Owner login (`identity=recovery`, `role=owner`) | **PASS** |
+| Owner login (`identity=recovery`, `role=owner`) | **PASS** (reconfirmed on `bc42nmsdp`) |
 | Owner list / logout | **PASS** |
-| Export filters + `X-Tejas-Export-Count` | **PASS** |
+| Export filters + `X-Tejas-Export-Count` | **PASS** (reconfirmed Punjab/Mohali CSV) |
 | Storage-status connected on Preview | **PASS** |
 | File download unauth 401 / owner 200 xlsx | **PASS** |
-| Geo fixtures visible in list (during QA) | **PASS** — 9 rows (5 seed + 4 geo) |
-| After geo cleanup API count | **PASS** — 5 seeds, 0 geo |
+| After PIN fixture cleanup | **PASS** — 5 seeds, 0 PIN fixtures |
 
 ---
 
@@ -106,7 +112,7 @@ All prior required checks for owner-only administration, address-derived State/D
 |---------|--------|
 | `registration.test.ts` **without** `--test-force-exit` | **EXIT 0**, 31/31 PASS |
 | `india-address.test.ts` + owner/filter suites | **EXIT 0**, 18/18 PASS |
-| `tsc --noEmit` / `next lint` / `npm run build` | **EXIT 0** |
+| `tsc --noEmit` / `next lint` / `next build` | **EXIT 0** |
 
 ### Open-handle investigation
 
@@ -118,21 +124,24 @@ All prior required checks for owner-only administration, address-derived State/D
 
 ---
 
-## C. Actual browser UI verification (prior Preview `dpl_8uBSCEx…`)
+## C. Actual browser UI verification
 
 **Method:** Playwright + fresh `vercel project token` → `x-vercel-trusted-oidc-idp-token` (Trusted Sources). Deployment Protection **not** disabled.
 
-**Summary:** **24 PASS / 0 FAIL** (browser suite on prior deployment). Re-run against post-fix Preview is still required for full PASS on this defect arc.
+| Surface | Result |
+|---------|--------|
+| Prior Preview `dpl_8uBSCEx…` geo/owner suite | **24 PASS / 0 FAIL** |
+| Post-fix Preview `dpl_YtTGDj…` PIN suite | **PASS** (`browserOk: true`) — Punjab / SAS Nagar combined filter, counts, CSV href |
 
 ---
 
-## D. Geographic fixture integration verification (prior)
+## D. Geographic / PIN fixture integration verification
 
 | Item | Detail |
 |------|--------|
 | Project | Preview `nbeslngnrsagarosuaab` only |
-| Existing five seeds | **Not modified**; preserved |
-| Prior fixtures | MH/Pune, MH/Nagpur, TN/Chennai, TN/Madurai — cleaned up |
+| Existing five seeds | **Not modified**; preserved before and after PIN QA |
+| PIN fixtures | Mohali/Punjab, Dehradun/Uttarakhand, Dhanbad/Jharkhand, Leh/Ladakh — cleaned up |
 | Production writes | None |
 
 ---
@@ -162,15 +171,12 @@ Local QA scripts under `.local-qa/` remain untracked.
 
 ## Remaining gaps
 
-1. Preview-only deploy of the PIN/short-alias fix.
-2. Preview UI/filter verification for Mohali / Dehradun / Dhanbad / Leh (temporary fixtures; do not mutate the five seeds).
-3. Recheck State → District, combined filters, counts, CSV on the new Preview deployment.
-4. Record new Preview URL / deployment ID here and flip verdict to **PASS** when complete.
+None for the PIN-prefix / short-alias defect arc. PR #65 remains **OPEN** (not merged).
 
 ## Safety confirmation
 
 - PR #65 **OPEN** — no merge  
 - No Production deploy / SQL / migration  
-- No payment approval mutations; no real registration mutation beyond temporary Preview GEO/PIN QA fixtures  
+- No payment approval mutations; no real registration mutation beyond temporary Preview PIN QA fixtures (cleaned up)  
 - Google Drive disabled  
 - Deployment Protection left enabled  

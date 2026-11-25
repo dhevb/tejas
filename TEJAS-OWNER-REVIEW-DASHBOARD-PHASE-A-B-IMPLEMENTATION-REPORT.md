@@ -60,11 +60,15 @@ Filtered cards recompute via `summarizeFilterableRows` using the **same** bucket
 
 | Field | Value |
 |-------|--------|
-| Preview URL | *(filled after deploy)* |
-| Deployment ID | *(filled after deploy)* |
-| Preview Supabase hostname | Remains **UNVERIFIED** (Secret); this UI change does not require DB migration |
+| Preview URL | https://tejas-g1l8gflsv-dhe-projects.vercel.app |
+| Stable alias | https://tejas-git-feat-owner-review-dashboard-phase-a-b-dhe-projects.vercel.app |
+| Deployment ID | `dpl_F4TN9eDc8mcz1x7dtiGWiyhRT2Yo` |
+| Status | **Ready** (Preview) |
+| Review path | `/schools/register/review` |
+| Commit | `75bd5fd` |
+| Preview Supabase hostname | Remains **UNVERIFIED** (Secret); no migration required for this UI |
 
-If Preview deploy fails due to Sensitive env / hostname, blocker is reported without bypass.
+Public GET of Preview review page returns 200 with updated hero copy. Owner token login required for data cards (same security model).
 
 ---
 

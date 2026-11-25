@@ -12,10 +12,15 @@
 2. **Registration records (class column):** count of registration records that include ≥1 student in that class. A multi-class registration increments each touched class once. **Do not sum this column across classes and treat the sum as total registration records.** Authoritative total registration records = overview card value.
 3. **Unique students:** identity key once per class within a registration (multi-stream rows do not inflate unique count).
 4. **Student-streams:** count of english/mathematics/technology selections in that class.
-5. Amounts: each registration’s **saved** `amountDue` is allocated to classes by stream weight; rounding adjusted so class amounts sum to registration `amountDue`.
-6. Confirmed / pending / rejected / refund_pending at class level follow the registration’s `payment.status` and are **not** merged (refund is separate from rejected).
+5. Amounts: each registration’s **saved** fee parts are allocated to classes by stream weight:
+   - `allocatedGross` from saved `grossTotal` (₹150/stream policy; independently stored)
+   - `allocatedSchoolShare` from saved `schoolShare` (₹30/stream)
+   - `allocatedAmountDue` from saved `amountDue` (TEJAS ₹120/stream remittance)
+   Rounding is adjusted so each part’s class sum equals the registration total for that part.
+6. Confirmed / pending / rejected / refund_pending at class level follow the registration’s `payment.status` and are **not** merged (refund is separate from rejected). Confirmed columns show **gross** and **TEJAS** separately; pending shows gross / TEJAS; rejected and refund show TEJAS (gross also tracked server-side).
 7. Classes **3–10 always appear**, including zero-count rows. Class Not Identified and other observed labels are kept when present.
 8. Filtered dashboard class table uses the same `summarizeFilterableRows` formulas as the overall cards. When a class filter is selected, `scopeFilterableRowsToClass` scopes card totals to that class’s allocated metrics.
+9. **Do not** label TEJAS `amountDue` as “total payment received.” Gross confirmed uses saved `grossTotal`; TEJAS confirmed uses saved `amountDue`.
 
 ---
 

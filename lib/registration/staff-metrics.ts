@@ -181,6 +181,16 @@ export function classKeyForStudent(student: Pick<StudentRecord, "classLabel" | "
   return { key: `label:${label.toLowerCase()}`, label, sort: 500 };
 }
 
+/** Saved fee parts used for allocation / payment buckets (never invent ratios). */
+export type RegistrationFeeParts = {
+  /** Saved TEJAS remittance (`amountDue` / registrationPayable). */
+  tejas: number;
+  /** Saved gross fee (`grossTotal` / totalStudentFees). */
+  gross: number;
+  /** Saved school share. */
+  schoolShare: number;
+};
+
 export type ClassMetric = {
   classKey: string;
   classLabel: string;
@@ -191,13 +201,38 @@ export type ClassMetric = {
   studentStreams: number;
   /** Share of this registration's TEJAS amountDue allocated by stream weight. */
   allocatedAmountDue: number;
+  /** Share of this registration's saved grossTotal allocated by stream weight. */
+  allocatedGross: number;
+  /** Share of this registration's saved schoolShare allocated by stream weight. */
+  allocatedSchoolShare: number;
 };
+
+function fixRoundingOnHeaviest(
+  rows: ClassMetric[],
+  field: "allocatedAmountDue" | "allocatedGross" | "allocatedSchoolShare",
+  target: number,
+): void {
+  if (rows.length === 0) return;
+  const sum = rows.reduce((n, row) => n + row[field], 0);
+  const delta = target - sum;
+  if (delta !== 0) {
+    const heaviest = [...rows].sort((a, b) => b.studentStreams - a.studentStreams || a.sort - b.sort)[0];
+    heaviest[field] += delta;
+  }
+}
 
 /**
  * Per-class metrics for one registration.
- * Amount is allocated from the saved registration amountDue by student-stream weight in each class.
+ * Amounts allocate saved fee parts by student-stream weight in each class.
+ * `amountDueOrParts` may be a TEJAS-only number (legacy) or full saved fee parts.
  */
-export function classMetricsForRegistration(students: StudentRecord[], amountDue: number): ClassMetric[] {
+export function classMetricsForRegistration(
+  students: StudentRecord[],
+  amountDueOrParts: number | RegistrationFeeParts,
+): ClassMetric[] {
+  const parts: RegistrationFeeParts = typeof amountDueOrParts === "number"
+    ? { tejas: amountDueOrParts, gross: 0, schoolShare: 0 }
+    : amountDueOrParts;
   type Acc = {
     info: ClassKeyInfo;
     identities: Set<string>;
@@ -224,7 +259,9 @@ export function classMetricsForRegistration(students: StudentRecord[], amountDue
       registrationTouch: 1,
       uniqueStudents: countUniqueStudents(students).unique,
       studentStreams: 0,
-      allocatedAmountDue: amountDue,
+      allocatedAmountDue: parts.tejas,
+      allocatedGross: parts.gross,
+      allocatedSchoolShare: parts.schoolShare,
     }];
   }
   const rows: ClassMetric[] = [];
@@ -237,78 +274,107 @@ export function classMetricsForRegistration(students: StudentRecord[], amountDue
       registrationTouch: 1,
       uniqueStudents: acc.identities.size,
       studentStreams: acc.studentStreams,
-      allocatedAmountDue: Math.round(amountDue * weight),
+      allocatedAmountDue: Math.round(parts.tejas * weight),
+      allocatedGross: Math.round(parts.gross * weight),
+      allocatedSchoolShare: Math.round(parts.schoolShare * weight),
     });
   }
-  // Fix rounding so class amounts sum to amountDue.
-  if (rows.length > 0) {
-    const sum = rows.reduce((n, row) => n + row.allocatedAmountDue, 0);
-    const delta = amountDue - sum;
-    if (delta !== 0) {
-      const heaviest = [...rows].sort((a, b) => b.studentStreams - a.studentStreams || a.sort - b.sort)[0];
-      heaviest.allocatedAmountDue += delta;
-    }
-  }
+  fixRoundingOnHeaviest(rows, "allocatedAmountDue", parts.tejas);
+  fixRoundingOnHeaviest(rows, "allocatedGross", parts.gross);
+  fixRoundingOnHeaviest(rows, "allocatedSchoolShare", parts.schoolShare);
   return rows.sort((a, b) => a.sort - b.sort || a.classLabel.localeCompare(b.classLabel));
 }
 
 export type PaymentBucketAmounts = {
   confirmedCount: number;
+  /** Confirmed TEJAS remittance (saved amountDue). */
   confirmedAmount: number;
+  /** Confirmed saved grossTotal (independent field; not invented from TEJAS). */
+  confirmedGross: number;
+  /** Confirmed saved schoolShare. */
+  confirmedSchoolShare: number;
   awaitingCount: number;
   awaitingAmount: number;
+  awaitingGross: number;
   reportedCount: number;
   reportedAmount: number;
+  reportedGross: number;
   rejectedCount: number;
   rejectedAmount: number;
+  rejectedGross: number;
   refundPendingCount: number;
   refundPendingAmount: number;
-  /** awaiting + reported (and any other unfinished pending_* except rejected/refund). */
+  refundPendingGross: number;
+  /** awaiting + reported TEJAS amounts. */
   pendingPayable: number;
+  /** awaiting + reported gross amounts. */
+  pendingGross: number;
 };
 
 export function emptyPaymentBuckets(): PaymentBucketAmounts {
   return {
     confirmedCount: 0,
     confirmedAmount: 0,
+    confirmedGross: 0,
+    confirmedSchoolShare: 0,
     awaitingCount: 0,
     awaitingAmount: 0,
+    awaitingGross: 0,
     reportedCount: 0,
     reportedAmount: 0,
+    reportedGross: 0,
     rejectedCount: 0,
     rejectedAmount: 0,
+    rejectedGross: 0,
     refundPendingCount: 0,
     refundPendingAmount: 0,
+    refundPendingGross: 0,
     pendingPayable: 0,
+    pendingGross: 0,
   };
 }
 
-export function addPaymentBucket(buckets: PaymentBucketAmounts, status: StaffPaymentStatus | string, amountDue: number): void {
+export function addPaymentBucket(
+  buckets: PaymentBucketAmounts,
+  status: StaffPaymentStatus | string,
+  amounts: number | RegistrationFeeParts,
+): void {
+  const parts: RegistrationFeeParts = typeof amounts === "number"
+    ? { tejas: amounts, gross: 0, schoolShare: 0 }
+    : amounts;
   if (status === "confirmed") {
     buckets.confirmedCount += 1;
-    buckets.confirmedAmount += amountDue;
+    buckets.confirmedAmount += parts.tejas;
+    buckets.confirmedGross += parts.gross;
+    buckets.confirmedSchoolShare += parts.schoolShare;
     return;
   }
   if (status === "rejected") {
     buckets.rejectedCount += 1;
-    buckets.rejectedAmount += amountDue;
+    buckets.rejectedAmount += parts.tejas;
+    buckets.rejectedGross += parts.gross;
     return;
   }
   if (status === "refund_pending") {
     buckets.refundPendingCount += 1;
-    buckets.refundPendingAmount += amountDue;
+    buckets.refundPendingAmount += parts.tejas;
+    buckets.refundPendingGross += parts.gross;
     return;
   }
   if (status === "reported") {
     buckets.reportedCount += 1;
-    buckets.reportedAmount += amountDue;
-    buckets.pendingPayable += amountDue;
+    buckets.reportedAmount += parts.tejas;
+    buckets.reportedGross += parts.gross;
+    buckets.pendingPayable += parts.tejas;
+    buckets.pendingGross += parts.gross;
     return;
   }
   // pending_instructions | awaiting_payment | future pending_*
   buckets.awaitingCount += 1;
-  buckets.awaitingAmount += amountDue;
-  buckets.pendingPayable += amountDue;
+  buckets.awaitingAmount += parts.tejas;
+  buckets.awaitingGross += parts.gross;
+  buckets.pendingPayable += parts.tejas;
+  buckets.pendingGross += parts.gross;
 }
 
 export type ClassBreakdownRow = {
@@ -324,13 +390,22 @@ export type ClassBreakdownRow = {
   uniqueStudents: number;
   studentStreams: number;
   confirmedCount: number;
+  /** Confirmed TEJAS share (allocated amountDue). */
   confirmedAmount: number;
+  /** Confirmed gross (allocated saved grossTotal). */
+  confirmedGross: number;
   pendingCount: number;
+  /** Pending TEJAS share. */
   pendingAmount: number;
+  /** Pending gross. */
+  pendingGross: number;
   rejectedCount: number;
+  /** Rejected TEJAS allocation (not received). */
   rejectedAmount: number;
+  rejectedGross: number;
   refundPendingCount: number;
   refundPendingAmount: number;
+  refundPendingGross: number;
 };
 
 /** Standard olympiad classes always shown in the class-wise table (zeros allowed). */
@@ -350,12 +425,16 @@ export function emptyClassBreakdown(info: ClassKeyInfo): ClassBreakdownRow {
     studentStreams: 0,
     confirmedCount: 0,
     confirmedAmount: 0,
+    confirmedGross: 0,
     pendingCount: 0,
     pendingAmount: 0,
+    pendingGross: 0,
     rejectedCount: 0,
     rejectedAmount: 0,
+    rejectedGross: 0,
     refundPendingCount: 0,
     refundPendingAmount: 0,
+    refundPendingGross: 0,
   };
 }
 
@@ -372,19 +451,24 @@ export function mergeClassMetricIntoBreakdown(
   row.registrationRecords += metric.registrationTouch;
   row.uniqueStudents += metric.uniqueStudents;
   row.studentStreams += metric.studentStreams;
-  const amount = metric.allocatedAmountDue;
+  const tejas = metric.allocatedAmountDue;
+  const gross = metric.allocatedGross ?? 0;
   if (status === "confirmed") {
     row.confirmedCount += 1;
-    row.confirmedAmount += amount;
+    row.confirmedAmount += tejas;
+    row.confirmedGross += gross;
   } else if (status === "rejected") {
     row.rejectedCount += 1;
-    row.rejectedAmount += amount;
+    row.rejectedAmount += tejas;
+    row.rejectedGross += gross;
   } else if (status === "refund_pending") {
     row.refundPendingCount += 1;
-    row.refundPendingAmount += amount;
+    row.refundPendingAmount += tejas;
+    row.refundPendingGross += gross;
   } else {
     row.pendingCount += 1;
-    row.pendingAmount += amount;
+    row.pendingAmount += tejas;
+    row.pendingGross += gross;
   }
   map.set(metric.classKey, row);
 }
@@ -404,28 +488,35 @@ export function ensureStandardClassRows(rows: ClassBreakdownRow[]): ClassBreakdo
     map.set(info.key, emptyClassBreakdown(info));
   }
   for (const row of rows) {
-    const existing = map.get(row.classKey);
-    map.set(row.classKey, existing
-      ? {
-          ...row,
-          refundPendingCount: row.refundPendingCount ?? 0,
-          refundPendingAmount: row.refundPendingAmount ?? 0,
-        }
-      : {
-          ...emptyClassBreakdown({ key: row.classKey, label: row.classLabel, sort: row.sort }),
-          ...row,
-          refundPendingCount: row.refundPendingCount ?? 0,
-          refundPendingAmount: row.refundPendingAmount ?? 0,
-        });
+    const base = emptyClassBreakdown({ key: row.classKey, label: row.classLabel, sort: row.sort });
+    map.set(row.classKey, {
+      ...base,
+      ...row,
+      confirmedGross: row.confirmedGross ?? 0,
+      pendingGross: row.pendingGross ?? 0,
+      rejectedGross: row.rejectedGross ?? 0,
+      refundPendingCount: row.refundPendingCount ?? 0,
+      refundPendingAmount: row.refundPendingAmount ?? 0,
+      refundPendingGross: row.refundPendingGross ?? 0,
+    });
   }
   return finalizeClassBreakdown(map);
 }
 
-/** Sum class amount buckets — used to reconcile with registration amountDue allocation. */
+/** Sum class TEJAS amount buckets — reconciles with registration amountDue allocation. */
 export function classBreakdownAmountTotal(rows: ClassBreakdownRow[]): number {
   return rows.reduce(
     (sum, row) =>
       sum + row.confirmedAmount + row.pendingAmount + row.rejectedAmount + (row.refundPendingAmount ?? 0),
+    0,
+  );
+}
+
+/** Sum class gross amount buckets — reconciles with registration grossTotal allocation. */
+export function classBreakdownGrossTotal(rows: ClassBreakdownRow[]): number {
+  return rows.reduce(
+    (sum, row) =>
+      sum + (row.confirmedGross ?? 0) + (row.pendingGross ?? 0) + (row.rejectedGross ?? 0) + (row.refundPendingGross ?? 0),
     0,
   );
 }
@@ -489,8 +580,8 @@ export function scopeFilterableRowsToClass(
     scoped.push({
       ...row,
       amountDue: metric.allocatedAmountDue,
-      grossTotal: Math.round(row.grossTotal * streamShare),
-      schoolShare: Math.round(row.schoolShare * streamShare),
+      grossTotal: metric.allocatedGross ?? Math.round(row.grossTotal * streamShare),
+      schoolShare: metric.allocatedSchoolShare ?? Math.round(row.schoolShare * streamShare),
       uniqueStudentCount: metric.uniqueStudents,
       studentCount: metric.uniqueStudents,
       studentStreamRegistrations: metric.studentStreams,
@@ -517,17 +608,27 @@ export function summarizeFilterableRows(rows: FilterableStaffRow[]): {
   amountDue: number;
   grossCollected: number;
   schoolShare: number;
+  /** Confirmed TEJAS remittance only (saved amountDue). */
   amountReceived: number;
+  /** Confirmed saved grossTotal only. */
+  confirmedGrossReceived: number;
+  /** Confirmed saved schoolShare only. */
+  confirmedSchoolShare: number;
   pendingPayable: number;
+  pendingGross: number;
   awaitingPaymentCount: number;
   awaitingPaymentAmount: number;
+  awaitingPaymentGross: number;
   reportedCount: number;
   reportedAmount: number;
+  reportedGross: number;
   confirmedCount: number;
   rejectedCount: number;
   rejectedPayable: number;
+  rejectedGross: number;
   refundPendingCount: number;
   refundPendingAmount: number;
+  refundPendingGross: number;
   rejectedOrRefund: number;
   payments: Record<string, number>;
   classBreakdown: ClassBreakdownRow[];
@@ -557,7 +658,11 @@ export function summarizeFilterableRows(rows: FilterableStaffRow[]): {
     technologyEntries += row.technologyCount ?? 0;
     if (row.channel === "individual-registration") individualRegistrations += 1;
     else schoolRegistrations += 1;
-    addPaymentBucket(buckets, row.paymentStatus, row.amountDue);
+    addPaymentBucket(buckets, row.paymentStatus, {
+      tejas: row.amountDue,
+      gross: row.grossTotal,
+      schoolShare: row.schoolShare,
+    });
     for (const metric of row.classMetrics ?? []) {
       mergeClassMetricIntoBreakdown(classMap, metric, row.paymentStatus);
     }
@@ -576,16 +681,23 @@ export function summarizeFilterableRows(rows: FilterableStaffRow[]): {
     grossCollected,
     schoolShare,
     amountReceived: buckets.confirmedAmount,
+    confirmedGrossReceived: buckets.confirmedGross,
+    confirmedSchoolShare: buckets.confirmedSchoolShare,
     pendingPayable: buckets.pendingPayable,
+    pendingGross: buckets.pendingGross,
     awaitingPaymentCount: buckets.awaitingCount,
     awaitingPaymentAmount: buckets.awaitingAmount,
+    awaitingPaymentGross: buckets.awaitingGross,
     reportedCount: buckets.reportedCount,
     reportedAmount: buckets.reportedAmount,
+    reportedGross: buckets.reportedGross,
     confirmedCount: buckets.confirmedCount,
     rejectedCount: buckets.rejectedCount,
     rejectedPayable: buckets.rejectedAmount,
+    rejectedGross: buckets.rejectedGross,
     refundPendingCount: buckets.refundPendingCount,
     refundPendingAmount: buckets.refundPendingAmount,
+    refundPendingGross: buckets.refundPendingGross,
     rejectedOrRefund: buckets.rejectedCount + buckets.refundPendingCount,
     payments,
     classBreakdown: ensureStandardClassRows(finalizeClassBreakdown(classMap)),

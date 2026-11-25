@@ -29,24 +29,35 @@ type Overview = {
   grossCollected: number;
   schoolShare: number;
   amountReceived: number;
+  confirmedGrossReceived?: number;
+  confirmedSchoolShare?: number;
   pendingPayable: number;
+  pendingGross?: number;
   awaitingPaymentCount?: number;
   awaitingPaymentAmount?: number;
+  awaitingPaymentGross?: number;
   reportedCount?: number;
   reportedAmount?: number;
+  reportedGross?: number;
   confirmedCount?: number;
   rejectedCount?: number;
   rejectedPayable?: number;
+  rejectedGross?: number;
   refundPendingCount?: number;
   refundPendingAmount?: number;
+  refundPendingGross?: number;
   rejectedOrRefund?: number;
   classBreakdown?: ClassBreakdownRow[];
   payments: Record<string, number>;
 };
 
 type ClassBreakdownDisplay = ClassBreakdownRow & {
+  confirmedGross: number;
+  pendingGross: number;
+  rejectedGross: number;
   refundPendingCount: number;
   refundPendingAmount: number;
+  refundPendingGross: number;
 };
 
 type Row = {
@@ -434,8 +445,12 @@ export function ReviewDashboard() {
   const visibleClassBreakdown = useMemo((): ClassBreakdownDisplay[] => {
     const rows = displayOverview.classBreakdown.map((row) => ({
       ...row,
+      confirmedGross: row.confirmedGross ?? 0,
+      pendingGross: row.pendingGross ?? 0,
+      rejectedGross: row.rejectedGross ?? 0,
       refundPendingCount: row.refundPendingCount ?? 0,
       refundPendingAmount: row.refundPendingAmount ?? 0,
+      refundPendingGross: row.refundPendingGross ?? 0,
     }));
     if (classFilter === "all") return rows;
     return rows.filter((row) => row.classKey === classFilter);
@@ -501,7 +516,7 @@ export function ReviewDashboard() {
     <div className="space-y-10 md:space-y-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="max-w-3xl text-base leading-relaxed text-tejas-muted">
-          Amounts use server-saved fee fields. Screenshot OCR match is not bank verification. Total payment received is confirmed payments only.
+          Amounts use server-saved fee fields. Confirmed gross, school share and TEJAS share are shown separately. Screenshot OCR match is not bank verification. Pending, reported, rejected and refund/adjustment are never counted as received.
         </p>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => load()} className="rounded-lg border border-tejas-border bg-white px-4 py-2.5 text-sm font-semibold text-tejas-blue disabled:opacity-60" disabled={loading}>
@@ -533,23 +548,24 @@ export function ReviewDashboard() {
           title="Verified payments"
           tone="emerald"
           onClick={() => { setStatusFilter("confirmed"); setPage(1); }}
-          primaryLabel="Total payment received"
-          primaryValue={inr.format(displayOverview.amountReceived)}
+          primaryLabel="Gross payment received (confirmed)"
+          primaryValue={inr.format(displayOverview.confirmedGrossReceived)}
           lines={[
+            `School share (confirmed) ${inr.format(displayOverview.confirmedSchoolShare)}`,
+            `TEJAS share (confirmed) ${inr.format(displayOverview.amountReceived)}`,
             `Confirmed count ${displayOverview.confirmedCount}`,
-            "TEJAS share (confirmed only)",
-            "Excludes pending / reported / rejected",
+            "Excludes pending / reported / rejected / refund",
           ]}
         />
         <SummaryCard
           title="Rejected / adjustment"
           tone="red"
           onClick={() => { setStatusFilter("rejected"); setPage(1); }}
-          primaryLabel="Rejected (not received)"
+          primaryLabel="Rejected TEJAS (not received)"
           primaryValue={inr.format(displayOverview.rejectedPayable)}
           lines={[
-            `Rejected count ${displayOverview.rejectedCount}`,
-            `Refund/adj. pending ${displayOverview.refundPendingCount} · ${inr.format(displayOverview.refundPendingAmount)}`,
+            `Rejected gross ${inr.format(displayOverview.rejectedGross)} · count ${displayOverview.rejectedCount}`,
+            `Refund/adj. TEJAS ${inr.format(displayOverview.refundPendingAmount)} · gross ${inr.format(displayOverview.refundPendingGross)}`,
             "Not counted as received",
           ]}
         />
@@ -557,12 +573,12 @@ export function ReviewDashboard() {
           title="Pending payments"
           tone="amber"
           onClick={() => { setStatusFilter("unfinished"); setPage(1); }}
-          primaryLabel="Pending amount"
+          primaryLabel="Pending TEJAS share"
           primaryValue={inr.format(displayOverview.pendingPayable)}
           lines={[
-            `Awaiting ${displayOverview.awaitingPaymentCount} · ${inr.format(displayOverview.awaitingPaymentAmount)}`,
-            `Proof submitted ${displayOverview.reportedCount} · ${inr.format(displayOverview.reportedAmount)}`,
-            "Not added to received",
+            `Pending gross ${inr.format(displayOverview.pendingGross)}`,
+            `Awaiting TEJAS ${inr.format(displayOverview.awaitingPaymentAmount)} · gross ${inr.format(displayOverview.awaitingPaymentGross)}`,
+            `Proof submitted TEJAS ${inr.format(displayOverview.reportedAmount)} · gross ${inr.format(displayOverview.reportedGross)}`,
           ]}
         />
       </div>
@@ -572,7 +588,7 @@ export function ReviewDashboard() {
           ["Gross calculated (all listed)", inr.format(displayOverview.grossCollected)],
           ["School share (all listed)", inr.format(displayOverview.schoolShare)],
           ["TEJAS payable (all listed)", inr.format(displayOverview.amountDue)],
-          ["Eligible received (= verified)", inr.format(displayOverview.amountReceived)],
+          ["Confirmed TEJAS share (received)", inr.format(displayOverview.amountReceived)],
         ].map(([label, value]) => (
           <div key={String(label)} className="rounded-2xl border border-tejas-border bg-white px-5 py-5 shadow-sm">
             <dt className="text-sm text-tejas-muted">{label}</dt>
@@ -586,10 +602,8 @@ export function ReviewDashboard() {
           <div className="max-w-3xl">
             <h2 className="text-xl font-bold text-tejas-ink">Class-wise registration</h2>
             <p className="mt-1 text-base text-tejas-muted">
-              Classes 3–10 always appear (zeros when empty). <strong className="font-semibold text-tejas-ink">Registration records</strong> =
-              registrations that include this class (do not sum across classes as total records).{" "}
-              <strong className="font-semibold text-tejas-ink">Unique students</strong> and{" "}
-              <strong className="font-semibold text-tejas-ink">student-streams</strong> are separate.
+              Classes 3–10 always appear (zeros when empty). Amount columns separate <strong className="font-semibold text-tejas-ink">gross</strong> (saved ₹150 fee)
+              from <strong className="font-semibold text-tejas-ink">TEJAS share</strong> (saved remittance ₹120). Registration records, unique students and student-streams stay distinct.
             </p>
           </div>
           <label className="text-base">
@@ -619,10 +633,11 @@ export function ReviewDashboard() {
                 <th className="px-3 py-3 font-semibold">Registration records</th>
                 <th className="px-3 py-3 font-semibold">Unique students</th>
                 <th className="px-3 py-3 font-semibold">Student-streams</th>
-                <th className="px-3 py-3 font-semibold">Confirmed received</th>
-                <th className="px-3 py-3 font-semibold">Pending</th>
-                <th className="px-3 py-3 font-semibold">Rejected</th>
-                <th className="px-3 py-3 font-semibold">Refund/adj.</th>
+                <th className="px-3 py-3 font-semibold">Confirmed gross received</th>
+                <th className="px-3 py-3 font-semibold">Confirmed TEJAS share</th>
+                <th className="px-3 py-3 font-semibold">Pending gross / TEJAS</th>
+                <th className="px-3 py-3 font-semibold">Rejected (TEJAS)</th>
+                <th className="px-3 py-3 font-semibold">Refund/adj. (TEJAS)</th>
               </tr>
             </thead>
             <tbody>
@@ -632,8 +647,9 @@ export function ReviewDashboard() {
                   <td className="px-3 py-3">{row.registrationRecords}</td>
                   <td className="px-3 py-3">{row.uniqueStudents}</td>
                   <td className="px-3 py-3">{row.studentStreams}</td>
+                  <td className="px-3 py-3">{row.confirmedCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.confirmedGross)}</span></td>
                   <td className="px-3 py-3">{row.confirmedCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.confirmedAmount)}</span></td>
-                  <td className="px-3 py-3">{row.pendingCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.pendingAmount)}</span></td>
+                  <td className="px-3 py-3">{row.pendingCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.pendingGross)} / {inr.format(row.pendingAmount)}</span></td>
                   <td className="px-3 py-3">{row.rejectedCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.rejectedAmount)}</span></td>
                   <td className="px-3 py-3">{row.refundPendingCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.refundPendingAmount)}</span></td>
                 </tr>
@@ -647,10 +663,10 @@ export function ReviewDashboard() {
                 </td>
                 <td className="px-3 py-3">{displayOverview.uniqueStudents}</td>
                 <td className="px-3 py-3">{displayOverview.studentStreams}</td>
-                <td className="px-3 py-3" colSpan={4}>
-                  Class amounts {inr.format(classAmountReconcile)}
+                <td className="px-3 py-3" colSpan={5}>
+                  Class TEJAS {inr.format(classAmountReconcile)}
                   <span className="ml-2 text-sm font-normal text-tejas-muted">
-                    (TEJAS payable {inr.format(displayOverview.amountDue)})
+                    (= TEJAS payable {inr.format(displayOverview.amountDue)}; confirmed gross {inr.format(displayOverview.confirmedGrossReceived)})
                   </span>
                 </td>
               </tr>

@@ -441,18 +441,27 @@ export type StaffOverview = {
   amountDue: number;
   grossCollected: number;
   schoolShare: number;
-  /** Confirmed TEJAS payable only — never pending/reported/rejected. */
+  /** Confirmed TEJAS remittance (saved amountDue) only — never pending/reported/rejected. */
   amountReceived: number;
+  /** Confirmed saved grossTotal only. */
+  confirmedGrossReceived: number;
+  /** Confirmed saved schoolShare only. */
+  confirmedSchoolShare: number;
   pendingPayable: number;
+  pendingGross: number;
   awaitingPaymentCount: number;
   awaitingPaymentAmount: number;
+  awaitingPaymentGross: number;
   reportedCount: number;
   reportedAmount: number;
+  reportedGross: number;
   confirmedCount: number;
   rejectedCount: number;
   rejectedPayable: number;
+  rejectedGross: number;
   refundPendingCount: number;
   refundPendingAmount: number;
+  refundPendingGross: number;
   /** @deprecated use rejectedCount; kept for older clients */
   rejectedOrRefund: number;
   bookGross: number;
@@ -503,7 +512,11 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
     const unique = countUniqueStudents(record.students);
     const driveSyncStatus = driveSyncStatusForRegistration(record.reference);
     const channel = record.channel ?? "school-registration";
-    const classMetrics = classMetricsForRegistration(record.students, fee.amountDue);
+    const classMetrics = classMetricsForRegistration(record.students, {
+      tejas: fee.amountDue,
+      gross: fee.grossTotal,
+      schoolShare: fee.schoolShare,
+    });
     const history = record.payment.history ?? [];
     const lastUpdatedAt = history.length > 0 ? history[history.length - 1]!.at : record.createdAt;
     if (channel === "individual-registration") individualRegistrations += 1;
@@ -521,7 +534,11 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
     bookGross += fee.printedBookAmount;
     bookSchoolShare += fee.bookSchoolShare;
     bookPayable += fee.bookPayable;
-    addPaymentBucket(buckets, record.payment.status, fee.amountDue);
+    addPaymentBucket(buckets, record.payment.status, {
+      tejas: fee.amountDue,
+      gross: fee.grossTotal,
+      schoolShare: fee.schoolShare,
+    });
     for (const metric of classMetrics) {
       mergeClassMetricIntoBreakdown(classBreakdownMap, metric, record.payment.status);
     }
@@ -594,16 +611,23 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       grossCollected,
       schoolShare,
       amountReceived: buckets.confirmedAmount,
+      confirmedGrossReceived: buckets.confirmedGross,
+      confirmedSchoolShare: buckets.confirmedSchoolShare,
       pendingPayable: buckets.pendingPayable,
+      pendingGross: buckets.pendingGross,
       awaitingPaymentCount: buckets.awaitingCount,
       awaitingPaymentAmount: buckets.awaitingAmount,
+      awaitingPaymentGross: buckets.awaitingGross,
       reportedCount: buckets.reportedCount,
       reportedAmount: buckets.reportedAmount,
+      reportedGross: buckets.reportedGross,
       confirmedCount: buckets.confirmedCount,
       rejectedCount: buckets.rejectedCount,
       rejectedPayable: buckets.rejectedAmount,
+      rejectedGross: buckets.rejectedGross,
       refundPendingCount: buckets.refundPendingCount,
       refundPendingAmount: buckets.refundPendingAmount,
+      refundPendingGross: buckets.refundPendingGross,
       rejectedOrRefund: buckets.rejectedCount + buckets.refundPendingCount,
       bookGross,
       bookSchoolShare,

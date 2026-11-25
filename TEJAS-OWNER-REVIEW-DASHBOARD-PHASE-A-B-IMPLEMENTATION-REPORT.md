@@ -1,99 +1,89 @@
 # TEJAS — Owner Review Dashboard Phase A + B implementation report
 
-**Date:** 2026-11-25 (updated after owner Preview visual / class-wise fixes)  
+**Date:** 2026-11-25 (payment label / amount semantics correction)  
 **Branch:** `feat/owner-review-dashboard-phase-a-b`  
-**PR:** https://github.com/dhevb/tejas/pull/67 — **NOT MERGED**  
-**Scope:** Phase A + B + owner Preview remediation (layout, Classes 3–10 always visible, count definitions, amount clarity)  
+**PR:** https://github.com/dhevb/tejas/pull/67 — **OPEN, NOT MERGED**  
 **Production:** **NOT DEPLOYED** · **NOT MERGED**
 
 ---
 
-## 1. Implemented UI changes
+## Audit finding (authoritative fields)
+
+School registration fee helpers (`lib/registration/fee.ts`) save three independent parts per registration:
+
+| Saved field | Policy (per student-stream) | Meaning |
+|-------------|-----------------------------|---------|
+| `grossTotal` / `totalStudentFees` | ₹150 | Calculated gross fee |
+| `schoolShare` / `registrationSchoolShare` | ₹30 | School retention |
+| `amountDue` / `registrationPayable` | ₹120 | TEJAS remittance (payment proof must equal this) |
+
+Payment proof validation requires `amountPaid === amountDue` (TEJAS ₹120), **not** gross ₹150. Gross is independently stored; it is **not** invented by scaling TEJAS share.
+
+**Prior bug:** Verified card labelled “Total payment received” using confirmed `amountDue` only, which is **TEJAS share**, not gross.
+
+---
+
+## Correction
+
+Verified card now shows:
+
+1. **Gross payment received (confirmed)** = sum of saved `grossTotal` for `confirmed` only  
+2. **School share (confirmed)** = sum of saved `schoolShare` for `confirmed` only  
+3. **TEJAS share (confirmed)** = sum of saved `amountDue` for `confirmed` only  
+
+Pending / reported / rejected / refund-adjustment show **gross and TEJAS separately** from the same saved fields. None of those statuses enter confirmed received.
+
+Class-wise columns:
+
+- Confirmed gross received  
+- Confirmed TEJAS share  
+- Pending gross / TEJAS  
+- Rejected (TEJAS)  
+- Refund/adj. (TEJAS)  
+
+Example for one confirmed school student-stream: Gross ₹150 · School ₹30 · TEJAS ₹120.
+
+---
+
+## Implemented UI (cumulative)
 
 | Item | Status |
 |------|--------|
-| Desktop content width ~1200px (`max-w-[1200px]`) | **Done** |
-| Larger summary cards with prominent primary amounts | **Done** |
-| Clearer spacing between cards / financial strip / class table / school list | **Done** |
-| Mobile responsive layout preserved | **Done** |
-| Site header/nav unchanged | **Honored** |
-| Four summary cards (Total / Verified / Rejected·Adjustment / Pending) | **Done** |
-| Labels: Registration records · Unique students · Student-streams (separate) | **Done** |
-| Total payment received = confirmed only | **Done** |
-| Pending splits awaiting vs proof-submitted (`reported`) | **Done** |
-| Rejected ₹ + refund/adjustment ₹ separate (cards + class table) | **Done** |
-| Classes 3–10 always visible (zeros when empty) | **Done** |
-| Class Not Identified retained when present | **Done** |
-| Class filter scopes overview cards to that class (reconcile) | **Done** |
-| State → District grouping preserved | **Done** |
-| Parent contacts hidden by default | **Done** |
-| OCR ≠ bank verification copy | **Done** |
-| No student account / entitlement / fee-policy changes | **Honored** |
-| Owner-only auth unchanged | **Honored** |
+| Desktop ~1200px + readable cards | Done |
+| Classes 3–10 always visible | Done |
+| Registration records ≠ unique students ≠ student-streams | Done |
+| Gross / school share / TEJAS share for confirmed | **Done (this fix)** |
+| Pending/rejected/refund never counted as received | Done |
+| Owner-only auth; no student access flips; no fee-policy change | Honored |
 
 ---
 
-## 2–8. Metrics (server formulas)
-
-| Metric | Definition |
-|--------|------------|
-| Registration records | Count of registration rows under current filters (`overview.schools`) |
-| Unique students | Identity-deduped students per registration, summed |
-| Student-streams | Selected english/mathematics/technology combinations |
-| Class registration records | Count of registrations that **touch** that class (do **not** sum across classes as total records) |
-| Confirmed received | `payment.status === confirmed` → sum saved `amountDue` |
-| Pending | awaiting + reported only |
-| Proof-submitted | `reportedAmount` (not confirmed) |
-| Rejected | `rejectedPayable` only (not refund_pending) |
-| Refund/adjustment | `refundPendingAmount` separate; never in received |
-
-Screenshot amounts (5 regs / 14 streams) rechecked against fee policy: Gross ₹2,100 · Share ₹420 · TEJAS ₹1,680 · Confirmed ₹120 · Pending ₹960 · Rejected ₹240 · Refund ₹360 — arithmetic consistent; no fee-policy change.
-
-Filtered cards recompute via `summarizeFilterableRows` + `scopeFilterableRowsToClass` on server-authored fields.
-
----
-
-## 9. Test results (this remediation)
+## Test results
 
 | Suite | Result |
 |-------|--------|
-| `staff-metrics.test.ts` (12 tests) | **PASS** |
-| Classes 3–10 always visible incl. zeros | **PASS** |
-| Registration records ≠ unique students ≠ student-streams | **PASS** |
-| Multi-stream one student | **PASS** |
-| Class totals reconcile with overview amounts | **PASS** |
-| Confirmed vs pending vs reported vs rejected vs refund_pending | **PASS** |
-| No double-count rejected + refund_pending | **PASS** |
-| Class filter scopes cards to class row | **PASS** |
+| `staff-metrics.test.ts` (13 tests) | **PASS** |
+| Gross ₹150 / school ₹30 / TEJAS ₹120 confirmed semantics | **PASS** |
+| Confirmed vs pending vs reported vs rejected vs refund | **PASS** |
 | `npx tsc --noEmit` | **PASS** |
-| `npm run lint` | **PASS** (existing emblem `<img>` warnings only) |
-| `npm run build` | **PASS** |
+| `npm run lint` | **PASS** (existing `<img>` warnings only) |
+| `npm run build` | **PASS** (this session) |
 | `git diff --check` | **PASS** |
 
 ---
 
-## 10. Preview deployment
+## Preview deployment
 
 | Field | Value |
 |-------|--------|
-| Preview URL | https://tejas-iew70des1-dhe-projects.vercel.app |
+| Preview URL | *(filled after Vercel Ready)* |
 | Stable alias | https://tejas-git-feat-owner-review-dashboard-phase-a-b-dhe-projects.vercel.app |
-| Deployment ID | `dpl_5s4SbrEKaXu1ajEcr3YDaBdcqhcw` |
-| Status | **Ready** (Preview) |
 | Review path | `/schools/register/review` |
-| Commit | `ff20fa3` |
-| Preview Supabase hostname | Remains **UNVERIFIED** (Secret); no migration required |
-| Production | Unchanged |
+| Preview Supabase hostname | Remains **UNVERIFIED**; no migration |
 
 ---
 
-## 11. Held PRs
+## Held PRs / Production
 
-Unchanged: #10 / #63 / #54 / #12 remain **HOLD**. No SQL applied.
-
----
-
-## 12. Production confirmation
-
-**Production data and settings: UNCHANGED.**  
-No merge to `main`, no Production promote, no SQL, no payment status mutations, no Auth/RLS/Storage/env changes, no student access flips.
+#10 / #63 / #54 / #12 remain **HOLD**.  
+**Production data and settings: UNCHANGED.** No merge, no promote, no SQL, no payment edits, no Auth/RLS/Storage/env changes.

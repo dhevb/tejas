@@ -10,10 +10,19 @@ import { streamById } from "@/lib/registration/schema";
 import type { StudentRecord } from "@/lib/registration/sheet";
 import { parseIndiaAddress, locationLabel } from "@/lib/registration/india-address";
 import {
+  addPaymentBucket,
+  classMetricsForRegistration,
+  ensureStandardClassRows,
   countStreamRegistrations,
+  countUniqueSchoolNames,
   countUniqueStudents,
   driveSyncLabel,
   driveSyncStatusForRegistration,
+  emptyPaymentBuckets,
+  finalizeClassBreakdown,
+  mergeClassMetricIntoBreakdown,
+  type ClassBreakdownRow,
+  type ClassMetric,
   type DriveSyncStatus,
 } from "@/lib/registration/staff-metrics";
 import {
@@ -95,9 +104,9 @@ export type PublicSummary = {
 const STATUS_LABEL: Record<PaymentStatus, string> = {
   pending_instructions: "Payment Pending",
   awaiting_payment: "Payment Pending",
-  reported: "Payment Submitted / Verification Pending",
-  confirmed: "Verified",
-  rejected: "Rejected",
+  reported: "Proof Submitted / Verification Awaiting",
+  confirmed: "Payment Verified / Amount Received",
+  rejected: "Rejected / Not Received",
   refund_pending: "Refund/Adjustment Pending",
 };
 
@@ -414,10 +423,13 @@ export type StaffRow = PublicSummary & {
   locationLabel: string;
   locationIdentified: boolean;
   locationNotes: string[];
+  classMetrics: ClassMetric[];
+  lastUpdatedAt: string;
 };
 
 export type StaffOverview = {
   schools: number;
+  uniqueSchools: number;
   schoolRegistrations: number;
   individualRegistrations: number;
   students: number;
@@ -429,14 +441,35 @@ export type StaffOverview = {
   amountDue: number;
   grossCollected: number;
   schoolShare: number;
+  /** Confirmed TEJAS remittance (saved amountDue) only — never pending/reported/rejected. */
   amountReceived: number;
+  /** Confirmed saved grossTotal only. */
+  confirmedGrossReceived: number;
+  /** Confirmed saved schoolShare only. */
+  confirmedSchoolShare: number;
   pendingPayable: number;
+  pendingGross: number;
+  awaitingPaymentCount: number;
+  awaitingPaymentAmount: number;
+  awaitingPaymentGross: number;
+  reportedCount: number;
+  reportedAmount: number;
+  reportedGross: number;
+  confirmedCount: number;
+  rejectedCount: number;
+  rejectedPayable: number;
+  rejectedGross: number;
+  refundPendingCount: number;
+  refundPendingAmount: number;
+  refundPendingGross: number;
+  /** @deprecated use rejectedCount; kept for older clients */
   rejectedOrRefund: number;
   bookGross: number;
   bookSchoolShare: number;
   bookPayable: number;
   classCounts: Record<string, number>;
   streamCounts: Record<string, number>;
+  classBreakdown: ClassBreakdownRow[];
   printedBooks: number;
   ebookAccess: number;
   payments: Record<PaymentStatus, number>;
@@ -463,10 +496,7 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
   let amountDue = 0;
   let grossCollected = 0;
   let schoolShare = 0;
-  let amountReceived = 0;
-  let pendingPayable = 0;
-  let rejectedOrRefund = 0;
-  let bookGross = 0;
+  let bookGross = 0; // printed-book historical aggregates only
   let bookSchoolShare = 0;
   let bookPayable = 0;
   let printedBooks = 0;
@@ -474,13 +504,21 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
   let schoolRegistrations = 0;
   let individualRegistrations = 0;
   const registrations: StaffRow[] = [];
-  const pendingStatuses: PaymentStatus[] = ["pending_instructions", "awaiting_payment", "reported"];
+  const buckets = emptyPaymentBuckets();
+  const classBreakdownMap = new Map<string, ClassBreakdownRow>();
   for (const record of records) {
     const fee = presentFee(record.fee);
     const streamParts = countStreamRegistrations(record.students);
     const unique = countUniqueStudents(record.students);
     const driveSyncStatus = driveSyncStatusForRegistration(record.reference);
     const channel = record.channel ?? "school-registration";
+    const classMetrics = classMetricsForRegistration(record.students, {
+      tejas: fee.amountDue,
+      gross: fee.grossTotal,
+      schoolShare: fee.schoolShare,
+    });
+    const history = record.payment.history ?? [];
+    const lastUpdatedAt = history.length > 0 ? history[history.length - 1]!.at : record.createdAt;
     if (channel === "individual-registration") individualRegistrations += 1;
     else schoolRegistrations += 1;
     payments[record.payment.status] += 1;
@@ -496,9 +534,14 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
     bookGross += fee.printedBookAmount;
     bookSchoolShare += fee.bookSchoolShare;
     bookPayable += fee.bookPayable;
-    if (record.payment.status === "confirmed") amountReceived += fee.amountDue;
-    if (pendingStatuses.includes(record.payment.status)) pendingPayable += fee.amountDue;
-    if (record.payment.status === "rejected" || record.payment.status === "refund_pending") rejectedOrRefund += 1;
+    addPaymentBucket(buckets, record.payment.status, {
+      tejas: fee.amountDue,
+      gross: fee.grossTotal,
+      schoolShare: fee.schoolShare,
+    });
+    for (const metric of classMetrics) {
+      mergeClassMetricIntoBreakdown(classBreakdownMap, metric, record.payment.status);
+    }
     const books = record.school.printedBooks === "yes" ? record.school.bookQuantity ?? 0 : 0;
     const ebooks = record.school.ebookAccess === "yes" ? record.students.length : 0;
     printedBooks += books;
@@ -545,13 +588,17 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       locationLabel: locationLabel(location),
       locationIdentified: location.fullyIdentified,
       locationNotes: location.notes,
+      classMetrics,
+      lastUpdatedAt,
     });
   }
   registrations.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  const uniqueSchools = countUniqueSchoolNames(registrations);
   return {
     registrations,
     overview: {
       schools: records.length,
+      uniqueSchools,
       schoolRegistrations,
       individualRegistrations,
       students,
@@ -563,14 +610,31 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       amountDue,
       grossCollected,
       schoolShare,
-      amountReceived,
-      pendingPayable,
-      rejectedOrRefund,
+      amountReceived: buckets.confirmedAmount,
+      confirmedGrossReceived: buckets.confirmedGross,
+      confirmedSchoolShare: buckets.confirmedSchoolShare,
+      pendingPayable: buckets.pendingPayable,
+      pendingGross: buckets.pendingGross,
+      awaitingPaymentCount: buckets.awaitingCount,
+      awaitingPaymentAmount: buckets.awaitingAmount,
+      awaitingPaymentGross: buckets.awaitingGross,
+      reportedCount: buckets.reportedCount,
+      reportedAmount: buckets.reportedAmount,
+      reportedGross: buckets.reportedGross,
+      confirmedCount: buckets.confirmedCount,
+      rejectedCount: buckets.rejectedCount,
+      rejectedPayable: buckets.rejectedAmount,
+      rejectedGross: buckets.rejectedGross,
+      refundPendingCount: buckets.refundPendingCount,
+      refundPendingAmount: buckets.refundPendingAmount,
+      refundPendingGross: buckets.refundPendingGross,
+      rejectedOrRefund: buckets.rejectedCount + buckets.refundPendingCount,
       bookGross,
       bookSchoolShare,
       bookPayable,
       classCounts,
       streamCounts,
+      classBreakdown: ensureStandardClassRows(finalizeClassBreakdown(classBreakdownMap)),
       printedBooks,
       ebookAccess,
       payments,

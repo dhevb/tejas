@@ -153,6 +153,47 @@ async function downloadObject(bucket: string, objectPath: string): Promise<Buffe
   return Buffer.from(await response.arrayBuffer());
 }
 
+/** True when Storage reports the object is missing (Supabase often uses 400, not only 404). */
+function storageMissingStatus(status: number): boolean {
+  return status === 404 || status === 400;
+}
+
+/**
+ * Existence check against the actual Storage object path.
+ * Does not treat DB metadata / filenames as proof. Does not load full object bytes.
+ * HEAD first; ranged GET (bytes=0-0) only when HEAD is inconclusive (e.g. 405).
+ */
+async function objectExists(bucket: string, objectPath: string): Promise<boolean> {
+  const headers = authHeaders();
+  const response = await fetch(`${originOrThrow()}/storage/v1/object/${bucket}/${objectPath}`, {
+    method: "HEAD",
+    headers,
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000),
+  });
+  await response.body?.cancel();
+  if (storageMissingStatus(response.status)) return false;
+  if (response.ok) {
+    // Empty object is not a usable upload/receipt.
+    if (response.headers.get("content-length") === "0") return false;
+    return true;
+  }
+  // Some Storage gateways reject HEAD; fall back to a ranged GET that stops after headers.
+  const rangedHeaders = authHeaders();
+  rangedHeaders.set("range", "bytes=0-0");
+  const ranged = await fetch(`${originOrThrow()}/storage/v1/object/${bucket}/${objectPath}`, {
+    method: "GET",
+    headers: rangedHeaders,
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000),
+  });
+  await ranged.body?.cancel();
+  if (storageMissingStatus(ranged.status)) return false;
+  if (!(ranged.ok || ranged.status === 206)) return false;
+  if (ranged.headers.get("content-length") === "0") return false;
+  return true;
+}
+
 async function compensate(created: Created) {
   const failures: string[] = [];
   const step = async (label: string, action: () => Promise<void>) => {
@@ -284,6 +325,14 @@ export async function readUpload(reference: string, ext: RegistrationRecord["upl
 
 export async function readReceipt(reference: string, ext: NonNullable<RegistrationRecord["receiptExt"]>): Promise<Buffer | null> {
   return downloadObject("tejas-payment-proofs", `${reference}/receipt.${ext}`);
+}
+
+export async function uploadExists(reference: string, ext: RegistrationRecord["uploadExt"]): Promise<boolean> {
+  return objectExists("tejas-registration-files", `${reference}/upload.${ext}`);
+}
+
+export async function receiptExists(reference: string, ext: NonNullable<RegistrationRecord["receiptExt"]>): Promise<boolean> {
+  return objectExists("tejas-payment-proofs", `${reference}/receipt.${ext}`);
 }
 
 function paymentHistoryNote(status: RegistrationRecord["payment"]["status"]): string {

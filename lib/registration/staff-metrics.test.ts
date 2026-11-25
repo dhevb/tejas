@@ -5,6 +5,8 @@ import {
   addPaymentBucket,
   classBreakdownAmountTotal,
   classBreakdownGrossTotal,
+  classBreakdownMainGrossTotal,
+  classBreakdownMainTejasTotal,
   classKeyForStudent,
   classMetricsForRegistration,
   classWiseCounts,
@@ -13,6 +15,8 @@ import {
   emptyPaymentBuckets,
   ensureStandardClassRows,
   finalizeClassBreakdown,
+  isMainClassTableStatus,
+  isPendingPaymentStatus,
   mergeClassMetricIntoBreakdown,
   reconcileFeeWithSaved,
   scopeFilterableRowsToClass,
@@ -381,6 +385,71 @@ test("rejected and refund_pending do not double-count in class breakdown", () =>
   assert.equal(class7!.refundPendingAmount, 120);
   assert.equal(class7!.confirmedAmount, 0);
   assert.equal(class7!.confirmedGross, 0);
+});
+
+test("main class table statuses exclude rejected and refund_pending but keep reported pending", () => {
+  assert.equal(isMainClassTableStatus("confirmed"), true);
+  assert.equal(isMainClassTableStatus("reported"), true);
+  assert.equal(isPendingPaymentStatus("reported"), true);
+  assert.equal(isMainClassTableStatus("awaiting_payment"), true);
+  assert.equal(isMainClassTableStatus("rejected"), false);
+  assert.equal(isMainClassTableStatus("refund_pending"), false);
+  const confirmed = classMetricsForRegistration(
+    [student({ fullName: "C", streams: ["english"], classNumber: 10, classLabel: "X" })],
+    { tejas: 120, gross: 150, schoolShare: 30 },
+  );
+  const rejected = classMetricsForRegistration(
+    [student({ fullName: "R", streams: ["english"], classNumber: 6, classLabel: "VI", parentMobile: "9000000011" })],
+    { tejas: 240, gross: 300, schoolShare: 60 },
+  );
+  const all = summarizeFilterableRows([
+    {
+      schoolName: "Confirmed School",
+      channel: "school-registration",
+      paymentStatus: "confirmed",
+      amountDue: 120,
+      grossTotal: 150,
+      schoolShare: 30,
+      uniqueStudentCount: 1,
+      studentCount: 1,
+      studentStreamRegistrations: 1,
+      classMetrics: confirmed,
+    },
+    {
+      schoolName: "Rejected School",
+      channel: "school-registration",
+      paymentStatus: "rejected",
+      amountDue: 240,
+      grossTotal: 300,
+      schoolShare: 60,
+      uniqueStudentCount: 1,
+      studentCount: 1,
+      studentStreamRegistrations: 2,
+      classMetrics: rejected,
+    },
+  ]);
+  assert.equal(all.rejectedPayable, 240);
+  const mainOnly = summarizeFilterableRows(
+    [
+      {
+        schoolName: "Confirmed School",
+        channel: "school-registration",
+        paymentStatus: "confirmed",
+        amountDue: 120,
+        grossTotal: 150,
+        schoolShare: 30,
+        uniqueStudentCount: 1,
+        studentCount: 1,
+        studentStreamRegistrations: 1,
+        classMetrics: confirmed,
+      },
+    ].filter((row) => isMainClassTableStatus(row.paymentStatus)),
+  );
+  assert.equal(mainOnly.rejectedPayable, 0);
+  assert.equal(mainOnly.amountReceived, 120);
+  assert.equal(classBreakdownMainTejasTotal(mainOnly.classBreakdown), 120);
+  assert.equal(classBreakdownMainGrossTotal(mainOnly.classBreakdown), 150);
+  assert.equal(mainOnly.classBreakdown.find((row) => row.classKey === "class-6")?.rejectedAmount ?? 0, 0);
 });
 
 test("class filter scopes overview to that class so cards reconcile with the class row", () => {

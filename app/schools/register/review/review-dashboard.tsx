@@ -583,19 +583,24 @@ export function ReviewDashboard() {
         />
       </div>
 
-      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          ["Gross calculated (all listed)", inr.format(displayOverview.grossCollected)],
-          ["School share (all listed)", inr.format(displayOverview.schoolShare)],
-          ["TEJAS payable (all listed)", inr.format(displayOverview.amountDue)],
-          ["Confirmed TEJAS share (received)", inr.format(displayOverview.amountReceived)],
-        ].map(([label, value]) => (
-          <div key={String(label)} className="rounded-2xl border border-tejas-border bg-white px-5 py-5 shadow-sm">
-            <dt className="text-sm text-tejas-muted">{label}</dt>
-            <dd className="mt-2 text-2xl font-semibold tracking-tight text-tejas-ink">{value}</dd>
-          </div>
-        ))}
-      </dl>
+      <div>
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["Gross calculated (all listed)", inr.format(displayOverview.grossCollected)],
+            ["School share (all listed)", inr.format(displayOverview.schoolShare)],
+            ["TEJAS payable (all listed)", inr.format(displayOverview.amountDue)],
+            ["Confirmed TEJAS share (received)", inr.format(displayOverview.amountReceived)],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="rounded-2xl border border-tejas-border bg-white px-5 py-5 shadow-sm">
+              <dt className="text-sm text-tejas-muted">{label}</dt>
+              <dd className="mt-2 text-2xl font-semibold tracking-tight text-tejas-ink">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-tejas-muted">
+          Includes all listed payment statuses; not equal to actual amount received.
+        </p>
+      </div>
 
       <section className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm md:p-6" aria-label="Class-wise registration">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -625,19 +630,19 @@ export function ReviewDashboard() {
             </select>
           </label>
         </div>
-        <div className="mt-5 overflow-x-auto">
-          <table className="min-w-full text-left text-base">
+        <div className="mt-5 -mx-1 overflow-x-auto overscroll-x-contain px-1">
+          <table className="min-w-[52rem] w-full text-left text-sm md:min-w-full md:text-base">
             <thead className="bg-stone-50">
               <tr className="border-b border-stone-200">
-                <th className="px-3 py-3 font-semibold">Class</th>
-                <th className="px-3 py-3 font-semibold">Registration records</th>
-                <th className="px-3 py-3 font-semibold">Unique students</th>
-                <th className="px-3 py-3 font-semibold">Student-streams</th>
-                <th className="px-3 py-3 font-semibold">Confirmed gross received</th>
-                <th className="px-3 py-3 font-semibold">Confirmed TEJAS share</th>
-                <th className="px-3 py-3 font-semibold">Pending gross / TEJAS</th>
-                <th className="px-3 py-3 font-semibold">Rejected (TEJAS)</th>
-                <th className="px-3 py-3 font-semibold">Refund/adj. (TEJAS)</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Class</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Registration records</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Unique students</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Student-streams</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Confirmed gross received</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Confirmed TEJAS share</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Pending gross / TEJAS</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Rejected (TEJAS)</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Refund/adj. (TEJAS)</th>
               </tr>
             </thead>
             <tbody>

@@ -26,3 +26,7 @@ tejas-*-pass-*.bin
 /vendor/tessdata/eng.traineddata
 
 
+
+# Local QA harness outputs (never commit secrets/evidence dumps)
+.local-qa/
+

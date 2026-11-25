@@ -134,11 +134,12 @@ Main columns now: Class · Registration records · Unique students · Student-st
 
 | Item | Status |
 |------|--------|
-| Preview URL | https://tejas-lvib1h9mo-dhe-projects.vercel.app/schools/register/review |
-| Preview host (links) | `tejas-lvib1h9mo-dhe-projects.vercel.app` (allowlisted `tejas-*-dhe-projects.vercel.app`) |
+| Preview URL | https://tejas-mdhqe5ezp-dhe-projects.vercel.app/schools/register/review |
+| Preview host (links) | `tejas-mdhqe5ezp-dhe-projects.vercel.app` (allowlisted `tejas-*-dhe-projects.vercel.app`) |
+| Prior Preview (file-existence probe) | https://tejas-lvib1h9mo-dhe-projects.vercel.app/schools/register/review (`dpl_G91J85LGp1Qcwnsk89djpQQBofrw`) |
 | Git branch alias (may lag CLI deploy) | https://tejas-git-feat-owner-dashboard-class-export-c2c54b-dhe-projects.vercel.app/schools/register/review |
-| Deployment ID | `dpl_G91J85LGp1Qcwnsk89djpQQBofrw` (**Ready**, target=preview) |
-| Inspector | https://vercel.com/dhe-projects/tejas/G91J85LGp1Qcwnsk89djpQQBofrw |
+| Deployment ID | `dpl_3n6BP27KDw7gG2jz2NwgoCErRSWe` (**Ready**, target=preview) |
+| Inspector | https://vercel.com/dhe-projects/tejas/3n6BP27KDw7gG2jz2NwgoCErRSWe |
 | Unauthenticated export/file | Browser/raw: Preview **302** Vercel SSO. Bypass protection (`vercel curl`): app returns **`{"ok":false}`** (Owner gate). Invalid reference same gate before file exposure. |
 | Workbook structure QA | Local sample + unit tests: **1 sheet** `School Registrations`, **64 columns**, stored geo + distinct UTR columns, missing receipt → unavailable label / no hyperlink, present upload → Owner-route link on Preview host |
 | Production `tejas.dhe.org.in/schools/register/review` | **200** (unchanged; this PR not deployed to Production) |

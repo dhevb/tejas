@@ -13,8 +13,8 @@ export default function ReviewPage() {
   return (
     <>
       <PageHero eyebrow="Owner" title="Registration review" subtitle="Verified amounts are confirmed payments only. Proof submitted is not bank confirmation. Pending and rejected are shown separately." />
-      <section className="py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section className="py-10 md:py-14">
+        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <ReviewDashboard />
         </div>
       </section>

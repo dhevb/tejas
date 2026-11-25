@@ -12,6 +12,7 @@ import { parseIndiaAddress, locationLabel } from "@/lib/registration/india-addre
 import {
   addPaymentBucket,
   classMetricsForRegistration,
+  ensureStandardClassRows,
   countStreamRegistrations,
   countUniqueSchoolNames,
   countUniqueStudents,
@@ -609,7 +610,7 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       bookPayable,
       classCounts,
       streamCounts,
-      classBreakdown: finalizeClassBreakdown(classBreakdownMap),
+      classBreakdown: ensureStandardClassRows(finalizeClassBreakdown(classBreakdownMap)),
       printedBooks,
       ebookAccess,
       payments,

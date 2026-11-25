@@ -5,7 +5,10 @@ import { presentFee } from "@/lib/registration/fee";
 import { panHolderLabel } from "@/lib/registration/school";
 import {
   CLASS_NOT_IDENTIFIED,
+  STANDARD_CLASS_NUMBERS,
+  classBreakdownAmountTotal,
   paymentStatusLabel,
+  scopeFilterableRowsToClass,
   summarizeFilterableRows,
   type ClassBreakdownRow,
   type ClassMetric,
@@ -39,6 +42,11 @@ type Overview = {
   rejectedOrRefund?: number;
   classBreakdown?: ClassBreakdownRow[];
   payments: Record<string, number>;
+};
+
+type ClassBreakdownDisplay = ClassBreakdownRow & {
+  refundPendingCount: number;
+  refundPendingAmount: number;
 };
 
 type Row = {
@@ -404,32 +412,39 @@ export function ReviewDashboard() {
       });
   }, [rows, query, statusFilter, streamFilter, channelFilter, stateFilter, districtFilter, classFilter, dateFrom, dateTo, sortKey, sortDir]);
 
-  const displayOverview = useMemo(
-    () =>
-      summarizeFilterableRows(
-        filtered.map((row) => ({
-          schoolName: row.schoolName,
-          channel: row.channel,
-          paymentStatus: row.paymentStatus,
-          amountDue: row.amountDue,
-          grossTotal: row.grossTotal,
-          schoolShare: row.schoolShare,
-          uniqueStudentCount: row.uniqueStudentCount ?? row.studentCount,
-          studentCount: row.studentCount,
-          studentStreamRegistrations: row.studentStreamRegistrations,
-          englishCount: row.englishCount,
-          mathematicsCount: row.mathematicsCount,
-          technologyCount: row.technologyCount,
-          classMetrics: row.classMetrics ?? [],
-        })),
-      ),
-    [filtered],
-  );
+  const displayOverview = useMemo(() => {
+    const baseRows = filtered.map((row) => ({
+      schoolName: row.schoolName,
+      channel: row.channel,
+      paymentStatus: row.paymentStatus,
+      amountDue: row.amountDue,
+      grossTotal: row.grossTotal,
+      schoolShare: row.schoolShare,
+      uniqueStudentCount: row.uniqueStudentCount ?? row.studentCount,
+      studentCount: row.studentCount,
+      studentStreamRegistrations: row.studentStreamRegistrations,
+      englishCount: row.englishCount,
+      mathematicsCount: row.mathematicsCount,
+      technologyCount: row.technologyCount,
+      classMetrics: row.classMetrics ?? [],
+    }));
+    return summarizeFilterableRows(scopeFilterableRowsToClass(baseRows, classFilter));
+  }, [filtered, classFilter]);
 
-  const visibleClassBreakdown = useMemo(() => {
-    if (classFilter === "all") return displayOverview.classBreakdown;
-    return displayOverview.classBreakdown.filter((row) => row.classKey === classFilter);
+  const visibleClassBreakdown = useMemo((): ClassBreakdownDisplay[] => {
+    const rows = displayOverview.classBreakdown.map((row) => ({
+      ...row,
+      refundPendingCount: row.refundPendingCount ?? 0,
+      refundPendingAmount: row.refundPendingAmount ?? 0,
+    }));
+    if (classFilter === "all") return rows;
+    return rows.filter((row) => row.classKey === classFilter);
   }, [displayOverview.classBreakdown, classFilter]);
+
+  const classAmountReconcile = useMemo(
+    () => classBreakdownAmountTotal(visibleClassBreakdown),
+    [visibleClassBreakdown],
+  );
 
   const stateGroups = useMemo(() => {
     const map = new Map<string, number>();
@@ -483,31 +498,32 @@ export function ReviewDashboard() {
   const shownFee = detail ? presentFee(detail.fee) : null;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-tejas-muted">
-          Amounts use server-saved fee fields. Screenshot OCR match is not bank verification. Eligible received revenue is confirmed payments only.
+    <div className="space-y-10 md:space-y-12">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <p className="max-w-3xl text-base leading-relaxed text-tejas-muted">
+          Amounts use server-saved fee fields. Screenshot OCR match is not bank verification. Total payment received is confirmed payments only.
         </p>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => load()} className="rounded-lg border border-tejas-border bg-white px-3 py-2 text-sm font-semibold text-tejas-blue disabled:opacity-60" disabled={loading}>
+          <button type="button" onClick={() => load()} className="rounded-lg border border-tejas-border bg-white px-4 py-2.5 text-sm font-semibold text-tejas-blue disabled:opacity-60" disabled={loading}>
             {loading ? "Refreshing…" : "Refresh"}
           </button>
-          <button type="button" onClick={() => signOut()} className="rounded-lg border border-tejas-border bg-white px-3 py-2 text-sm font-semibold">
+          <button type="button" onClick={() => signOut()} className="rounded-lg border border-tejas-border bg-white px-4 py-2.5 text-sm font-semibold">
             Owner logout
           </button>
         </div>
       </div>
 
-      {message ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{message}</p> : null}
-      {success ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{success}</p> : null}
+      {message ? <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-base text-red-800" role="alert">{message}</p> : null}
+      {success ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-base text-emerald-800">{success}</p> : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           title="Total registrations"
           tone="blue"
           onClick={() => { setStatusFilter("all"); setPage(1); }}
+          primaryLabel="Registration records"
+          primaryValue={String(displayOverview.schools)}
           lines={[
-            `Records ${displayOverview.schools}`,
             `Unique schools ${displayOverview.uniqueSchools}`,
             `Unique students ${displayOverview.uniqueStudents}`,
             `Student-streams ${displayOverview.studentStreams}`,
@@ -517,66 +533,74 @@ export function ReviewDashboard() {
           title="Verified payments"
           tone="emerald"
           onClick={() => { setStatusFilter("confirmed"); setPage(1); }}
+          primaryLabel="Total payment received"
+          primaryValue={inr.format(displayOverview.amountReceived)}
           lines={[
-            `Count ${displayOverview.confirmedCount}`,
-            `Received ${inr.format(displayOverview.amountReceived)}`,
-            "Confirmed TEJAS share only",
-            "Excludes pending / rejected",
+            `Confirmed count ${displayOverview.confirmedCount}`,
+            "TEJAS share (confirmed only)",
+            "Excludes pending / reported / rejected",
           ]}
         />
         <SummaryCard
           title="Rejected / adjustment"
           tone="red"
           onClick={() => { setStatusFilter("rejected"); setPage(1); }}
+          primaryLabel="Rejected (not received)"
+          primaryValue={inr.format(displayOverview.rejectedPayable)}
           lines={[
-            `Rejected ${displayOverview.rejectedCount} · ${inr.format(displayOverview.rejectedPayable)}`,
-            `Refund/adj. ${displayOverview.refundPendingCount} · ${inr.format(displayOverview.refundPendingAmount)}`,
+            `Rejected count ${displayOverview.rejectedCount}`,
+            `Refund/adj. pending ${displayOverview.refundPendingCount} · ${inr.format(displayOverview.refundPendingAmount)}`,
             "Not counted as received",
-            "Historical amounts retained",
           ]}
         />
         <SummaryCard
           title="Pending payments"
           tone="amber"
           onClick={() => { setStatusFilter("unfinished"); setPage(1); }}
+          primaryLabel="Pending amount"
+          primaryValue={inr.format(displayOverview.pendingPayable)}
           lines={[
             `Awaiting ${displayOverview.awaitingPaymentCount} · ${inr.format(displayOverview.awaitingPaymentAmount)}`,
             `Proof submitted ${displayOverview.reportedCount} · ${inr.format(displayOverview.reportedAmount)}`,
-            `Pending total ${inr.format(displayOverview.pendingPayable)}`,
             "Not added to received",
           ]}
         />
       </div>
 
-      <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Gross calculated (all listed)", inr.format(displayOverview.grossCollected)],
           ["School share (all listed)", inr.format(displayOverview.schoolShare)],
           ["TEJAS payable (all listed)", inr.format(displayOverview.amountDue)],
           ["Eligible received (= verified)", inr.format(displayOverview.amountReceived)],
         ].map(([label, value]) => (
-          <div key={String(label)} className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm">
-            <dt className="text-tejas-muted">{label}</dt>
-            <dd className="mt-1 text-lg font-semibold text-tejas-ink">{value}</dd>
+          <div key={String(label)} className="rounded-2xl border border-tejas-border bg-white px-5 py-5 shadow-sm">
+            <dt className="text-sm text-tejas-muted">{label}</dt>
+            <dd className="mt-2 text-2xl font-semibold tracking-tight text-tejas-ink">{value}</dd>
           </div>
         ))}
       </dl>
 
-      <section className="rounded-2xl border border-tejas-border bg-white p-4 shadow-sm" aria-label="Class-wise registration">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-tejas-ink">Class-wise registration</h2>
-            <p className="text-sm text-tejas-muted">Unique students and student-streams are separate. Amounts allocate each registration’s saved TEJAS payable by stream weight in the class.</p>
+      <section className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm md:p-6" aria-label="Class-wise registration">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="max-w-3xl">
+            <h2 className="text-xl font-bold text-tejas-ink">Class-wise registration</h2>
+            <p className="mt-1 text-base text-tejas-muted">
+              Classes 3–10 always appear (zeros when empty). <strong className="font-semibold text-tejas-ink">Registration records</strong> =
+              registrations that include this class (do not sum across classes as total records).{" "}
+              <strong className="font-semibold text-tejas-ink">Unique students</strong> and{" "}
+              <strong className="font-semibold text-tejas-ink">student-streams</strong> are separate.
+            </p>
           </div>
-          <label className="text-sm">
+          <label className="text-base">
             <span className="font-medium">Class filter</span>
             <select
               value={classFilter}
               onChange={(event) => { setClassFilter(event.target.value); setPage(1); }}
-              className="mt-1 block rounded-lg border border-tejas-border bg-white px-3 py-2"
+              className="mt-1 block min-w-[11rem] rounded-lg border border-tejas-border bg-white px-3 py-2.5"
             >
               <option value="all">All classes</option>
-              {[3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              {STANDARD_CLASS_NUMBERS.map((n) => (
                 <option key={n} value={`class-${n}`}>Class {n}</option>
               ))}
               {classOptions
@@ -587,38 +611,56 @@ export function ReviewDashboard() {
             </select>
           </label>
         </div>
-        <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+        <div className="mt-5 overflow-x-auto">
+          <table className="min-w-full text-left text-base">
             <thead className="bg-stone-50">
               <tr className="border-b border-stone-200">
-                <th className="px-3 py-2">Class</th>
-                <th className="px-3 py-2">Registrations</th>
-                <th className="px-3 py-2">Unique students</th>
-                <th className="px-3 py-2">Student-streams</th>
-                <th className="px-3 py-2">Confirmed</th>
-                <th className="px-3 py-2">Pending</th>
-                <th className="px-3 py-2">Rejected</th>
+                <th className="px-3 py-3 font-semibold">Class</th>
+                <th className="px-3 py-3 font-semibold">Registration records</th>
+                <th className="px-3 py-3 font-semibold">Unique students</th>
+                <th className="px-3 py-3 font-semibold">Student-streams</th>
+                <th className="px-3 py-3 font-semibold">Confirmed received</th>
+                <th className="px-3 py-3 font-semibold">Pending</th>
+                <th className="px-3 py-3 font-semibold">Rejected</th>
+                <th className="px-3 py-3 font-semibold">Refund/adj.</th>
               </tr>
             </thead>
             <tbody>
-              {visibleClassBreakdown.length === 0 ? (
-                <tr><td className="px-3 py-4 text-tejas-muted" colSpan={7}>No class rows under the current filters.</td></tr>
-              ) : (
-                visibleClassBreakdown.map((row) => (
-                  <tr key={row.classKey} className="border-b border-stone-100">
-                    <td className="px-3 py-2 font-medium">{row.classLabel || CLASS_NOT_IDENTIFIED}</td>
-                    <td className="px-3 py-2">{row.registrationRecords}</td>
-                    <td className="px-3 py-2">{row.uniqueStudents}</td>
-                    <td className="px-3 py-2">{row.studentStreams}</td>
-                    <td className="px-3 py-2">{row.confirmedCount}<br /><span className="text-tejas-muted">{inr.format(row.confirmedAmount)}</span></td>
-                    <td className="px-3 py-2">{row.pendingCount}<br /><span className="text-tejas-muted">{inr.format(row.pendingAmount)}</span></td>
-                    <td className="px-3 py-2">{row.rejectedCount}<br /><span className="text-tejas-muted">{inr.format(row.rejectedAmount)}</span></td>
-                  </tr>
-                ))
-              )}
+              {visibleClassBreakdown.map((row) => (
+                <tr key={row.classKey} className="border-b border-stone-100">
+                  <td className="px-3 py-3 font-medium">{row.classLabel || CLASS_NOT_IDENTIFIED}</td>
+                  <td className="px-3 py-3">{row.registrationRecords}</td>
+                  <td className="px-3 py-3">{row.uniqueStudents}</td>
+                  <td className="px-3 py-3">{row.studentStreams}</td>
+                  <td className="px-3 py-3">{row.confirmedCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.confirmedAmount)}</span></td>
+                  <td className="px-3 py-3">{row.pendingCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.pendingAmount)}</span></td>
+                  <td className="px-3 py-3">{row.rejectedCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.rejectedAmount)}</span></td>
+                  <td className="px-3 py-3">{row.refundPendingCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.refundPendingAmount)}</span></td>
+                </tr>
+              ))}
             </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-stone-200 bg-stone-50/80 font-semibold">
+                <td className="px-3 py-3">Reconcile (filtered)</td>
+                <td className="px-3 py-3" title="Authoritative registration-record count from overview cards">
+                  {displayOverview.schools}
+                </td>
+                <td className="px-3 py-3">{displayOverview.uniqueStudents}</td>
+                <td className="px-3 py-3">{displayOverview.studentStreams}</td>
+                <td className="px-3 py-3" colSpan={4}>
+                  Class amounts {inr.format(classAmountReconcile)}
+                  <span className="ml-2 text-sm font-normal text-tejas-muted">
+                    (TEJAS payable {inr.format(displayOverview.amountDue)})
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
+        <p className="mt-3 text-sm text-tejas-muted">
+          Overview cards use the same filters. Unique students in the total registrations card: {displayOverview.uniqueStudents}.
+          Student-streams: {displayOverview.studentStreams}. Registration records: {displayOverview.schools}.
+        </p>
       </section>
 
       {stateGroups.length > 0 ? (
@@ -665,7 +707,7 @@ export function ReviewDashboard() {
         </section>
       ) : null}
 
-      <div className="grid gap-3 rounded-2xl border border-tejas-border bg-white p-4 text-sm md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 rounded-2xl border border-tejas-border bg-white p-5 text-base md:grid-cols-2 xl:grid-cols-4 md:p-6">
         <label>
           <span className="font-medium">Search school / reference</span>
           <input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} className="mt-1 w-full rounded-lg border border-tejas-border bg-white px-3 py-2" placeholder="School, reference, UTR…" />
@@ -747,45 +789,45 @@ export function ReviewDashboard() {
       ) : (
         <>
           <div className="hidden overflow-x-auto rounded-2xl border border-tejas-border bg-white md:block">
-            <table className="min-w-full text-left text-sm">
+            <table className="min-w-full text-left text-base">
               <thead className="bg-stone-50">
                 <tr className="border-b border-stone-200">
-                  <th className="px-3 py-3">Updated</th>
-                  <th className="px-3 py-3">School / reference</th>
-                  <th className="px-3 py-3">State / District</th>
-                  <th className="px-3 py-3">Students / streams</th>
-                  <th className="px-3 py-3">Classes</th>
-                  <th className="px-3 py-3">Fees (TEJAS)</th>
-                  <th className="px-3 py-3">Payment</th>
+                  <th className="px-4 py-3.5 font-semibold">Updated</th>
+                  <th className="px-4 py-3.5 font-semibold">School / reference</th>
+                  <th className="px-4 py-3.5 font-semibold">State / District</th>
+                  <th className="px-4 py-3.5 font-semibold">Students / streams</th>
+                  <th className="px-4 py-3.5 font-semibold">Classes</th>
+                  <th className="px-4 py-3.5 font-semibold">Fees (TEJAS)</th>
+                  <th className="px-4 py-3.5 font-semibold">Payment</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map((row) => (
                   <tr key={row.reference} className="border-b border-stone-100 align-top">
-                    <td className="whitespace-nowrap px-3 py-3">{formatDate(row.lastUpdatedAt ?? row.createdAt)}</td>
-                    <td className="px-3 py-3">
+                    <td className="whitespace-nowrap px-4 py-4">{formatDate(row.lastUpdatedAt ?? row.createdAt)}</td>
+                    <td className="px-4 py-4">
                       <button type="button" className="text-left font-semibold text-tejas-blue underline" onClick={() => openRow(row.reference)}>{row.schoolName}</button>
-                      <div className="text-tejas-muted">{row.reference}</div>
-                      <div className="text-xs text-tejas-muted">{row.channel === "individual-registration" ? "Individual" : "School"}</div>
+                      <div className="text-sm text-tejas-muted">{row.reference}</div>
+                      <div className="text-sm text-tejas-muted">{row.channel === "individual-registration" ? "Individual" : "School"}</div>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-4 py-4">
                       <div>{row.derivedState ?? UNIDENTIFIED}</div>
-                      <div className="text-tejas-muted">{row.derivedDistrict ?? (row.derivedState ? UNIDENTIFIED_DISTRICT : "—")}</div>
+                      <div className="text-sm text-tejas-muted">{row.derivedDistrict ?? (row.derivedState ? UNIDENTIFIED_DISTRICT : "—")}</div>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-4 py-4">
                       {row.uniqueStudentCount ?? row.studentCount} unique<br />
-                      <span className="text-tejas-muted">{row.studentStreamRegistrations} streams · E {row.englishCount ?? 0} · M {row.mathematicsCount ?? 0} · FT {row.technologyCount ?? 0}</span>
+                      <span className="text-sm text-tejas-muted">{row.studentStreamRegistrations} streams · E {row.englishCount ?? 0} · M {row.mathematicsCount ?? 0} · FT {row.technologyCount ?? 0}</span>
                     </td>
-                    <td className="px-3 py-3 text-tejas-muted">
+                    <td className="px-4 py-4 text-sm text-tejas-muted">
                       {(row.classMetrics ?? []).map((metric) => `${metric.classLabel}: ${metric.uniqueStudents}`).join(" · ") || "—"}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-4 py-4">
                       Gross {inr.format(row.grossTotal)}<br />
                       Share {inr.format(row.schoolShare)}<br />
                       TEJAS {inr.format(row.amountDue)}
                     </td>
-                    <td className="px-3 py-3">
-                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClass(row.paymentStatus)}`}>
+                    <td className="px-4 py-4">
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold ${badgeClass(row.paymentStatus)}`}>
                         {row.paymentLabel || paymentStatusLabel(row.paymentStatus)}
                       </span>
                     </td>
@@ -933,11 +975,15 @@ function SummaryCard({
   lines,
   tone,
   onClick,
+  primaryLabel,
+  primaryValue,
 }: {
   title: string;
   lines: string[];
   tone: "blue" | "emerald" | "red" | "amber";
   onClick: () => void;
+  primaryLabel: string;
+  primaryValue: string;
 }) {
   const toneClass =
     tone === "emerald" ? "border-emerald-200 bg-emerald-50/60" :
@@ -945,10 +991,12 @@ function SummaryCard({
     tone === "amber" ? "border-amber-200 bg-amber-50/60" :
     "border-tejas-blue/30 bg-tejas-blue/5";
   return (
-    <button type="button" onClick={onClick} className={`rounded-2xl border p-4 text-left shadow-sm transition hover:shadow ${toneClass}`}>
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-tejas-muted">{title}</h2>
-      <ul className="mt-2 space-y-1 text-sm text-tejas-ink">
-        {lines.map((line) => <li key={line} className="font-medium">{line}</li>)}
+    <button type="button" onClick={onClick} className={`rounded-2xl border px-5 py-5 text-left shadow-sm transition hover:shadow md:min-h-[11.5rem] ${toneClass}`}>
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-tejas-muted md:text-sm">{title}</h2>
+      <p className="mt-3 text-sm text-tejas-muted">{primaryLabel}</p>
+      <p className="mt-1 text-2xl font-bold tracking-tight text-tejas-ink md:text-3xl">{primaryValue}</p>
+      <ul className="mt-3 space-y-1 text-sm text-tejas-ink md:text-base">
+        {lines.map((line) => <li key={line}>{line}</li>)}
       </ul>
     </button>
   );

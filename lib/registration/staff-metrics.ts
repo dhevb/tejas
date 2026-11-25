@@ -315,6 +315,11 @@ export type ClassBreakdownRow = {
   classKey: string;
   classLabel: string;
   sort: number;
+  /**
+   * Count of registration records that include ≥1 student in this class.
+   * A multi-class registration increments each touched class once — do not sum
+   * this column across classes and treat the sum as total registration records.
+   */
   registrationRecords: number;
   uniqueStudents: number;
   studentStreams: number;
@@ -324,7 +329,16 @@ export type ClassBreakdownRow = {
   pendingAmount: number;
   rejectedCount: number;
   rejectedAmount: number;
+  refundPendingCount: number;
+  refundPendingAmount: number;
 };
+
+/** Standard olympiad classes always shown in the class-wise table (zeros allowed). */
+export const STANDARD_CLASS_NUMBERS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
+
+export function standardClassInfo(classNumber: number): ClassKeyInfo {
+  return { key: `class-${classNumber}`, label: `Class ${classNumber}`, sort: classNumber };
+}
 
 export function emptyClassBreakdown(info: ClassKeyInfo): ClassBreakdownRow {
   return {
@@ -340,6 +354,8 @@ export function emptyClassBreakdown(info: ClassKeyInfo): ClassBreakdownRow {
     pendingAmount: 0,
     rejectedCount: 0,
     rejectedAmount: 0,
+    refundPendingCount: 0,
+    refundPendingAmount: 0,
   };
 }
 
@@ -360,9 +376,12 @@ export function mergeClassMetricIntoBreakdown(
   if (status === "confirmed") {
     row.confirmedCount += 1;
     row.confirmedAmount += amount;
-  } else if (status === "rejected" || status === "refund_pending") {
+  } else if (status === "rejected") {
     row.rejectedCount += 1;
     row.rejectedAmount += amount;
+  } else if (status === "refund_pending") {
+    row.refundPendingCount += 1;
+    row.refundPendingAmount += amount;
   } else {
     row.pendingCount += 1;
     row.pendingAmount += amount;
@@ -372,6 +391,43 @@ export function mergeClassMetricIntoBreakdown(
 
 export function finalizeClassBreakdown(map: Map<string, ClassBreakdownRow>): ClassBreakdownRow[] {
   return [...map.values()].sort((a, b) => a.sort - b.sort || a.classLabel.localeCompare(b.classLabel));
+}
+
+/**
+ * Always include Classes 3–10 (zero-filled). Keep Class Not Identified and any
+ * other observed class keys from data. Does not invent classes outside data + 3–10.
+ */
+export function ensureStandardClassRows(rows: ClassBreakdownRow[]): ClassBreakdownRow[] {
+  const map = new Map<string, ClassBreakdownRow>();
+  for (const n of STANDARD_CLASS_NUMBERS) {
+    const info = standardClassInfo(n);
+    map.set(info.key, emptyClassBreakdown(info));
+  }
+  for (const row of rows) {
+    const existing = map.get(row.classKey);
+    map.set(row.classKey, existing
+      ? {
+          ...row,
+          refundPendingCount: row.refundPendingCount ?? 0,
+          refundPendingAmount: row.refundPendingAmount ?? 0,
+        }
+      : {
+          ...emptyClassBreakdown({ key: row.classKey, label: row.classLabel, sort: row.sort }),
+          ...row,
+          refundPendingCount: row.refundPendingCount ?? 0,
+          refundPendingAmount: row.refundPendingAmount ?? 0,
+        });
+  }
+  return finalizeClassBreakdown(map);
+}
+
+/** Sum class amount buckets — used to reconcile with registration amountDue allocation. */
+export function classBreakdownAmountTotal(rows: ClassBreakdownRow[]): number {
+  return rows.reduce(
+    (sum, row) =>
+      sum + row.confirmedAmount + row.pendingAmount + row.rejectedAmount + (row.refundPendingAmount ?? 0),
+    0,
+  );
 }
 
 /** Distinct school names (trimmed, case-insensitive) for school-channel rows. */
@@ -413,6 +469,39 @@ export type FilterableStaffRow = {
   technologyCount?: number;
   classMetrics: ClassMetric[];
 };
+
+/**
+ * When a class filter is active, scope each registration to that class’s allocated
+ * students / streams / amount so card totals match the class-wise row.
+ */
+export function scopeFilterableRowsToClass(
+  rows: FilterableStaffRow[],
+  classKey: string,
+): FilterableStaffRow[] {
+  if (classKey === "all") return rows;
+  const scoped: FilterableStaffRow[] = [];
+  for (const row of rows) {
+    const metric = (row.classMetrics ?? []).find((item) => item.classKey === classKey);
+    if (!metric) continue;
+    const streamShare = row.studentStreamRegistrations > 0
+      ? metric.studentStreams / row.studentStreamRegistrations
+      : 0;
+    scoped.push({
+      ...row,
+      amountDue: metric.allocatedAmountDue,
+      grossTotal: Math.round(row.grossTotal * streamShare),
+      schoolShare: Math.round(row.schoolShare * streamShare),
+      uniqueStudentCount: metric.uniqueStudents,
+      studentCount: metric.uniqueStudents,
+      studentStreamRegistrations: metric.studentStreams,
+      englishCount: undefined,
+      mathematicsCount: undefined,
+      technologyCount: undefined,
+      classMetrics: [metric],
+    });
+  }
+  return scoped;
+}
 
 /** Recompute overview buckets from already server-authored row fields (same formulas as staffSnapshot). */
 export function summarizeFilterableRows(rows: FilterableStaffRow[]): {
@@ -499,6 +588,6 @@ export function summarizeFilterableRows(rows: FilterableStaffRow[]): {
     refundPendingAmount: buckets.refundPendingAmount,
     rejectedOrRefund: buckets.rejectedCount + buckets.refundPendingCount,
     payments,
-    classBreakdown: finalizeClassBreakdown(classMap),
+    classBreakdown: ensureStandardClassRows(finalizeClassBreakdown(classMap)),
   };
 }

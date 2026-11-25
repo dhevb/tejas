@@ -134,9 +134,14 @@ Main columns now: Class · Registration records · Unique students · Student-st
 
 | Item | Status |
 |------|--------|
-| Preview URL | *(updated after this commit’s Preview deploy — see section below / PR comment)* |
-| Deployment ID | *(updated after Preview deploy)* |
-| Unauthenticated export/file | Local app: **401**. Preview also fronted by Vercel Deployment Protection (**302** SSO) before the app gate. |
+| Preview URL | https://tejas-lvib1h9mo-dhe-projects.vercel.app/schools/register/review |
+| Preview host (links) | `tejas-lvib1h9mo-dhe-projects.vercel.app` (allowlisted `tejas-*-dhe-projects.vercel.app`) |
+| Git branch alias (may lag CLI deploy) | https://tejas-git-feat-owner-dashboard-class-export-c2c54b-dhe-projects.vercel.app/schools/register/review |
+| Deployment ID | `dpl_G91J85LGp1Qcwnsk89djpQQBofrw` (**Ready**, target=preview) |
+| Inspector | https://vercel.com/dhe-projects/tejas/G91J85LGp1Qcwnsk89djpQQBofrw |
+| Unauthenticated export/file | Browser/raw: Preview **302** Vercel SSO. Bypass protection (`vercel curl`): app returns **`{"ok":false}`** (Owner gate). Invalid reference same gate before file exposure. |
+| Workbook structure QA | Local sample + unit tests: **1 sheet** `School Registrations`, **64 columns**, stored geo + distinct UTR columns, missing receipt → unavailable label / no hyperlink, present upload → Owner-route link on Preview host |
+| Production `tejas.dhe.org.in/schools/register/review` | **200** (unchanged; this PR not deployed to Production) |
 | Production data / Auth / RLS / Storage / env | **UNCHANGED** |
 | Fee policy / payment records / student access | **UNCHANGED** |
 | Database schema | **UNCHANGED** |
@@ -151,6 +156,7 @@ Main columns now: Class · Registration records · Unique students · Student-st
 - Full PAN reveal remains **disabled** (`FULL_PAN_REVEAL_AVAILABLE = false`) until a trusted role model is approved.
 - Existence checks use HEAD (with ranged GET fallback); extremely unusual Storage gateways that reject both may mark a present file unavailable (safe failure → no link).
 - Preview Deployment Protection may return SSO **302** before app **401** for unauthenticated browser hits.
+- End-to-end Owner-authenticated Complete Excel download on this Preview was not re-run in-browser after sessions expired; structure/security covered by unit tests + `vercel curl` Owner-gate checks. Owner can re-verify after signing in on the Preview URL above.
 
 ---
 

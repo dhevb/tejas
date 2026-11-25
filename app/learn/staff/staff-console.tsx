@@ -35,8 +35,6 @@ const fieldClass = "mt-1 w-full rounded-xl border border-tejas-border bg-white p
 
 export function StaffConsole() {
   const [token, setToken] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [overview, setOverview] = useState<Overview | null>(null);
   const [error, setError] = useState("");
 
@@ -64,7 +62,7 @@ export function StaffConsole() {
     const response = await fetch("/api/register/admin/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, token }),
+      body: JSON.stringify({ token }),
     });
     const body = (await response.json()) as { ok?: boolean; error?: string };
     if (!response.ok || !body.ok) {
@@ -88,14 +86,8 @@ export function StaffConsole() {
   if (!overview) {
     return (
       <form onSubmit={signIn} className="mx-auto max-w-md space-y-4 rounded-3xl border border-tejas-border bg-white p-6 shadow-tejas">
-        <p className="text-sm text-tejas-muted">TEJAS Olympiad staff inventory. Use a staff email and password when an individual account exists. Until then, the recovery token configured on the server still opens this page.</p>
-        <label className="block text-sm font-semibold">Email
-          <input className={fieldClass} type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" />
-        </label>
-        <label className="block text-sm font-semibold">Password
-          <input className={fieldClass} type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />
-        </label>
-        <label className="block text-sm font-semibold">Recovery token
+        <p className="text-sm text-tejas-muted">Owner-only access. School staff do not receive inventory accounts. Use the owner access token configured on the server.</p>
+        <label className="block text-sm font-semibold">Owner access token
           <input className={fieldClass} type="password" value={token} onChange={(event) => setToken(event.target.value)} autoComplete="off" />
         </label>
         {error ? <p className="text-sm text-tejas-error" role="alert">{error}</p> : null}
@@ -113,8 +105,8 @@ export function StaffConsole() {
         void post("/api/learn/staff/accounts", { email: form.get("email"), password: form.get("password") });
         event.currentTarget.reset();
       }}>
-        <h2 className="text-lg font-bold text-tejas-blue">Create a staff account</h2>
-        <p className="text-sm text-tejas-muted">Choose the email and password for a reviewer. No account is created until you submit one here.</p>
+        <h2 className="text-lg font-bold text-tejas-blue">Create a learn content reviewer</h2>
+        <p className="text-sm text-tejas-muted">Owner-only. Creates a learn-portal content reviewer — not a school registration staff account. School staff do not receive dashboard access.</p>
         <label className="block text-sm font-semibold">Email
           <input className={fieldClass} name="email" type="email" required autoComplete="off" />
         </label>

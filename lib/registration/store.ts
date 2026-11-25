@@ -8,6 +8,14 @@ import { panHolderLabel } from "@/lib/registration/school";
 import type { SchoolForm } from "@/lib/registration/school";
 import { streamById } from "@/lib/registration/schema";
 import type { StudentRecord } from "@/lib/registration/sheet";
+import { parseIndiaAddress, locationLabel } from "@/lib/registration/india-address";
+import {
+  countStreamRegistrations,
+  countUniqueStudents,
+  driveSyncLabel,
+  driveSyncStatusForRegistration,
+  type DriveSyncStatus,
+} from "@/lib/registration/staff-metrics";
 import {
   attachReceipt as attachRemoteReceipt,
   configured as remoteConfigured,
@@ -373,9 +381,14 @@ export async function transactionSeenBefore(reference: string): Promise<boolean>
 }
 
 export type StaffRow = PublicSummary & {
+  channel: RegistrationRecord["channel"];
   coordinatorName: string;
   coordinatorEmail: string;
+  coordinatorMobile: string;
+  coordinatorDesignation: string;
   principalName: string;
+  principalMobile: string;
+  principalEmail: string;
   maskedPan: string;
   panHolderLabel: string;
   panDuplicate: boolean;
@@ -384,17 +397,41 @@ export type StaffRow = PublicSummary & {
   ebookAccess: number;
   transactionReference: string | null;
   paymentMode: string | null;
+  uniqueStudentCount: number;
+  englishCount: number;
+  mathematicsCount: number;
+  technologyCount: number;
+  driveSyncStatus: DriveSyncStatus;
+  driveSyncLabel: string;
+  approvalMethod: RegistrationRecord["payment"]["approvalMethod"];
+  /** Original school address — never rewritten by geo parsing. */
+  schoolAddress: string;
+  /** Derived from address only; empty stored school.state/district are not used. */
+  derivedState: string | null;
+  derivedDistrict: string | null;
+  stateKey: string;
+  districtKey: string;
+  locationLabel: string;
+  locationIdentified: boolean;
+  locationNotes: string[];
 };
 
 export type StaffOverview = {
   schools: number;
+  schoolRegistrations: number;
+  individualRegistrations: number;
   students: number;
+  uniqueStudents: number;
   studentStreams: number;
+  englishEntries: number;
+  mathematicsEntries: number;
+  technologyEntries: number;
   amountDue: number;
   grossCollected: number;
   schoolShare: number;
   amountReceived: number;
   pendingPayable: number;
+  rejectedOrRefund: number;
   bookGross: number;
   bookSchoolShare: number;
   bookPayable: number;
@@ -418,24 +455,41 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
   const classCounts: Record<string, number> = {};
   const streamCounts: Record<string, number> = {};
   let students = 0;
+  let uniqueStudents = 0;
   let studentStreams = 0;
+  let englishEntries = 0;
+  let mathematicsEntries = 0;
+  let technologyEntries = 0;
   let amountDue = 0;
   let grossCollected = 0;
   let schoolShare = 0;
   let amountReceived = 0;
   let pendingPayable = 0;
+  let rejectedOrRefund = 0;
   let bookGross = 0;
   let bookSchoolShare = 0;
   let bookPayable = 0;
   let printedBooks = 0;
   let ebookAccess = 0;
+  let schoolRegistrations = 0;
+  let individualRegistrations = 0;
   const registrations: StaffRow[] = [];
-  const pendingStatuses: PaymentStatus[] = ["pending_instructions", "awaiting_payment", "reported", "refund_pending"];
+  const pendingStatuses: PaymentStatus[] = ["pending_instructions", "awaiting_payment", "reported"];
   for (const record of records) {
     const fee = presentFee(record.fee);
+    const streamParts = countStreamRegistrations(record.students);
+    const unique = countUniqueStudents(record.students);
+    const driveSyncStatus = driveSyncStatusForRegistration(record.reference);
+    const channel = record.channel ?? "school-registration";
+    if (channel === "individual-registration") individualRegistrations += 1;
+    else schoolRegistrations += 1;
     payments[record.payment.status] += 1;
     students += record.students.length;
+    uniqueStudents += unique.unique;
     studentStreams += fee.studentStreamRegistrations;
+    englishEntries += streamParts.english;
+    mathematicsEntries += streamParts.mathematics;
+    technologyEntries += streamParts.technology;
     amountDue += fee.amountDue;
     grossCollected += fee.grossTotal;
     schoolShare += fee.schoolShare;
@@ -444,6 +498,7 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
     bookPayable += fee.bookPayable;
     if (record.payment.status === "confirmed") amountReceived += fee.amountDue;
     if (pendingStatuses.includes(record.payment.status)) pendingPayable += fee.amountDue;
+    if (record.payment.status === "rejected" || record.payment.status === "refund_pending") rejectedOrRefund += 1;
     const books = record.school.printedBooks === "yes" ? record.school.bookQuantity ?? 0 : 0;
     const ebooks = record.school.ebookAccess === "yes" ? record.students.length : 0;
     printedBooks += books;
@@ -456,11 +511,17 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
         streamCounts[name] = (streamCounts[name] ?? 0) + 1;
       }
     }
+    const location = parseIndiaAddress(record.school.schoolAddress);
     registrations.push({
       ...toPublicSummary(record),
+      channel,
       coordinatorName: record.school.coordinatorName,
       coordinatorEmail: record.school.coordinatorEmail,
+      coordinatorMobile: record.school.coordinatorMobile,
+      coordinatorDesignation: record.school.coordinatorDesignation,
       principalName: record.school.principalName,
+      principalMobile: record.school.principalMobile,
+      principalEmail: record.school.principalEmail,
       maskedPan: record.school.pan ? maskPan(record.school.pan) : "",
       panHolderLabel: panHolderLabel(record.school.panHolder),
       panDuplicate: record.school.panDuplicate === true,
@@ -469,6 +530,21 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       ebookAccess: ebooks,
       transactionReference: record.payment.transactionReference,
       paymentMode: record.payment.mode ?? null,
+      uniqueStudentCount: unique.unique,
+      englishCount: streamParts.english,
+      mathematicsCount: streamParts.mathematics,
+      technologyCount: streamParts.technology,
+      driveSyncStatus,
+      driveSyncLabel: driveSyncLabel(driveSyncStatus),
+      approvalMethod: record.payment.approvalMethod ?? null,
+      schoolAddress: record.school.schoolAddress,
+      derivedState: location.state,
+      derivedDistrict: location.district,
+      stateKey: location.stateKey,
+      districtKey: location.districtKey,
+      locationLabel: locationLabel(location),
+      locationIdentified: location.fullyIdentified,
+      locationNotes: location.notes,
     });
   }
   registrations.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
@@ -476,13 +552,20 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
     registrations,
     overview: {
       schools: records.length,
+      schoolRegistrations,
+      individualRegistrations,
       students,
+      uniqueStudents,
       studentStreams,
+      englishEntries,
+      mathematicsEntries,
+      technologyEntries,
       amountDue,
       grossCollected,
       schoolShare,
       amountReceived,
       pendingPayable,
+      rejectedOrRefund,
       bookGross,
       bookSchoolShare,
       bookPayable,

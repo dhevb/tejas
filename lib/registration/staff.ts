@@ -32,6 +32,15 @@ async function sessionAllowed(session: ReturnType<typeof openStaffSession>): Pro
   return current === session.version;
 }
 
+/**
+ * Registration administration is owner-only.
+ * The owner recovery session (`STAFF_RECOVERY_SUBJECT`) holds Super Admin / Admin / Staff capabilities.
+ * School staff accounts and learn-portal reviewer emails must not open registration admin APIs.
+ */
+export function isRegistrationOwnerSubject(subject: string | null | undefined): boolean {
+  return subject === STAFF_RECOVERY_SUBJECT;
+}
+
 export async function staffAuthorised(): Promise<boolean> {
   return sessionAllowed(await openedSession());
 }
@@ -39,6 +48,20 @@ export async function staffAuthorised(): Promise<boolean> {
 /** Same staff rule as `staffAuthorised`, using the cookie on this request. */
 export async function staffRequestAuthorised(request: Request): Promise<boolean> {
   return sessionAllowed(openStaffSession(cookieValue(request, STAFF_COOKIE)));
+}
+
+/** Owner-only gate for school registration review APIs and dashboard data. */
+export async function registrationOwnerAuthorised(): Promise<boolean> {
+  const session = await openedSession();
+  if (!(await sessionAllowed(session))) return false;
+  return isRegistrationOwnerSubject(session?.subject);
+}
+
+/** Owner-only gate using the cookie on this request. */
+export async function registrationOwnerRequestAuthorised(request: Request): Promise<boolean> {
+  const session = openStaffSession(cookieValue(request, STAFF_COOKIE));
+  if (!(await sessionAllowed(session))) return false;
+  return isRegistrationOwnerSubject(session?.subject);
 }
 
 export async function staffSubject(): Promise<string | null> {

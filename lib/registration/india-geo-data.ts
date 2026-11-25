@@ -1,0 +1,409 @@
+/**
+ * Deterministic India State/UT + District reference for address parsing.
+ * Canonical names follow common English administrative usage.
+ * Aliases cover frequent spellings and postal abbreviations — matching is exact after normalisation.
+ */
+
+export type IndiaDistrict = { name: string; aliases?: string[] };
+export type IndiaState = { name: string; aliases: string[]; districts: IndiaDistrict[] };
+
+function d(name: string, ...aliases: string[]): IndiaDistrict {
+  return aliases.length ? { name, aliases } : { name };
+}
+
+/** All States and Union Territories with maintained district lists (common + official spellings). */
+export const INDIA_STATES: IndiaState[] = [
+  {
+    name: "Andhra Pradesh",
+    aliases: ["andhra pradesh", "andhra", "a.p.", "ap"],
+    districts: [
+      d("Anantapur", "anantapuramu"), d("Chittoor"), d("East Godavari"), d("Guntur"),
+      d("Krishna", "machilipatnam"), d("Kurnool"), d("Nellore", "sri potti sriramulu nellore", "spsr nellore"),
+      d("Prakasam"), d("Srikakulam"), d("Visakhapatnam", "vizag", "visakha"), d("Vizianagaram"),
+      d("West Godavari"), d("YSR Kadapa", "kadapa", "cuddapah", "ysr"), d("Alluri Sitharama Raju"),
+      d("Anakapalli"), d("Annamayya"), d("Bapatla"), d("Eluru"), d("Kakinada"), d("Konaseema"),
+      d("Nandyal"), d("Ntr", "ntr district", "vijayawada"), d("Palnadu"), d("Parvathipuram Manyam"),
+      d("Tirupati"), d("Sri Sathya Sai"),
+    ],
+  },
+  {
+    name: "Arunachal Pradesh",
+    aliases: ["arunachal pradesh", "arunachal", "a.p. (arunachal)"],
+    districts: [
+      d("Tawang"), d("West Kameng"), d("East Kameng"), d("Papum Pare"), d("Kurung Kumey"),
+      d("Kra Daadi"), d("Lower Subansiri"), d("Upper Subansiri"), d("West Siang"), d("East Siang"),
+      d("Siang"), d("Upper Siang"), d("Lower Siang"), d("Lower Dibang Valley"), d("Dibang Valley"),
+      d("Anjaw"), d("Lohit"), d("Namsai"), d("Changlang"), d("Tirap"), d("Longding"), d("Pakke Kessang"),
+      d("Kamle"), d("Lepa Rada"), d("Shi Yomi"), d("Itanagar Capital Complex", "itanagar"),
+    ],
+  },
+  {
+    name: "Assam",
+    aliases: ["assam"],
+    districts: [
+      d("Baksa"), d("Barpeta"), d("Biswanath"), d("Bongaigaon"), d("Cachar"), d("Charaideo"),
+      d("Chirang"), d("Darrang"), d("Dhemaji"), d("Dhubri"), d("Dibrugarh"), d("Dima Hasao", "north cachar hills"),
+      d("Goalpara"), d("Golaghat"), d("Hailakandi"), d("Hojai"), d("Jorhat"), d("Kamrup"),
+      d("Kamrup Metropolitan", "kamrup metro", "guwahati"), d("Karbi Anglong"), d("Karimganj"),
+      d("Kokrajhar"), d("Lakhimpur"), d("Majuli"), d("Morigaon"), d("Nagaon"), d("Nalbari"),
+      d("Sivasagar", "sibsagar"), d("Sonitpur"), d("South Salmara-Mankachar"), d("Tinsukia"),
+      d("Udalguri"), d("West Karbi Anglong"), d("Bajali"), d("Tamulpur"),
+    ],
+  },
+  {
+    name: "Bihar",
+    aliases: ["bihar", "br"],
+    districts: [
+      d("Araria"), d("Arwal"), d("Aurangabad", "aurangabad bihar"), d("Banka"), d("Begusarai"),
+      d("Bhagalpur"), d("Bhojpur", "arrah"), d("Buxar"), d("Darbhanga"), d("East Champaran", "purba champaran", "motihari"),
+      d("Gaya"), d("Gopalganj"), d("Jamui"), d("Jehanabad"), d("Kaimur", "bhabua"), d("Katihar"),
+      d("Khagaria"), d("Kishanganj"), d("Lakhisarai"), d("Madhepura"), d("Madhubani"), d("Munger"),
+      d("Muzaffarpur"), d("Nalanda", "biharsharif", "bihar sharif"), d("Nawada"), d("Patna"),
+      d("Purnia", "purnea"), d("Rohtas", "sasaram"), d("Saharsa"), d("Samastipur"), d("Saran", "chhapra"),
+      d("Sheikhpura"), d("Sheohar"), d("Sitamarhi"), d("Siwan"), d("Supaul"), d("Vaishali", "hajipur"),
+      d("West Champaran", "pashchim champaran", "bettiah"),
+    ],
+  },
+  {
+    name: "Chhattisgarh",
+    aliases: ["chhattisgarh", "chattisgarh", "cg", "c.g."],
+    districts: [
+      d("Balod"), d("Baloda Bazar"), d("Balrampur", "balrampur chhattisgarh"), d("Bastar"), d("Bemetara"),
+      d("Bijapur", "bijapur chhattisgarh"), d("Bilaspur", "bilaspur chhattisgarh"), d("Dantewada", "dakshin bastar dantewada"),
+      d("Dhamtari"), d("Durg"), d("Gariaband"), d("Gaurela-Pendra-Marwahi"), d("Janjgir-Champa"),
+      d("Jashpur"), d("Kabirdham", "kawardha"), d("Kanker", "uttar bastar kanker"), d("Kondagaon"),
+      d("Korba"), d("Koriya", "korea"), d("Mahasamund"), d("Mungeli"), d("Narayanpur"), d("Raigarh"),
+      d("Raipur"), d("Rajnandgaon"), d("Sukma"), d("Surajpur"), d("Surguja"), d("Manendragarh-Chirmiri-Bharatpur"),
+      d("Mohla-Manpur-Ambagarh Chowki"), d("Sarangarh-Bilaigarh"), d("Khairagarh-Chhuikhadan-Gandai"),
+    ],
+  },
+  {
+    name: "Goa",
+    aliases: ["goa", "ga"],
+    districts: [d("North Goa", "panaji", "panjim", "mapusa"), d("South Goa", "margao", "vasco")],
+  },
+  {
+    name: "Gujarat",
+    aliases: ["gujarat", "gj", "gujrat"],
+    districts: [
+      d("Ahmedabad", "amdavad"), d("Amreli"), d("Anand"), d("Aravalli"), d("Banaskantha", "palanpur"),
+      d("Bharuch"), d("Bhavnagar"), d("Botad"), d("Chhota Udaipur"), d("Dahod"), d("Dang", "the dang", "dangs"),
+      d("Devbhumi Dwarka", "dwarka"), d("Gandhinagar"), d("Gir Somnath"), d("Jamnagar"), d("Junagadh"),
+      d("Kheda", "nadiad"), d("Kutch", "kachchh"), d("Mahisagar"), d("Mehsana"), d("Morbi"),
+      d("Narmada", "rajpipla"), d("Navsari"), d("Panchmahal", "godhra"), d("Patan"), d("Porbandar"),
+      d("Rajkot"), d("Sabarkantha", "himatnagar"), d("Surat"), d("Surendranagar"), d("Tapi", "vyara"),
+      d("Vadodara", "baroda"), d("Valsad"),
+    ],
+  },
+  {
+    name: "Haryana",
+    aliases: ["haryana", "hr", "hariyana"],
+    districts: [
+      d("Ambala"), d("Bhiwani"), d("Charkhi Dadri"), d("Faridabad"), d("Fatehabad"), d("Gurugram", "gurgaon"),
+      d("Hisar"), d("Jhajjar"), d("Jind"), d("Kaithal"), d("Karnal"), d("Kurukshetra"), d("Mahendragarh", "narnaul"),
+      d("Nuh", "mewat"), d("Palwal"), d("Panchkula"), d("Panipat"), d("Rewari"), d("Rohtak"),
+      d("Sirsa"), d("Sonipat", "sonepat"), d("Yamunanagar"),
+    ],
+  },
+  {
+    name: "Himachal Pradesh",
+    aliases: ["himachal pradesh", "himachal", "hp", "h.p."],
+    districts: [
+      d("Bilaspur", "bilaspur himachal"), d("Chamba"), d("Hamirpur", "hamirpur himachal"), d("Kangra", "dharamshala"),
+      d("Kinnaur"), d("Kullu"), d("Lahaul and Spiti", "lahaul spiti"), d("Mandi"), d("Shimla"),
+      d("Sirmaur", "nahan"), d("Solan"), d("Una"),
+    ],
+  },
+  {
+    name: "Jharkhand",
+    aliases: ["jharkhand", "jh", "jarkhand"],
+    districts: [
+      d("Bokaro"), d("Chatra"), d("Deoghar"), d("Dhanbad"), d("Dumka"), d("East Singhbhum", "jamshedpur", "purbi singhbhum"),
+      d("Garhwa"), d("Giridih"), d("Godda"), d("Gumla"), d("Hazaribagh"), d("Jamtara"), d("Khunti"),
+      d("Koderma"), d("Latehar"), d("Lohardaga"), d("Pakur"), d("Palamu", "daltonganj"), d("Ramgarh"),
+      d("Ranchi"), d("Sahibganj"), d("Saraikela-Kharsawan", "seraikela"), d("Simdega"),
+      d("West Singhbhum", "chaibasa", "pashchimi singhbhum"),
+    ],
+  },
+  {
+    name: "Karnataka",
+    aliases: ["karnataka", "ka", "karnatak", "karntaka"],
+    districts: [
+      d("Bagalkote", "bagalkot"), d("Ballari", "bellary"), d("Belagavi", "belgaum"), d("Bengaluru Rural", "bangalore rural"),
+      d("Bengaluru Urban", "bangalore", "bengaluru", "bangalore urban", "blr"), d("Bidar"), d("Chamarajanagar"),
+      d("Chikkaballapur"), d("Chikkamagaluru", "chikmagalur"), d("Chitradurga"), d("Dakshina Kannada", "mangaluru", "mangalore"),
+      d("Davanagere", "davangere"), d("Dharwad", "hubballi", "hubli"), d("Gadag"), d("Hassan"), d("Haveri"),
+      d("Kalaburagi", "gulbarga"), d("Kodagu", "coorg", "madikeri"), d("Kolar"), d("Koppal"), d("Mandya"),
+      d("Mysuru", "mysore"), d("Raichur"), d("Ramanagara"), d("Shivamogga", "shimoga"), d("Tumakuru", "tumkur"),
+      d("Udupi"), d("Uttara Kannada", "karwar"), d("Vijayapura", "bijapur"), d("Yadgir"),
+      d("Vijayanagara"),
+    ],
+  },
+  {
+    name: "Kerala",
+    aliases: ["kerala", "kl"],
+    districts: [
+      d("Alappuzha", "alleppey"), d("Ernakulam", "kochi", "cochin"), d("Idukki"), d("Kannur", "cannanore"),
+      d("Kasaragod"), d("Kollam", "quillón", "quilon"), d("Kottayam"), d("Kozhikode", "calicut"),
+      d("Malappuram"), d("Palakkad", "palghat"), d("Pathanamthitta"), d("Thiruvananthapuram", "trivandrum"),
+      d("Thrissur", "trichur"), d("Wayanad"),
+    ],
+  },
+  {
+    name: "Madhya Pradesh",
+    aliases: ["madhya pradesh", "m.p.", "mp"],
+    districts: [
+      d("Agar Malwa"), d("Alirajpur"), d("Anuppur"), d("Ashoknagar"), d("Balaghat"), d("Barwani"),
+      d("Betul"), d("Bhind"), d("Bhopal"), d("Burhanpur"), d("Chhatarpur"), d("Chhindwara"),
+      d("Damoh"), d("Datia"), d("Dewas"), d("Dhar"), d("Dindori"), d("Guna"), d("Gwalior"),
+      d("Harda"), d("Hoshangabad", "narmadapuram"), d("Indore"), d("Jabalpur"), d("Jhabua"),
+      d("Katni"), d("Khandwa", "east nimar"), d("Khargone", "west nimar"), d("Mandla"), d("Mandsaur"),
+      d("Morena"), d("Narsinghpur"), d("Neemuch"), d("Niwari"), d("Panna"), d("Raisen"), d("Rajgarh"),
+      d("Ratlam"), d("Rewa"), d("Sagar"), d("Satna"), d("Sehore"), d("Seoni"), d("Shahdol"),
+      d("Shajapur"), d("Sheopur"), d("Shivpuri"), d("Sidhi"), d("Singrauli"), d("Tikamgarh"),
+      d("Ujjain"), d("Umaria"), d("Vidisha"), d("Maihar"), d("Mauganj"), d("Pandhurna"),
+    ],
+  },
+  {
+    name: "Maharashtra",
+    aliases: ["maharashtra", "mh", "maha"],
+    districts: [
+      d("Ahmednagar", "ahilyanagar"), d("Akola"), d("Amravati"), d("Beed"), d("Bhandara"),
+      d("Buldhana"), d("Chandrapur"), d("Dhule"), d("Gadchiroli"), d("Gondia"), d("Hingoli"),
+      d("Jalgaon"), d("Jalna"), d("Kolhapur"), d("Latur"), d("Mumbai City", "mumbai", "bombay"),
+      d("Mumbai Suburban", "mumbai suburban"), d("Nagpur"), d("Nanded"), d("Nandurbar"),
+      d("Nashik", "nasik"), d("Osmanabad", "dharashiv"), d("Palghar"), d("Parbhani"), d("Pune"),
+      d("Raigad", "raigarh maharashtra", "alibag"), d("Ratnagiri"), d("Sangli"), d("Satara"),
+      d("Sindhudurg"), d("Solapur"), d("Thane"), d("Wardha"), d("Washim"), d("Yavatmal"),
+    ],
+  },
+  {
+    name: "Manipur",
+    aliases: ["manipur", "mn"],
+    districts: [
+      d("Bishnupur"), d("Chandel"), d("Churachandpur"), d("Imphal East"), d("Imphal West"),
+      d("Jiribam"), d("Kakching"), d("Kamjong"), d("Kangpokpi"), d("Noney"), d("Pherzawl"),
+      d("Senapati"), d("Tamenglong"), d("Tengnoupal"), d("Thoubal"), d("Ukhrul"),
+    ],
+  },
+  {
+    name: "Meghalaya",
+    aliases: ["meghalaya", "ml"],
+    districts: [
+      d("East Garo Hills"), d("East Jaintia Hills"), d("East Khasi Hills", "shillong"),
+      d("North Garo Hills"), d("Ri Bhoi"), d("South Garo Hills"), d("South West Garo Hills"),
+      d("South West Khasi Hills"), d("West Garo Hills"), d("West Jaintia Hills"), d("West Khasi Hills"),
+      d("Eastern West Khasi Hills"),
+    ],
+  },
+  {
+    name: "Mizoram",
+    aliases: ["mizoram", "mz"],
+    districts: [
+      d("Aizawl"), d("Champhai"), d("Hnahthial"), d("Khawzawl"), d("Kolasib"), d("Lawngtlai"),
+      d("Lunglei"), d("Mamit"), d("Saitual"), d("Serchhip"), d("Siaha", "saiha"),
+    ],
+  },
+  {
+    name: "Nagaland",
+    aliases: ["nagaland", "nl"],
+    districts: [
+      d("Chumoukedima"), d("Dimapur"), d("Kiphire"), d("Kohima"), d("Longleng"), d("Mokokchung"),
+      d("Mon"), d("Niuland"), d("Noklak"), d("Peren"), d("Phek"), d("Shamator"), d("Tseminyu"),
+      d("Tuensang"), d("Wokha"), d("Zunheboto"),
+    ],
+  },
+  {
+    name: "Odisha",
+    aliases: ["odisha", "orissa", "od"],
+    districts: [
+      d("Angul"), d("Balangir", "bolangir"), d("Balasore", "baleswar"), d("Bargarh"), d("Bhadrak"),
+      d("Boudh"), d("Cuttack"), d("Deogarh"), d("Dhenkanal"), d("Gajapati"), d("Ganjam", "berhampur"),
+      d("Jagatsinghpur"), d("Jajpur"), d("Jharsuguda"), d("Kalahandi"), d("Kandhamal", "phulbani"),
+      d("Kendrapara"), d("Kendujhar", "keonjhar"), d("Khordha", "khurda", "bhubaneswar"), d("Koraput"),
+      d("Malkangiri"), d("Mayurbhanj", "baripada"), d("Nabarangpur"), d("Nayagarh"), d("Nuapada"),
+      d("Puri"), d("Rayagada"), d("Sambalpur"), d("Subarnapur", "sonapur"), d("Sundargarh"),
+    ],
+  },
+  {
+    name: "Punjab",
+    aliases: ["punjab", "pb"],
+    districts: [
+      d("Amritsar"), d("Barnala"), d("Bathinda"), d("Faridkot"), d("Fatehgarh Sahib"), d("Fazilka"),
+      d("Ferozepur", "ferozepur"), d("Gurdaspur"), d("Hoshiarpur"), d("Jalandhar"), d("Kapurthala"),
+      d("Ludhiana"), d("Malerkotla"), d("Mansa"), d("Moga"), d("Pathankot"), d("Patiala"),
+      d("Rupnagar", "ropar"), d("Sahibzada Ajit Singh Nagar", "mohali", "s.a.s. nagar", "sas nagar"),
+      d("Sangrur"), d("Shaheed Bhagat Singh Nagar", "nawanshahr", "sbs nagar"), d("Sri Muktsar Sahib", "muktsar"),
+      d("Tarn Taran"),
+    ],
+  },
+  {
+    name: "Rajasthan",
+    aliases: ["rajasthan", "rj", "rajastan"],
+    districts: [
+      d("Ajmer"), d("Alwar"), d("Banswara"), d("Baran"), d("Barmer"), d("Bharatpur"), d("Bhilwara"),
+      d("Bikaner"), d("Bundi"), d("Chittorgarh"), d("Churu"), d("Dausa"), d("Dholpur"), d("Dungarpur"),
+      d("Hanumangarh"), d("Jaipur"), d("Jaisalmer"), d("Jalore"), d("Jhalawar"), d("Jhunjhunu"),
+      d("Jodhpur"), d("Karauli"), d("Kota"), d("Nagaur"), d("Pali"), d("Pratapgarh", "pratapgarh rajasthan"),
+      d("Rajsamand"), d("Sawai Madhopur"), d("Sikar"), d("Sirohi"), d("Sri Ganganagar", "ganganagar"),
+      d("Tonk"), d("Udaipur"), d("Anupgarh"), d("Balotra"), d("Beawar"), d("Deeg"), d("Didwana-Kuchaman"),
+      d("Dudu"), d("Gangapur City"), d("Jaipur Rural"), d("Jodhpur Rural"), d("Kekri"), d("Khairthal-Tijara"),
+      d("Kotputli-Behror"), d("Neem Ka Thana"), d("Phalodi"), d("Salumbar"), d("Sanchore"), d("Shahpura"),
+    ],
+  },
+  {
+    name: "Sikkim",
+    aliases: ["sikkim", "sk"],
+    districts: [
+      d("Gangtok", "east sikkim"), d("Gyalshing", "west sikkim"), d("Mangan", "north sikkim"),
+      d("Namchi", "south sikkim"), d("Pakyong"), d("Soreng"),
+    ],
+  },
+  {
+    name: "Tamil Nadu",
+    aliases: ["tamil nadu", "tamilnadu", "tn", "t.n.", "madras state"],
+    districts: [
+      d("Ariyalur"), d("Chengalpattu"), d("Chennai", "madras"), d("Coimbatore"), d("Cuddalore"),
+      d("Dharmapuri"), d("Dindigul"), d("Erode"), d("Kallakurichi"), d("Kanchipuram", "kancheepuram"),
+      d("Kanniyakumari", "kanyakumari", "nagercoil"), d("Karur"), d("Krishnagiri"), d("Madurai"),
+      d("Mayiladuthurai"), d("Nagapattinam"), d("Namakkal"), d("Nilgiris", "the nilgiris", "ooty", "udhagamandalam"),
+      d("Perambalur"), d("Pudukkottai"), d("Ramanathapuram"), d("Ranipet"), d("Salem"), d("Sivaganga"),
+      d("Tenkasi"), d("Thanjavur", "tanjore"), d("Theni"), d("Thoothukudi", "tuticorin"),
+      d("Tiruchirappalli", "trichy", "tiruchi"), d("Tirunelveli"), d("Tirupathur"), d("Tiruppur"),
+      d("Tiruvallur"), d("Tiruvannamalai"), d("Tiruvarur"), d("Vellore"), d("Viluppuram"), d("Virudhunagar"),
+    ],
+  },
+  {
+    name: "Telangana",
+    aliases: ["telangana", "telengana", "ts", "tg", "t.s."],
+    districts: [
+      d("Adilabad"), d("Bhadradri Kothagudem"), d("Hanumakonda", "warangal urban", "hanamkonda"),
+      d("Hyderabad", "hyd"), d("Jagtial"), d("Jangaon"), d("Jayashankar Bhupalpally"), d("Jogulamba Gadwal"),
+      d("Kamareddy"), d("Karimnagar"), d("Khammam"), d("Kumuram Bheem", "asifabad"), d("Mahabubabad"),
+      d("Mahabubnagar", "mahbubnagar"), d("Mancherial"), d("Medak"), d("Medchal-Malkajgiri", "medchal"),
+      d("Mulugu"), d("Nagarkurnool"), d("Nalgonda"), d("Narayanpet"), d("Nirmal"), d("Nizamabad"),
+      d("Peddapalli"), d("Rajanna Sircilla"), d("Rangareddy", "ranga reddy"), d("Sangareddy"),
+      d("Siddipet"), d("Suryapet"), d("Vikarabad"), d("Wanaparthy"), d("Warangal", "warangal rural"),
+      d("Yadadri Bhuvanagiri"),
+    ],
+  },
+  {
+    name: "Tripura",
+    aliases: ["tripura", "tr"],
+    districts: [
+      d("Dhalai"), d("Gomati"), d("Khowai"), d("North Tripura"), d("Sepahijala"),
+      d("South Tripura"), d("Unakoti"), d("West Tripura", "agartala"),
+    ],
+  },
+  {
+    name: "Uttar Pradesh",
+    aliases: ["uttar pradesh", "u.p.", "up", "uttarpradesh"],
+    districts: [
+      d("Agra"), d("Aligarh"), d("Ambedkar Nagar"), d("Amethi"), d("Amroha", "jyotiba phule nagar"),
+      d("Auraiya"), d("Ayodhya", "faizabad"), d("Azamgarh"), d("Baghpat"), d("Bahraich"), d("Ballia"),
+      d("Balrampur", "balrampur uttar pradesh"), d("Banda"), d("Barabanki"), d("Bareilly"),
+      d("Basti"), d("Bhadohi", "sant ravidas nagar"), d("Bijnor"), d("Budaun"), d("Bulandshahr"),
+      d("Chandauli"), d("Chitrakoot"), d("Deoria"), d("Etah"), d("Etawah"), d("Farrukhabad"),
+      d("Fatehpur"), d("Firozabad"), d("Gautam Buddha Nagar", "noida", "greater noida", "gautam budh nagar"),
+      d("Ghaziabad"), d("Ghazipur"), d("Gonda"), d("Gorakhpur"), d("Hamirpur", "hamirpur uttar pradesh"),
+      d("Hapur"), d("Hardoi"), d("Hathras", "mahamaya nagar"), d("Jalaun"), d("Jaunpur"), d("Jhansi"),
+      d("Kannauj"), d("Kanpur Dehat"), d("Kanpur Nagar", "kanpur"), d("Kasganj"), d("Kaushambi"),
+      d("Kheri", "lakhimpur kheri"), d("Kushinagar"), d("Lalitpur"), d("Lucknow"), d("Maharajganj"),
+      d("Mahoba"), d("Mainpuri"), d("Mathura"), d("Mau"), d("Meerut"), d("Mirzapur"), d("Moradabad"),
+      d("Muzaffarnagar"), d("Pilibhit"), d("Pratapgarh", "pratapgarh uttar pradesh"), d("Prayagraj", "allahabad"),
+      d("Raebareli", "rae bareli"), d("Rampur"), d("Saharanpur"), d("Sambhal"), d("Sant Kabir Nagar"),
+      d("Shahjahanpur"), d("Shamli"), d("Shravasti"), d("Siddharthnagar"), d("Sitapur"), d("Sonbhadra"),
+      d("Sultanpur"), d("Unnao"), d("Varanasi", "banaras", "benaras"),
+    ],
+  },
+  {
+    name: "Uttarakhand",
+    aliases: ["uttarakhand", "uttaranchal", "uk", "ua", "u.k."],
+    districts: [
+      d("Almora"), d("Bageshwar"), d("Chamoli"), d("Champawat"), d("Dehradun", "dehra dun"),
+      d("Haridwar", "hardwar"), d("Nainital"), d("Pauri Garhwal", "pauri"), d("Pithoragarh"),
+      d("Rudraprayag"), d("Tehri Garhwal", "tehri"), d("Udham Singh Nagar", "rudrapur"), d("Uttarkashi"),
+    ],
+  },
+  {
+    name: "West Bengal",
+    aliases: ["west bengal", "w.b.", "wb", "westbengal", "paschim banga"],
+    districts: [
+      d("Alipurduar"), d("Bankura"), d("Birbhum"), d("Cooch Behar", "koch bihar"), d("Dakshin Dinajpur", "south dinajpur"),
+      d("Darjeeling", "darjiling"), d("Hooghly", "hugli"), d("Howrah", "haora"), d("Jalpaiguri"),
+      d("Jhargram"), d("Kalimpong"), d("Kolkata", "calcutta", "kolkatta"), d("Malda", "maldah"),
+      d("Murshidabad"), d("Nadia"), d("North 24 Parganas", "north 24-parganas", "uttar 24 parganas", "barasat"),
+      d("Paschim Bardhaman", "west bardhaman", "asansol", "durgapur"), d("Paschim Medinipur", "west medinipur", "midnapore"),
+      d("Purba Bardhaman", "east bardhaman", "bardhaman", "burdwan"), d("Purba Medinipur", "east medinipur", "tamluk"),
+      d("Purulia"), d("South 24 Parganas", "south 24-parganas", "dakshin 24 parganas"),
+      d("Uttar Dinajpur", "north dinajpur"),
+    ],
+  },
+  // Union Territories
+  {
+    name: "Andaman and Nicobar Islands",
+    aliases: ["andaman and nicobar islands", "andaman and nicobar", "andaman", "a & n islands", "ani"],
+    districts: [d("Nicobar"), d("North and Middle Andaman"), d("South Andaman", "port blair")],
+  },
+  {
+    name: "Chandigarh",
+    aliases: ["chandigarh", "ch", "chd"],
+    districts: [d("Chandigarh")],
+  },
+  {
+    name: "Dadra and Nagar Haveli and Daman and Diu",
+    aliases: [
+      "dadra and nagar haveli and daman and diu",
+      "dadra and nagar haveli",
+      "daman and diu",
+      "daman",
+      "diu",
+      "silvassa",
+      "dnhdd",
+      "dnh & dd",
+    ],
+    districts: [d("Dadra and Nagar Haveli", "silvassa"), d("Daman"), d("Diu")],
+  },
+  {
+    name: "Delhi",
+    aliases: ["delhi", "nct of delhi", "nct delhi", "new delhi", "dl", "ncr delhi"],
+    districts: [
+      d("Central Delhi"), d("East Delhi"), d("New Delhi"), d("North Delhi"), d("North East Delhi"),
+      d("North West Delhi"), d("Shahdara"), d("South Delhi"), d("South East Delhi"), d("South West Delhi"),
+      d("West Delhi"),
+    ],
+  },
+  {
+    name: "Jammu and Kashmir",
+    aliases: ["jammu and kashmir", "jammu & kashmir", "j&k", "j and k", "jk"],
+    districts: [
+      d("Anantnag"), d("Bandipora"), d("Baramulla"), d("Budgam"), d("Doda"), d("Ganderbal"),
+      d("Jammu"), d("Kathua"), d("Kishtwar"), d("Kulgam"), d("Kupwara"), d("Poonch"),
+      d("Pulwama"), d("Rajouri"), d("Ramban"), d("Reasi"), d("Samba"), d("Shopian"),
+      d("Srinagar"), d("Udhampur"),
+    ],
+  },
+  {
+    name: "Ladakh",
+    aliases: ["ladakh", "la"],
+    districts: [d("Kargil"), d("Leh", "leh ladakh")],
+  },
+  {
+    name: "Lakshadweep",
+    aliases: ["lakshadweep", "ld", "laccadive"],
+    districts: [d("Lakshadweep", "kavaratti")],
+  },
+  {
+    name: "Puducherry",
+    aliases: ["puducherry", "pondicherry", "pondichery", "py"],
+    districts: [d("Karaikal"), d("Mahe"), d("Puducherry", "pondicherry"), d("Yanam")],
+  },
+];
+
+/**
+ * Two-digit PIN → State maps are intentionally NOT used for identification or veto.
+ * Postal prefixes overlap States/UTs (e.g. 16 Mohali/Punjab vs Chandigarh, 24 Dehradun/UK vs UP,
+ * 82 Dhanbad/Jharkhand vs Bihar, 19 Ladakh vs J&K). Without a verified six-digit PIN dataset,
+ * PIN must never invent or reject a text-derived State/District.
+ */
+export const PIN_PREFIX_TO_STATE: Record<string, string> = {};

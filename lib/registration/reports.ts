@@ -1,5 +1,6 @@
 import { presentFee } from "@/lib/registration/fee";
-import { maskPan } from "@/lib/registration/fields";
+import { parseIndiaAddress, UNIDENTIFIED_LOCATION } from "@/lib/registration/india-address";
+import { panValueForExport } from "@/lib/registration/pan-access";
 import { panHolderLabel } from "@/lib/registration/school";
 import { streamById } from "@/lib/registration/schema";
 import { statusLabel, type RegistrationRecord } from "@/lib/registration/store";
@@ -20,18 +21,18 @@ function line(values: Array<string | number | null | undefined>): string {
 export function registrationsToCsv(records: RegistrationRecord[], kind: ReportKind, revealPan: boolean): string {
   const rows: string[] = [];
   if (kind === "schools") {
-    rows.push(line(["Reference", "School", "PAN number", "PAN holder", "State", "District", "City", "PIN", "Principal", "Coordinator", "Students", "Student-streams", "Gross registration", "Registration school share", "Registration payable to TEJAS", "Book gross", "Book school share", "Book payable to TEJAS", "Combined gross", "Combined school share", "Payable to TEJAS", "Payment status", "PAN flagged"]));
+    rows.push(line(["Reference", "School", "PAN number", "PAN holder", "School address", "State (from address)", "District (from address)", "Principal", "Coordinator", "Students", "Student-streams", "Gross registration", "Registration school share", "Registration payable to TEJAS", "Book gross", "Book school share", "Book payable to TEJAS", "Combined gross", "Combined school share", "Payable to TEJAS", "Payment status", "PAN flagged"]));
     for (const record of records) {
       const fee = presentFee(record.fee);
+      const location = parseIndiaAddress(record.school.schoolAddress);
       rows.push(line([
         record.reference,
         record.school.schoolName,
-        revealPan ? record.school.pan : maskPan(record.school.pan ?? ""),
+        panValueForExport(record.school.pan, revealPan),
         panHolderLabel(record.school.panHolder),
-        record.school.state,
-        record.school.district,
-        record.school.city,
-        record.school.pin,
+        record.school.schoolAddress,
+        location.state ?? UNIDENTIFIED_LOCATION,
+        location.district ?? (location.state ? "District Not Identified" : UNIDENTIFIED_LOCATION),
         record.school.principalName,
         record.school.coordinatorName,
         record.students.length,

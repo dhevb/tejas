@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-25  
 **Branch:** `feat/owner-dashboard-class-export-complete` (from `origin/main` @ `d8c3ef7` / PR #67 merge)  
-**PR:** *(filled after open)* — **OPEN, NOT MERGED**  
+**PR:** https://github.com/dhevb/tejas/pull/68 — **OPEN, NOT MERGED**  
 **Production:** **NOT DEPLOYED** · **UNCHANGED**
 
 ---
@@ -75,7 +75,10 @@ Owner-only export/file routes continue to require `registrationOwnerAuthorised()
 
 | Item | Status |
 |------|--------|
-| Preview URL / deployment ID | *(filled after deploy)* |
+| Preview URL | https://tejas-rh73rhaqj-dhe-projects.vercel.app/schools/register/review |
+| Stable alias | https://tejas-git-feat-owner-dashboard-class-export-c2c54b-dhe-projects.vercel.app/schools/register/review |
+| Deployment ID | `dpl_EkcHp5hHRXJbZDjpLsUxewYM9vVX` (**Ready**) |
+| Unauthenticated export/file | Local app: schools/complete/file all **401** `{ok:false}`. Preview also fronted by Vercel Deployment Protection (**302** SSO) before the app gate. |
 | Production data / Auth / RLS / Storage / env | **UNCHANGED** |
 | Fee policy / payment records / student access | **UNCHANGED** |
 | Held PRs #10 / #63 / #54 / #12 | **HOLD unchanged** |

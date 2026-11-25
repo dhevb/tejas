@@ -545,6 +545,34 @@ export function isAwaitingPaymentStatus(status: string): boolean {
   return status === "pending_instructions" || status === "awaiting_payment";
 }
 
+/** Pending for owner UI: awaiting payment instructions/transfer or proof submitted (reported). */
+export function isPendingPaymentStatus(status: string): boolean {
+  return (
+    status === "pending_instructions" ||
+    status === "awaiting_payment" ||
+    status === "reported" ||
+    (status.startsWith("pending_") && status !== "refund_pending")
+  );
+}
+
+/**
+ * Statuses included in the main Class-wise registration table.
+ * Rejected and refund/adjustment remain in source data and overview cards, but are excluded here.
+ */
+export function isMainClassTableStatus(status: string): boolean {
+  return status === "confirmed" || isPendingPaymentStatus(status);
+}
+
+/** Confirmed TEJAS + pending TEJAS from class rows (excludes rejected/refund columns). */
+export function classBreakdownMainTejasTotal(rows: ClassBreakdownRow[]): number {
+  return rows.reduce((sum, row) => sum + row.confirmedAmount + row.pendingAmount, 0);
+}
+
+/** Confirmed gross + pending gross from class rows. */
+export function classBreakdownMainGrossTotal(rows: ClassBreakdownRow[]): number {
+  return rows.reduce((sum, row) => sum + (row.confirmedGross ?? 0) + (row.pendingGross ?? 0), 0);
+}
+
 export type FilterableStaffRow = {
   schoolName: string;
   channel?: string | null;

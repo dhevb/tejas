@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { presentFee } from "@/lib/registration/fee";
 import { panHolderLabel } from "@/lib/registration/school";
 import {
   CLASS_NOT_IDENTIFIED,
   STANDARD_CLASS_NUMBERS,
-  classBreakdownAmountTotal,
+  classBreakdownMainGrossTotal,
+  classBreakdownMainTejasTotal,
+  isMainClassTableStatus,
   paymentStatusLabel,
   scopeFilterableRowsToClass,
   summarizeFilterableRows,
@@ -54,10 +57,6 @@ type Overview = {
 type ClassBreakdownDisplay = ClassBreakdownRow & {
   confirmedGross: number;
   pendingGross: number;
-  rejectedGross: number;
-  refundPendingCount: number;
-  refundPendingAmount: number;
-  refundPendingGross: number;
 };
 
 type Row = {
@@ -423,43 +422,61 @@ export function ReviewDashboard() {
       });
   }, [rows, query, statusFilter, streamFilter, channelFilter, stateFilter, districtFilter, classFilter, dateFrom, dateTo, sortKey, sortDir]);
 
-  const displayOverview = useMemo(() => {
-    const baseRows = filtered.map((row) => ({
-      schoolName: row.schoolName,
-      channel: row.channel,
-      paymentStatus: row.paymentStatus,
-      amountDue: row.amountDue,
-      grossTotal: row.grossTotal,
-      schoolShare: row.schoolShare,
-      uniqueStudentCount: row.uniqueStudentCount ?? row.studentCount,
-      studentCount: row.studentCount,
-      studentStreamRegistrations: row.studentStreamRegistrations,
-      englishCount: row.englishCount,
-      mathematicsCount: row.mathematicsCount,
-      technologyCount: row.technologyCount,
-      classMetrics: row.classMetrics ?? [],
-    }));
-    return summarizeFilterableRows(scopeFilterableRowsToClass(baseRows, classFilter));
+  const toFilterable = (row: Row) => ({
+    schoolName: row.schoolName,
+    channel: row.channel,
+    paymentStatus: row.paymentStatus,
+    amountDue: row.amountDue,
+    grossTotal: row.grossTotal,
+    schoolShare: row.schoolShare,
+    uniqueStudentCount: row.uniqueStudentCount ?? row.studentCount,
+    studentCount: row.studentCount,
+    studentStreamRegistrations: row.studentStreamRegistrations,
+    englishCount: row.englishCount,
+    mathematicsCount: row.mathematicsCount,
+    technologyCount: row.technologyCount,
+    classMetrics: row.classMetrics ?? [],
+  });
+
+  const displayOverview = useMemo(
+    () => summarizeFilterableRows(scopeFilterableRowsToClass(filtered.map(toFilterable), classFilter)),
+    [filtered, classFilter],
+  );
+
+  /** Main Class-wise table: confirmed + pending/reported only (rejected/refund excluded from this table, not deleted). */
+  const classTableOverview = useMemo(() => {
+    const mainRows = filtered.filter((row) => isMainClassTableStatus(row.paymentStatus)).map(toFilterable);
+    return summarizeFilterableRows(scopeFilterableRowsToClass(mainRows, classFilter));
   }, [filtered, classFilter]);
 
   const visibleClassBreakdown = useMemo((): ClassBreakdownDisplay[] => {
-    const rows = displayOverview.classBreakdown.map((row) => ({
+    const rows = classTableOverview.classBreakdown.map((row) => ({
       ...row,
       confirmedGross: row.confirmedGross ?? 0,
       pendingGross: row.pendingGross ?? 0,
-      rejectedGross: row.rejectedGross ?? 0,
-      refundPendingCount: row.refundPendingCount ?? 0,
-      refundPendingAmount: row.refundPendingAmount ?? 0,
-      refundPendingGross: row.refundPendingGross ?? 0,
     }));
     if (classFilter === "all") return rows;
     return rows.filter((row) => row.classKey === classFilter);
-  }, [displayOverview.classBreakdown, classFilter]);
+  }, [classTableOverview.classBreakdown, classFilter]);
 
-  const classAmountReconcile = useMemo(
-    () => classBreakdownAmountTotal(visibleClassBreakdown),
+  const classMainTejasReconcile = useMemo(
+    () => classBreakdownMainTejasTotal(visibleClassBreakdown),
     [visibleClassBreakdown],
   );
+  const classMainGrossReconcile = useMemo(
+    () => classBreakdownMainGrossTotal(visibleClassBreakdown),
+    [visibleClassBreakdown],
+  );
+
+  const exportQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    if (stateFilter !== "all") params.set("state", stateFilter);
+    if (districtFilter !== "all") params.set("district", districtFilter);
+    if (statusFilter !== "all" && statusFilter !== "unfinished") params.set("status", statusFilter);
+    if (query.trim()) params.set("q", query.trim());
+    const suffix = params.toString();
+    return suffix ? `&${suffix}` : "";
+  }, [stateFilter, districtFilter, statusFilter, query]);
 
   const stateGroups = useMemo(() => {
     const map = new Map<string, number>();
@@ -602,13 +619,49 @@ export function ReviewDashboard() {
         </p>
       </div>
 
+      <section className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm md:p-6" aria-label="Owner exports">
+        <h2 className="text-xl font-bold text-tejas-ink">Downloads</h2>
+        <p className="mt-1 text-sm text-tejas-muted">
+          Owner-only. The first three CSV exports follow the selected State, District, search and payment filters ({filtered.length} matching registrations).
+          Complete Excel exports every registration (including rejected / refund-adjustment), not the dashboard filters.
+        </p>
+        <ul className="mt-4 grid gap-3 text-base sm:grid-cols-2">
+          <li>
+            <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=schools${exportQuery}`} prefetch={false}>
+              Schools CSV (masked PAN, filtered)
+            </Link>
+            <p className="mt-1 text-sm text-tejas-muted">One row per registration — school and fee summary.</p>
+          </li>
+          <li>
+            <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=students${exportQuery}`} prefetch={false}>
+              Students CSV (filtered)
+            </Link>
+            <p className="mt-1 text-sm text-tejas-muted">One row per student entry under matching registrations.</p>
+          </li>
+          <li>
+            <Link className="font-semibold text-tejas-blue underline" href={`/api/register/admin/export?report=payments${exportQuery}`} prefetch={false}>
+              Payments CSV (filtered)
+            </Link>
+            <p className="mt-1 text-sm text-tejas-muted">Payment status, UTR and remittance fields for matching registrations.</p>
+          </li>
+          <li>
+            <Link className="font-semibold text-tejas-blue underline" href="/api/register/admin/export?report=complete" prefetch={false}>
+              Complete School Registration Excel
+            </Link>
+            <p className="mt-1 text-sm text-tejas-muted">
+              One .xlsx worksheet, one row per registration, with Owner-authenticated links to the student upload and payment proof. Requires an active Owner browser session to open those links.
+            </p>
+          </li>
+        </ul>
+      </section>
+
       <section className="rounded-2xl border border-tejas-border bg-white p-5 shadow-sm md:p-6" aria-label="Class-wise registration">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-3xl">
             <h2 className="text-xl font-bold text-tejas-ink">Class-wise registration</h2>
             <p className="mt-1 text-base text-tejas-muted">
-              Classes 3–10 always appear (zeros when empty). Amount columns separate <strong className="font-semibold text-tejas-ink">gross</strong> (saved ₹150 fee)
-              from <strong className="font-semibold text-tejas-ink">TEJAS share</strong> (saved remittance ₹120). Registration records, unique students and student-streams stay distinct.
+              Classes 3–10 always appear (zeros when empty). This table includes <strong className="font-semibold text-tejas-ink">Confirmed</strong> (payment verified)
+              and <strong className="font-semibold text-tejas-ink">Pending</strong> (awaiting payment or verification, including Proof Submitted). Rejected and refund/adjustment stay on overview cards and in Complete Excel — not here.
             </p>
           </div>
           <label className="text-base">
@@ -631,18 +684,17 @@ export function ReviewDashboard() {
           </label>
         </div>
         <div className="mt-5 -mx-1 overflow-x-auto overscroll-x-contain px-1">
-          <table className="min-w-[52rem] w-full text-left text-sm md:min-w-full md:text-base">
+          <table className="min-w-[44rem] w-full text-left text-sm md:min-w-full md:text-base">
             <thead className="bg-stone-50">
               <tr className="border-b border-stone-200">
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Class</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Registration records</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Unique students</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Student-streams</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Confirmed gross received</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Confirmed TEJAS share</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Pending gross / TEJAS</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Rejected (TEJAS)</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold">Refund/adj. (TEJAS)</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Class from stored class field only">Class</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Registrations that include this class. Do not sum across classes as total records.">Registration records</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Deduplicated students in this class">Unique students</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Selected stream combinations in this class">Student-streams</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Confirmed = payment verified. Saved grossTotal only.">Confirmed Gross Received</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Confirmed TEJAS remittance. Saved amountDue only.">Confirmed TEJAS Share</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Pending = awaiting payment or verification (includes Proof Submitted). Saved grossTotal.">Pending Gross</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Pending TEJAS remittance (includes Proof Submitted). Not received.">Pending TEJAS Share</th>
               </tr>
             </thead>
             <tbody>
@@ -652,26 +704,25 @@ export function ReviewDashboard() {
                   <td className="px-3 py-3">{row.registrationRecords}</td>
                   <td className="px-3 py-3">{row.uniqueStudents}</td>
                   <td className="px-3 py-3">{row.studentStreams}</td>
-                  <td className="px-3 py-3">{row.confirmedCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.confirmedGross)}</span></td>
-                  <td className="px-3 py-3">{row.confirmedCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.confirmedAmount)}</span></td>
-                  <td className="px-3 py-3">{row.pendingCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.pendingGross)} / {inr.format(row.pendingAmount)}</span></td>
-                  <td className="px-3 py-3">{row.rejectedCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.rejectedAmount)}</span></td>
-                  <td className="px-3 py-3">{row.refundPendingCount}<br /><span className="text-sm text-tejas-muted">{inr.format(row.refundPendingAmount)}</span></td>
+                  <td className="px-3 py-3">{inr.format(row.confirmedGross)}</td>
+                  <td className="px-3 py-3">{inr.format(row.confirmedAmount)}</td>
+                  <td className="px-3 py-3">{inr.format(row.pendingGross)}</td>
+                  <td className="px-3 py-3">{inr.format(row.pendingAmount)}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-stone-200 bg-stone-50/80 font-semibold">
-                <td className="px-3 py-3">Reconcile (filtered)</td>
-                <td className="px-3 py-3" title="Authoritative registration-record count from overview cards">
-                  {displayOverview.schools}
+                <td className="px-3 py-3">Reconcile (confirmed + pending)</td>
+                <td className="px-3 py-3" title="Confirmed + pending registration count under current filters">
+                  {classTableOverview.schools}
                 </td>
-                <td className="px-3 py-3">{displayOverview.uniqueStudents}</td>
-                <td className="px-3 py-3">{displayOverview.studentStreams}</td>
-                <td className="px-3 py-3" colSpan={5}>
-                  Class TEJAS {inr.format(classAmountReconcile)}
+                <td className="px-3 py-3">{classTableOverview.uniqueStudents}</td>
+                <td className="px-3 py-3">{classTableOverview.studentStreams}</td>
+                <td className="px-3 py-3" colSpan={4}>
+                  Gross {inr.format(classMainGrossReconcile)} · TEJAS {inr.format(classMainTejasReconcile)}
                   <span className="ml-2 text-sm font-normal text-tejas-muted">
-                    (= TEJAS payable {inr.format(displayOverview.amountDue)}; confirmed gross {inr.format(displayOverview.confirmedGrossReceived)})
+                    (cards: confirmed gross {inr.format(displayOverview.confirmedGrossReceived)} · confirmed TEJAS {inr.format(displayOverview.amountReceived)} · pending TEJAS {inr.format(displayOverview.pendingPayable)})
                   </span>
                 </td>
               </tr>
@@ -679,8 +730,7 @@ export function ReviewDashboard() {
           </table>
         </div>
         <p className="mt-3 text-sm text-tejas-muted">
-          Overview cards use the same filters. Unique students in the total registrations card: {displayOverview.uniqueStudents}.
-          Student-streams: {displayOverview.studentStreams}. Registration records: {displayOverview.schools}.
+          Confirmed = payment verified. Pending = awaiting payment or verification. Proof Submitted = payment proof received, not bank verified. OCR matching is not bank verification.
         </p>
       </section>
 

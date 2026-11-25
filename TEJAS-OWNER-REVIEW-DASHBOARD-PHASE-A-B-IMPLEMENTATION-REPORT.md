@@ -76,8 +76,12 @@ Filtered cards recompute via `summarizeFilterableRows` + `scopeFilterableRowsToC
 
 | Field | Value |
 |-------|--------|
-| Preview URL | *(updated after this commit’s Vercel Preview deploy)* |
+| Preview URL | https://tejas-iew70des1-dhe-projects.vercel.app |
+| Stable alias | https://tejas-git-feat-owner-review-dashboard-phase-a-b-dhe-projects.vercel.app |
+| Deployment ID | `dpl_5s4SbrEKaXu1ajEcr3YDaBdcqhcw` |
+| Status | **Ready** (Preview) |
 | Review path | `/schools/register/review` |
+| Commit | `ff20fa3` |
 | Preview Supabase hostname | Remains **UNVERIFIED** (Secret); no migration required |
 | Production | Unchanged |
 

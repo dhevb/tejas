@@ -1,9 +1,16 @@
 import { buildCompleteRegistrationWorkbook } from "@/lib/registration/complete-registration-workbook";
 import { filterRegistrationsForExport } from "@/lib/registration/export-filters";
+import { resolveOwnerExportOrigin } from "@/lib/registration/export-origin";
 import { authorizePanReveal } from "@/lib/registration/pan-access";
 import { registrationsToCsv, type ReportKind } from "@/lib/registration/reports";
 import { registrationOwnerAuthorised, staffSubject } from "@/lib/registration/staff";
-import { listStoredRegistrations, type PaymentStatus } from "@/lib/registration/store";
+import {
+  listStoredRegistrations,
+  receiptExists,
+  uploadExists,
+  type PaymentStatus,
+  type RegistrationRecord,
+} from "@/lib/registration/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,13 +25,19 @@ const PAYMENT_STATUSES: PaymentStatus[] = [
   "refund_pending",
 ];
 
-function requestOrigin(request: Request): string {
-  const url = new URL(request.url);
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const host = forwardedHost ?? request.headers.get("host") ?? url.host;
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  const proto = forwardedProto ?? (url.protocol.replace(":", "") || "https");
-  return `${proto}://${host}`;
+async function fileAvailabilityMap(
+  records: RegistrationRecord[],
+): Promise<Record<string, { uploadAvailable: boolean; receiptAvailable: boolean }>> {
+  const entries = await Promise.all(
+    records.map(async (record) => {
+      const [uploadAvailable, receiptAvailable] = await Promise.all([
+        uploadExists(record.reference),
+        receiptExists(record.reference),
+      ]);
+      return [record.reference, { uploadAvailable, receiptAvailable }] as const;
+    }),
+  );
+  return Object.fromEntries(entries);
 }
 
 export async function GET(request: Request) {
@@ -48,10 +61,16 @@ export async function GET(request: Request) {
   const records = await listStoredRegistrations();
 
   if (kind === "complete") {
+    const originResult = resolveOwnerExportOrigin(request);
+    if (!originResult.ok) {
+      return Response.json({ ok: false, error: originResult.error }, { status: 400 });
+    }
     // Complete School Registration Excel: all registrations (including rejected/refund), not dashboard-filter scoped.
+    const availability = await fileAvailabilityMap(records);
     const bytes = buildCompleteRegistrationWorkbook(records, {
-      origin: requestOrigin(request),
+      origin: originResult.origin,
       scopeLabel: `Scope: all ${records.length} registration record(s); not limited by dashboard State/District/status filters.`,
+      fileAvailability: availability,
     });
     return new Response(new Uint8Array(bytes), {
       headers: {
@@ -60,6 +79,7 @@ export async function GET(request: Request) {
         "Cache-Control": "no-store",
         "X-TEJAS-Export-Count": String(records.length),
         "X-TEJAS-Export-Scope": "all-registrations",
+        "X-TEJAS-Export-Origin-Source": originResult.source,
       },
     });
   }

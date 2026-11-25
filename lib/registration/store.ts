@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { chmod, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { access, chmod, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
 import path from "node:path";
 import { paymentProofsAccepted } from "@/lib/registration/durable";
 import { presentFee, type FeeBreakdown } from "@/lib/registration/fee";
@@ -35,9 +36,11 @@ import {
   readReceipt as readRemoteReceipt,
   readRegistration as readRemoteRegistration,
   readUpload as readRemoteUpload,
+  receiptExists as remoteReceiptExists,
   storeIdempotency as storeRemoteIdempotency,
   transactionSeen,
   updatePayment as updateRemotePayment,
+  uploadExists as remoteUploadExists,
 } from "@/lib/registration/database";
 import { dataDir } from "@/lib/registration/paths";
 import { referenceIsValid } from "@/lib/registration/reference";
@@ -268,6 +271,32 @@ export async function readReceipt(reference: string): Promise<{ filename: string
     return { filename: `tejas-receipt-${reference}.${record.receiptExt}`, bytes, contentType: types[record.receiptExt] };
   } catch {
     return null;
+  }
+}
+
+/** True when the student upload object/file exists — does not load file bytes. */
+export async function uploadExists(reference: string): Promise<boolean> {
+  const record = await readRegistration(reference);
+  if (!record) return false;
+  if (remoteConfigured()) return remoteUploadExists(reference, record.uploadExt);
+  try {
+    await access(path.join(regDir(reference), `upload.${record.uploadExt}`), fsConstants.R_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** True when a payment-proof file exists for this registration — does not load file bytes. */
+export async function receiptExists(reference: string): Promise<boolean> {
+  const record = await readRegistration(reference);
+  if (!record?.receiptExt) return false;
+  if (remoteConfigured()) return remoteReceiptExists(reference, record.receiptExt);
+  try {
+    await access(path.join(regDir(reference), `receipt.${record.receiptExt}`), fsConstants.R_OK);
+    return true;
+  } catch {
+    return false;
   }
 }
 

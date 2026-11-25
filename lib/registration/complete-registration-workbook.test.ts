@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import {
   COMPLETE_REGISTRATION_COLUMNS,
   COMPLETE_WORKBOOK_SHEET_NAME,
+  SCHOOL_FORM_FIELD_COVERAGE,
   buildCompleteRegistrationWorkbook,
   completeWorkbookSheetNames,
 } from "@/lib/registration/complete-registration-workbook";
@@ -13,6 +14,12 @@ function fakeRecord(partial: {
   reference: string;
   status: RegistrationRecord["payment"]["status"];
   receiptExt?: RegistrationRecord["receiptExt"];
+  state?: string;
+  district?: string;
+  city?: string;
+  pin?: string;
+  enteredUtr?: string | null;
+  transactionReference?: string | null;
 }): RegistrationRecord {
   return {
     reference: partial.reference,
@@ -23,10 +30,10 @@ function fakeRecord(partial: {
     school: {
       schoolName: `School ${partial.reference}`,
       schoolAddress: "KV No.1, Pune, Maharashtra 411001",
-      state: "",
-      district: "",
-      city: "",
-      pin: "",
+      state: partial.state ?? "Maharashtra",
+      district: partial.district ?? "Pune",
+      city: partial.city ?? "Pune",
+      pin: partial.pin ?? "411001",
       pan: "ABCDE1234F",
       panHolder: "school",
       panDuplicate: false,
@@ -86,13 +93,13 @@ function fakeRecord(partial: {
     },
     payment: {
       status: partial.status,
-      transactionReference: "UTRTEST001",
+      transactionReference: "transactionReference" in partial ? (partial.transactionReference ?? null) : "UTR-TXN-001",
       reviewNote: null,
       mode: "UPI",
       paidOn: "2026-11-02",
       payerName: "Payer",
-      enteredUtr: "UTRTEST001",
-      extractedUtr: "UTRTEST001",
+      enteredUtr: "enteredUtr" in partial ? (partial.enteredUtr ?? null) : "UTR-ENTERED-001",
+      extractedUtr: "UTR-OCR-001",
       approvalMethod: "staff",
       verificationLabel: null,
       history: [{ at: "2026-11-02T12:00:00.000Z", status: partial.status, note: null, actor: "staff" }],
@@ -100,15 +107,20 @@ function fakeRecord(partial: {
   };
 }
 
-test("complete workbook has exactly one worksheet and one row per registration", () => {
+test("complete workbook has exactly one worksheet and covers every SchoolForm field", () => {
   const records = [
     fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA1", status: "confirmed" }),
     fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA2", status: "rejected", receiptExt: null }),
     fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA3", status: "refund_pending" }),
   ];
   const bytes = buildCompleteRegistrationWorkbook(records, {
-    origin: "https://tejas.example.test",
+    origin: "https://tejas.dhe.org.in",
     scopeLabel: "Scope: all 3 registration record(s).",
+    fileAvailability: {
+      "TEJAS-2026-AAAAAAAAAAAAAAA1": { uploadAvailable: true, receiptAvailable: true },
+      "TEJAS-2026-AAAAAAAAAAAAAAA2": { uploadAvailable: true, receiptAvailable: false },
+      "TEJAS-2026-AAAAAAAAAAAAAAA3": { uploadAvailable: true, receiptAvailable: true },
+    },
   });
   assert.deepEqual(completeWorkbookSheetNames(bytes), [COMPLETE_WORKBOOK_SHEET_NAME]);
   const book = XLSX.read(bytes, { type: "buffer" });
@@ -119,33 +131,66 @@ test("complete workbook has exactly one worksheet and one row per registration",
   for (const column of COMPLETE_REGISTRATION_COLUMNS) {
     assert.ok(header.includes(column), `missing column ${column}`);
   }
-  const statuses = rows.slice(2).map((row) => row[header.indexOf("Payment status code")]);
-  assert.deepEqual(statuses, ["confirmed", "rejected", "refund_pending"]);
+  for (const item of SCHOOL_FORM_FIELD_COVERAGE) {
+    assert.ok(header.includes(item.column), `SchoolForm.${item.field} missing as ${item.column}`);
+  }
+  const data = rows[2]!;
+  assert.equal(data[header.indexOf("Stored state (original)")], "Maharashtra");
+  assert.equal(data[header.indexOf("Stored district (original)")], "Pune");
+  assert.equal(data[header.indexOf("Stored city (original)")], "Pune");
+  assert.equal(data[header.indexOf("Stored PIN (original)")], "411001");
+  assert.notEqual(data[header.indexOf("State (derived from address)")], undefined);
+  assert.equal(data[header.indexOf("Transaction reference")], "UTR-TXN-001");
+  assert.equal(data[header.indexOf("Entered UTR")], "UTR-ENTERED-001");
+  assert.equal(data[header.indexOf("OCR-extracted UTR")], "UTR-OCR-001");
+  assert.equal(String(data[header.indexOf("PAN (masked)")]), "ABCDE****F");
+  assert.equal(String(data[header.indexOf("PAN (masked)")]).includes("1234"), false);
+  assert.equal(String(data[header.indexOf("PAN (masked)")]).includes("ABCDE1234F"), false);
 });
 
-test("complete workbook embeds owner-route hyperlinks and unavailable proof text", () => {
-  const withProof = fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA4", status: "reported" });
-  const withoutProof = fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA5", status: "awaiting_payment", receiptExt: null });
-  const bytes = buildCompleteRegistrationWorkbook([withProof, withoutProof], {
-    origin: "https://preview.example.test",
+test("missing upload or receipt produces unavailable label without hyperlink", () => {
+  const missingUpload = fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA4", status: "reported" });
+  const missingReceipt = fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA5", status: "awaiting_payment", receiptExt: "jpg" });
+  const present = fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA6", status: "confirmed" });
+  const bytes = buildCompleteRegistrationWorkbook([missingUpload, missingReceipt, present], {
+    origin: "https://tejas.dhe.org.in",
+    fileAvailability: {
+      "TEJAS-2026-AAAAAAAAAAAAAAA4": { uploadAvailable: false, receiptAvailable: true },
+      "TEJAS-2026-AAAAAAAAAAAAAAA5": { uploadAvailable: true, receiptAvailable: false },
+      "TEJAS-2026-AAAAAAAAAAAAAAA6": { uploadAvailable: true, receiptAvailable: true },
+    },
   });
   const book = XLSX.read(bytes, { type: "buffer" });
   const sheet = book.Sheets[COMPLETE_WORKBOOK_SHEET_NAME]!;
-  const uploadCell = sheet[XLSX.utils.encode_cell({ r: 2, c: COMPLETE_REGISTRATION_COLUMNS.indexOf("Student upload download") })] as XLSX.CellObject;
-  const proofCell = sheet[XLSX.utils.encode_cell({ r: 2, c: COMPLETE_REGISTRATION_COLUMNS.indexOf("Payment proof download") })] as XLSX.CellObject;
-  const missingProof = sheet[XLSX.utils.encode_cell({ r: 3, c: COMPLETE_REGISTRATION_COLUMNS.indexOf("Payment proof download") })] as XLSX.CellObject;
-  assert.ok(uploadCell.l?.Target?.includes("/api/register/admin/registrations/TEJAS-2026-AAAAAAAAAAAAAAA4/file?kind=upload"));
-  assert.ok(proofCell.l?.Target?.includes("/api/register/admin/registrations/TEJAS-2026-AAAAAAAAAAAAAAA4/file?kind=receipt"));
-  assert.equal(String(missingProof.v), "Payment proof unavailable");
-  assert.equal(missingProof.l, undefined);
-  assert.ok(!JSON.stringify(bytes).includes("service_role"));
-  assert.ok(!String(uploadCell.l?.Target ?? "").includes("supabase"));
+  const uploadCol = COMPLETE_REGISTRATION_COLUMNS.indexOf("Student upload download");
+  const receiptCol = COMPLETE_REGISTRATION_COLUMNS.indexOf("Payment proof download");
+
+  const missingUploadCell = sheet[XLSX.utils.encode_cell({ r: 2, c: uploadCol })] as XLSX.CellObject;
+  assert.equal(String(missingUploadCell.v), "Student upload unavailable");
+  assert.equal(missingUploadCell.l, undefined);
+
+  const missingReceiptCell = sheet[XLSX.utils.encode_cell({ r: 3, c: receiptCol })] as XLSX.CellObject;
+  assert.equal(String(missingReceiptCell.v), "Payment proof unavailable");
+  assert.equal(missingReceiptCell.l, undefined);
+
+  const presentUpload = sheet[XLSX.utils.encode_cell({ r: 4, c: uploadCol })] as XLSX.CellObject;
+  const presentReceipt = sheet[XLSX.utils.encode_cell({ r: 4, c: receiptCol })] as XLSX.CellObject;
+  assert.ok(presentUpload.l?.Target?.startsWith("https://tejas.dhe.org.in/api/register/admin/registrations/"));
+  assert.ok(presentUpload.l?.Target?.includes("kind=upload"));
+  assert.ok(presentReceipt.l?.Target?.includes("kind=receipt"));
+  assert.ok(!JSON.stringify(book).includes("service_role"));
+  assert.ok(!String(presentUpload.l?.Target ?? "").includes("supabase"));
 });
 
 test("complete workbook keeps gross, school share and TEJAS remittance independent", () => {
   const bytes = buildCompleteRegistrationWorkbook(
-    [fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA6", status: "confirmed" })],
-    { origin: "https://tejas.example.test" },
+    [fakeRecord({ reference: "TEJAS-2026-AAAAAAAAAAAAAAA7", status: "confirmed" })],
+    {
+      origin: "https://tejas.dhe.org.in",
+      fileAvailability: {
+        "TEJAS-2026-AAAAAAAAAAAAAAA7": { uploadAvailable: true, receiptAvailable: true },
+      },
+    },
   );
   const book = XLSX.read(bytes, { type: "buffer" });
   const rows = XLSX.utils.sheet_to_json<string[]>(book.Sheets[COMPLETE_WORKBOOK_SHEET_NAME]!, { header: 1 }) as string[][];
@@ -154,4 +199,32 @@ test("complete workbook keeps gross, school share and TEJAS remittance independe
   assert.equal(row[header.indexOf("Gross amount (grossTotal)")], 150);
   assert.equal(row[header.indexOf("School share (schoolShare)")], 30);
   assert.equal(row[header.indexOf("TEJAS remittance (amountDue)")], 120);
+});
+
+test("blank stored geo fields stay blank and are not invented from address", () => {
+  const record = fakeRecord({
+    reference: "TEJAS-2026-AAAAAAAAAAAAAAA8",
+    status: "confirmed",
+    state: "",
+    district: "",
+    city: "",
+    pin: "",
+  });
+  const bytes = buildCompleteRegistrationWorkbook([record], {
+    origin: "https://tejas.dhe.org.in",
+    fileAvailability: {
+      "TEJAS-2026-AAAAAAAAAAAAAAA8": { uploadAvailable: true, receiptAvailable: false },
+    },
+  });
+  const rows = XLSX.utils.sheet_to_json<string[]>(
+    XLSX.read(bytes, { type: "buffer" }).Sheets[COMPLETE_WORKBOOK_SHEET_NAME]!,
+    { header: 1 },
+  ) as string[][];
+  const header = rows[1]!;
+  const row = rows[2]!;
+  assert.equal(row[header.indexOf("Stored state (original)")], "");
+  assert.equal(row[header.indexOf("Stored district (original)")], "");
+  assert.equal(row[header.indexOf("Stored city (original)")], "");
+  assert.equal(row[header.indexOf("Stored PIN (original)")], "");
+  assert.ok(String(row[header.indexOf("State (derived from address)")]).length > 0);
 });

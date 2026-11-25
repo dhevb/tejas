@@ -1,17 +1,28 @@
 import * as XLSX from "xlsx";
 import { presentFee } from "@/lib/registration/fee";
 import { parseIndiaAddress, UNIDENTIFIED_LOCATION } from "@/lib/registration/india-address";
+import { panValueForExport } from "@/lib/registration/pan-access";
 import { panHolderLabel } from "@/lib/registration/school";
 import { countUniqueStudents } from "@/lib/registration/staff-metrics";
 import { statusLabel, type RegistrationRecord } from "@/lib/registration/store";
 
 export const COMPLETE_WORKBOOK_SHEET_NAME = "School Registrations";
 
+export type CompleteFileAvailability = {
+  uploadAvailable: boolean;
+  receiptAvailable: boolean;
+};
+
 export type CompleteWorkbookOptions = {
-  /** Absolute origin used for owner-authenticated file links (e.g. https://tejas.dhe.org.in). */
+  /** Absolute allowlisted origin used for owner-authenticated file links. */
   origin: string;
   /** Scope label written into the workbook banner row. */
   scopeLabel?: string;
+  /**
+   * Per-reference file existence. When omitted, upload is assumed present and
+   * receipt follows receiptExt only (legacy tests). Production export always passes checks.
+   */
+  fileAvailability?: Record<string, CompleteFileAvailability>;
 };
 
 type CellValue = string | number;
@@ -21,7 +32,7 @@ function safe(value: CellValue): CellValue {
   return /^[=+\-@]/.test(value) ? `'${value}` : value;
 }
 
-function fileUrl(origin: string, reference: string, kind: "upload" | "receipt"): string {
+export function ownerFileDownloadUrl(origin: string, reference: string, kind: "upload" | "receipt"): string {
   const base = origin.replace(/\/$/, "");
   return `${base}/api/register/admin/registrations/${encodeURIComponent(reference)}/file?kind=${kind}`;
 }
@@ -32,15 +43,22 @@ function lastPaymentAt(record: RegistrationRecord): string {
   return history[history.length - 1]!.at;
 }
 
-/** Column headers for the single-worksheet Complete School Registration Excel. */
+/**
+ * Column headers for the single-worksheet Complete School Registration Excel.
+ * Includes every SchoolForm field plus derived location, payment, and file columns.
+ */
 export const COMPLETE_REGISTRATION_COLUMNS = [
   "Reference",
   "Channel",
   "Registration created at",
   "School name",
   "School address (original)",
-  "State (from address)",
-  "District (from address)",
+  "Stored state (original)",
+  "Stored district (original)",
+  "Stored city (original)",
+  "Stored PIN (original)",
+  "State (derived from address)",
+  "District (derived from address)",
   "School email",
   "School mobile",
   "School category",
@@ -83,7 +101,8 @@ export const COMPLETE_REGISTRATION_COLUMNS = [
   "Payment mode",
   "Paid on",
   "Payer name",
-  "Entered UTR / transaction reference",
+  "Transaction reference",
+  "Entered UTR",
   "OCR-extracted UTR",
   "Approval method",
   "Verification label",
@@ -95,30 +114,70 @@ export const COMPLETE_REGISTRATION_COLUMNS = [
   "Payment proof download",
 ] as const;
 
-function maskPan(pan: string): string {
-  const clean = pan.replace(/\s+/g, "").toUpperCase();
-  if (clean.length < 4) return "****";
-  return `${"*".repeat(Math.max(0, clean.length - 4))}${clean.slice(-4)}`;
+/** SchoolForm field names that must appear as workbook columns (directly or labelled). */
+export const SCHOOL_FORM_FIELD_COVERAGE: Array<{ field: string; column: (typeof COMPLETE_REGISTRATION_COLUMNS)[number] }> = [
+  { field: "schoolName", column: "School name" },
+  { field: "schoolAddress", column: "School address (original)" },
+  { field: "state", column: "Stored state (original)" },
+  { field: "district", column: "Stored district (original)" },
+  { field: "city", column: "Stored city (original)" },
+  { field: "pin", column: "Stored PIN (original)" },
+  { field: "schoolEmail", column: "School email" },
+  { field: "schoolMobile", column: "School mobile" },
+  { field: "schoolCategory", column: "School category" },
+  { field: "affiliationBoard", column: "Affiliation board" },
+  { field: "affiliationNumber", column: "Affiliation number" },
+  { field: "pan", column: "PAN (masked)" },
+  { field: "panHolder", column: "PAN holder" },
+  { field: "panDuplicate", column: "PAN duplicate flag" },
+  { field: "principalName", column: "Principal name" },
+  { field: "principalMobile", column: "Principal mobile" },
+  { field: "principalEmail", column: "Principal email" },
+  { field: "principalDesignation", column: "Principal designation" },
+  { field: "coordinatorName", column: "Coordinator name" },
+  { field: "coordinatorMobile", column: "Coordinator mobile" },
+  { field: "coordinatorEmail", column: "Coordinator email" },
+  { field: "coordinatorDesignation", column: "Coordinator designation" },
+  { field: "representativeName", column: "Representative name" },
+  { field: "representativeDesignation", column: "Representative designation" },
+  { field: "previousParticipation", column: "Previous participation" },
+  { field: "previousReference", column: "Previous reference" },
+  { field: "printedBooks", column: "Printed books choice" },
+  { field: "bookQuantity", column: "Printed book quantity" },
+  { field: "ebookAccess", column: "E-book access choice" },
+];
+
+function availabilityFor(
+  record: RegistrationRecord,
+  map: CompleteWorkbookOptions["fileAvailability"],
+): CompleteFileAvailability {
+  if (map?.[record.reference]) return map[record.reference]!;
+  return {
+    uploadAvailable: true,
+    receiptAvailable: Boolean(record.receiptExt),
+  };
 }
 
 /**
  * Build one-worksheet Complete School Registration workbook.
- * One row per registration. File cells are owner-route hyperlinks (cookie session required).
+ * One row per registration. File cells are owner-route hyperlinks only when the file exists.
  */
 export function buildCompleteRegistrationWorkbook(
   records: RegistrationRecord[],
   options: CompleteWorkbookOptions,
 ): Buffer {
   const origin = options.origin.trim();
-  if (!origin || !/^https?:\/\//i.test(origin)) {
-    throw new Error("Complete workbook requires an absolute https origin for file links.");
+  const httpsOk = /^https:\/\/[^\s/]+$/i.test(origin);
+  const localOk = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  if (!origin || (!httpsOk && !localOk)) {
+    throw new Error("Complete workbook requires an allowlisted absolute origin for file links.");
   }
 
   const headerNote = [
     "Complete School Registration Excel — one worksheet, one row per registration.",
     options.scopeLabel ?? "Scope: all listed registrations in this export.",
-    "Student upload and payment-proof links open the Owner-authenticated download route. An active Owner browser session is required. Links are not public Storage URLs.",
-    "OCR match is not bank verification. Gross, school share and TEJAS remittance are independent saved fields.",
+    "Student upload and payment-proof links open the Owner-authenticated download route only when the file exists. An active Owner browser session is required. Links are not public Storage URLs.",
+    "OCR match is not bank verification. Gross, school share and TEJAS remittance are independent saved fields. Stored state/district/city/PIN are original saved values; derived State/District come from the address parser.",
   ].join(" ");
 
   const aoa: CellValue[][] = [
@@ -131,10 +190,17 @@ export function buildCompleteRegistrationWorkbook(
   for (const record of records) {
     const fee = presentFee(record.fee);
     const location = parseIndiaAddress(record.school.schoolAddress);
-    const uploadName = `tejas-upload-${record.reference}.${record.uploadExt}`;
-    const receiptName = record.receiptExt ? `tejas-receipt-${record.reference}.${record.receiptExt}` : "";
-    const uploadLinkLabel = "Open student upload (Owner login required)";
-    const receiptLinkLabel = record.receiptExt
+    const files = availabilityFor(record, options.fileAvailability);
+    const uploadName = files.uploadAvailable
+      ? `tejas-upload-${record.reference}.${record.uploadExt}`
+      : "";
+    const receiptName = files.receiptAvailable && record.receiptExt
+      ? `tejas-receipt-${record.reference}.${record.receiptExt}`
+      : "";
+    const uploadLinkLabel = files.uploadAvailable
+      ? "Open student upload (Owner login required)"
+      : "Student upload unavailable";
+    const receiptLinkLabel = files.receiptAvailable
       ? "Open payment proof (Owner login required)"
       : "Payment proof unavailable";
 
@@ -144,6 +210,10 @@ export function buildCompleteRegistrationWorkbook(
       record.createdAt,
       record.school.schoolName,
       record.school.schoolAddress,
+      record.school.state ?? "",
+      record.school.district ?? "",
+      record.school.city ?? "",
+      record.school.pin ?? "",
       location.state ?? UNIDENTIFIED_LOCATION,
       location.district ?? (location.state ? "District Not Identified" : UNIDENTIFIED_LOCATION),
       record.school.schoolEmail,
@@ -151,7 +221,7 @@ export function buildCompleteRegistrationWorkbook(
       record.school.schoolCategory,
       record.school.affiliationBoard,
       record.school.affiliationNumber ?? "",
-      record.school.pan ? maskPan(record.school.pan) : "",
+      panValueForExport(record.school.pan, false),
       panHolderLabel(record.school.panHolder),
       record.school.panDuplicate ? "yes" : "",
       record.school.principalName,
@@ -188,7 +258,8 @@ export function buildCompleteRegistrationWorkbook(
       record.payment.mode ?? "",
       record.payment.paidOn ?? "",
       record.payment.payerName ?? "",
-      record.payment.enteredUtr ?? record.payment.transactionReference ?? "",
+      record.payment.transactionReference ?? "",
+      record.payment.enteredUtr ?? "",
       record.payment.extractedUtr ?? "",
       record.payment.approvalMethod ?? "",
       record.payment.verificationLabel ?? "",
@@ -205,17 +276,19 @@ export function buildCompleteRegistrationWorkbook(
 
     const uploadCol = COMPLETE_REGISTRATION_COLUMNS.indexOf("Student upload download");
     const receiptCol = COMPLETE_REGISTRATION_COLUMNS.indexOf("Payment proof download");
-    hyperlinks.push({
-      r,
-      c: uploadCol,
-      url: fileUrl(origin, record.reference, "upload"),
-      tooltip: "Owner-authenticated student upload download",
-    });
-    if (record.receiptExt) {
+    if (files.uploadAvailable) {
+      hyperlinks.push({
+        r,
+        c: uploadCol,
+        url: ownerFileDownloadUrl(origin, record.reference, "upload"),
+        tooltip: "Owner-authenticated student upload download",
+      });
+    }
+    if (files.receiptAvailable) {
       hyperlinks.push({
         r,
         c: receiptCol,
-        url: fileUrl(origin, record.reference, "receipt"),
+        url: ownerFileDownloadUrl(origin, record.reference, "receipt"),
         tooltip: "Owner-authenticated payment proof download",
       });
     }

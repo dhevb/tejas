@@ -17,7 +17,7 @@ No merge of PR #71 / #72 / #73. No Production deploy. No SQL applied. No book pu
 | PR #73 | OPEN — https://github.com/dhevb/tejas/pull/73 | gh |
 | PR #73 base | `fix/pr71-phase2-payment-entitlement-pdf` @ `e856edc…` | gh |
 | PR #73 head (before this Phase 2.2 commit) | `d173d261f65f5c485e347a69679221acdb14d8bf` | gh + local |
-| PR #73 head (after Phase 2.2 push) | *(see tip of `fix/pr72-phase2-1-utr-recovery-preview-qa` / GitHub PR #73)* | git push |
+| PR #73 head (Phase 2.2) | `5909aac5aa43be0288d97ba3b9667317b4d44ca8` — trust GitHub PR #73 if tip advances | `gh pr view 73` / git |
 | Working branch | `fix/pr72-phase2-1-utr-recovery-preview-qa` | local |
 | Vercel project | `dhe-projects/tejas` | `vercel ls` / inspect |
 

@@ -23,6 +23,7 @@ import {
 import {
   enrolledStreamIds,
   isBookPaidByStreamEntitlement,
+  isMockTestPaidByStreamEntitlement,
   libraryBooks,
   paidStreamIds,
 } from "@/lib/portal/entitlement-access";
@@ -312,6 +313,7 @@ export async function remoteAccessFor(student: PortalStudent, bookId: string, te
     ? publicationOf(catalog.tests.find((test) => test.id === testId)?.publicationStatus ?? "awaiting_approval", publication.tests[testId]) === "published"
     : false;
   const paid = contentQa || isBookPaidByStreamEntitlement(catalog, student.classLevel, bookId, entitlementRows);
+  const mocksPaid = contentQa || isMockTestPaidByStreamEntitlement(catalog, student.classLevel, bookId, entitlementRows);
   return decideAccess({
     catalog,
     streamId: student.streamId,
@@ -321,6 +323,7 @@ export async function remoteAccessFor(student: PortalStudent, bookId: string, te
     bookPublished,
     testPublished,
     paid,
+    mocksPaid,
     entitledStreamIds: contentQa
       ? uniqueStreamIds(["english", "mathematics", "technology"])
       : enrolledStreamIds(catalog, student.streamId, entitlementRows),
@@ -385,6 +388,7 @@ export async function remoteDashboard(student: PortalStudent) {
     const entitlement = entitlementRows.find((item) => item.book_id === chargeBookId && item.status !== "superseded");
     const bookStatus = publicationOf(book.publicationStatus, publication.books[book.id]);
     const paidBook = contentQa || isBookPaidByStreamEntitlement(catalog, student.classLevel, book.id, statusRows);
+    const mocksPaid = contentQa || isMockTestPaidByStreamEntitlement(catalog, student.classLevel, book.id, statusRows);
     const rawStatus = entitlement?.status;
     const paymentStatus: PaymentState | "none" = contentQa || paidBook
       ? "verified"
@@ -416,7 +420,7 @@ export async function remoteDashboard(student: PortalStudent) {
           paperCode: test.paperCode,
           questionCount: test.questionCount,
           publicationStatus: testStatus,
-          canStart: bookStatus === "published" && testStatus === "published" && paidBook && contentChecked(test),
+          canStart: bookStatus === "published" && testStatus === "published" && mocksPaid && contentChecked(test),
           latestScore: typeof latest?.score === "number" ? latest.score : null,
           latestMax: typeof latest?.max_score === "number" ? latest.max_score : null,
           attempts: mine.length,

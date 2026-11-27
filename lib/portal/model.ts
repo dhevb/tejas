@@ -341,11 +341,16 @@ export function decideAccess(input: {
   testId?: string | null;
   bookPublished: boolean;
   testPublished: boolean;
+  /** Book reading paid (may include Future Tech companion books). */
   paid: boolean;
   /**
-   * Streams unlocked by a verified payment on that stream's payable book.
-   * When set, access uses syllabus rules (Future Tech Book 1 with Book 2) instead of
-   * requiring the book to match only the student's primary registration stream.
+   * Mock-test paid flag. Defaults to `paid` when omitted.
+   * Companion Future Tech Book 1 may be readable while its mock tests stay unpaid.
+   */
+  mocksPaid?: boolean;
+  /**
+   * Enrolled library streams for syllabus membership (not only verified-paid streams).
+   * Future Tech Book 1 with Book 2 uses syllabus rules under the enrolled technology stream.
    */
   entitledStreamIds?: readonly StreamId[];
   /** Allowlisted content-QA identity: published content only; no stream/class/payment lock. */
@@ -373,15 +378,15 @@ export function decideAccess(input: {
     return { ok: false, reason: "wrong_class" };
   }
   if (test) {
-    const testOnSyllabus = entitled.some((streamId) =>
-      booksForStreamSyllabus(input.catalog, streamId, input.classLevel).some((item) => item.id === test.bookId),
-    );
-    if (!testOnSyllabus || test.bookId !== book.id) {
+    // Mock tests are bound to the purchased payable book for the class, not syllabus companions.
+    const payableId = payableBookIdForStream(input.catalog, book.streamId, input.classLevel);
+    if (!payableId || test.bookId !== payableId || test.bookId !== book.id) {
       return { ok: false, reason: test.streamId !== book.streamId ? "wrong_stream" : "wrong_class" };
     }
   }
   if (!published) return { ok: false, reason: "unpublished" };
-  if (!input.paid) return { ok: false, reason: "unpaid" };
+  const mocksPaid = input.mocksPaid ?? input.paid;
+  if (test ? !mocksPaid : !input.paid) return { ok: false, reason: "unpaid" };
   return { ok: true, book, test };
 }
 

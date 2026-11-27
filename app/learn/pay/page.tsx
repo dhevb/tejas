@@ -54,7 +54,7 @@ export default async function PayPage() {
               ))}
             </ul>
             <p className="mt-4 text-sm leading-relaxed text-tejas-muted">
-              Transfer the total for the streams you select below. Default selection covers all unpaid streams ({formatInr(defaultTotal)}). {bank.message} Sending the reference does not open the material until verification succeeds.
+              Pay one unpaid stream at a time with the exact bank UTR for that ₹49 transfer. Unpaid streams listed above: {formatInr(defaultTotal)} if paid separately. {bank.message} Sending the reference does not open the material until verification succeeds.
             </p>
             <h2 className="mt-4 text-lg font-bold text-tejas-blue">{bank.heading}</h2>
             <dl className="mt-4 grid gap-2 text-sm">

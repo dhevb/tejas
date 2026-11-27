@@ -123,7 +123,11 @@ test("one email can register and unlock multiple streams without overwriting", a
     assert.equal(before.books.some((book) => book.id === "ft-book-1"), true);
     assert.equal(before.books.every((book) => book.canRead === false), true);
 
-    assert.equal((await reportPayment(student.id, "UTR49MULTI1", ["english", "mathematics", "technology"])).ok, true);
+    // One exact UTR per stream — grouped single-UTR multi-stream is refused until schema approval.
+    assert.equal((await reportPayment(student.id, "UTR49MULTI1", ["english", "mathematics", "technology"])).ok, false);
+    assert.equal((await reportPayment(student.id, "UTR49MULTI1", ["english"])).ok, true);
+    assert.equal((await reportPayment(student.id, "UTR49MULTI2", ["mathematics"])).ok, true);
+    assert.equal((await reportPayment(student.id, "UTR49MULTI3", ["technology"])).ok, true);
     assert.equal((await reviewPayment({ actor: "staff", studentId: student.id, bookId: "eng-class-07", decision: "verified", note: "Matched English credit." })).ok, true);
     assert.equal((await reviewPayment({ actor: "staff", studentId: student.id, bookId: "mat-class-07", decision: "verified", note: "Matched Maths credit." })).ok, true);
     assert.equal((await reviewPayment({ actor: "staff", studentId: student.id, bookId: "ft-book-1", decision: "verified", note: "Matched Future Tech credit." })).ok, true);
@@ -171,8 +175,15 @@ test("Future Tech Book 2 payment unlocks Book 1 without a second charge", async 
     assert.equal((await accessFor(student, "ft-book-1")).ok, true);
     assert.equal((await accessFor(student, "ft-book-2")).ok, true);
     assert.equal((await accessFor(student, "eng-class-09")).ok, false);
+    assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "published", reason: "Publish Book 1 mock." })).ok, true);
+    assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b2-mt01", status: "published", reason: "Publish Book 2 mock." })).ok, true);
+    const companionMock = await accessFor(student, "ft-book-1", "ft-b1-mt01");
+    assert.equal(companionMock.ok, false);
+    assert.equal((await accessFor(student, "ft-book-2", "ft-b2-mt01")).ok, true);
     const paidView = await dashboard(student);
     assert.equal(paidView.books.every((book) => book.canRead), true);
+    assert.equal(paidView.books.find((book) => book.id === "ft-book-1")?.tests.every((test) => test.canStart === false), true);
+    assert.equal(paidView.books.find((book) => book.id === "ft-book-2")?.tests.some((test) => test.id === "ft-b2-mt01" && test.canStart), true);
   });
 });
 

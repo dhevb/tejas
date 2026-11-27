@@ -365,7 +365,9 @@ test("payment status cannot be set by the student and a second report does not a
   if (!student) return;
   assert.equal((await accessFor(student, "ft-book-1")).ok, false);
   assert.equal((await reportPayment(student.id, "UTR49RIA001")).ok, true);
-  assert.equal((await reportPayment(student.id, "UTR49RIA002")).ok, true);
+  // Exact UTR retained; a different UTR cannot overwrite a reported payment.
+  assert.equal((await reportPayment(student.id, "UTR49RIA002")).ok, false);
+  assert.equal((await reportPayment(student.id, "UTR49RIA001")).ok, true);
   const overview = await staffOverview();
   const row = overview.students.find((item) => item.id === student?.id);
   assert.equal(row?.payment.filter((item) => item.bookId === "ft-book-1" && item.status !== "superseded").length, 1);
@@ -395,8 +397,10 @@ test("a submitted score is calculated by the server from the stored key", async 
   assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b2-mt01", status: "published", reason: "Review one test for scoring." })).ok, true);
   assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "published", reason: "Publish Future Tech book 1 for syllabus access." })).ok, true);
   assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "published", reason: "Publish Future Tech book 1 mock for syllabus access." })).ok, true);
-  const bookOne = await accessFor(student, "ft-book-1", "ft-b1-mt01");
-  assert.equal(bookOne.ok, true);
+  assert.equal((await accessFor(student, "ft-book-1")).ok, true);
+  const bookOneMocks = await accessFor(student, "ft-book-1", "ft-b1-mt01");
+  assert.equal(bookOneMocks.ok, false);
+  if (!bookOneMocks.ok) assert.equal(bookOneMocks.reason, "wrong_class");
   const started = await startAttempt(student, "ft-b2-mt01");
   assert.equal(started.ok, true);
   if (!started.ok) return;

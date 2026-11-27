@@ -1,22 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { formatInr } from "@/lib/registration/fee";
+import type { StreamId } from "@/lib/registration/schema";
 
 const fieldClass = "mt-1 w-full rounded-xl border border-tejas-border bg-white px-3 py-2 text-sm";
 
-export function PayForm() {
+type PayOption = {
+  streamId: StreamId;
+  streamName: string;
+  amountInr: number;
+  includedMockTests: number;
+};
+
+export function PayForm({
+  options,
+  defaultSelected,
+}: {
+  options: PayOption[];
+  defaultSelected: StreamId[];
+}) {
+  const [selected, setSelected] = useState<StreamId[]>(defaultSelected);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const total = useMemo(
+    () => options.filter((item) => selected.includes(item.streamId)).reduce((sum, item) => sum + item.amountInr, 0),
+    [options, selected],
+  );
+
+  function toggle(streamId: StreamId) {
+    setSelected((current) => (current.includes(streamId) ? current.filter((id) => id !== streamId) : [...current, streamId]));
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    if (selected.length === 0) {
+      setError("Select at least one unpaid stream to pay for.");
+      return;
+    }
     setPending(true);
     setError("");
     setMessage("");
     const form = new FormData(event.currentTarget);
+    for (const streamId of selected) form.append("streamIds", streamId);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 25_000);
     try {
@@ -32,6 +61,7 @@ export function PayForm() {
         outcome?: string;
         reason?: string;
         verificationLabel?: string;
+        amountDue?: number;
       };
       let body: PayResponse | null = null;
       try {
@@ -44,7 +74,7 @@ export function PayForm() {
         return;
       }
       if (body.outcome === "automatic") {
-        setMessage(`${body.reason ?? "Payment approved from the screenshot match."} Access opens for the purchased stream only. This is screenshot-based automatic approval, not bank-statement confirmation.`);
+        setMessage(`${body.reason ?? "Payment approved from the screenshot match."} Access opens for the purchased stream(s) only. This is screenshot-based automatic approval, not bank-statement confirmation.`);
       } else {
         setMessage(`${body.reason ?? "Payment proof saved."} The e-book stays locked until the screenshot checks pass or staff complete a review. This is not bank-statement confirmation.`);
       }
@@ -61,6 +91,26 @@ export function PayForm() {
 
   return (
     <form onSubmit={onSubmit} className="mt-6 space-y-4" encType="multipart/form-data">
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-semibold">Streams to pay for</legend>
+        {options.map((option) => (
+          <label key={option.streamId} className="flex cursor-pointer items-start gap-3 rounded-2xl border border-tejas-border px-3 py-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1 size-4"
+              checked={selected.includes(option.streamId)}
+              onChange={() => toggle(option.streamId)}
+            />
+            <span>
+              <span className="font-semibold text-tejas-ink">{option.streamName}</span>
+              <span className="mt-1 block text-tejas-muted">
+                {formatInr(option.amountInr)} · {option.includedMockTests} mock tests
+              </span>
+            </span>
+          </label>
+        ))}
+        <p className="text-sm font-semibold text-tejas-blue">Total payable: {formatInr(total)}</p>
+      </fieldset>
       <label className="block text-sm font-semibold">UTR / transaction reference
         <input className={fieldClass} name="transactionReference" required minLength={6} />
       </label>
@@ -72,7 +122,7 @@ export function PayForm() {
       </p>
       {error ? <p className="text-sm text-tejas-error" role="alert">{error}</p> : null}
       {message ? <p className="text-sm text-tejas-emerald" role="status">{message}</p> : null}
-      <Button type="submit" disabled={pending}>{pending ? "Uploading" : "Submit screenshot and UTR"}</Button>
+      <Button type="submit" disabled={pending || selected.length === 0}>{pending ? "Uploading" : "Submit screenshot and UTR"}</Button>
     </form>
   );
 }

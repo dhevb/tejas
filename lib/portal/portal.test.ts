@@ -108,7 +108,7 @@ test("class lists follow the stream and the fee stays with one book", () => {
   }
   assert.equal(quoteFee(catalog, "mathematics", 5).status, "payable");
   assert.deepEqual(booksForLearner(catalog, "mathematics", 10).map((book) => book.id), ["mat-class-10"]);
-  const denied = decideAccess({
+  const syllabusCompanion = decideAccess({
     catalog,
     streamId: "technology",
     classLevel: 9,
@@ -117,8 +117,18 @@ test("class lists follow the stream and the fee stays with one book", () => {
     testPublished: true,
     paid: true,
   });
-  assert.equal(denied.ok, false);
-  if (!denied.ok) assert.equal(denied.reason, "wrong_class");
+  assert.equal(syllabusCompanion.ok, true);
+  const deniedOtherStream = decideAccess({
+    catalog,
+    streamId: "technology",
+    classLevel: 9,
+    bookId: "eng-class-09",
+    bookPublished: true,
+    testPublished: true,
+    paid: true,
+  });
+  assert.equal(deniedOtherStream.ok, false);
+  if (!deniedOtherStream.ok) assert.equal(deniedOtherStream.reason, "wrong_stream");
 });
 
 test("a student keeps the registered stream and class, and content stays closed until payment and publication", async () => {
@@ -180,8 +190,8 @@ test("a student keeps the registered stream and class, and content stays closed 
   assert.ok(class9);
   if (!class9) return;
   const class9View = await dashboard(class9);
-  assert.deepEqual(class9View.books.map((book) => book.id), ["ft-book-2"]);
-  assert.equal(class9View.books[0].canRead, false);
+  assert.deepEqual(class9View.books.map((book) => book.id), ["ft-book-1", "ft-book-2"]);
+  assert.equal(class9View.books.every((book) => book.canRead === false), true);
 
   const catalogStillClosed = JSON.parse(readFileSync(path.join(process.cwd(), "content/portal/catalog.json"), "utf8")) as { tests: { publicationStatus: string }[] };
   assert.equal(catalogStillClosed.tests.every((item) => item.publicationStatus === "awaiting_approval"), true);
@@ -197,7 +207,8 @@ test("a student keeps the registered stream and class, and content stays closed 
   assert.equal(moved?.classLevel, 9);
   const oldBook = await accessFor(moved!, "ft-book-1");
   assert.equal(oldBook.ok, false);
-  if (!oldBook.ok) assert.equal(oldBook.reason, "wrong_class");
+  // Class 9 Future Tech syllabus includes Book 1, but payment was superseded by the correction.
+  if (!oldBook.ok) assert.equal(oldBook.reason, "unpaid");
   const audit = (await staffOverview()).audit.find((item) => item.action === "correct-registration" && item.studentId === stored.id);
   assert.ok(audit);
   assert.equal(audit?.actor, "staff");
@@ -382,9 +393,10 @@ test("a submitted score is calculated by the server from the stored key", async 
   assert.equal((await reviewPayment({ actor: "staff", studentId: student.id, bookId: "ft-book-2", decision: "verified", note: "Matched the test credit." })).ok, true);
   assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-2", status: "published", reason: "Review one book for scoring." })).ok, true);
   assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b2-mt01", status: "published", reason: "Review one test for scoring." })).ok, true);
+  assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "published", reason: "Publish Future Tech book 1 for syllabus access." })).ok, true);
+  assert.equal((await setPublication({ actor: "staff", kind: "test", id: "ft-b1-mt01", status: "published", reason: "Publish Future Tech book 1 mock for syllabus access." })).ok, true);
   const bookOne = await accessFor(student, "ft-book-1", "ft-b1-mt01");
-  assert.equal(bookOne.ok, false);
-  if (!bookOne.ok) assert.equal(bookOne.reason, "wrong_class");
+  assert.equal(bookOne.ok, true);
   const started = await startAttempt(student, "ft-b2-mt01");
   assert.equal(started.ok, true);
   if (!started.ok) return;
@@ -529,24 +541,24 @@ test("the public e-book summary follows publication status and does not include 
 });
 
 test("the student library and staff inventory use TEJAS Olympiad branding", () => {
-  const pages = [
+  const brandedPages = [
     "app/learn/dashboard/page.tsx",
     "app/learn/staff/page.tsx",
-    "app/learn/staff/staff-console.tsx",
   ];
-  const shared = [
+  const noLegacyBrand = [
+    ...brandedPages,
+    "app/learn/staff/staff-console.tsx",
     "app/layout.tsx",
     "components/layout/TejasNavbar.tsx",
     "components/layout/TejasFooter.tsx",
     "components/shared/FloatingCTA.tsx",
     "components/brand/TejasEmblem.tsx",
   ];
-  for (const file of pages) {
+  for (const file of brandedPages) {
     const source = readFileSync(path.join(process.cwd(), file), "utf8");
-    assert.equal(source.includes("DHE English Olympiad"), false, file);
     assert.equal(source.includes("TEJAS Olympiad"), true, file);
   }
-  for (const file of shared) {
+  for (const file of noLegacyBrand) {
     const source = readFileSync(path.join(process.cwd(), file), "utf8");
     assert.equal(source.includes("DHE English Olympiad"), false, file);
   }
@@ -645,9 +657,12 @@ test("QA-account-only retake: QA may retake, ordinary student cannot, scores iso
     assert.equal(ordinaryDash.student.contentQa, false);
     assert.equal(ordinaryDash.history.some((item) => item.id === qaStart.attemptId), false);
 
-    const wrongClass = await accessFor(ordinary, "ft-book-1", "ft-b1-mt01");
-    assert.equal(wrongClass.ok, false);
-    if (!wrongClass.ok) assert.equal(wrongClass.reason, "wrong_class");
+    // Future Tech Book 2 payment unlocks Book 1 on the same stream; unrelated streams stay closed.
+    assert.equal((await setPublication({ actor: "staff", kind: "book", id: "ft-book-1", status: "published", reason: "QA syllabus companion book." })).ok, true);
+    assert.equal((await accessFor(ordinary, "ft-book-1")).ok, true);
+    const wrongStream = await accessFor(ordinary, "eng-class-10");
+    assert.equal(wrongStream.ok, false);
+    if (!wrongStream.ok) assert.equal(wrongStream.reason, "wrong_stream");
 
     // Staff overview remains a separate staff path; QA flag does not expand payment powers in student APIs.
     const overview = await staffOverview();

@@ -11,9 +11,11 @@ import {
   buildStreamClassMatrix,
   classBreakdownMainGrossTotal,
   classBreakdownMainTejasTotal,
+  countStateGroupsForMainScope,
   isMainClassTableStatus,
   paymentStatusLabel,
   scopeFilterableRowsToClass,
+  studentStreamsTotalFromMatrix,
   summarizeFilterableRows,
   type ClassBreakdownRow,
   type ClassMetric,
@@ -504,14 +506,25 @@ export function ReviewDashboard() {
   }, [filtered, classFilter]);
 
   const visibleClassBreakdown = useMemo((): ClassBreakdownDisplay[] => {
-    const rows = classTableOverview.classBreakdown.map((row) => ({
-      ...row,
-      confirmedGross: row.confirmedGross ?? 0,
-      pendingGross: row.pendingGross ?? 0,
-    }));
+    const rows = classTableOverview.classBreakdown.map((row) => {
+      const classNumber = row.classKey.startsWith("class-")
+        ? Number(row.classKey.replace("class-", ""))
+        : NaN;
+      const distinctStreams =
+        Number.isFinite(classNumber) && streamClassMatrix.studentStreamsByClass[classNumber] != null
+          ? streamClassMatrix.studentStreamsByClass[classNumber]!
+          : row.studentStreams;
+      return {
+        ...row,
+        /** Display uses distinct student×stream enrollments (matches Olympiad stream cards). */
+        studentStreams: distinctStreams,
+        confirmedGross: row.confirmedGross ?? 0,
+        pendingGross: row.pendingGross ?? 0,
+      };
+    });
     if (classFilter === "all") return rows;
     return rows.filter((row) => row.classKey === classFilter);
-  }, [classTableOverview.classBreakdown, classFilter]);
+  }, [classTableOverview.classBreakdown, classFilter, streamClassMatrix]);
 
   const classMainTejasReconcile = useMemo(
     () => classBreakdownMainTejasTotal(visibleClassBreakdown),
@@ -521,6 +534,11 @@ export function ReviewDashboard() {
     () => classBreakdownMainGrossTotal(visibleClassBreakdown),
     [visibleClassBreakdown],
   );
+  /** Distinct student×stream enrollments — must equal Eng+Math+FT stream card totals. */
+  const classMainStudentStreamsReconcile = useMemo(() => {
+    if (classFilter === "all") return studentStreamsTotalFromMatrix(streamClassMatrix);
+    return visibleClassBreakdown.reduce((sum, row) => sum + row.studentStreams, 0);
+  }, [classFilter, streamClassMatrix, visibleClassBreakdown]);
 
   const exportQuery = useMemo(() => {
     const params = new URLSearchParams();
@@ -532,23 +550,17 @@ export function ReviewDashboard() {
     return suffix ? `&${suffix}` : "";
   }, [stateFilter, districtFilter, statusFilter, query]);
 
-  const stateGroups = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const row of filtered) {
-      const key = row.stateKey ?? UNIDENTIFIED;
-      map.set(key, (map.get(key) ?? 0) + 1);
-    }
-    return [...map.entries()].sort((a, b) => {
-      if (a[0] === UNIDENTIFIED) return 1;
-      if (b[0] === UNIDENTIFIED) return -1;
-      return b[1] - a[1] || a[0].localeCompare(b[0]);
-    });
-  }, [filtered]);
+  /** Confirmed + Pending only — same main-table status rule; excludes rejected/refund. */
+  const stateGroups = useMemo(
+    () => countStateGroupsForMainScope(filtered, UNIDENTIFIED),
+    [filtered],
+  );
 
   const districtGroups = useMemo(() => {
     if (stateFilter === "all") return [] as Array<[string, number]>;
     const map = new Map<string, number>();
     for (const row of filtered) {
+      if (!isMainClassTableStatus(row.paymentStatus)) continue;
       const key = row.districtKey ?? UNIDENTIFIED;
       map.set(key, (map.get(key) ?? 0) + 1);
     }
@@ -745,9 +757,24 @@ export function ReviewDashboard() {
             <thead className="bg-stone-50">
               <tr className="border-b border-stone-200">
                 <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Class from stored class field only">Class</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Registrations that include this class. Do not sum across classes as total records.">Registration records</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Deduplicated students in this class">Unique students</th>
-                <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Selected stream combinations in this class">Student-streams</th>
+                <th
+                  className="whitespace-nowrap px-3 py-3 font-semibold"
+                  title="Registrations that include this class (registration touches). Do not sum across classes as distinct registration count — multi-class schools appear in more than one row."
+                >
+                  Registration records
+                </th>
+                <th
+                  className="whitespace-nowrap px-3 py-3 font-semibold"
+                  title="Distinct students in this class (identity = name + date of birth + parent name + parent mobile). Same name alone does not merge students."
+                >
+                  Unique students
+                </th>
+                <th
+                  className="whitespace-nowrap px-3 py-3 font-semibold"
+                  title="Distinct student×stream enrollments in this class (same rule as Olympiad stream cards). Eng+Math = two streams. Duplicate registrations for the same student×stream count once."
+                >
+                  Student-streams
+                </th>
                 <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Confirmed = payment verified. Saved grossTotal only.">Confirmed Gross Received</th>
                 <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Confirmed TEJAS remittance. Saved amountDue only.">Confirmed TEJAS Share</th>
                 <th className="whitespace-nowrap px-3 py-3 font-semibold" title="Pending = awaiting payment or verification (includes Proof Submitted). Saved grossTotal.">Pending Gross</th>
@@ -771,11 +798,18 @@ export function ReviewDashboard() {
             <tfoot>
               <tr className="border-t-2 border-stone-200 bg-stone-50/80 font-semibold">
                 <td className="px-3 py-3">Reconcile (confirmed + pending)</td>
-                <td className="px-3 py-3" title="Confirmed + pending registration count under current filters">
+                <td className="px-3 py-3" title="Distinct Confirmed + Pending registrations under current filters (not the sum of class touches)">
                   {classTableOverview.schools}
                 </td>
-                <td className="px-3 py-3">{classTableOverview.uniqueStudents}</td>
-                <td className="px-3 py-3">{classTableOverview.studentStreams}</td>
+                <td className="px-3 py-3" title="Distinct students under Confirmed + Pending (registration-level unique counts summed)">
+                  {classTableOverview.uniqueStudents}
+                </td>
+                <td
+                  className="px-3 py-3"
+                  title="Distinct student×stream enrollments — equals English + Mathematics + Future Tech unique-student cards"
+                >
+                  {classMainStudentStreamsReconcile}
+                </td>
                 <td className="px-3 py-3" colSpan={4}>
                   Gross {inr.format(classMainGrossReconcile)} · TEJAS {inr.format(classMainTejasReconcile)}
                   <span className="ml-2 text-sm font-normal text-tejas-muted">
@@ -788,6 +822,8 @@ export function ReviewDashboard() {
         </div>
         <p className="mt-3 text-sm text-tejas-muted">
           Confirmed = payment verified. Pending = awaiting payment or verification. Proof Submitted = payment proof received, not bank verified. OCR matching is not bank verification.
+          Unique students = distinct children. Student-streams = distinct student-and-stream enrollments (reconciles with Olympiad stream cards below).
+          Registration records in each class row are touches — summing them across classes is not the distinct registration total.
         </p>
       </section>
 
@@ -795,9 +831,9 @@ export function ReviewDashboard() {
         <div className="space-y-2">
           <h2 className="text-lg font-semibold text-tejas-ink md:text-xl">Olympiad streams — unique students</h2>
           <p className="max-w-3xl text-sm text-tejas-muted md:text-base">
-            {streamClassMatrix.scopeLabel}. A child in English and Mathematics counts once in each stream.
-            These are not registration-record counts and not student-stream enrollment totals.
-            Future Tech applies to Classes 6–10 only.
+            {streamClassMatrix.scopeLabel}. A child in English and Mathematics counts once in each stream
+            (distinct student×stream enrollments; duplicate registrations for the same child and stream count once).
+            Card totals sum to the class-wise Student-streams reconcile total. Future Tech applies to Classes 6–10 only (N/A for 3–5).
           </p>
         </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -861,6 +897,10 @@ export function ReviewDashboard() {
       {stateGroups.length > 0 ? (
         <section className="rounded-2xl border border-tejas-border bg-white p-4 text-sm" aria-label="State grouping">
           <h2 className="font-semibold text-tejas-ink">State-wise (filtered)</h2>
+          <p className="mt-1 text-tejas-muted">
+            Confirmed + Pending only (includes Proof Submitted). Excludes rejected and refund/adjustment.
+            Rejected totals remain on overview cards and in Complete Excel. Respects current dashboard filters.
+          </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {stateGroups.map(([state, count]) => (
               <li key={state}>
@@ -881,6 +921,11 @@ export function ReviewDashboard() {
               </li>
             ) : null}
           </ul>
+          <p className="mt-2 text-xs text-tejas-muted">
+            Total {stateGroups.reduce((sum, [, n]) => sum + n, 0)} Confirmed + Pending registration
+            {stateGroups.reduce((sum, [, n]) => sum + n, 0) === 1 ? "" : "s"} under current filters
+            (matches class-wise reconcile registration count when payment filter is All).
+          </p>
           {districtGroups.length > 0 ? (
             <>
               <h3 className="mt-4 font-semibold text-tejas-ink">Districts in {stateFilter}</h3>

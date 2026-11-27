@@ -7,12 +7,13 @@
 | Parent PR | https://github.com/dhevb/tejas/pull/71 |
 | Correction PR (Phase 2) | https://github.com/dhevb/tejas/pull/72 |
 | Phase 2.1 branch | `fix/pr72-phase2-1-utr-recovery-preview-qa` |
-| Phase 2.1 PR | *(filled after `gh pr create`)* |
+| Phase 2.1 PR | https://github.com/dhevb/tejas/pull/73 |
 | Base of this branch | PR #72 head `e856edce48e9f2416fc83cc016ce14fecc9b2d70` |
-| Final commit SHA | *(filled after commit)* |
-| Preview URL | *(filled after Preview deploy)* |
-| Deployment ID | *(filled after Preview deploy)* |
-| Deployment status | *(filled after READY)* |
+| Final commit SHA | `86103b6d9dcce50d7b312f5a93d7a48486376530` |
+| Preview URL | https://tejas-8weocht3q-dhe-projects.vercel.app |
+| Deployment ID | `dpl_Bx9PqKVPY1ZiCGRt48duAmNn5xcL` |
+| Deployment status | READY (`target: null` — Preview only, not Production) |
+| Inspector | https://vercel.com/dhe-projects/tejas/Bx9PqKVPY1ZiCGRt48duAmNn5xcL |
 
 ---
 

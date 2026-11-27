@@ -142,12 +142,13 @@ Screenshots: capture on Preview after deploy (desktop + mobile) during Owner QA.
 
 ## 10. Preview URL and deployment ID
 
-Filled after Preview deploy in this session (see PR description / final chat note).
-
 | Item | Value |
 |------|--------|
-| Preview URL | _pending deploy_ |
-| Deployment ID | _pending deploy_ |
+| Preview URL | https://tejas-6lpejn28g-dhe-projects.vercel.app |
+| Deployment ID | `dpl_CoZnWYoZ92WCUABuN37J8EvtA96D` |
+| Inspector | https://vercel.com/dhe-projects/tejas/CoZnWYoZ92WCUABuN37J8EvtA96D |
+| PR | https://github.com/dhevb/tejas/pull/71 |
+| Target | Preview only (`target: null`) — not Production |
 
 ---
 

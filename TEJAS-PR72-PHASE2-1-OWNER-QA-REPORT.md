@@ -13,7 +13,7 @@
 | Phase 2.1 PR | https://github.com/dhevb/tejas/pull/73 | Verified |
 | Base of this branch | PR #72 head `e856edce48e9f2416fc83cc016ce14fecc9b2d70` | Verified |
 | PR #73 head at Phase 2.2 start | `d173d261f65f5c485e347a69679221acdb14d8bf` | Verified (`gh pr view 73`) |
-| PR #73 tip after Phase 2.2 docs push | *(GitHub PR #73 head SHA — updates with this branch)* | Verified after push |
+| PR #73 tip after Phase 2.2 docs push | `5ba010c5557577d7af618b248cf7fe600994071f` | Verified after push (SHA-align commit may advance tip by one) |
 | Preview URL (for `d173d26`) | https://tejas-7edcw033y-dhe-projects.vercel.app | Verified — GitHub Deployments + `vercel inspect` |
 | Deployment ID | `dpl_6UZievvEvDRZnLgdkPjDT6SKspRJ` | Verified |
 | Deployment status | READY | Verified |

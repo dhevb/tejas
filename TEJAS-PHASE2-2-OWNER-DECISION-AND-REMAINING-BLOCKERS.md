@@ -4,6 +4,18 @@
 
 No merge of PR #71 / #72 / #73. No Production deploy. No SQL applied. No book publication. No access-control weakening.
 
+### Phase 2.3 update (design lock — still waiting)
+
+| Item | Status |
+|------|--------|
+| Option A | **Design direction locked** — SQL **not** approved. See `TEJAS-PHASE2-3-OPTION-A-RPC-DESIGN-AND-SAFETY-REVIEW.md` |
+| Option B | **Deferred** |
+| PR #73 actual head | `0e6295052d10ddf84e1af7882778596f5f2a604b` (supersedes intermediate report SHA `5909aac…`) |
+| Preview for current head | https://tejas-kh7so1hw9-dhe-projects.vercel.app — `dpl_GeZ9XLDNTQsEiaXgSvKgxHYKRNcY` — target `preview` — READY |
+| Learn tables 404 | **Root cause:** PostgREST **PGRST205** — `public.tejas_learn_*` missing on Preview; `tejas_payment_utrs` exists. See `TEJAS-PHASE2-3-PREVIEW-INTEGRATION-AND-PDF-QA-PLAN.md` |
+| Blank pages | Still **WAITING FOR OWNER** |
+| Authenticated PDF QA | Design only — needs Owner auth before any Preview publish / QA student |
+
 ---
 
 ## 1. Exact PR and commit metadata (verified)
@@ -91,10 +103,10 @@ Full write-up: `docs/TEJAS-PHASE2-2-SECONDARY-STREAM-RPC-AND-PAYMENT-SCHEMA-DECI
 
 | Option | Summary | Owner choice |
 |--------|---------|--------------|
-| **A. Interim** | Keep one ₹49 + one genuine UTR per unpaid stream; Preview-first RPC relax so secondary-stream report works without `students.stream_id = books.stream_id` | ☐ Approve Preview SQL later / ☐ Defer |
-| **B. Grouped payment** | New payment_transactions + lines; one UTR for N×₹49; atomic verify | ☐ Approve design / ☐ Defer |
+| **A. Interim** | Keep one ₹49 + one genuine UTR per unpaid stream; Preview-first RPC relax so secondary-stream report works without `students.stream_id = books.stream_id` | **Design locked (Phase 2.3)** — ☐ Approve Preview SQL separately / ☐ Defer SQL |
+| **B. Grouped payment** | New payment_transactions + lines; one UTR for N×₹49; atomic verify | **Deferred** |
 
-**No SQL applied in Phase 2.2.**
+**No SQL applied in Phase 2.2 or 2.3.**
 
 ---
 
@@ -154,11 +166,11 @@ Never converted BLOCKED → PASS.
 
 ## 9. Remaining blockers
 
-1. Preview learn schema readable (`tejas_learn_students` 404) — Owner schema apply authorization required separately.  
-2. Secondary-stream `tejas_learn_report_payment` predicate — choose Option A / B / defer.  
+1. Preview learn schema missing (**PGRST205** on `tejas_learn_*`) — Owner must authorize Preview-only apply of `20261118000100` + `20261118000200` (UTR table already present).  
+2. Option A RPC SQL — design locked; **separate** Owner SQL approval still required (after schema exists). Option B deferred.  
 3. Five blank English pages — Owner blank-vs-replace decisions.  
 4. Authenticated Preview PDF QA — Owner temporary Preview publication / content-QA authorization.  
-5. Full remote integration suite — blocked until (1) and credentials/schema are Owner-cleared.
+5. Full remote integration suite — blocked until (1); then Option A SQL if approved.
 
 ---
 

@@ -129,8 +129,40 @@ export function streamAcceptsClass(streamId: StreamId, classLevel: number): bool
   return classIsEligible(classLevel, classesForStream(streamId));
 }
 
+/**
+ * Chargeable book for one stream + class (exact class mapping).
+ * Future Tech class 9–10 charges Book 2 only; Book 1 is syllabus access, not a second charge.
+ */
 export function booksForLearner(catalog: PortalCatalog, streamId: StreamId, classLevel: number): PortalBook[] {
   return catalog.books.filter((book) => book.streamId === streamId && book.assignedClasses.includes(classLevel));
+}
+
+/**
+ * Learning syllabus for a purchased stream at the learner's class.
+ * Future Tech Book 2 applicants (classes 9–10) also receive Book 1 under the same ₹49 stream entitlement.
+ */
+export function booksForStreamSyllabus(catalog: PortalCatalog, streamId: StreamId, classLevel: number): PortalBook[] {
+  if (!streamAcceptsClass(streamId, classLevel)) return [];
+  if (streamId === "technology" && (classLevel === 9 || classLevel === 10)) {
+    return catalog.books
+      .filter((book) => book.streamId === "technology" && (book.id === "ft-book-1" || book.id === "ft-book-2"))
+      .sort((a, b) => a.bookNumber - b.bookNumber);
+  }
+  return booksForLearner(catalog, streamId, classLevel);
+}
+
+/** Union of syllabus books across every stream the student is enrolled in or purchasing. */
+export function booksForLibrary(catalog: PortalCatalog, streamIds: readonly StreamId[], classLevel: number): PortalBook[] {
+  const seen = new Set<string>();
+  const books: PortalBook[] = [];
+  for (const streamId of uniqueStreamIds(streamIds)) {
+    for (const book of booksForStreamSyllabus(catalog, streamId, classLevel)) {
+      if (seen.has(book.id)) continue;
+      seen.add(book.id);
+      books.push(book);
+    }
+  }
+  return books;
 }
 
 /** All catalog books — used only for the allowlisted content-QA student dashboard. */
@@ -142,15 +174,45 @@ export function testsForBook(catalog: PortalCatalog, bookId: string): PortalTest
   return catalog.tests.filter((test) => test.bookId === bookId).sort((a, b) => a.number - b.number);
 }
 
+export function isPortalStreamId(value: unknown): value is StreamId {
+  return value === "english" || value === "mathematics" || value === "technology";
+}
+
+export function uniqueStreamIds(streamIds: readonly StreamId[]): StreamId[] {
+  const order: StreamId[] = ["english", "mathematics", "technology"];
+  const selected = new Set(streamIds.filter(isPortalStreamId));
+  return order.filter((id) => selected.has(id));
+}
+
+export function parseStreamIds(input: unknown): StreamId[] | null {
+  if (isPortalStreamId(input)) return [input];
+  if (!Array.isArray(input) || input.length === 0) return null;
+  const parsed = uniqueStreamIds(input.filter(isPortalStreamId));
+  return parsed.length > 0 ? parsed : null;
+}
+
 export type FeeQuote =
   | {
       status: "payable";
       bookId: string;
+      streamId: StreamId;
       amountInr: number;
       includedMockTests: number;
       mockTestAmountInr: 0;
     }
   | { status: "no_book"; amountInr: 0; includedMockTests: 0; mockTestAmountInr: 0 }
+  | { status: "fee_not_approved"; amountInr: 0; includedMockTests: 0; mockTestAmountInr: 0; reason: string };
+
+export type MultiStreamFeeQuote =
+  | {
+      status: "payable";
+      amountInr: number;
+      feePerStream: number;
+      includedMockTests: number;
+      mockTestAmountInr: 0;
+      lines: { streamId: StreamId; streamName: string; bookId: string; bookTitle: string; amountInr: number; includedMockTests: number }[];
+    }
+  | { status: "no_book"; amountInr: 0; includedMockTests: 0; mockTestAmountInr: 0; reason: string }
   | { status: "fee_not_approved"; amountInr: 0; includedMockTests: 0; mockTestAmountInr: 0; reason: string };
 
 export function quoteFee(catalog: PortalCatalog, streamId: StreamId, classLevel: number): FeeQuote {
@@ -199,10 +261,65 @@ export function quoteFee(catalog: PortalCatalog, streamId: StreamId, classLevel:
   return {
     status: "payable",
     bookId: book.id,
+    streamId,
     amountInr: PORTAL_EBOOK_FEE_INR,
     includedMockTests: included,
     mockTestAmountInr: 0,
   };
+}
+
+/** ₹49 per selected eligible stream. Already-paid streams must be filtered out by the caller. */
+export function quoteFeesForStreams(catalog: PortalCatalog, streamIds: readonly StreamId[], classLevel: number): MultiStreamFeeQuote {
+  const selected = uniqueStreamIds(streamIds);
+  const empty = { amountInr: 0 as const, includedMockTests: 0 as const, mockTestAmountInr: 0 as const };
+  if (selected.length === 0) {
+    return { status: "no_book", ...empty, reason: "Select at least one stream." };
+  }
+  const lines: Extract<MultiStreamFeeQuote, { status: "payable" }>["lines"] = [];
+  for (const streamId of selected) {
+    if (!streamAcceptsClass(streamId, classLevel)) {
+      return {
+        status: "fee_not_approved",
+        ...empty,
+        reason: `${streamById(streamId).name} is not offered for class ${classLevel}.`,
+      };
+    }
+    const quote = quoteFee(catalog, streamId, classLevel);
+    if (quote.status !== "payable") {
+      return {
+        status: quote.status === "fee_not_approved" ? "fee_not_approved" : "no_book",
+        ...empty,
+        reason: quote.status === "fee_not_approved" ? quote.reason : `No published e-book maps to ${streamById(streamId).name} for this class.`,
+      };
+    }
+    const book = catalog.books.find((item) => item.id === quote.bookId);
+    lines.push({
+      streamId,
+      streamName: streamById(streamId).name,
+      bookId: quote.bookId,
+      bookTitle: book?.title ?? quote.bookId,
+      amountInr: quote.amountInr,
+      includedMockTests: quote.includedMockTests,
+    });
+  }
+  return {
+    status: "payable",
+    amountInr: lines.length * PORTAL_EBOOK_FEE_INR,
+    feePerStream: PORTAL_EBOOK_FEE_INR,
+    includedMockTests: lines.reduce((sum, line) => sum + line.includedMockTests, 0),
+    mockTestAmountInr: 0,
+    lines,
+  };
+}
+
+/** Payable book that unlocks a stream (and its syllabus companions such as Future Tech Book 1). */
+export function payableBookIdForStream(catalog: PortalCatalog, streamId: StreamId, classLevel: number): string | null {
+  const quote = quoteFee(catalog, streamId, classLevel);
+  return quote.status === "payable" ? quote.bookId : null;
+}
+
+export function streamIdForBook(catalog: PortalCatalog, bookId: string): StreamId | null {
+  return catalog.books.find((book) => book.id === bookId)?.streamId ?? null;
 }
 
 export function publicationOf(base: PublicationStatus, override: PublicationStatus | undefined): PublicationStatus {
@@ -225,6 +342,12 @@ export function decideAccess(input: {
   bookPublished: boolean;
   testPublished: boolean;
   paid: boolean;
+  /**
+   * Streams unlocked by a verified payment on that stream's payable book.
+   * When set, access uses syllabus rules (Future Tech Book 1 with Book 2) instead of
+   * requiring the book to match only the student's primary registration stream.
+   */
+  entitledStreamIds?: readonly StreamId[];
   /** Allowlisted content-QA identity: published content only; no stream/class/payment lock. */
   contentQa?: boolean;
 }): AccessDecision {
@@ -238,10 +361,24 @@ export function decideAccess(input: {
     if (!published) return { ok: false, reason: "unpublished" };
     return { ok: true, book, test };
   }
-  if (book.streamId !== input.streamId) return { ok: false, reason: "wrong_stream" };
-  if (!book.assignedClasses.includes(input.classLevel)) return { ok: false, reason: "wrong_class" };
-  if (test && (test.streamId !== input.streamId || !test.assignedClasses.includes(input.classLevel))) {
-    return { ok: false, reason: test.streamId !== input.streamId ? "wrong_stream" : "wrong_class" };
+
+  const entitled = uniqueStreamIds(input.entitledStreamIds ?? [input.streamId]);
+  const syllabusOk = entitled.some((streamId) =>
+    booksForStreamSyllabus(input.catalog, streamId, input.classLevel).some((item) => item.id === book.id),
+  );
+  if (!syllabusOk) {
+    if (book.streamId !== input.streamId && !entitled.includes(book.streamId)) {
+      return { ok: false, reason: "wrong_stream" };
+    }
+    return { ok: false, reason: "wrong_class" };
+  }
+  if (test) {
+    const testOnSyllabus = entitled.some((streamId) =>
+      booksForStreamSyllabus(input.catalog, streamId, input.classLevel).some((item) => item.id === test.bookId),
+    );
+    if (!testOnSyllabus || test.bookId !== book.id) {
+      return { ok: false, reason: test.streamId !== book.streamId ? "wrong_stream" : "wrong_class" };
+    }
   }
   if (!published) return { ok: false, reason: "unpublished" };
   if (!input.paid) return { ok: false, reason: "unpaid" };

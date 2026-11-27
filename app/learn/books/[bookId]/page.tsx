@@ -36,7 +36,7 @@ export default async function BookPage({ params }: { params: Promise<{ bookId: s
           <>
             <h1 className="mt-4 text-3xl font-bold text-tejas-blue">{decision.book.title}</h1>
             <p className="mt-2 text-sm text-tejas-muted">Online reading for {decision.book.streamName}, classes {decision.book.assignedClasses.join(", ")}.</p>
-            <div className="mt-6"><BookReader bookId={decision.book.id} title={decision.book.title} /></div>
+            <div className="mt-6"><BookReader bookId={decision.book.id} title={decision.book.title} streamName={decision.book.streamName} /></div>
           </>
         ) : (
           <>

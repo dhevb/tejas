@@ -9,20 +9,27 @@ import {
 import { isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import {
   booksForContentQa,
-  booksForLearner,
   contentChecked,
   decideAccess,
   publicationOf,
   quoteFee,
+  quoteFeesForStreams,
   scoreAnswers,
   testsForBook,
   toPublicQuestion,
+  uniqueStreamIds,
   type PublicationStatus,
 } from "@/lib/portal/model";
+import {
+  enrolledStreamIds,
+  isBookPaidByStreamEntitlement,
+  libraryBooks,
+  paidStreamIds,
+} from "@/lib/portal/entitlement-access";
 import { hashPassword, passwordMatches } from "@/lib/portal/session";
 import { PortalUnavailable, schemaMissing, supabaseRest } from "@/lib/portal/supabase-rest";
 import { streamById, type StreamId } from "@/lib/registration/schema";
-import type { Attempt, AuditEvent, PaymentState, PortalStudent, PublicStudent } from "@/lib/portal/store";
+import type { Attempt, AuditEvent, DashboardPurchaseOption, PaymentState, PortalStudent, PublicStudent } from "@/lib/portal/store";
 
 function rows(json: unknown): Record<string, unknown>[] {
   if (!Array.isArray(json)) return [];
@@ -255,20 +262,56 @@ export async function remotePublicationMap(): Promise<{ books: Record<string, Pu
   return { books, tests };
 }
 
-async function verified(studentId: string, bookId: string): Promise<boolean> {
-  const result = await supabaseRest(`/rest/v1/tejas_learn_entitlements?student_id=eq.${encodeURIComponent(studentId)}&book_id=eq.${encodeURIComponent(bookId)}&status=eq.verified&select=id`, { method: "GET" });
+export async function remoteEntitlementRows(studentId: string): Promise<{ bookId: string; status: string }[]> {
+  const result = await supabaseRest(`/rest/v1/tejas_learn_entitlements?student_id=eq.${encodeURIComponent(studentId)}&select=book_id,status`, { method: "GET" });
   if (result.status !== 200) throw new PortalUnavailable();
-  return rows(result.json).length > 0;
+  return rows(result.json)
+    .map((row) => ({
+      bookId: typeof row.book_id === "string" ? row.book_id : "",
+      status: typeof row.status === "string" ? row.status : "",
+    }))
+    .filter((row) => row.bookId);
+}
+
+/** Create unpaid entitlement rows for additional streams (service-role). No-op when a non-superseded row already exists. */
+export async function remoteEnsureUnpaidEntitlements(
+  studentId: string,
+  lines: { bookId: string; amountInr: number; includedMockTests: number }[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (lines.length === 0) return { ok: true };
+  const existing = await remoteEntitlementRows(studentId);
+  const active = new Set(existing.filter((row) => row.status !== "superseded").map((row) => row.bookId));
+  for (const line of lines) {
+    if (active.has(line.bookId)) continue;
+    const inserted = await supabaseRest("/rest/v1/tejas_learn_entitlements", {
+      method: "POST",
+      headers: { "content-type": "application/json", prefer: "return=minimal" },
+      body: JSON.stringify({
+        student_id: studentId,
+        book_id: line.bookId,
+        amount_inr: line.amountInr,
+        included_mock_tests: line.includedMockTests,
+        mock_test_amount_inr: 0,
+        status: "unpaid",
+      }),
+    });
+    if (inserted.status !== 201 && inserted.status !== 200) {
+      return { ok: false, error: "Additional stream entitlements could not be prepared." };
+    }
+  }
+  return { ok: true };
 }
 
 export async function remoteAccessFor(student: PortalStudent, bookId: string, testId?: string | null) {
   const catalog = loadCatalog();
   const publication = await remotePublicationMap();
   const contentQa = isContentQaStudent(student);
+  const entitlementRows = await remoteEntitlementRows(student.id);
   const bookPublished = publicationOf(catalog.books.find((book) => book.id === bookId)?.publicationStatus ?? "awaiting_approval", publication.books[bookId]) === "published";
   const testPublished = testId
     ? publicationOf(catalog.tests.find((test) => test.id === testId)?.publicationStatus ?? "awaiting_approval", publication.tests[testId]) === "published"
     : false;
+  const paid = contentQa || isBookPaidByStreamEntitlement(catalog, student.classLevel, bookId, entitlementRows);
   return decideAccess({
     catalog,
     streamId: student.streamId,
@@ -277,7 +320,10 @@ export async function remoteAccessFor(student: PortalStudent, bookId: string, te
     testId,
     bookPublished,
     testPublished,
-    paid: contentQa || (await verified(student.id, bookId)),
+    paid,
+    entitledStreamIds: contentQa
+      ? uniqueStreamIds(["english", "mathematics", "technology"])
+      : enrolledStreamIds(catalog, student.streamId, entitlementRows),
     contentQa,
   });
 }
@@ -325,29 +371,40 @@ export async function remoteDashboard(student: PortalStudent) {
   const contentQa = isContentQaStudent(student);
   const quote = quoteFee(catalog, student.streamId, student.classLevel);
   const entitlementRows = rows(entitlements.json);
+  const statusRows = entitlementRows.map((item) => ({
+    bookId: typeof item.book_id === "string" ? item.book_id : "",
+    status: typeof item.status === "string" ? item.status : "",
+  })).filter((item) => item.bookId);
+  const enrolled = enrolledStreamIds(catalog, student.streamId, statusRows);
+  const paidStreams = contentQa ? uniqueStreamIds(["english", "mathematics", "technology"]) : paidStreamIds(catalog, student.classLevel, statusRows);
   const attemptRows = rows(attempts.json);
-  const visibleBooks = contentQa ? booksForContentQa(catalog) : booksForLearner(catalog, student.streamId, student.classLevel);
+  const visibleBooks = contentQa ? booksForContentQa(catalog) : libraryBooks(catalog, student.streamId, student.classLevel, statusRows);
   const books = visibleBooks.map((book) => {
-    const entitlement = entitlementRows.find((item) => item.book_id === book.id && item.status !== "superseded");
+    const payable = quoteFee(catalog, book.streamId, student.classLevel);
+    const chargeBookId = payable.status === "payable" ? payable.bookId : book.id;
+    const entitlement = entitlementRows.find((item) => item.book_id === chargeBookId && item.status !== "superseded");
     const bookStatus = publicationOf(book.publicationStatus, publication.books[book.id]);
+    const paidBook = contentQa || isBookPaidByStreamEntitlement(catalog, student.classLevel, book.id, statusRows);
     const rawStatus = entitlement?.status;
-    const paymentStatus: PaymentState | "none" = contentQa
+    const paymentStatus: PaymentState | "none" = contentQa || paidBook
       ? "verified"
       : rawStatus === "unpaid" || rawStatus === "reported" || rawStatus === "verified" || rawStatus === "rejected" || rawStatus === "superseded"
         ? rawStatus
         : "none";
-    const paid = contentQa || paymentStatus === "verified";
+    const syllabusCompanion = book.id !== chargeBookId;
     return {
       id: book.id,
       title: book.title,
+      streamId: book.streamId,
       streamName: book.streamName,
       bookNumber: book.bookNumber,
       assignedClasses: book.assignedClasses,
       publicationStatus: bookStatus,
       paymentStatus,
-      amountInr: typeof entitlement?.amount_inr === "number" ? entitlement.amount_inr : quote.amountInr,
+      amountInr: syllabusCompanion ? 0 : typeof entitlement?.amount_inr === "number" ? entitlement.amount_inr : (payable.status === "payable" ? payable.amountInr : 0),
       includedMockTests: testsForBook(catalog, book.id).length,
-      canRead: bookStatus === "published" && paid,
+      canRead: bookStatus === "published" && paidBook,
+      syllabusCompanion,
       tests: testsForBook(catalog, book.id).map((test) => {
         const testStatus = publicationOf(test.publicationStatus, publication.tests[test.id]);
         const mine = attemptRows.filter((item) => item.test_id === test.id && item.status === "submitted");
@@ -359,7 +416,7 @@ export async function remoteDashboard(student: PortalStudent) {
           paperCode: test.paperCode,
           questionCount: test.questionCount,
           publicationStatus: testStatus,
-          canStart: bookStatus === "published" && testStatus === "published" && paid && contentChecked(test),
+          canStart: bookStatus === "published" && testStatus === "published" && paidBook && contentChecked(test),
           latestScore: typeof latest?.score === "number" ? latest.score : null,
           latestMax: typeof latest?.max_score === "number" ? latest.max_score : null,
           attempts: mine.length,
@@ -367,9 +424,54 @@ export async function remoteDashboard(student: PortalStudent) {
       }),
     };
   });
+  const purchaseOptions: DashboardPurchaseOption[] = uniqueStreamIds(["english", "mathematics", "technology"]).map((streamId) => {
+    const streamQuote = quoteFee(catalog, streamId, student.classLevel);
+    const streamName = streamById(streamId).name;
+    if (streamQuote.status !== "payable") {
+      return {
+        streamId,
+        streamName,
+        bookId: "",
+        bookTitle: "",
+        amountInr: 0,
+        includedMockTests: 0,
+        status: "unavailable" as const,
+        reason: streamQuote.status === "fee_not_approved" ? streamQuote.reason : "No e-book for this class.",
+      };
+    }
+    const entitlement = entitlementRows.find((item) => item.book_id === streamQuote.bookId && item.status !== "superseded");
+    const book = catalog.books.find((item) => item.id === streamQuote.bookId);
+    if (paidStreams.includes(streamId)) {
+      return {
+        streamId,
+        streamName,
+        bookId: streamQuote.bookId,
+        bookTitle: book?.title ?? streamQuote.bookId,
+        amountInr: streamQuote.amountInr,
+        includedMockTests: streamQuote.includedMockTests,
+        status: "purchased" as const,
+      };
+    }
+    const pending = entitlement?.status === "reported";
+    return {
+      streamId,
+      streamName,
+      bookId: streamQuote.bookId,
+      bookTitle: book?.title ?? streamQuote.bookId,
+      amountInr: streamQuote.amountInr,
+      includedMockTests: streamQuote.includedMockTests,
+      status: pending ? "pending" as const : "available" as const,
+    };
+  });
+  const unpaidStreams = purchaseOptions.filter((item) => item.status === "available" || item.status === "pending").map((item) => item.streamId);
+  const purchaseQuote = unpaidStreams.length > 0 ? quoteFeesForStreams(catalog, unpaidStreams, student.classLevel) : null;
   return {
     student: publicStudent(student),
     quote,
+    purchaseQuote: purchaseQuote?.status === "payable" ? purchaseQuote : null,
+    enrolledStreams: enrolled,
+    paidStreams,
+    purchaseOptions,
     books,
     history: attemptRows.map((item) => ({
       id: String(item.id),

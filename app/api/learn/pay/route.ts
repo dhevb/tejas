@@ -18,6 +18,7 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const reference = String(form.get("transactionReference") ?? "");
+  const streamIds = form.getAll("streamIds").map((value) => String(value));
   const receiptFile = form.get("receipt");
   if (!(receiptFile instanceof File)) {
     return noStore({ ok: false, error: "Upload a JPG or PNG payment screenshot. Both the screenshot and the UTR are required." }, 400);
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
     return noStore({ ok: false, error: "Upload the receipt as a JPG or PNG screenshot." }, 400);
   }
 
-  const result = await reportPaymentWithScreenshot(student.id, reference, bytes, ext);
+  const result = await reportPaymentWithScreenshot(student.id, reference, bytes, ext, streamIds.length > 0 ? streamIds : undefined);
   if (!result.ok) return noStore(result, 400);
   return noStore({
     ok: true,

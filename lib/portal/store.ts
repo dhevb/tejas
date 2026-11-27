@@ -7,19 +7,29 @@ import { streamById, type StreamId } from "@/lib/registration/schema";
 import { loadCatalog } from "@/lib/portal/catalog.server";
 import {
   booksForContentQa,
-  booksForLearner,
   contentChecked,
   decideAccess,
+  isPortalStreamId,
+  parseStreamIds,
   publicationOf,
   quoteFee,
+  quoteFeesForStreams,
   scoreAnswers,
   streamAcceptsClass,
   testsForBook,
   toPublicQuestion,
+  uniqueStreamIds,
   type PortalCatalog,
   type PublicationStatus,
   type PublicQuestion,
 } from "@/lib/portal/model";
+import {
+  enrolledStreamIds,
+  entitlementPaymentReference,
+  isBookPaidByStreamEntitlement,
+  libraryBooks,
+  paidStreamIds,
+} from "@/lib/portal/entitlement-access";
 import { pickCanonicalOpenAttempt, timeValidOpenAttempts } from "@/lib/portal/attempt-open-integrity";
 import { isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import { hashPassword, passwordIsAcceptable, passwordMatches } from "@/lib/portal/session";
@@ -199,8 +209,47 @@ export type RegisterInput = {
   schoolName?: unknown;
   password?: unknown;
   streamId?: unknown;
+  /** Optional multi-select. When present, creates unpaid entitlements for each eligible stream. */
+  streamIds?: unknown;
   classLevel?: unknown;
 };
+
+function selectedStreamsFromRegister(input: RegisterInput): StreamId[] | null {
+  const fromIds = Array.isArray(input.streamIds)
+    ? (() => {
+        const ordered: StreamId[] = [];
+        const seen = new Set<StreamId>();
+        for (const value of input.streamIds as unknown[]) {
+          if (!isPortalStreamId(value) || seen.has(value)) continue;
+          seen.add(value);
+          ordered.push(value);
+        }
+        return ordered.length > 0 ? ordered : null;
+      })()
+    : null;
+  if (fromIds) return fromIds;
+  return parseStreamIds(input.streamId);
+}
+
+function pushUnpaidEntitlement(db: Database, studentId: string, bookId: string, amountInr: number, includedMockTests: number, note: string | null = null) {
+  if (db.entitlements.some((item) => item.studentId === studentId && item.bookId === bookId && item.status !== "superseded")) {
+    return;
+  }
+  db.entitlements.push({
+    id: randomUUID(),
+    studentId,
+    bookId,
+    amountInr,
+    includedMockTests,
+    mockTestAmountInr: 0,
+    status: "unpaid",
+    transactionReference: null,
+    reportedAt: null,
+    verifiedAt: null,
+    verifiedBy: null,
+    note,
+  });
+}
 
 export async function registerStudent(input: RegisterInput): Promise<{ ok: true; student: PublicStudent } | { ok: false; error: string }> {
   if ("streamLocked" in input || "classLocked" in input || "fee" in input || "paid" in input) {
@@ -219,19 +268,41 @@ export async function registerStudent(input: RegisterInput): Promise<{ ok: true;
   if (typeof input.password !== "string" || !passwordIsAcceptable(input.password)) {
     return { ok: false, error: "Use a password of 8 to 72 characters." };
   }
-  const streamId = input.streamId;
-  if (streamId !== "english" && streamId !== "mathematics" && streamId !== "technology") {
-    return { ok: false, error: "Select a stream." };
+  const streamIds = selectedStreamsFromRegister(input);
+  if (!streamIds || streamIds.length === 0) {
+    return { ok: false, error: "Select at least one stream." };
   }
+  const streamId = streamIds[0];
   const classLevel = typeof input.classLevel === "number" ? input.classLevel : Number(input.classLevel);
-  if (!Number.isInteger(classLevel) || !streamAcceptsClass(streamId, classLevel)) {
+  if (!Number.isInteger(classLevel)) {
     return { ok: false, error: "Select a class offered for this stream." };
+  }
+  for (const id of streamIds) {
+    if (!streamAcceptsClass(id, classLevel)) {
+      return { ok: false, error: `Select a class offered for ${streamById(id).name}.` };
+    }
+  }
+  const catalog = loadCatalog();
+  const multiQuote = quoteFeesForStreams(catalog, streamIds, classLevel);
+  if (multiQuote.status !== "payable") {
+    return { ok: false, error: multiQuote.reason };
   }
   const mode = portalPersistence();
   if (mode === "unavailable") return { ok: false, error: DATABASE_UNAVAILABLE };
   if (mode === "remote") {
-    const { remoteRegister } = await import("@/lib/portal/remote-store");
-    return remoteRegister({ fullName, parentName, mobile, email, schoolName, password: input.password, streamId, classLevel });
+    const { remoteRegister, remoteEnsureUnpaidEntitlements } = await import("@/lib/portal/remote-store");
+    const created = await remoteRegister({ fullName, parentName, mobile, email, schoolName, password: input.password, streamId, classLevel });
+    if (!created.ok) return created;
+    const extra = multiQuote.lines.filter((line) => line.streamId !== streamId);
+    if (extra.length > 0) {
+      const ensured = await remoteEnsureUnpaidEntitlements(created.student.id, extra.map((line) => ({
+        bookId: line.bookId,
+        amountInr: line.amountInr,
+        includedMockTests: line.includedMockTests,
+      })));
+      if (!ensured.ok) return { ok: false, error: ensured.error };
+    }
+    return created;
   }
   return withLock(async () => {
     const db = await readDb();
@@ -252,29 +323,68 @@ export async function registerStudent(input: RegisterInput): Promise<{ ok: true;
       sessionVersion: 1,
     };
     db.students.push(student);
-    const quote = quoteFee(loadCatalog(), streamId, classLevel);
-    if (quote.status === "payable") {
-      db.entitlements.push({
-        id: randomUUID(),
-        studentId: student.id,
-        bookId: quote.bookId,
-        amountInr: quote.amountInr,
-        includedMockTests: quote.includedMockTests,
-        mockTestAmountInr: 0,
-        status: "unpaid",
-        transactionReference: null,
-        reportedAt: null,
-        verifiedAt: null,
-        verifiedBy: null,
-        note: null,
-      });
+    for (const line of multiQuote.lines) {
+      pushUnpaidEntitlement(db, student.id, line.bookId, line.amountInr, line.includedMockTests);
     }
     db.audit.push(event("student", "register", student.id, "Student registered. Stream and class were stored from the form and locked.", null, {
       streamId,
+      streamIds,
       classLevel,
     }));
     await writeDb(db);
     return { ok: true as const, student: toPublicStudent(student) };
+  });
+}
+
+/** Add unpaid entitlements for additional streams without changing the primary registration stream. */
+export async function addStreamPurchases(
+  studentId: string,
+  streamIdsInput: unknown,
+): Promise<{ ok: true; quote: ReturnType<typeof quoteFeesForStreams> } | { ok: false; error: string }> {
+  const student = await readStudent(studentId);
+  if (!student) return { ok: false, error: "Account not found." };
+  const streamIds = parseStreamIds(streamIdsInput);
+  if (!streamIds) return { ok: false, error: "Select at least one stream." };
+  const catalog = loadCatalog();
+  const mode = portalPersistence();
+  if (mode === "unavailable") return { ok: false, error: DATABASE_UNAVAILABLE };
+
+  const entitlementRows = mode === "remote"
+    ? await (async () => {
+        const { remoteEntitlementRows } = await import("@/lib/portal/remote-store");
+        return remoteEntitlementRows(studentId);
+      })()
+    : (await readDb()).entitlements
+      .filter((item) => item.studentId === studentId && item.status !== "superseded")
+      .map((item) => ({ bookId: item.bookId, status: item.status }));
+
+  const alreadyPaid = new Set(paidStreamIds(catalog, student.classLevel, entitlementRows));
+  const toBuy = streamIds.filter((id) => !alreadyPaid.has(id));
+  if (toBuy.length === 0) return { ok: false, error: "Those streams are already purchased for this account." };
+  const quote = quoteFeesForStreams(catalog, toBuy, student.classLevel);
+  if (quote.status !== "payable") return { ok: false, error: quote.reason };
+
+  if (mode === "remote") {
+    const { remoteEnsureUnpaidEntitlements } = await import("@/lib/portal/remote-store");
+    const ensured = await remoteEnsureUnpaidEntitlements(studentId, quote.lines.map((line) => ({
+      bookId: line.bookId,
+      amountInr: line.amountInr,
+      includedMockTests: line.includedMockTests,
+    })));
+    if (!ensured.ok) return ensured;
+    return { ok: true, quote };
+  }
+  return withLock(async () => {
+    const db = await readDb();
+    for (const line of quote.lines) {
+      pushUnpaidEntitlement(db, studentId, line.bookId, line.amountInr, line.includedMockTests, "Added from Buy more streams.");
+    }
+    db.audit.push(event("student", "add-streams", studentId, "Student selected additional streams to purchase.", null, {
+      streamIds: toBuy,
+      amountInr: quote.amountInr,
+    }));
+    await writeDb(db);
+    return { ok: true as const, quote };
   });
 }
 
@@ -489,36 +599,75 @@ function activeEntitlement(db: Database, studentId: string, bookId: string): Ent
   return db.entitlements.find((item) => item.studentId === studentId && item.bookId === bookId && item.status !== "superseded");
 }
 
-export async function reportPayment(studentId: string, transactionReference: string): Promise<{ ok: true } | { ok: false; error: string }> {
+async function unresolvedPurchaseStreams(student: PortalStudent, streamIdsInput?: unknown): Promise<
+  | { ok: true; streamIds: StreamId[]; quote: Extract<ReturnType<typeof quoteFeesForStreams>, { status: "payable" }> }
+  | { ok: false; error: string }
+> {
+  const catalog = loadCatalog();
+  const mode = portalPersistence();
+  const rows = mode === "remote"
+    ? await (await import("@/lib/portal/remote-store")).remoteEntitlementRows(student.id)
+    : entitlementRowsFor(await readDb(), student.id);
+  const paid = new Set(paidStreamIds(catalog, student.classLevel, rows));
+  const requested = parseStreamIds(streamIdsInput) ?? enrolledStreamIds(catalog, student.streamId, rows);
+  const toPay = requested.filter((id) => !paid.has(id));
+  if (toPay.length === 0) return { ok: false, error: "Payment is already verified for the selected streams." };
+  const quote = quoteFeesForStreams(catalog, toPay, student.classLevel);
+  if (quote.status !== "payable") return { ok: false, error: quote.reason };
+  return { ok: true, streamIds: toPay, quote };
+}
+
+export async function reportPayment(
+  studentId: string,
+  transactionReference: string,
+  streamIdsInput?: unknown,
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const reference = transactionReference.trim();
   if (reference.length < 6 || reference.length > 80) return { ok: false, error: "Enter the transaction reference." };
   const mode = portalPersistence();
   if (mode === "unavailable") return { ok: false, error: DATABASE_UNAVAILABLE };
+  const student = await readStudent(studentId);
+  if (!student) return { ok: false, error: "Account not found." };
+  const unresolved = await unresolvedPurchaseStreams(student, streamIdsInput);
+  if (!unresolved.ok) return unresolved;
   if (mode === "remote") {
-    const student = await readStudent(studentId);
-    if (!student) return { ok: false, error: "Account not found." };
-    const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
-    if (quote.status !== "payable") return { ok: false, error: "There is no approved e-book fee for this account." };
-    const { remoteReportPayment } = await import("@/lib/portal/remote-store");
-    return remoteReportPayment(studentId, quote.bookId, reference, quote.amountInr);
+    const { remoteReportPayment, remoteEnsureUnpaidEntitlements } = await import("@/lib/portal/remote-store");
+    const ensured = await remoteEnsureUnpaidEntitlements(studentId, unresolved.quote.lines.map((line) => ({
+      bookId: line.bookId,
+      amountInr: line.amountInr,
+      includedMockTests: line.includedMockTests,
+    })));
+    if (!ensured.ok) return ensured;
+    for (let index = 0; index < unresolved.quote.lines.length; index += 1) {
+      const line = unresolved.quote.lines[index];
+      const lineRef = entitlementPaymentReference(reference, line.bookId, index === 0);
+      const reported = await remoteReportPayment(studentId, line.bookId, lineRef, line.amountInr);
+      if (!reported.ok) return reported;
+    }
+    return { ok: true };
   }
   return withLock(async () => {
     const db = await readDb();
-    const student = db.students.find((item) => item.id === studentId);
-    if (!student) return { ok: false, error: "Account not found." };
-    const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
-    if (quote.status !== "payable") return { ok: false, error: "There is no approved e-book fee for this account." };
-    const entitlement = activeEntitlement(db, student.id, quote.bookId);
-    if (!entitlement) return { ok: false, error: "No entitlement record exists for this e-book." };
-    if (entitlement.amountInr !== quote.amountInr || entitlement.mockTestAmountInr !== 0) {
-      return { ok: false, error: "The stored fee does not match the approved price." };
+    for (const line of unresolved.quote.lines) {
+      pushUnpaidEntitlement(db, student.id, line.bookId, line.amountInr, line.includedMockTests);
     }
-    if (entitlement.status === "verified") return { ok: false, error: "Payment is already verified." };
-    entitlement.status = "reported";
-    entitlement.transactionReference = reference;
-    entitlement.reportedAt = new Date().toISOString();
-    entitlement.note = "Reported by the student. Content stays locked until staff verification.";
-    db.audit.push(event("student", "report-payment", student.id, "Student reported a payment reference.", null, { bookId: quote.bookId, amountInr: quote.amountInr }));
+    for (let index = 0; index < unresolved.quote.lines.length; index += 1) {
+      const line = unresolved.quote.lines[index];
+      const entitlement = activeEntitlement(db, student.id, line.bookId);
+      if (!entitlement) return { ok: false as const, error: "No entitlement record exists for this e-book." };
+      if (entitlement.amountInr !== line.amountInr || entitlement.mockTestAmountInr !== 0) {
+        return { ok: false as const, error: "The stored fee does not match the approved price." };
+      }
+      if (entitlement.status === "verified") continue;
+      entitlement.status = "reported";
+      entitlement.transactionReference = entitlementPaymentReference(reference, line.bookId, index === 0);
+      entitlement.reportedAt = new Date().toISOString();
+      entitlement.note = "Reported by the student. Content stays locked until staff verification.";
+    }
+    db.audit.push(event("student", "report-payment", student.id, "Student reported a payment reference.", null, {
+      bookIds: unresolved.quote.lines.map((line) => line.bookId),
+      amountInr: unresolved.quote.amountInr,
+    }));
     await writeDb(db);
     return { ok: true as const };
   });
@@ -536,12 +685,14 @@ export type ScreenshotPaymentReport = {
 /**
  * E-book payment with mandatory screenshot + entered UTR.
  * Auto-verifies only when screenshot OCR checks all pass. Never labelled bank-verified.
+ * Supports one or more unpaid streams at ₹49 each in a single transfer.
  */
 export async function reportPaymentWithScreenshot(
   studentId: string,
   transactionReference: string,
   receipt: Buffer,
   receiptExt: "jpg" | "png" | "webp",
+  streamIdsInput?: unknown,
 ): Promise<ScreenshotPaymentReport> {
   const reference = transactionReference.trim();
   if (reference.length < 6 || reference.length > 80) return { ok: false, error: "Enter the UTR / transaction reference." };
@@ -550,15 +701,17 @@ export async function reportPaymentWithScreenshot(
 
   const student = await readStudent(studentId);
   if (!student) return { ok: false, error: "Account not found." };
-  const quote = quoteFee(loadCatalog(), student.streamId, student.classLevel);
-  if (quote.status !== "payable") return { ok: false, error: "There is no approved e-book fee for this account." };
+  const unresolved = await unresolvedPurchaseStreams(student, streamIdsInput);
+  if (!unresolved.ok) return unresolved;
+  const quote = unresolved.quote;
+  const bookKey = quote.lines.map((line) => line.bookId).join("+");
 
   const { claimUtr, noteUtr, releaseUtr, utrOwner } = await import("@/lib/registration/utr-claim");
   const { extractPaymentScreenshotAsync } = await import("@/lib/registration/screenshot-ocr");
   const { decideScreenshotPayment } = await import("@/lib/registration/payment-decision");
 
   const { utrRegistryUnavailableMessage } = await import("@/lib/registration/utr-claim");
-  const owner = utrOwner("ebook", `${studentId}:${quote.bookId}`);
+  const owner = utrOwner("ebook", `${studentId}:${bookKey}`);
   const claimed = await claimUtr(reference, "ebook", owner);
   if (!claimed.ok && claimed.error === "duplicate") {
     return { ok: false, error: "This UTR is already used for another payment." };
@@ -594,44 +747,63 @@ export async function reportPaymentWithScreenshot(
     const approved = uniquenessOk && decision.outcome === "automatic";
 
     if (mode === "remote") {
-      const { remoteReportPayment, remoteReviewPayment } = await import("@/lib/portal/remote-store");
-      const reported = await remoteReportPayment(studentId, quote.bookId, reference, quote.amountInr);
-      if (!reported.ok) {
+      const { remoteReportPayment, remoteReviewPayment, remoteEnsureUnpaidEntitlements } = await import("@/lib/portal/remote-store");
+      const ensured = await remoteEnsureUnpaidEntitlements(studentId, quote.lines.map((line) => ({
+        bookId: line.bookId,
+        amountInr: line.amountInr,
+        includedMockTests: line.includedMockTests,
+      })));
+      if (!ensured.ok) {
         if (uniquenessOk) await releaseUtr(reference, owner);
-        return reported;
+        return ensured;
       }
-      if (approved) {
-        const verified = await remoteReviewPayment({
-          actor: "screenshot-ocr",
-          studentId,
-          bookId: quote.bookId,
-          decision: "verified",
-          note: decision.reason,
-        });
-        if (!verified.ok) {
+      for (let index = 0; index < quote.lines.length; index += 1) {
+        const line = quote.lines[index];
+        const lineRef = entitlementPaymentReference(reference, line.bookId, index === 0);
+        const reported = await remoteReportPayment(studentId, line.bookId, lineRef, line.amountInr);
+        if (!reported.ok) {
           if (uniquenessOk) await releaseUtr(reference, owner);
-          return verified;
+          return reported;
+        }
+        if (approved) {
+          const verified = await remoteReviewPayment({
+            actor: "screenshot-ocr",
+            studentId,
+            bookId: line.bookId,
+            decision: "verified",
+            note: decision.reason,
+          });
+          if (!verified.ok) {
+            if (uniquenessOk) await releaseUtr(reference, owner);
+            return verified;
+          }
         }
       }
     } else {
       const locked = await withLock(async () => {
         const db = await readDb();
-        const entitlement = activeEntitlement(db, studentId, quote.bookId);
-        if (!entitlement) return { ok: false as const, error: "No entitlement record exists for this e-book." };
-        if (entitlement.amountInr !== quote.amountInr || entitlement.mockTestAmountInr !== 0) {
-          return { ok: false as const, error: "The stored fee does not match the approved price." };
+        for (const line of quote.lines) {
+          pushUnpaidEntitlement(db, studentId, line.bookId, line.amountInr, line.includedMockTests);
         }
-        if (entitlement.status === "verified") return { ok: false as const, error: "Payment is already verified." };
-        entitlement.transactionReference = reference;
-        entitlement.reportedAt = new Date().toISOString();
-        if (approved) {
-          entitlement.status = "verified";
-          entitlement.verifiedAt = new Date().toISOString();
-          entitlement.verifiedBy = "screenshot-ocr";
-          entitlement.note = decision.reason;
-        } else {
-          entitlement.status = "reported";
-          entitlement.note = decision.reason;
+        for (let index = 0; index < quote.lines.length; index += 1) {
+          const line = quote.lines[index];
+          const entitlement = activeEntitlement(db, studentId, line.bookId);
+          if (!entitlement) return { ok: false as const, error: "No entitlement record exists for this e-book." };
+          if (entitlement.amountInr !== line.amountInr || entitlement.mockTestAmountInr !== 0) {
+            return { ok: false as const, error: "The stored fee does not match the approved price." };
+          }
+          if (entitlement.status === "verified") continue;
+          entitlement.transactionReference = entitlementPaymentReference(reference, line.bookId, index === 0);
+          entitlement.reportedAt = new Date().toISOString();
+          if (approved) {
+            entitlement.status = "verified";
+            entitlement.verifiedAt = new Date().toISOString();
+            entitlement.verifiedBy = "screenshot-ocr";
+            entitlement.note = decision.reason;
+          } else {
+            entitlement.status = "reported";
+            entitlement.note = decision.reason;
+          }
         }
         db.audit.push(event(
           "student",
@@ -639,7 +811,12 @@ export async function reportPaymentWithScreenshot(
           studentId,
           decision.reason,
           null,
-          { bookId: quote.bookId, amountInr: quote.amountInr, receiptExt, verificationLabel: decision.verificationLabel },
+          {
+            bookIds: quote.lines.map((line) => line.bookId),
+            amountInr: quote.amountInr,
+            receiptExt,
+            verificationLabel: decision.verificationLabel,
+          },
         ));
         await writeDb(db);
         return { ok: true as const };
@@ -738,8 +915,14 @@ export async function setPublication(input: {
   });
 }
 
-function paidFor(db: Database, studentId: string, bookId: string): boolean {
-  return db.entitlements.some((item) => item.studentId === studentId && item.bookId === bookId && item.status === "verified");
+function entitlementRowsFor(db: Database, studentId: string) {
+  return db.entitlements
+    .filter((item) => item.studentId === studentId)
+    .map((item) => ({ bookId: item.bookId, status: item.status }));
+}
+
+function paidFor(db: Database, student: PortalStudent, bookId: string): boolean {
+  return isBookPaidByStreamEntitlement(loadCatalog(), student.classLevel, bookId, entitlementRowsFor(db, student.id));
 }
 
 export async function publicBookPublication(): Promise<
@@ -801,6 +984,7 @@ export async function accessFor(student: PortalStudent, bookId: string, testId?:
       bookPublished: false,
       testPublished: false,
       paid: false,
+      entitledStreamIds: [student.streamId],
       contentQa,
     });
   }
@@ -810,6 +994,7 @@ export async function accessFor(student: PortalStudent, bookId: string, testId?:
   }
   const db = await readDb();
   const catalog = loadCatalog();
+  const rows = entitlementRowsFor(db, student.id);
   const bookPublished = publicationOf(catalog.books.find((book) => book.id === bookId)?.publicationStatus ?? "awaiting_approval", db.publication.books[bookId]) === "published";
   const testPublished = testId
     ? publicationOf(catalog.tests.find((test) => test.id === testId)?.publicationStatus ?? "awaiting_approval", db.publication.tests[testId]) === "published"
@@ -822,7 +1007,9 @@ export async function accessFor(student: PortalStudent, bookId: string, testId?:
     testId,
     bookPublished,
     testPublished,
-    paid: contentQa || paidFor(db, student.id, bookId),
+    paid: contentQa || paidFor(db, student, bookId),
+    // Syllabus membership uses enrolled streams; payment is checked separately via `paid`.
+    entitledStreamIds: contentQa ? uniqueStreamIds(["english", "mathematics", "technology"]) : enrolledStreamIds(catalog, student.streamId, rows),
     contentQa,
   });
 }
@@ -830,6 +1017,7 @@ export async function accessFor(student: PortalStudent, bookId: string, testId?:
 export type DashboardBook = {
   id: string;
   title: string;
+  streamId: StreamId;
   streamName: string;
   bookNumber: number;
   assignedClasses: number[];
@@ -838,6 +1026,8 @@ export type DashboardBook = {
   amountInr: number;
   includedMockTests: number;
   canRead: boolean;
+  /** True when this book is included via Future Tech syllabus (no separate ₹49 charge). */
+  syllabusCompanion: boolean;
   tests: {
     id: string;
     number: number;
@@ -852,9 +1042,24 @@ export type DashboardBook = {
   }[];
 };
 
+export type DashboardPurchaseOption = {
+  streamId: StreamId;
+  streamName: string;
+  bookId: string;
+  bookTitle: string;
+  amountInr: number;
+  includedMockTests: number;
+  status: "purchased" | "pending" | "available" | "unavailable";
+  reason?: string;
+};
+
 export async function dashboard(student: PortalStudent): Promise<{
   student: PublicStudent;
   quote: ReturnType<typeof quoteFee>;
+  purchaseQuote: ReturnType<typeof quoteFeesForStreams> | null;
+  enrolledStreams: StreamId[];
+  paidStreams: StreamId[];
+  purchaseOptions: DashboardPurchaseOption[];
   books: DashboardBook[];
   history: { id: string; testId: string; status: Attempt["status"]; score: number | null; maxScore: number; submittedAt: string | null }[];
 }> {
@@ -866,24 +1071,36 @@ export async function dashboard(student: PortalStudent): Promise<{
   const db = await readDb();
   const catalog = loadCatalog();
   const contentQa = isContentQaStudent(student);
+  const rows = entitlementRowsFor(db, student.id);
+  const enrolled = enrolledStreamIds(catalog, student.streamId, rows);
+  const paid = contentQa ? uniqueStreamIds(["english", "mathematics", "technology"]) : paidStreamIds(catalog, student.classLevel, rows);
   const quote = quoteFee(catalog, student.streamId, student.classLevel);
-  const visibleBooks = contentQa ? booksForContentQa(catalog) : booksForLearner(catalog, student.streamId, student.classLevel);
+  const visibleBooks = contentQa ? booksForContentQa(catalog) : libraryBooks(catalog, student.streamId, student.classLevel, rows);
   const books = visibleBooks.map((book) => {
-    const entitlement = activeEntitlement(db, student.id, book.id);
+    const payableId = quoteFee(catalog, book.streamId, student.classLevel);
+    const chargeBookId = payableId.status === "payable" ? payableId.bookId : book.id;
+    const entitlement = activeEntitlement(db, student.id, chargeBookId);
     const bookStatus = publicationOf(book.publicationStatus, db.publication.books[book.id]);
-    const paymentStatus: PaymentState | "none" = contentQa ? "verified" : entitlement?.status ?? "none";
-    const paid = contentQa || paymentStatus === "verified";
+    const paidBook = contentQa || isBookPaidByStreamEntitlement(catalog, student.classLevel, book.id, rows);
+    const paymentStatus: PaymentState | "none" = contentQa
+      ? "verified"
+      : paidBook
+        ? "verified"
+        : entitlement?.status ?? "none";
+    const syllabusCompanion = book.id !== chargeBookId;
     return {
       id: book.id,
       title: book.title,
+      streamId: book.streamId,
       streamName: book.streamName,
       bookNumber: book.bookNumber,
       assignedClasses: book.assignedClasses,
       publicationStatus: bookStatus,
       paymentStatus,
-      amountInr: entitlement?.amountInr ?? quote.amountInr,
+      amountInr: syllabusCompanion ? 0 : entitlement?.amountInr ?? (payableId.status === "payable" ? payableId.amountInr : 0),
       includedMockTests: testsForBook(catalog, book.id).length,
-      canRead: bookStatus === "published" && paid,
+      canRead: bookStatus === "published" && paidBook,
+      syllabusCompanion,
       tests: testsForBook(catalog, book.id).map((test) => {
         const testStatus = publicationOf(test.publicationStatus, db.publication.tests[test.id]);
         const mine = db.attempts.filter((attempt) => attempt.studentId === student.id && attempt.testId === test.id && attempt.status === "submitted");
@@ -895,7 +1112,7 @@ export async function dashboard(student: PortalStudent): Promise<{
           paperCode: test.paperCode,
           questionCount: test.questionCount,
           publicationStatus: testStatus,
-          canStart: bookStatus === "published" && testStatus === "published" && paid && contentChecked(test),
+          canStart: bookStatus === "published" && testStatus === "published" && paidBook && contentChecked(test),
           latestScore: latest?.score ?? null,
           latestMax: latest?.maxScore ?? null,
           attempts: mine.length,
@@ -903,10 +1120,70 @@ export async function dashboard(student: PortalStudent): Promise<{
       }),
     };
   });
+  const purchaseOptions: DashboardPurchaseOption[] = uniqueStreamIds(["english", "mathematics", "technology"]).map((streamId) => {
+    const streamQuote = quoteFee(catalog, streamId, student.classLevel);
+    const streamName = streamById(streamId).name;
+    if (streamQuote.status !== "payable") {
+      return {
+        streamId,
+        streamName,
+        bookId: "",
+        bookTitle: "",
+        amountInr: 0,
+        includedMockTests: 0,
+        status: "unavailable" as const,
+        reason: streamQuote.status === "fee_not_approved" ? streamQuote.reason : "No e-book for this class.",
+      };
+    }
+    const entitlement = activeEntitlement(db, student.id, streamQuote.bookId);
+    const book = catalog.books.find((item) => item.id === streamQuote.bookId);
+    if (paid.includes(streamId)) {
+      return {
+        streamId,
+        streamName,
+        bookId: streamQuote.bookId,
+        bookTitle: book?.title ?? streamQuote.bookId,
+        amountInr: streamQuote.amountInr,
+        includedMockTests: streamQuote.includedMockTests,
+        status: "purchased" as const,
+      };
+    }
+    if (entitlement && (entitlement.status === "reported" || entitlement.status === "unpaid" || entitlement.status === "rejected")) {
+      return {
+        streamId,
+        streamName,
+        bookId: streamQuote.bookId,
+        bookTitle: book?.title ?? streamQuote.bookId,
+        amountInr: streamQuote.amountInr,
+        includedMockTests: streamQuote.includedMockTests,
+        status: entitlement.status === "reported" ? "pending" as const : "available" as const,
+      };
+    }
+    return {
+      streamId,
+      streamName,
+      bookId: streamQuote.bookId,
+      bookTitle: book?.title ?? streamQuote.bookId,
+      amountInr: streamQuote.amountInr,
+      includedMockTests: streamQuote.includedMockTests,
+      status: "available" as const,
+    };
+  });
+  const unpaidStreams = purchaseOptions.filter((item) => item.status === "available" || item.status === "pending").map((item) => item.streamId);
+  const purchaseQuote = unpaidStreams.length > 0 ? quoteFeesForStreams(catalog, unpaidStreams, student.classLevel) : null;
   const history = db.attempts
     .filter((attempt) => attempt.studentId === student.id)
     .map((attempt) => ({ id: attempt.id, testId: attempt.testId, status: attempt.status, score: attempt.score, maxScore: attempt.maxScore, submittedAt: attempt.submittedAt }));
-  return { student: toPublicStudent(student), quote, books, history };
+  return {
+    student: toPublicStudent(student),
+    quote,
+    purchaseQuote: purchaseQuote?.status === "payable" ? purchaseQuote : null,
+    enrolledStreams: enrolled,
+    paidStreams: paid,
+    purchaseOptions,
+    books,
+    history,
+  };
 }
 
 export async function startAttempt(student: PortalStudent, testId: string): Promise<{ ok: true; attemptId: string; expiresAt: string; questions: PublicQuestion[]; timeMinutes: number } | { ok: false; error: string; reason?: string }> {

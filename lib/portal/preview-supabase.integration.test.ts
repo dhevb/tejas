@@ -28,6 +28,14 @@ function valueIsPlaceholder(value: string): boolean {
   return !value || /SENSITIVE|YOUR_|REDACTED|placeholder/i.test(value) || value.length < 20;
 }
 
+/** Reject truncated or non-service keys (JWT or sb_secret_ of sufficient length). */
+function serviceRoleKeyLooksUsable(value: string): boolean {
+  if (!value || valueIsPlaceholder(value)) return false;
+  if (/^eyJ/.test(value) && value.length >= 100) return true;
+  if (/^sb_secret_/.test(value) && value.length >= 40) return true;
+  return false;
+}
+
 function loadCandidateEnv(): EnvLoad {
   const files = [
     ".local-qa/.env.preview.supabase",
@@ -40,7 +48,10 @@ function loadCandidateEnv(): EnvLoad {
     const text = readFileSync(file, "utf8");
     let url: string | null = null;
     let key: string | null = null;
-    for (const line of text.split(/\n/)) {
+    for (const raw of text.split(/\n/)) {
+      // Strip BOM/CR/whitespace — Windows CRLF leaves `\r` which breaks `(.*)$` because `.` does not match `\r`.
+      const line = raw.replace(/^\uFEFF/, "").replace(/\r/g, "").trim();
+      if (!line || line.startsWith("#")) continue;
       const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
       if (!match) continue;
       let value = match[2].trim();
@@ -50,13 +61,13 @@ function loadCandidateEnv(): EnvLoad {
       if (match[1] === "PREVIEW_SUPABASE_URL" || match[1] === "SUPABASE_URL") url = value;
       if (match[1] === "PREVIEW_SUPABASE_SERVICE_ROLE_KEY" || match[1] === "SUPABASE_SERVICE_ROLE_KEY") key = value;
     }
-    if (!url || !key || valueIsPlaceholder(url) || valueIsPlaceholder(key)) {
+    if (!url || !key || valueIsPlaceholder(url) || valueIsPlaceholder(key) || !serviceRoleKeyLooksUsable(key)) {
       return {
         url,
-        keyPresent: Boolean(key && !valueIsPlaceholder(key)),
+        keyPresent: Boolean(key && !valueIsPlaceholder(key) && serviceRoleKeyLooksUsable(key)),
         source: file,
         host: null,
-        blockedReason: `Preview credentials missing or placeholder in ${file}.`,
+        blockedReason: `Preview credentials missing, placeholder, or unusable service-role key shape in ${file}.`,
       };
     }
     let host = "";
@@ -146,12 +157,13 @@ test("Preview Supabase e-book payment integration", async () => {
   // Load key only inside the running process from the same file (never log it).
   const text = readFileSync(env.source, "utf8");
   let key = "";
-  for (const line of text.split(/\n/)) {
+  for (const raw of text.split(/\n/)) {
+    const line = raw.replace(/^\uFEFF/, "").replace(/\r/g, "").trim();
     const match = line.match(/^(PREVIEW_SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SERVICE_ROLE_KEY)=(.*)$/);
     if (!match) continue;
     key = match[2].trim().replace(/^["']|["']$/g, "");
   }
-  assert.ok(key && !valueIsPlaceholder(key));
+  assert.ok(key && !valueIsPlaceholder(key) && serviceRoleKeyLooksUsable(key));
 
   const marker = `phase21_${Date.now()}`;
   const email = `tejas.phase21.${marker}@example.test`;

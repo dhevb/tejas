@@ -186,14 +186,17 @@ See `docs/TEJAS-PR71-PHASE2-PAYMENT-GROUP-SCHEMA-PROPOSAL.md`.
 
 ---
 
-## 15. Phase 2.1 follow-up (UTR recovery + Preview integration gate + PDF visual)
+## 15. Phase 2.1 / 2.2 follow-up
 
-See **`TEJAS-PR72-PHASE2-1-OWNER-QA-REPORT.md`** for authoritative Phase 2.1 SHA, Preview URL, deployment ID, test counts, UTR recovery evidence, PDF visual QA, and blocked items.
+Authoritative documents:
 
-Summary of Phase 2.1 deltas on branch `fix/pr72-phase2-1-utr-recovery-preview-qa`:
+- `TEJAS-PR72-PHASE2-1-OWNER-QA-REPORT.md` (metadata corrected in Phase 2.2)
+- `TEJAS-PHASE2-2-OWNER-DECISION-AND-REMAINING-BLOCKERS.md` (**Owner decisions**)
+- `docs/TEJAS-PHASE2-2-SECONDARY-STREAM-RPC-AND-PAYMENT-SCHEMA-DECISION.md` (Options A/B; **no SQL**)
 
-- UTR recovery helpers + tests; claimed UTR never released after valid claim; idempotent same-UTR retry.
-- Preview integration suite fails as **BLOCKED** when credentials missing (never skip-as-PASS).
-- Pay/dashboard UI states one ₹49 transfer + UTR per unpaid stream.
-- Flagged English pages browser-rendered: blank white with ops=0 — Owner source decision required; spot-checks of Eng/Math/FT content pages PASS.
-- Remote Preview integration still **BLOCKED** (placeholders). No SQL applied.
+Phase 2.2 verified Preview for PR #73 tip `d173d26`:  
+https://tejas-7edcw033y-dhe-projects.vercel.app — `dpl_6UZievvEvDRZnLgdkPjDT6SKspRJ` — READY — Vercel **`target: preview`**.
+
+Remote integration remains **BLOCKED** (Preview learn tables HTTP 404 after host-verified probe; no mutations). Blank English pages remain Owner blank-vs-replace. Authenticated Preview PDF QA remains blocked on approval gate.
+
+**PREVIEW ONLY — WAITING FOR OWNER APPROVAL.** No merge / Production / SQL.

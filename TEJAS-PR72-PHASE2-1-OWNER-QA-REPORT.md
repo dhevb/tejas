@@ -1,19 +1,25 @@
 # TEJAS PR #72 — Phase 2.1 Owner QA Report
 
-**Mode:** Preview-only. No merge of PR #71 / #72 / this correction PR. No Production deploy/SQL.
+**Mode:** Preview-only. No merge of PR #71 / #72 / #73. No Production deploy/SQL.  
+**Phase 2.2 follow-up:** see `TEJAS-PHASE2-2-OWNER-DECISION-AND-REMAINING-BLOCKERS.md`.
 
-| Item | Value |
-|------|--------|
-| Parent PR | https://github.com/dhevb/tejas/pull/71 |
-| Correction PR (Phase 2) | https://github.com/dhevb/tejas/pull/72 |
-| Phase 2.1 branch | `fix/pr72-phase2-1-utr-recovery-preview-qa` |
-| Phase 2.1 PR | https://github.com/dhevb/tejas/pull/73 |
-| Base of this branch | PR #72 head `e856edce48e9f2416fc83cc016ce14fecc9b2d70` |
-| Final commit SHA | `ad4a42044a639a5787b6c23036780064607f59bf` |
-| Preview URL | https://tejas-8weocht3q-dhe-projects.vercel.app |
-| Deployment ID | `dpl_Bx9PqKVPY1ZiCGRt48duAmNn5xcL` |
-| Deployment status | READY (`target: null` — Preview only, not Production) |
-| Inspector | https://vercel.com/dhe-projects/tejas/Bx9PqKVPY1ZiCGRt48duAmNn5xcL |
+### Metadata (corrected Phase 2.2 — do not trust older rows)
+
+| Item | Value | Evidence class |
+|------|--------|----------------|
+| Parent PR | https://github.com/dhevb/tejas/pull/71 | Verified |
+| Correction PR (Phase 2) | https://github.com/dhevb/tejas/pull/72 | Verified |
+| Phase 2.1 / 2.2 branch | `fix/pr72-phase2-1-utr-recovery-preview-qa` | Verified |
+| Phase 2.1 PR | https://github.com/dhevb/tejas/pull/73 | Verified |
+| Base of this branch | PR #72 head `e856edce48e9f2416fc83cc016ce14fecc9b2d70` | Verified |
+| PR #73 head at Phase 2.2 start | `d173d261f65f5c485e347a69679221acdb14d8bf` | Verified (`gh pr view 73`) |
+| PR #73 tip after Phase 2.2 docs push | *(GitHub PR #73 head SHA — updates with this branch)* | Verified after push |
+| Preview URL (for `d173d26`) | https://tejas-7edcw033y-dhe-projects.vercel.app | Verified — GitHub Deployments + `vercel inspect` |
+| Deployment ID | `dpl_6UZievvEvDRZnLgdkPjDT6SKspRJ` | Verified |
+| Deployment status | READY | Verified |
+| Vercel `target` | **`preview`** (not null) | Verified — `npx vercel inspect` |
+| Inspector | https://vercel.com/dhe-projects/tejas/6UZievvEvDRZnLgdkPjDT6SKspRJ | Verified |
+| Superseded CLI Preview (86103b6-era) | https://tejas-8weocht3q-dhe-projects.vercel.app / `dpl_Bx9PqKVPY1ZiCGRt48duAmNn5xcL` | Historical only |
 
 ---
 
@@ -56,17 +62,21 @@ Remote `tejas_learn_report_payment` still requires `books.stream_id = students.s
 
 ## 2. Preview Supabase integration
 
-| Check | Result |
-|-------|--------|
-| Allowlist only `nbeslngnrsagarosuaab` | Enforced |
-| Hard-deny Production `zapccpipwxduzlnvjdmy` | Enforced |
-| Credentials present but suite skipped → PASS | **Fixed** — suite uses `assert.fail("BLOCKED:…")` when credentials missing/placeholder; never silent PASS |
-| File-store substituted as remote proof | **No** |
-| Remote mutations executed | **No** |
+| Check | Result | Evidence class |
+|-------|--------|----------------|
+| Allowlist only `nbeslngnrsagarosuaab` | Enforced | Code |
+| Hard-deny Production `zapccpipwxduzlnvjdmy` | Enforced | Code |
+| Credentials present but suite skipped → PASS | **Fixed** — `assert.fail("BLOCKED:…")`; never silent PASS | Code |
+| Windows CRLF `.env.preview` parse | **Fixed** in Phase 2.2 (`\r` broke `NAME=value` match) | Code |
+| File-store substituted as remote proof | **No** | Policy |
+| `vercel env pull` placeholders | Still `[SENSITIVE]` in pulled file | Local FS |
+| Local `.env.preview` host | Preview allowlist host present | Local FS (no secret printed) |
+| Read-only `tejas_learn_students` | HTTP **404** | Cursor-run probe |
+| Remote mutations executed | **None** (aborted before writes) | Cursor-run |
 
-**Result: BLOCKED** — local Preview env pull yields `[SENSITIVE]` placeholders only. Command: `npm run test:preview-integration` → fail with BLOCKED message (not PASS).
+**Result: BLOCKED** — `npm run test:preview-integration` fails with BLOCKED (learn tables not readable). **Not PASS.**
 
-Unblock: Owner-provided local ignored `.env.preview` / `.local-qa/.env.preview.supabase` with Preview URL + service role for `nbeslngnrsagarosuaab` only.
+Unblock: Owner ensures Preview project has portal learn schema + usable Preview-only service_role in ignored `.env.preview`. Never paste secrets into chat.
 
 ---
 
@@ -110,7 +120,7 @@ Original sources preserved. No fabricated replacement content. Private delivery 
 |-------|--------|
 | Unit tests (`npm test`) | **170 pass / 0 fail** |
 | UTR recovery tests | Included in unit suite |
-| Preview integration | **BLOCKED** (credentials) |
+| Preview integration | **BLOCKED** (learn tables HTTP 404 after host verify; no mutations) |
 | `tsc --noEmit` | PASS |
 | Lint | PASS (existing img warnings only) |
 | Production build | PASS |
@@ -121,11 +131,13 @@ Original sources preserved. No fabricated replacement content. Private delivery 
 
 ## 6. Blocked items (Owner)
 
-1. Preview Supabase service-role credentials for real remote integration.
-2. RPC/schema change for secondary-stream `tejas_learn_report_payment` (proposal only).
-3. Payment-group schema for true single-UTR multi-stream (proposal only).
-4. Publish books on Preview (or content-QA publish) for authenticated portal PDF QA.
-5. Decision on blank English pages (replace sources vs intentional blanks).
+See **`TEJAS-PHASE2-2-OWNER-DECISION-AND-REMAINING-BLOCKERS.md`** for the authoritative Owner checklist.
+
+1. Preview learn schema readable (`tejas_learn_students` 404) + usable Preview-only credentials in ignored `.env.preview`.
+2. RPC/schema Option A (interim secondary-stream) vs B (grouped payment) — proposals only; no SQL applied.
+3. Authenticated Preview PDF QA — temporary Preview publication / content-QA authorization required.
+4. Five blank English pages — confirm intentional blank or provide approved replacement sources.
+5. Do not merge #71/#72/#73 or deploy Production without explicit Owner approval.
 
 ---
 

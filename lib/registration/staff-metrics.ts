@@ -471,13 +471,32 @@ export type StreamClassMatrix = {
   cardTotals: { english: number; mathematics: number; technology: number };
   rows: StreamClassMatrixRow[];
   columnTotals: { english: number; mathematics: number; technology: number };
+  /**
+   * Distinct student×stream enrollments per class (same identity+stream deduped across registrations).
+   * Equals english + mathematics + technology (numeric) for that class.
+   */
+  studentStreamsByClass: Record<number, number>;
+  /** Sum of studentStreamsByClass for Classes 3–10 — equals sum of cardTotals. */
+  studentStreamsTotal: number;
   notes: string[];
 };
+
+/** Distinct student×stream enrollments from a stream matrix (Eng+Math+FT cards). */
+export function studentStreamsTotalFromMatrix(
+  matrix: Pick<StreamClassMatrix, "cardTotals" | "studentStreamsTotal">,
+): number {
+  return (
+    matrix.studentStreamsTotal ??
+    matrix.cardTotals.english + matrix.cardTotals.mathematics + matrix.cardTotals.technology
+  );
+}
 
 /**
  * Unique students per stream and class.
  * Multi-stream students count once in each enrolled stream.
  * Future Tech cells for Classes 3–5 are N/A (not zero).
+ * Student-stream totals use the same opaque identity dedupe as stream cards
+ * (duplicate registrations for the same student×stream do not inflate counts).
  */
 export function buildStreamClassMatrix(
   placements: OlympiadPlacement[],
@@ -524,10 +543,14 @@ export function buildStreamClassMatrix(
     );
   }
 
+  const studentStreamsByClass: Record<number, number> = {};
   const rows: StreamClassMatrixRow[] = STANDARD_CLASS_NUMBERS.map((classNumber) => {
     const english = eng.get(classNumber)?.size ?? 0;
     const mathematics = math.get(classNumber)?.size ?? 0;
     const technology: StreamClassCell = classNumber < 6 ? "n/a" : (tech.get(classNumber)?.size ?? 0);
+    const studentStreams =
+      english + mathematics + (typeof technology === "number" ? technology : 0);
+    studentStreamsByClass[classNumber] = studentStreams;
     return {
       classNumber,
       classLabel: `Class ${classNumber}`,
@@ -546,13 +569,51 @@ export function buildStreamClassMatrix(
     technology: sumNumeric(rows.map((row) => row.technology)),
   };
 
+  const studentStreamsTotal =
+    columnTotals.english + columnTotals.mathematics + columnTotals.technology;
+
   return {
     scopeLabel: options?.scopeLabel ?? "Confirmed + Pending under current filters",
     cardTotals: { ...columnTotals },
     rows,
     columnTotals,
+    studentStreamsByClass,
+    studentStreamsTotal,
     notes,
   };
+}
+
+const DEFAULT_UNIDENTIFIED_STATE = "State/District Not Identified";
+
+export type StateCountRow = {
+  paymentStatus: string;
+  stateKey?: string | null;
+};
+
+/**
+ * State-wise registration counts for Owner dashboard chips.
+ * Same Confirmed + Pending rule as the class-wise / stream tables.
+ * Excludes rejected and refund_pending (and any non-main status).
+ */
+export function countStateGroupsForMainScope(
+  rows: StateCountRow[],
+  unidentifiedLabel: string = DEFAULT_UNIDENTIFIED_STATE,
+): Array<[string, number]> {
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    if (!isMainClassTableStatus(row.paymentStatus)) continue;
+    const key = row.stateKey ?? unidentifiedLabel;
+    map.set(key, (map.get(key) ?? 0) + 1);
+  }
+  return [...map.entries()].sort((a, b) => {
+    if (a[0] === unidentifiedLabel) return 1;
+    if (b[0] === unidentifiedLabel) return -1;
+    return b[1] - a[1] || a[0].localeCompare(b[0]);
+  });
+}
+
+export function sumStateGroupCounts(groups: Array<[string, number]>): number {
+  return groups.reduce((sum, [, count]) => sum + count, 0);
 }
 
 export function emptyClassBreakdown(info: ClassKeyInfo): ClassBreakdownRow {

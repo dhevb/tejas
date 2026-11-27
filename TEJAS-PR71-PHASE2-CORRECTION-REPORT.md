@@ -179,6 +179,7 @@ See `docs/TEJAS-PR71-PHASE2-PAYMENT-GROUP-SCHEMA-PROPOSAL.md`.
 | Correction PR | https://github.com/dhevb/tejas/pull/72 |
 | Base branch | `feat/ebook-portal-multi-stream-ft-syllabus-pdf-revamp` (PR #71) |
 | Commit SHA | `be6fc6c6958d5e0685fb09fb02f2f58017e5212b` |
-| Preview URL | **Pending Owner/local Preview deploy** — automated `vercel deploy` was blocked in this session; no Production deploy was attempted |
-| Deployment ID | Pending Preview deploy |
+| Preview URL | https://tejas-jt4k6b4qv-dhe-projects.vercel.app |
+| Deployment ID | `dpl_VCF3L3uyatwFidKwL6rTKLjGq9V9` (READY, `target: null` — not Production) |
+| Inspector | https://vercel.com/dhe-projects/tejas/VCF3L3uyatwFidKwL6rTKLjGq9V9 |
 | Parent PR | https://github.com/dhevb/tejas/pull/71 |

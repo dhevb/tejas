@@ -45,7 +45,10 @@ export function paidStreamIds(
   return paid;
 }
 
-/** True when the stream payable book is verified (covers Future Tech syllabus companions). */
+/**
+ * Reading access for a book under a verified stream payment.
+ * Future Tech Book 1 is readable as a syllabus companion when Book 2 is paid (classes 9–10).
+ */
 export function isBookPaidByStreamEntitlement(
   catalog: PortalCatalog,
   classLevel: number,
@@ -62,6 +65,23 @@ export function isBookPaidByStreamEntitlement(
   return entitlements.some((row) => row.bookId === payableId && row.status === "verified");
 }
 
+/**
+ * Mock-test access follows the purchased payable book only (five tests per stream).
+ * Future Tech Book 1 companion reading does NOT unlock Book 1 mock tests for Book 2 purchasers.
+ */
+export function isMockTestPaidByStreamEntitlement(
+  catalog: PortalCatalog,
+  classLevel: number,
+  bookId: string,
+  entitlements: readonly EntitlementStatusRow[],
+): boolean {
+  const streamId = streamIdForBook(catalog, bookId);
+  if (!streamId) return false;
+  const payableId = payableBookIdForStream(catalog, streamId, classLevel);
+  if (!payableId || payableId !== bookId) return false;
+  return entitlements.some((row) => row.bookId === payableId && row.status === "verified");
+}
+
 export function libraryBooks(
   catalog: PortalCatalog,
   primaryStreamId: StreamId,
@@ -69,11 +89,4 @@ export function libraryBooks(
   entitlements: readonly EntitlementStatusRow[],
 ) {
   return booksForLibrary(catalog, enrolledStreamIds(catalog, primaryStreamId, entitlements), classLevel);
-}
-
-/** Payment reference for secondary books in a multi-stream transfer (unique DB reference). */
-export function entitlementPaymentReference(baseReference: string, bookId: string, isPrimary: boolean): string {
-  if (isPrimary) return baseReference;
-  const combined = `${baseReference}/${bookId}`;
-  return combined.length <= 80 ? combined : combined.slice(0, 80);
 }

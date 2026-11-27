@@ -90,7 +90,7 @@ export default async function DashboardPage() {
                       <p className="mt-2 text-sm text-tejas-muted">
                         Classes {book.assignedClasses.join(", ")}
                         {book.syllabusCompanion
-                          ? " · Included with Future Tech entitlement (no extra charge)"
+                          ? " · Included with Future Tech entitlement for reading (no extra charge; Book 1 mock tests stay with a Book 1 purchase)"
                           : ` · Fee ${formatInr(book.amountInr)} · ${book.includedMockTests} mock tests`}
                       </p>
                     </div>

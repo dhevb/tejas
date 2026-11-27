@@ -23,6 +23,7 @@ import {
   finalizeClassBreakdown,
   mergeClassMetricIntoBreakdown,
   olympiadPlacementsForStudents,
+  studentIdentityKey,
   type ClassBreakdownRow,
   type ClassMetric,
   type DriveSyncStatus,
@@ -622,7 +623,9 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       locationIdentified: location.fullyIdentified,
       locationNotes: location.notes,
       classMetrics,
-      olympiadPlacements: olympiadPlacementsForStudents(record.students),
+      olympiadPlacements: olympiadPlacementsForStudents(record.students, (student) =>
+        createHash("sha256").update(studentIdentityKey(student)).digest("hex").slice(0, 24),
+      ),
       lastUpdatedAt,
     });
   }

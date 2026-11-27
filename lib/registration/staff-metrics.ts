@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { parseClassValue } from "@/lib/registration/fields";
 import { FEE_SCHOOL, FEE_TEJAS, FEE_TOTAL, presentFee, type StoredFee } from "@/lib/registration/fee";
 import type { StreamId } from "@/lib/registration/schema";
@@ -40,26 +39,25 @@ export function countStreamRegistrations(students: StudentRecord[]): StreamCount
   return counts;
 }
 
-/** Opaque dedupe token for Owner list payloads (avoids re-sending raw identity fields). */
-export function studentIdentityDedupeToken(
-  student: Pick<StudentRecord, "fullName" | "dateOfBirth" | "parentName" | "parentMobile">,
-): string {
-  return createHash("sha256").update(studentIdentityKey(student)).digest("hex").slice(0, 24);
-}
-
 export type OlympiadPlacement = {
-  /** Stable hashed student identity for cross-registration dedupe. */
+  /** Stable opaque student identity for cross-registration dedupe. */
   id: string;
   /** Resolved class number 3–10, or null when class is missing/invalid. */
   classNumber: number | null;
   streams: Array<"english" | "mathematics" | "technology">;
 };
 
-/** Compact olympiad placements for one registration (Owner dashboard stream×class matrix). */
-export function olympiadPlacementsForStudents(students: StudentRecord[]): OlympiadPlacement[] {
+/**
+ * Compact olympiad placements for one registration (Owner dashboard stream×class matrix).
+ * `identityToken` must be a stable opaque id (server hashes the parser identity key).
+ */
+export function olympiadPlacementsForStudents(
+  students: StudentRecord[],
+  identityToken: (student: StudentRecord) => string,
+): OlympiadPlacement[] {
   const byId = new Map<string, OlympiadPlacement>();
   for (const student of students) {
-    const id = studentIdentityDedupeToken(student);
+    const id = identityToken(student);
     const info = classKeyForStudent(student);
     const classNumber =
       info.key.startsWith("class-") && info.sort >= 3 && info.sort <= 10 ? info.sort : null;

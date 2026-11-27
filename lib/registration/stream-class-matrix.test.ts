@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createHash } from "node:crypto";
 import {
   buildStreamClassMatrix,
   olympiadPlacementsForStudents,
-  studentIdentityDedupeToken,
+  studentIdentityKey,
 } from "@/lib/registration/staff-metrics";
 import type { StudentRecord } from "@/lib/registration/sheet";
+
+function token(student: StudentRecord): string {
+  return createHash("sha256").update(studentIdentityKey(student)).digest("hex").slice(0, 24);
+}
 
 function student(partial: Partial<StudentRecord> & Pick<StudentRecord, "fullName" | "classNumber" | "streams">): StudentRecord {
   return {
@@ -23,11 +28,14 @@ function student(partial: Partial<StudentRecord> & Pick<StudentRecord, "fullName
 }
 
 test("multi-stream student counts once per stream; Future Tech N/A for classes 3–5", () => {
-  const placements = olympiadPlacementsForStudents([
-    student({ fullName: "Ada", classNumber: 5, streams: ["english", "mathematics"] }),
-    student({ fullName: "Bea", classNumber: 7, streams: ["english", "technology"] }),
-    student({ fullName: "Ada", classNumber: 5, streams: ["english"], parentMobile: "9000000001" }), // same identity
-  ]);
+  const placements = olympiadPlacementsForStudents(
+    [
+      student({ fullName: "Ada", classNumber: 5, streams: ["english", "mathematics"] }),
+      student({ fullName: "Bea", classNumber: 7, streams: ["english", "technology"] }),
+      student({ fullName: "Ada", classNumber: 5, streams: ["english"], parentMobile: "9000000001" }), // same identity
+    ],
+    token,
+  );
   const matrix = buildStreamClassMatrix(placements);
   assert.equal(matrix.cardTotals.english, 2);
   assert.equal(matrix.cardTotals.mathematics, 1);
@@ -43,18 +51,12 @@ test("multi-stream student counts once per stream; Future Tech N/A for classes 3
 });
 
 test("same identity across registrations dedupes; different parent mobile stays separate", () => {
-  const a = studentIdentityDedupeToken({
-    fullName: "Ada",
-    dateOfBirth: "15-08-2015",
-    parentName: "Parent",
-    parentMobile: "9000000001",
-  });
-  const b = studentIdentityDedupeToken({
-    fullName: "Ada",
-    dateOfBirth: "15-08-2015",
-    parentName: "Parent",
-    parentMobile: "9000000002",
-  });
+  const a = token(
+    student({ fullName: "Ada", classNumber: 6, streams: ["english"], parentMobile: "9000000001" }),
+  );
+  const b = token(
+    student({ fullName: "Ada", classNumber: 6, streams: ["english"], parentMobile: "9000000002" }),
+  );
   assert.notEqual(a, b);
   const matrix = buildStreamClassMatrix([
     { id: a, classNumber: 6, streams: ["english"] },

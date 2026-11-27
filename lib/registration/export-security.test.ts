@@ -14,6 +14,10 @@ test("export and file routes keep owner auth and no-store cache", () => {
   assert.ok(!exportSource.includes("x-forwarded-host"));
   assert.ok(fileSource.includes("registrationOwnerAuthorised"));
   assert.ok(fileSource.includes("referenceIsValid"));
+  assert.ok(fileSource.includes("owner_auth_required"));
+  assert.ok(fileSource.includes("payment_proof_not_stored"));
+  assert.ok(fileSource.includes("file_not_found"));
+  assert.ok(fileSource.includes("invalid_reference"));
   assert.ok(fileSource.includes("Cache-Control\": \"no-store\"") || fileSource.includes('"Cache-Control": "no-store"'));
   assert.ok(!fileSource.includes("getPublicUrl"));
   assert.ok(!exportSource.includes("getPublicUrl"));

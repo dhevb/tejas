@@ -142,7 +142,8 @@ async function downloadObject(bucket: string, objectPath: string): Promise<Buffe
     cache: "no-store",
     signal: AbortSignal.timeout(20000),
   });
-  if (response.status === 404) {
+  // Supabase Storage often returns 400 (not only 404) when the object is absent.
+  if (response.status === 404 || response.status === 400) {
     await response.body?.cancel();
     return null;
   }

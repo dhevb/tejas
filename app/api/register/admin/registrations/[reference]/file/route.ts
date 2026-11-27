@@ -1,4 +1,10 @@
 import { consolidatedRegistrationWorkbook } from "@/lib/registration/consolidated-workbook";
+import { noStore } from "@/lib/registration/http";
+import {
+  isBrowserNavigationRequest,
+  ownerFileAuthRequiredHtml,
+  parseOwnerFileDownloadPath,
+} from "@/lib/registration/owner-file-download";
 import { authorizePanReveal } from "@/lib/registration/pan-access";
 import { referenceIsValid } from "@/lib/registration/reference";
 import { studentsToWorkbook } from "@/lib/registration/sheet";
@@ -18,10 +24,31 @@ function fileResponse(bytes: Buffer, filename: string, contentType: string) {
   });
 }
 
+function errorJson(status: number, error: string) {
+  return noStore({ ok: false, error }, status);
+}
+
+function unauthorizedResponse(request: Request): Response {
+  if (isBrowserNavigationRequest(request)) {
+    const url = new URL(request.url);
+    const downloadPath = parseOwnerFileDownloadPath(`${url.pathname}${url.search}`);
+    const review = new URL("/schools/register/review", url.origin);
+    if (downloadPath) review.searchParams.set("download", downloadPath);
+    return new Response(ownerFileAuthRequiredHtml(review.pathname + review.search), {
+      status: 401,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+      },
+    });
+  }
+  return errorJson(401, "owner_auth_required");
+}
+
 export async function GET(request: Request, context: { params: Promise<{ reference: string }> }) {
-  if (!(await registrationOwnerAuthorised())) return Response.json({ ok: false }, { status: 401 });
+  if (!(await registrationOwnerAuthorised())) return unauthorizedResponse(request);
   const { reference } = await context.params;
-  if (!referenceIsValid(reference)) return Response.json({ ok: false }, { status: 404 });
+  if (!referenceIsValid(reference)) return errorJson(404, "invalid_reference");
   const url = new URL(request.url);
   const kind = url.searchParams.get("kind");
   const revealDecision = authorizePanReveal({
@@ -32,17 +59,20 @@ export async function GET(request: Request, context: { params: Promise<{ referen
   });
   if (kind === "upload") {
     const file = await readUpload(reference);
-    if (!file) return Response.json({ ok: false }, { status: 404 });
+    if (!file) return errorJson(404, "file_not_found");
     return fileResponse(file.bytes, file.filename, "application/octet-stream");
   }
   if (kind === "receipt") {
+    const record = await readRegistration(reference);
+    if (!record) return errorJson(404, "invalid_reference");
+    if (!record.receiptExt) return errorJson(404, "payment_proof_not_stored");
     const file = await readReceipt(reference);
-    if (!file) return Response.json({ ok: false }, { status: 404 });
+    if (!file) return errorJson(404, "file_not_found");
     return fileResponse(file.bytes, file.filename, file.contentType);
   }
   if (kind === "consolidated") {
     const record = await readRegistration(reference);
-    if (!record) return Response.json({ ok: false }, { status: 404 });
+    if (!record) return errorJson(404, "invalid_reference");
     const bytes = consolidatedRegistrationWorkbook(record, { revealPan: revealDecision.reveal });
     return fileResponse(
       bytes,
@@ -51,7 +81,7 @@ export async function GET(request: Request, context: { params: Promise<{ referen
     );
   }
   const record = await readRegistration(reference);
-  if (!record) return Response.json({ ok: false }, { status: 404 });
+  if (!record) return errorJson(404, "invalid_reference");
   const bytes = studentsToWorkbook(record.students);
   return fileResponse(bytes, `tejas-students-${reference}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }

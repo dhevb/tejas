@@ -22,9 +22,11 @@ import {
   emptyPaymentBuckets,
   finalizeClassBreakdown,
   mergeClassMetricIntoBreakdown,
+  olympiadPlacementsForStudents,
   type ClassBreakdownRow,
   type ClassMetric,
   type DriveSyncStatus,
+  type OlympiadPlacement,
 } from "@/lib/registration/staff-metrics";
 import {
   attachReceipt as attachRemoteReceipt,
@@ -453,6 +455,8 @@ export type StaffRow = PublicSummary & {
   locationIdentified: boolean;
   locationNotes: string[];
   classMetrics: ClassMetric[];
+  /** Compact hashed placements for Owner stream×class unique-student matrix. */
+  olympiadPlacements: OlympiadPlacement[];
   lastUpdatedAt: string;
 };
 
@@ -618,6 +622,7 @@ export async function staffSnapshot(): Promise<{ registrations: StaffRow[]; over
       locationIdentified: location.fullyIdentified,
       locationNotes: location.notes,
       classMetrics,
+      olympiadPlacements: olympiadPlacementsForStudents(record.students),
       lastUpdatedAt,
     });
   }

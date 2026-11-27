@@ -991,7 +991,7 @@ test("a payment proof is stored as verification pending and is not marked verifi
     const payload = await accepted.json() as { registration?: { paymentStatus?: string; paymentLabel?: string } };
     assert.equal(accepted.status, 200, JSON.stringify(payload));
     assert.equal(payload.registration?.paymentStatus, "reported");
-    assert.equal(payload.registration?.paymentLabel, "Payment Submitted / Verification Pending");
+    assert.equal(payload.registration?.paymentLabel, "Proof Submitted / Verification Awaiting");
     assert.equal(JSON.stringify(payload).includes("/storage/"), false);
     assert.equal(calls.some((call) => call.includes("/storage/v1/object/tejas-payment-proofs/")), true);
     assert.equal(bodies.some((body) => body.includes("\"status\":\"reported\"") && body.includes("Registration fee")), true);

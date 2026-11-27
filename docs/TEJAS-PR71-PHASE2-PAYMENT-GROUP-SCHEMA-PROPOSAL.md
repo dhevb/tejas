@@ -55,6 +55,16 @@ Therefore a single ₹147 bank transfer with one UTR cannot lawfully be stored a
 
 Keep per-book entitlements for access control, but **move UTR uniqueness** from entitlement.transaction_reference to payment_transactions.transaction_reference. Entitlement may store `payment_transaction_id` instead of (or in addition to) a denormalised reference.
 
+## Additional Phase 2.1 finding — secondary-stream report RPC
+
+Existing `tejas_learn_report_payment` requires:
+
+`books.stream_id = students.stream_id`
+
+So a student whose primary `stream_id` is English cannot report payment for a Mathematics entitlement row through this RPC, even if an unpaid entitlement was inserted via REST. That blocks true multi-stream remote payments until the RPC (or payment-group schema above) is Owner-approved.
+
+Proposed Preview-first RPC change (NOT applied): allow report when an active unpaid entitlement exists for `(student_id, book_id)` and the book is class-eligible and fee=49, without requiring `students.stream_id = books.stream_id`.
+
 ## Explicit non-actions
 
 - No Production SQL

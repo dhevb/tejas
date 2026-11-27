@@ -172,14 +172,28 @@ See `docs/TEJAS-PR71-PHASE2-PAYMENT-GROUP-SCHEMA-PROPOSAL.md`.
 
 ---
 
-## Preview / PR
+## Preview / PR (Phase 2 — PR #72)
 
 | Item | Value |
 |------|--------|
 | Correction PR | https://github.com/dhevb/tejas/pull/72 |
 | Base branch | `feat/ebook-portal-multi-stream-ft-syllabus-pdf-revamp` (PR #71) |
-| Commit SHA | `be6fc6c6958d5e0685fb09fb02f2f58017e5212b` |
-| Preview URL | https://tejas-jt4k6b4qv-dhe-projects.vercel.app |
-| Deployment ID | `dpl_VCF3L3uyatwFidKwL6rTKLjGq9V9` (READY, `target: null` — not Production) |
+| Commit SHA (PR #72 head at Phase 2.1 branch cut) | `e856edce48e9f2416fc83cc016ce14fecc9b2d70` |
+| Preview URL (Phase 2) | https://tejas-jt4k6b4qv-dhe-projects.vercel.app |
+| Deployment ID (Phase 2) | `dpl_VCF3L3uyatwFidKwL6rTKLjGq9V9` (READY, `target: null` — not Production) |
 | Inspector | https://vercel.com/dhe-projects/tejas/VCF3L3uyatwFidKwL6rTKLjGq9V9 |
 | Parent PR | https://github.com/dhevb/tejas/pull/71 |
+
+---
+
+## 15. Phase 2.1 follow-up (UTR recovery + Preview integration gate + PDF visual)
+
+See **`TEJAS-PR72-PHASE2-1-OWNER-QA-REPORT.md`** for authoritative Phase 2.1 SHA, Preview URL, deployment ID, test counts, UTR recovery evidence, PDF visual QA, and blocked items.
+
+Summary of Phase 2.1 deltas on branch `fix/pr72-phase2-1-utr-recovery-preview-qa`:
+
+- UTR recovery helpers + tests; claimed UTR never released after valid claim; idempotent same-UTR retry.
+- Preview integration suite fails as **BLOCKED** when credentials missing (never skip-as-PASS).
+- Pay/dashboard UI states one ₹49 transfer + UTR per unpaid stream.
+- Flagged English pages browser-rendered: blank white with ops=0 — Owner source decision required; spot-checks of Eng/Math/FT content pages PASS.
+- Remote Preview integration still **BLOCKED** (placeholders). No SQL applied.

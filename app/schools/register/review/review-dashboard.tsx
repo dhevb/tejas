@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { presentFee } from "@/lib/registration/fee";
+import { parseOwnerFileDownloadPath } from "@/lib/registration/owner-file-download";
 import { panHolderLabel } from "@/lib/registration/school";
 import {
   CLASS_NOT_IDENTIFIED,
   STANDARD_CLASS_NUMBERS,
+  buildStreamClassMatrix,
   classBreakdownMainGrossTotal,
   classBreakdownMainTejasTotal,
   isMainClassTableStatus,
@@ -15,6 +17,7 @@ import {
   summarizeFilterableRows,
   type ClassBreakdownRow,
   type ClassMetric,
+  type OlympiadPlacement,
 } from "@/lib/registration/staff-metrics";
 
 type Overview = {
@@ -89,6 +92,7 @@ type Row = {
   districtKey?: string;
   locationLabel?: string;
   classMetrics?: ClassMetric[];
+  olympiadPlacements?: OlympiadPlacement[];
   lastUpdatedAt?: string;
 };
 
@@ -231,6 +235,24 @@ export function ReviewDashboard() {
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<"createdAt" | "schoolName" | "amountDue">("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [pendingDownload, setPendingDownload] = useState<string | null>(null);
+
+  function readPendingDownloadFromUrl(): string | null {
+    if (typeof window === "undefined") return null;
+    const raw = new URLSearchParams(window.location.search).get("download");
+    return parseOwnerFileDownloadPath(raw);
+  }
+
+  function continuePendingDownload(path: string | null) {
+    if (!path) return;
+    // Strip download param so refresh does not re-trigger.
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("download");
+      window.history.replaceState({}, "", url.pathname + url.search);
+      window.location.assign(path);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -249,10 +271,23 @@ export function ReviewDashboard() {
       setRows(body.registrations);
       setOverview(body.overview);
       setReady(true);
+      const download = pendingDownload ?? readPendingDownloadFromUrl();
+      if (download) {
+        setPendingDownload(null);
+        continuePendingDownload(download);
+      }
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const download = readPendingDownloadFromUrl();
+    if (download) setPendingDownload(download);
+    void load();
+    // Initial session restore + optional post-login download return.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function signIn(event: React.FormEvent) {
     event.preventDefault();
@@ -269,6 +304,8 @@ export function ReviewDashboard() {
       return;
     }
     setToken("");
+    const download = pendingDownload ?? readPendingDownloadFromUrl();
+    if (download) setPendingDownload(download);
     await load();
   }
 
@@ -449,6 +486,23 @@ export function ReviewDashboard() {
     return summarizeFilterableRows(scopeFilterableRowsToClass(mainRows, classFilter));
   }, [filtered, classFilter]);
 
+  /**
+   * Stream × class unique-student matrix.
+   * Same Confirmed + Pending scope as the main class-wise fee table; State/District/search filters apply.
+   * Dedupes by hashed student identity across registrations; multi-stream students count once per stream.
+   */
+  const streamClassMatrix = useMemo(() => {
+    const mainRows = filtered.filter((row) => isMainClassTableStatus(row.paymentStatus));
+    const scoped =
+      classFilter === "all"
+        ? mainRows
+        : mainRows.filter((row) => (row.classMetrics ?? []).some((metric) => metric.classKey === classFilter));
+    const placements = scoped.flatMap((row) => row.olympiadPlacements ?? []);
+    return buildStreamClassMatrix(placements, {
+      scopeLabel: "Confirmed + Pending under current filters (unique students per stream)",
+    });
+  }, [filtered, classFilter]);
+
   const visibleClassBreakdown = useMemo((): ClassBreakdownDisplay[] => {
     const rows = classTableOverview.classBreakdown.map((row) => ({
       ...row,
@@ -513,6 +567,9 @@ export function ReviewDashboard() {
       <form onSubmit={signIn} className="mx-auto max-w-md space-y-3">
         <p className="text-sm text-tejas-muted">
           Registration review is owner-only. School staff do not receive accounts or dashboard access. Use the owner access token configured on the server.
+          {pendingDownload ? (
+            <span className="mt-2 block text-tejas-ink">After sign-in, your file download will continue automatically.</span>
+          ) : null}
         </p>
         <label className="block text-sm">
           <span className="font-medium">Owner access token</span>
@@ -732,6 +789,73 @@ export function ReviewDashboard() {
         <p className="mt-3 text-sm text-tejas-muted">
           Confirmed = payment verified. Pending = awaiting payment or verification. Proof Submitted = payment proof received, not bank verified. OCR matching is not bank verification.
         </p>
+      </section>
+
+      <section className="rounded-2xl border border-tejas-border bg-white p-4 md:p-5" aria-label="Stream-wise unique students">
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-tejas-ink md:text-xl">Olympiad streams — unique students</h2>
+          <p className="max-w-3xl text-sm text-tejas-muted md:text-base">
+            {streamClassMatrix.scopeLabel}. A child in English and Mathematics counts once in each stream.
+            These are not registration-record counts and not student-stream enrollment totals.
+            Future Tech applies to Classes 6–10 only.
+          </p>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {(
+            [
+              { key: "english", label: "English", total: streamClassMatrix.cardTotals.english },
+              { key: "mathematics", label: "Mathematics", total: streamClassMatrix.cardTotals.mathematics },
+              { key: "technology", label: "Future Tech", total: streamClassMatrix.cardTotals.technology },
+            ] as const
+          ).map((card) => (
+            <article key={card.key} className="rounded-xl border border-tejas-border bg-stone-50/80 px-4 py-4">
+              <p className="text-sm font-medium text-tejas-muted">{card.label}</p>
+              <p className="mt-1 text-3xl font-semibold tabular-nums text-tejas-ink">{card.total}</p>
+              <p className="mt-1 text-xs text-tejas-muted">Unique students</p>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="mt-8 text-base font-semibold text-tejas-ink md:text-lg">Class × stream comparison</h3>
+        <div className="mt-3 -mx-1 overflow-x-auto overscroll-x-contain px-1">
+          <table className="min-w-[28rem] w-full text-left text-sm md:min-w-full md:text-base">
+            <thead className="bg-stone-50">
+              <tr className="border-b border-stone-200">
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Class</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">English</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Mathematics</th>
+                <th className="whitespace-nowrap px-3 py-3 font-semibold">Future Tech</th>
+              </tr>
+            </thead>
+            <tbody>
+              {streamClassMatrix.rows.map((row) => (
+                <tr key={row.classNumber} className="border-b border-stone-100">
+                  <td className="px-3 py-3 font-medium">{row.classLabel}</td>
+                  <td className="px-3 py-3 tabular-nums">{row.english}</td>
+                  <td className="px-3 py-3 tabular-nums">{row.mathematics}</td>
+                  <td className="px-3 py-3 tabular-nums text-tejas-muted">
+                    {row.technology === "n/a" ? "N/A" : row.technology}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-stone-200 bg-stone-50/80 font-semibold">
+                <td className="px-3 py-3">Total</td>
+                <td className="px-3 py-3 tabular-nums">{streamClassMatrix.columnTotals.english}</td>
+                <td className="px-3 py-3 tabular-nums">{streamClassMatrix.columnTotals.mathematics}</td>
+                <td className="px-3 py-3 tabular-nums">{streamClassMatrix.columnTotals.technology}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {streamClassMatrix.notes.length > 0 ? (
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-amber-900">
+            {streamClassMatrix.notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        ) : null}
       </section>
 
       {stateGroups.length > 0 ? (

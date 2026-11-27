@@ -39,6 +39,46 @@ export function countStreamRegistrations(students: StudentRecord[]): StreamCount
   return counts;
 }
 
+export type OlympiadPlacement = {
+  /** Stable opaque student identity for cross-registration dedupe. */
+  id: string;
+  /** Resolved class number 3–10, or null when class is missing/invalid. */
+  classNumber: number | null;
+  streams: Array<"english" | "mathematics" | "technology">;
+};
+
+/**
+ * Compact olympiad placements for one registration (Owner dashboard stream×class matrix).
+ * `identityToken` must be a stable opaque id (server hashes the parser identity key).
+ */
+export function olympiadPlacementsForStudents(
+  students: StudentRecord[],
+  identityToken: (student: StudentRecord) => string,
+): OlympiadPlacement[] {
+  const byId = new Map<string, OlympiadPlacement>();
+  for (const student of students) {
+    const id = identityToken(student);
+    const info = classKeyForStudent(student);
+    const classNumber =
+      info.key.startsWith("class-") && info.sort >= 3 && info.sort <= 10 ? info.sort : null;
+    const streams = student.streams.filter(
+      (stream): stream is "english" | "mathematics" | "technology" =>
+        stream === "english" || stream === "mathematics" || stream === "technology",
+    );
+    if (streams.length === 0) continue;
+    const existing = byId.get(id);
+    if (!existing) {
+      byId.set(id, { id, classNumber, streams: [...new Set(streams)] });
+      continue;
+    }
+    const merged = new Set([...existing.streams, ...streams]);
+    existing.streams = [...merged];
+    // Prefer a resolved class number when one placement has it.
+    if (existing.classNumber == null && classNumber != null) existing.classNumber = classNumber;
+  }
+  return [...byId.values()];
+}
+
 /** Unique students by parser identity. Multi-stream as separate rows counts once. */
 export function countUniqueStudents(students: StudentRecord[]): {
   unique: number;
@@ -413,6 +453,106 @@ export const STANDARD_CLASS_NUMBERS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
 
 export function standardClassInfo(classNumber: number): ClassKeyInfo {
   return { key: `class-${classNumber}`, label: `Class ${classNumber}`, sort: classNumber };
+}
+
+export type StreamClassCell = number | "n/a";
+
+export type StreamClassMatrixRow = {
+  classNumber: number;
+  classLabel: string;
+  english: StreamClassCell;
+  mathematics: StreamClassCell;
+  technology: StreamClassCell;
+};
+
+export type StreamClassMatrix = {
+  /** Human-readable scope (e.g. Confirmed + Pending under current filters). */
+  scopeLabel: string;
+  cardTotals: { english: number; mathematics: number; technology: number };
+  rows: StreamClassMatrixRow[];
+  columnTotals: { english: number; mathematics: number; technology: number };
+  notes: string[];
+};
+
+/**
+ * Unique students per stream and class.
+ * Multi-stream students count once in each enrolled stream.
+ * Future Tech cells for Classes 3–5 are N/A (not zero).
+ */
+export function buildStreamClassMatrix(
+  placements: OlympiadPlacement[],
+  options?: { scopeLabel?: string },
+): StreamClassMatrix {
+  const notes: string[] = [];
+  const eng = new Map<number, Set<string>>();
+  const math = new Map<number, Set<string>>();
+  const tech = new Map<number, Set<string>>();
+  let missingClass = 0;
+  let futureTechOutsideRange = 0;
+
+  const add = (map: Map<number, Set<string>>, classNumber: number, id: string) => {
+    const set = map.get(classNumber) ?? new Set<string>();
+    set.add(id);
+    map.set(classNumber, set);
+  };
+
+  for (const placement of placements) {
+    if (placement.classNumber == null) {
+      missingClass += 1;
+      continue;
+    }
+    const classNumber = placement.classNumber;
+    for (const stream of placement.streams) {
+      if (stream === "english") add(eng, classNumber, placement.id);
+      else if (stream === "mathematics") add(math, classNumber, placement.id);
+      else if (stream === "technology") {
+        if (classNumber < 6) {
+          futureTechOutsideRange += 1;
+          continue;
+        }
+        add(tech, classNumber, placement.id);
+      }
+    }
+  }
+
+  if (missingClass > 0) {
+    notes.push(`${missingClass} olympiad placement(s) omitted — class not identified.`);
+  }
+  if (futureTechOutsideRange > 0) {
+    notes.push(
+      `${futureTechOutsideRange} Future Tech placement(s) outside Classes 6–10 omitted from the table (not shown as zero).`,
+    );
+  }
+
+  const rows: StreamClassMatrixRow[] = STANDARD_CLASS_NUMBERS.map((classNumber) => {
+    const english = eng.get(classNumber)?.size ?? 0;
+    const mathematics = math.get(classNumber)?.size ?? 0;
+    const technology: StreamClassCell = classNumber < 6 ? "n/a" : (tech.get(classNumber)?.size ?? 0);
+    return {
+      classNumber,
+      classLabel: `Class ${classNumber}`,
+      english,
+      mathematics,
+      technology,
+    };
+  });
+
+  const sumNumeric = (cells: StreamClassCell[]) =>
+    cells.reduce<number>((sum, cell) => sum + (typeof cell === "number" ? cell : 0), 0);
+
+  const columnTotals = {
+    english: sumNumeric(rows.map((row) => row.english)),
+    mathematics: sumNumeric(rows.map((row) => row.mathematics)),
+    technology: sumNumeric(rows.map((row) => row.technology)),
+  };
+
+  return {
+    scopeLabel: options?.scopeLabel ?? "Confirmed + Pending under current filters",
+    cardTotals: { ...columnTotals },
+    rows,
+    columnTotals,
+    notes,
+  };
 }
 
 export function emptyClassBreakdown(info: ClassKeyInfo): ClassBreakdownRow {

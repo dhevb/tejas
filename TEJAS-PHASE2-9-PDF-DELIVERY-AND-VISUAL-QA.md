@@ -6,7 +6,7 @@
 
 ## Verdict
 
-# PARTIAL PASS — LOCAL INTEGRITY COMPLETE; REMOTE SIGNED DELIVERY QA BLOCKED
+# PARTIAL PASS — LOCAL INTEGRITY COMPLETE; INTENTIONAL BLANKS OWNER-ACCEPTED; REMOTE SIGNED DELIVERY QA BLOCKED ON SCHEMA
 
 Probe: `.local-qa/phase27-29-pdf-inventory.json` at 2026-11-28T10:49:11.891Z
 
@@ -18,10 +18,10 @@ Probe: `.local-qa/phase27-29-pdf-inventory.json` at 2026-11-28T10:49:11.891Z
 | english | 4 | eng-class-04 | PASS | 110 match | source OK | deferred remote | private reader route; no public Storage in migrations | PASS local |
 | english | 5 | eng-class-05 | PASS | 103 match | source OK | deferred remote | private reader route; no public Storage in migrations | PASS local |
 | english | 6 | eng-class-06 | PASS | 92 match | source OK | deferred remote | private reader route; no public Storage in migrations | PASS local |
-| english | 7 | eng-class-07 | PASS | 125 match | known blank pages: 6, 74, 76 | deferred remote | private reader route; no public Storage in migrations | PASS w/ known blanks |
+| english | 7 | eng-class-07 | PASS | 125 match | intentional blanks (Owner 2026-11-28): 6, 74, 76 | deferred remote | private reader route; no public Storage in migrations | PASS |
 | english | 8 | eng-class-08 | PASS | 130 match | source OK | deferred remote | private reader route; no public Storage in migrations | PASS local |
 | english | 9 | eng-class-09 | PASS | 134 match | source OK | deferred remote | private reader route; no public Storage in migrations | PASS local |
-| english | 10 | eng-class-10 | PASS | 160 match | known blank pages: 6, 80 | deferred remote | private reader route; no public Storage in migrations | PASS w/ known blanks |
+| english | 10 | eng-class-10 | PASS | 160 match | intentional blanks (Owner 2026-11-28): 6, 80 | deferred remote | private reader route; no public Storage in migrations | PASS |
 | mathematics | 3 | mat-class-03 | PASS | 89 match | source OK | deferred remote | private reader route; no public Storage in migrations | PASS local |
 | mathematics | 4 | mat-class-04 | PASS | 87 match | source OK | deferred remote | private reader route; no public Storage in migrations | PASS local |
 | mathematics | 5 | mat-class-05 | PASS | 104 match | source OK | deferred remote | private reader route; no public Storage in migrations | PASS local |

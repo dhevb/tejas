@@ -82,7 +82,8 @@ Re-hash immediately before any future Production window. If drift → new safety
 - Preview: Option A full matrix PASS  
 - Preview: 18 books / 90 mocks metadata present  
 - Unit/integration/security gates green  
-- Blank-page Owner decision recorded  
+- Blank-page Owner decision recorded (**accepted intentional, 2026-11-28**)  
+- Temporary Preview QA publication opened **and closed** with evidence  
 
 ## 11. Outstanding risks
 

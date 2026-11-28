@@ -10,7 +10,9 @@
 
 ## Final verdict
 
-# PREVIEW PARTIALLY ACCEPTED — OWNER BLOCKERS REMAIN
+# PREVIEW PARTIALLY ACCEPTED — OWNER BLOCKERS REMAIN (SCHEMA / EXECUTOR)
+
+**Owner decisions 2026-11-28:** five blank pages **accepted intentional**; temporary Preview content-QA publication **approved** but **not opened** (schema missing). See `TEJAS-OWNER-DECISIONS-2026-11-28.md`.
 
 ---
 
@@ -21,8 +23,8 @@
 | 2.4.2 Preview migrations 001→002 | **BLOCKED** | No Dashboard session / Preview DB URL; Owner pack ready |
 | 2.5 Option A RPC | **BLOCKED** (SQL prepared) | Migration hash-locked; not applied |
 | 2.6 Content inventory | **PARTIAL PASS** | Repo 18/90 verified; DB seed prepared, not applied |
-| 2.7 Blank PDF pages | **PASS (Owner decision)** | 5 pages genuinely blank in source |
-| 2.8 Restricted Preview QA | **DESIGN READY / BLOCKED exec** | Content-QA path exists; needs schema + Owner Preview publication decision |
+| 2.7 Blank PDF pages | **PASS — Owner accepted intentional** | Not a content blocker (`TEJAS-PHASE2-7-BLANK-PAGE-OWNER-ACCEPTANCE.md`) |
+| 2.8 Restricted Preview QA | **APPROVED / BLOCKED exec** | Publication SQL ready; schema prerequisite fails |
 | 2.9 PDF QA (18) | **PARTIAL PASS** | Local integrity PASS; remote delivery deferred |
 | 3.0 Payment/entitlement E2E Preview | **BLOCKED** | Schema missing |
 | 3.1 Security + regression | **PARTIAL PASS** | 170 unit tests PASS; tsc PASS; lint PASS |
@@ -69,17 +71,15 @@ See `TEJAS-PHASE2-9-PDF-DELIVERY-AND-VISUAL-QA.md` — 18/18 local integrity PAS
 2. Option A not live.  
 3. Eng/Math DB metadata not seeded.  
 4. Question rows not SQL-seeded (catalog remains source of truth for content packs).  
-5. Five blank English pages await Owner accept-or-replace.  
-6. Authenticated Preview browser/PDF signed-delivery suite not completed.
+5. ~~Five blank English pages~~ → **Owner-accepted intentional (2026-11-28).**  
+6. Authenticated Preview browser/PDF signed-delivery suite not completed (blocked on schema).  
+7. Temporary QA publication approved but not opened/closed yet.
 
-## Outstanding Owner decisions
+## Outstanding Owner actions (decisions already granted where noted)
 
-1. Run `preview-sql/phase242-owner-apply/` on Preview SQL Editor (confirm ref in URL).  
-2. After verify: Option A pack `preview-sql/phase25-option-a/`.  
-3. Eng/Math seed `preview-sql/phase26-content-seed/`.  
-4. Blank pages: accept intentional **or** supply replacement PDFs.  
-5. Temporary Preview-only publication for restricted QA (no Production publish).  
-6. Optional: place Preview-only `PREVIEW_SUPABASE_DB_URL` in ignored `.env.preview` (never in chat) for agent resume.
+1. Run consolidated `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md` on Preview SQL Editor (confirm ref in URL) — Steps A–E.  
+2. After agent verifies QA, run Step F to close temporary publication.  
+3. Optional: place Preview-only `PREVIEW_SUPABASE_DB_URL` in ignored `.env.preview` (never in chat) for agent-side DDL.
 
 ## Production readiness recommendation
 

@@ -1,9 +1,10 @@
 # TEJAS Phase 2.4.2 — Preview Migration Execution Report
 
-**Report update (UTC):** 2026-11-28T10:55Z  
+**Report update (UTC):** 2026-11-28T11:00Z  
 **Branch:** `fix/pr72-phase2-1-utr-recovery-preview-qa`  
-**Tip SHA:** `a49d9771e0e8f88c3fece126fa18f6e6dccd9fa5`  
-**Safety-review tip (hashes):** `c2f6aa8f958c2db866edc3dea7ee92a52af0098c`
+**Tip SHA (pre-decision commits):** `c1493b31429de83a0dd15d46543ac03e87978a9f`  
+**Safety-review tip (hashes):** `c2f6aa8f958c2db866edc3dea7ee92a52af0098c`  
+**Re-probe:** 2026-11-28T10:58Z — learn schema still `PGRST205`; consolidated Owner runbook: `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md`
 
 ---
 

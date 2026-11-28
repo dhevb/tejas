@@ -8,7 +8,10 @@
 
 ## Verdict
 
-# PASS — GENUINELY BLANK IN SOURCE (OWNER DECISION REQUIRED FOR REPLACEMENT)
+# PASS — GENUINELY BLANK IN SOURCE — OWNER ACCEPTED INTENTIONAL (2026-11-28)
+
+See `TEJAS-PHASE2-7-BLANK-PAGE-OWNER-ACCEPTANCE.md` and `TEJAS-OWNER-DECISIONS-2026-11-28.md`.  
+These pages are **not** unresolved content blockers. Do not replace or fabricate.
 
 Re-probe at tip `a49d977` using `pdfjs-dist` (operator list + text + annotations). Evidence: `.local-qa/phase27-29-pdf-inventory.json`.
 
@@ -27,14 +30,13 @@ Re-probe at tip `a49d977` using `pdfjs-dist` (operator list + text + annotations
 - Page boxes exist (typical ~504×684).  
 - Agrees with prior `.local-qa/blank-page-owner-packet.json`.
 
-## Owner decision (blocking for “resolved content”)
+## Owner decision
 
-1. **Accept as intentional blanks** in published English Class 7/10 PDFs, **or**  
-2. **Provide approved replacement PDF sources** (agent will not invent pages).
+**ACCEPTED AS INTENTIONALLY BLANK** (28 November 2026). No replacement required.
 
 ## Not performed
 
 - PDF rewrite / annotation  
 - Production Storage changes  
 
-**Next:** Owner chooses accept-vs-replace; Phase 2.9 records these pages as known blanks until replaced.
+**Next:** Phase 2.9 / Final Acceptance treat these as intentional blanks, not blockers.

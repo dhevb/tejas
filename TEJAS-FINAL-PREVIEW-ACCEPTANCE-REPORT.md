@@ -1,7 +1,7 @@
 # TEJAS Final Preview Acceptance Report
 
 **Branch:** `fix/pr72-phase2-1-utr-recovery-preview-qa`  
-**Tip SHA at acceptance drafting:** `7de62de` (docs pack; prior schema tip `a49d9771e0e8f88c3fece126fa18f6e6dccd9fa5`)  
+**Tip SHA at acceptance drafting:** `36972a382c67727401c02de8b772fee8bdf75eb7` (phase docs pack; prior schema tip `a49d9771e0e8f88c3fece126fa18f6e6dccd9fa5`)  
 **Preview Supabase:** `nbeslngnrsagarosuaab`  
 **Production Supabase:** `zapccpipwxduzlnvjdmy` — **untouched**  
 **Production site:** `https://tejas.dhe.org.in` — **untouched**

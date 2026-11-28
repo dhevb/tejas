@@ -7,7 +7,8 @@
 |------|--------|
 | Repository | `dhevb/tejas` |
 | Branch | `fix/pr72-phase2-1-utr-recovery-preview-qa` |
-| Verified tip SHA | `627bf3a7cf8885721f8a28d74c4f4cebf02cff73` |
+| Verified tip SHA | `d865af0f2d3d28285fc0fd915daabf063b9e5203` |
+| PDF.js fix commit | `627bf3a7cf8885721f8a28d74c4f4cebf02cff73` |
 | Prior audited tip | `efeadface3fdc7a481fe8405102233bdb28fede4` |
 | Preview Supabase | `nbeslngnrsagarosuaab` |
 | Production Supabase | `zapccpipwxduzlnvjdmy` — **untouched this audit** |
@@ -114,8 +115,8 @@ Preview technical gates for learn schema, Option A integration evidence, invento
 
 ### Tip and tracking **VERIFIED**
 
-- HEAD = `627bf3a…` (PDF.js commit on top of `efeadfa`).
-- Branch: `fix/pr72-phase2-1-utr-recovery-preview-qa` — **ahead 1** of origin (PDF.js commit not pushed; no force-push).
+- HEAD = `d865af0…` (closure docs on top of PDF.js `627bf3a` / `efeadfa`).
+- Branch: `fix/pr72-phase2-1-utr-recovery-preview-qa` — **ahead 2** of origin (PDF.js + docs commits not pushed; no force-push).
 - No history rewrite performed.
 
 ### File categorization
@@ -183,7 +184,7 @@ No real payments or student-row edits in this closure.
 
 1. **Option A live SQL body** not re-read via `pg_get_functiondef` this cycle — reliance on behavioral 12/12 evidence file.  
 2. **`tejas_learn_set_publication` RPC** returned 2xx without column mutation during close; Preview closed via REST PATCH matching approved SQL — process limitation for future publication ops.  
-3. **Stacked PRs #71–#73** must merge in order; tip alone is not on `main`. PDF.js commit `627bf3a` is local (**ahead 1**) until Owner authorizes push.  
+3. **Stacked PRs #71–#73** must merge in order; tip alone is not on `main`. Tip `d865af0` (includes PDF.js `627bf3a`) is local (**ahead 2**) until Owner authorizes push.  
 4. **Production window** still requires explicit Owner auth, backup, hash re-verify, and no public publication by default.  
 5. Large **untracked** school export artifacts remain on disk — treat as sensitive; not committed.
 
@@ -203,7 +204,7 @@ PDF.js public-load fix is **no longer** a limitation (committed + tested).
 
 ## 8. Owner next steps (no execution here)
 
-1. Authorize push of PDF.js commit `627bf3a` (and any approved docs commit) to update PR #73.  
+1. Authorize push of tip `d865af0` (PDF.js `627bf3a` + closure docs) to update PR #73.  
 2. Merge stack **#71 → #72 → #73** only after review.  
 3. Separate Production authorization before any SQL/deploy on `zapccpipwxduzlnvjdmy`.  
 4. Keep temporary publication closed until intentional Owner publication decision.  

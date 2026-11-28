@@ -1,7 +1,8 @@
 # TEJAS Final Preview Acceptance Report
 
 **Branch:** `fix/pr72-phase2-1-utr-recovery-preview-qa`  
-**Tip SHA:** `627bf3a7cf8885721f8a28d74c4f4cebf02cff73`  
+**Tip SHA:** `d865af0f2d3d28285fc0fd915daabf063b9e5203`  
+**PDF.js fix commit:** `627bf3a7cf8885721f8a28d74c4f4cebf02cff73`  
 **Prior tip (pre-PDF.js commit):** `efeadface3fdc7a481fe8405102233bdb28fede4`  
 **Preview Supabase:** `nbeslngnrsagarosuaab`  
 **Production Supabase:** `zapccpipwxduzlnvjdmy` — **untouched**  
@@ -14,7 +15,7 @@
 
 # READY WITH DOCUMENTED LIMITATIONS
 
-Preview browser QA and restricted publication closeout remain **PASS**. Closure cycle **re-verified** live Preview inventory (18/90), fees ₹49, publication closed (`awaiting_approval`), private Storage, unauthenticated PDF **401**, PR stack OPEN/MERGEABLE, unit tests **170/170**, and PDF.js fix commit **`627bf3a`** with reader/browser/build evidence. Limitations: Option A certified by behavioral 12/12 evidence (not fresh `pg_get_functiondef`); publication RPC close quirk; Production still requires separate Owner authorization.
+Preview browser QA and restricted publication closeout remain **PASS**. Closure cycle **re-verified** live Preview inventory (18/90), fees ₹49, publication closed (`awaiting_approval`), private Storage, unauthenticated PDF **401**, PR stack OPEN/MERGEABLE, unit tests **170/170**, PDF.js fix **`627bf3a`**, and tip **`d865af0`** with closure docs. Limitations: Option A certified by behavioral 12/12 evidence (not fresh `pg_get_functiondef`); publication RPC close quirk; Production still requires separate Owner authorization.
 
 ---
 
@@ -53,6 +54,8 @@ Preview browser QA and restricted publication closeout remain **PASS**. Closure 
 | No fresh `pg_get_functiondef` | Explicit limitation |
 | PR #71 / #72 / #73 | OPEN + MERGEABLE (`gh`) |
 | PDF.js fix commit | `627bf3a` — Load pdf.js from public assets… |
+| Final tip SHA | `d865af0` — Record Preview closure evidence… |
+| Git tracking | Branch **ahead 2** of origin (unpushed; no force-push) |
 
 ## PDF.js Phase A evidence
 
@@ -75,12 +78,12 @@ Preview browser QA and restricted publication closeout remain **PASS**. Closure 
 
 1. Option A live function bodies not re-read via Postgres in this cycle.  
 2. `set_publication` RPC did not mutate columns during close; REST PATCH closed Preview.  
-3. PR merge stack #71→#72→#73 not executed; tip `627bf3a` is **ahead 1** (unpushed) until Owner push.  
+3. PR merge stack #71→#72→#73 not executed; tip `d865af0` is **ahead 2** (unpushed) until Owner push.  
 4. No Production deploy.
 
 ## Outstanding Owner actions
 
-1. Authorize push of `627bf3a` (+ optional approved docs) to refresh PR #73.  
+1. Authorize push of tip `d865af0` to refresh PR #73.  
 2. Review and merge PR stack in order when ready.  
 3. Separate Production window authorization (backup, hashes, target confirm).  
 4. PII review before any school export commit.

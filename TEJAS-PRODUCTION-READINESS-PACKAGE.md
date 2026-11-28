@@ -6,8 +6,9 @@
 
 Production ref: `zapccpipwxduzlnvjdmy`  
 Preview ref (QA only): `nbeslngnrsagarosuaab`  
-Preview tip exercised: `627bf3a7cf8885721f8a28d74c4f4cebf02cff73`  
-Branch: `fix/pr72-phase2-1-utr-recovery-preview-qa` (**ahead 1** of origin — PDF.js commit local until Owner push)
+Preview tip exercised: `d865af0f2d3d28285fc0fd915daabf063b9e5203`  
+PDF.js fix commit: `627bf3a7cf8885721f8a28d74c4f4cebf02cff73`  
+Branch: `fix/pr72-phase2-1-utr-recovery-preview-qa` (**ahead 2** of origin — local until Owner push)
 
 ---
 
@@ -101,7 +102,7 @@ Re-hash immediately before any future Production window. If drift → new safety
 
 1. Option A certified by Preview behavioral 12/12 evidence; live `pg_get_functiondef` not re-read this cycle.  
 2. Publication close used REST PATCH after RPC returned 2xx without column mutation.  
-3. Tip is on stacked PR #73, not yet on `main`; PDF.js commit may still need Owner push (`ahead 1`).  
+3. Tip is on stacked PR #73, not yet on `main`; tip `d865af0` still needs Owner push (`ahead 2`).  
 4. School CSV/XLSX exports remain uncommitted pending PII review.
 
 ## 11. Outstanding risks
@@ -122,17 +123,17 @@ Re-hash immediately before any future Production window. If drift → new safety
 7. Destructive rollback SQL  
 8. Commit of school registration exports (PII)  
 
-## 13. Exact Git status at package freeze (pre-docs-commit)
-
-Recorded after PDF.js commit and report rewrite; final SHA after any docs commit is stated in the independent audit / acceptance report footer when committed.
+## 13. Exact Git status at package freeze
 
 ```
-Branch: fix/pr72-phase2-1-utr-recovery-preview-qa [ahead 1]
-Tip:    627bf3a7cf8885721f8a28d74c4f4cebf02cff73
-        Load pdf.js from public assets to avoid Next webpack eval breakage.
+Branch: fix/pr72-phase2-1-utr-recovery-preview-qa [ahead 2]
+Tip:    d865af0f2d3d28285fc0fd915daabf063b9e5203
+        Record Preview closure evidence and production readiness package.
+PDF.js: 627bf3a7cf8885721f8a28d74c4f4cebf02cff73
 PRs:    #71 OPEN/MERGEABLE, #72 OPEN/MERGEABLE, #73 OPEN/MERGEABLE
-Not staged for commit (excluded): TEJAS-PRODUCTION-SCHOOLS-REGISTERED.csv,
-  TEJAS-PRODUCTION-REGISTERED-SCHOOLS-STATE-DISTRICT-WISE.xlsx, .env*, .local-qa/, public/pdfjs/
+Excluded (untracked, not committed): TEJAS-PRODUCTION-SCHOOLS-REGISTERED.csv,
+  TEJAS-PRODUCTION-REGISTERED-SCHOOLS-STATE-DISTRICT-WISE.xlsx
+Ignored: .env*, .local-qa/, public/pdfjs/
 ```
 
 ---

@@ -175,7 +175,7 @@ export default async function DashboardPage() {
             <div>
               <h2 id="buy-more-heading" className="text-2xl font-bold text-tejas-ink">Buy More Books</h2>
               <p className="mt-1 text-sm text-tejas-muted">
-                One email can purchase multiple streams. Already purchased streams are not charged again. Price {formatInr(49)} per stream.
+                One email can enrol in multiple streams. Already purchased streams are not charged again. Price {formatInr(49)} per stream. Pay each unpaid stream separately with its own ₹49 transfer and exact UTR — one grouped multi-stream bank transfer is not supported yet.
               </p>
             </div>
             <BuyMoreStreams options={view.purchaseOptions} />

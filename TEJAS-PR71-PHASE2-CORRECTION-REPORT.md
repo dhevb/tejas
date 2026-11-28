@@ -172,14 +172,31 @@ See `docs/TEJAS-PR71-PHASE2-PAYMENT-GROUP-SCHEMA-PROPOSAL.md`.
 
 ---
 
-## Preview / PR
+## Preview / PR (Phase 2 — PR #72)
 
 | Item | Value |
 |------|--------|
 | Correction PR | https://github.com/dhevb/tejas/pull/72 |
 | Base branch | `feat/ebook-portal-multi-stream-ft-syllabus-pdf-revamp` (PR #71) |
-| Commit SHA | `be6fc6c6958d5e0685fb09fb02f2f58017e5212b` |
-| Preview URL | https://tejas-jt4k6b4qv-dhe-projects.vercel.app |
-| Deployment ID | `dpl_VCF3L3uyatwFidKwL6rTKLjGq9V9` (READY, `target: null` — not Production) |
+| Commit SHA (PR #72 head at Phase 2.1 branch cut) | `e856edce48e9f2416fc83cc016ce14fecc9b2d70` |
+| Preview URL (Phase 2) | https://tejas-jt4k6b4qv-dhe-projects.vercel.app |
+| Deployment ID (Phase 2) | `dpl_VCF3L3uyatwFidKwL6rTKLjGq9V9` (READY, `target: null` — not Production) |
 | Inspector | https://vercel.com/dhe-projects/tejas/VCF3L3uyatwFidKwL6rTKLjGq9V9 |
 | Parent PR | https://github.com/dhevb/tejas/pull/71 |
+
+---
+
+## 15. Phase 2.1 / 2.2 follow-up
+
+Authoritative documents:
+
+- `TEJAS-PR72-PHASE2-1-OWNER-QA-REPORT.md` (metadata corrected in Phase 2.2)
+- `TEJAS-PHASE2-2-OWNER-DECISION-AND-REMAINING-BLOCKERS.md` (**Owner decisions**)
+- `docs/TEJAS-PHASE2-2-SECONDARY-STREAM-RPC-AND-PAYMENT-SCHEMA-DECISION.md` (Options A/B; **no SQL**)
+
+Phase 2.2 verified Preview for PR #73 tip `d173d26`:  
+https://tejas-7edcw033y-dhe-projects.vercel.app — `dpl_6UZievvEvDRZnLgdkPjDT6SKspRJ` — READY — Vercel **`target: preview`**.
+
+Remote integration remains **BLOCKED** (Preview learn tables HTTP 404 after host-verified probe; no mutations). Blank English pages remain Owner blank-vs-replace. Authenticated Preview PDF QA remains blocked on approval gate.
+
+**PREVIEW ONLY — WAITING FOR OWNER APPROVAL.** No merge / Production / SQL.

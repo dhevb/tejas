@@ -31,7 +31,10 @@ export default async function PayPage() {
         <Link className="text-sm font-semibold text-tejas-blue underline" href="/learn/dashboard">Back to the library</Link>
         <h1 className="mt-4 text-3xl font-bold text-tejas-blue">E-book payment</h1>
         <p className="mt-2 text-sm text-tejas-muted">
-          Class {view.student.classLevel}. Already purchased streams are not charged again. Future Tech Book 1 is included with a Future Tech entitlement at no extra charge.
+          Class {view.student.classLevel}. Already purchased streams are not charged again. Future Tech Book 1 is included for reading with a Future Tech Book 2 entitlement at no extra charge.
+        </p>
+        <p className="mt-2 rounded-2xl border border-tejas-saffron/40 bg-tejas-ivory px-4 py-3 text-sm text-tejas-ink" role="note">
+          Each unpaid stream currently requires its own ₹49 bank transfer and its own exact UTR. One grouped bank transfer covering multiple streams is not supported yet.
         </p>
         {payable.length === 0 ? (
           <p className="mt-3 text-sm text-tejas-muted">

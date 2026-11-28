@@ -30,6 +30,12 @@ import {
   libraryBooks,
   paidStreamIds,
 } from "@/lib/portal/entitlement-access";
+import {
+  ebookUtrOwner,
+  recoveryAfterClaimFailure,
+  shouldAcceptIdempotentRetry,
+  utrIsClaimableFormat,
+} from "@/lib/portal/utr-payment-recovery";
 import { pickCanonicalOpenAttempt, timeValidOpenAttempts } from "@/lib/portal/attempt-open-integrity";
 import { isContentQaStudent, retakesAllowedFor } from "@/lib/portal/content-qa";
 import { hashPassword, passwordIsAcceptable, passwordMatches } from "@/lib/portal/session";
@@ -652,13 +658,26 @@ export async function reportPayment(
   const unresolved = await unresolvedSingleStreamPurchase(student, streamIdsInput);
   if (!unresolved.ok) return unresolved;
   if (mode === "remote") {
-    const { remoteReportPayment, remoteEnsureUnpaidEntitlements } = await import("@/lib/portal/remote-store");
+    const { remoteReportPayment, remoteEnsureUnpaidEntitlements, remoteEntitlementDetail } = await import("@/lib/portal/remote-store");
     const ensured = await remoteEnsureUnpaidEntitlements(studentId, [{
       bookId: unresolved.bookId,
       amountInr: unresolved.amountInr,
       includedMockTests: unresolved.includedMockTests,
     }]);
     if (!ensured.ok) return ensured;
+    // Match file-store: reject different-UTR overwrite; allow same-UTR idempotent retry.
+    const existing = await remoteEntitlementDetail(studentId, unresolved.bookId);
+    if (existing) {
+      const retry = shouldAcceptIdempotentRetry({
+        existingStatus: existing.status,
+        existingReference: existing.transactionReference,
+        incomingReference: reference,
+      });
+      if (!retry.ok) return { ok: false, error: retry.error };
+      if (retry.action === "noop_verified" || retry.action === "noop_reported") {
+        return { ok: true };
+      }
+    }
     // Exact UTR only — never fabricate or suffix the reference.
     return remoteReportPayment(studentId, unresolved.bookId, reference, unresolved.amountInr);
   }
@@ -670,17 +689,14 @@ export async function reportPayment(
     if (entitlement.amountInr !== unresolved.amountInr || entitlement.mockTestAmountInr !== 0) {
       return { ok: false as const, error: "The stored fee does not match the approved price." };
     }
-    if (entitlement.status === "verified") return { ok: false as const, error: "Payment is already verified." };
-    // Idempotent retry: same student/book/UTR already reported stays reported.
-    if (entitlement.status === "reported" && entitlement.transactionReference === reference) {
+    const retry = shouldAcceptIdempotentRetry({
+      existingStatus: entitlement.status,
+      existingReference: entitlement.transactionReference,
+      incomingReference: reference,
+    });
+    if (!retry.ok) return { ok: false as const, error: retry.error };
+    if (retry.action === "noop_verified" || retry.action === "noop_reported") {
       return { ok: true as const };
-    }
-    if (
-      entitlement.transactionReference
-      && entitlement.transactionReference !== reference
-      && (entitlement.status === "reported" || entitlement.status === "rejected")
-    ) {
-      return { ok: false as const, error: "A different UTR is already recorded for this stream. Contact TEJAS staff if you need a correction." };
     }
     const duplicateRef = db.entitlements.some(
       (item) => item.transactionReference === reference && !(item.studentId === student.id && item.bookId === unresolved.bookId),
@@ -732,12 +748,16 @@ export async function reportPaymentWithScreenshot(
   if (!student) return { ok: false, error: "Account not found." };
   const unresolved = await unresolvedSingleStreamPurchase(student, streamIdsInput);
   if (!unresolved.ok) return unresolved;
+  // Reject malformed UTRs before any registry write (nothing to reserve).
+  if (!utrIsClaimableFormat(reference)) {
+    return { ok: false, error: "Enter a valid UTR / transaction reference." };
+  }
 
-  const { claimUtr, noteUtr, utrOwner, utrRegistryUnavailableMessage } = await import("@/lib/registration/utr-claim");
+  const { claimUtr, noteUtr, utrRegistryUnavailableMessage } = await import("@/lib/registration/utr-claim");
   const { extractPaymentScreenshotAsync } = await import("@/lib/registration/screenshot-ocr");
   const { decideScreenshotPayment } = await import("@/lib/registration/payment-decision");
 
-  const owner = utrOwner("ebook", `${studentId}:${unresolved.bookId}`);
+  const owner = ebookUtrOwner(studentId, unresolved.bookId);
   const claimed = await claimUtr(reference, "ebook", owner);
   if (!claimed.ok && claimed.error === "duplicate") {
     return { ok: false, error: "This UTR is already used for another payment." };
@@ -746,8 +766,17 @@ export async function reportPaymentWithScreenshot(
     return { ok: false, error: "Enter a valid UTR / transaction reference." };
   }
   const uniquenessOk = claimed.ok;
-  // After a successful claim, do not release the UTR on downstream entitlement failure.
-  // Same owner may retry and reclaim (idempotent).
+  // Valid claim is never released after this point — recovery is same-owner retry with the same UTR.
+
+  const heldFailure = (stage: "after_claim" | "after_report" | "during_entitlement" | "transient", detail: string) => {
+    const recovery = recoveryAfterClaimFailure({
+      studentId,
+      bookId: unresolved.bookId,
+      utr: reference,
+      stage,
+    });
+    return { ok: false as const, error: `${detail} ${recovery.message}` };
+  };
 
   try {
     const ocr = await extractPaymentScreenshotAsync(receipt);
@@ -781,9 +810,17 @@ export async function reportPaymentWithScreenshot(
         amountInr: unresolved.amountInr,
         includedMockTests: unresolved.includedMockTests,
       }]);
-      if (!ensured.ok) return ensured;
+      if (!ensured.ok) {
+        return uniquenessOk
+          ? heldFailure("during_entitlement", ensured.error)
+          : ensured;
+      }
       const reported = await remoteReportPayment(studentId, unresolved.bookId, reference, unresolved.amountInr);
-      if (!reported.ok) return reported;
+      if (!reported.ok) {
+        return uniquenessOk
+          ? heldFailure("after_claim", reported.error)
+          : reported;
+      }
       if (approved) {
         const verified = await remoteReviewPayment({
           actor: "screenshot-ocr",
@@ -792,7 +829,11 @@ export async function reportPaymentWithScreenshot(
           decision: "verified",
           note: decision.reason,
         });
-        if (!verified.ok) return verified;
+        if (!verified.ok) {
+          return uniquenessOk
+            ? heldFailure("after_report", verified.error)
+            : verified;
+        }
       }
     } else {
       const locked = await withLock(async () => {
@@ -803,9 +844,14 @@ export async function reportPaymentWithScreenshot(
         if (entitlement.amountInr !== unresolved.amountInr || entitlement.mockTestAmountInr !== 0) {
           return { ok: false as const, error: "The stored fee does not match the approved price." };
         }
-        if (entitlement.status === "verified") {
-          if (entitlement.transactionReference === reference) return { ok: true as const };
-          return { ok: false as const, error: "Payment is already verified." };
+        const retry = shouldAcceptIdempotentRetry({
+          existingStatus: entitlement.status,
+          existingReference: entitlement.transactionReference,
+          incomingReference: reference,
+        });
+        if (!retry.ok) return { ok: false as const, error: retry.error };
+        if (retry.action === "noop_verified" || retry.action === "noop_reported") {
+          return { ok: true as const };
         }
         const duplicateRef = db.entitlements.some(
           (item) => item.transactionReference === reference && !(item.studentId === studentId && item.bookId === unresolved.bookId),
@@ -834,12 +880,17 @@ export async function reportPaymentWithScreenshot(
             amountInr: unresolved.amountInr,
             receiptExt,
             verificationLabel: decision.verificationLabel,
+            utrExact: true,
           },
         ));
         await writeDb(db);
         return { ok: true as const };
       });
-      if (!locked.ok) return locked;
+      if (!locked.ok) {
+        return uniquenessOk
+          ? heldFailure("during_entitlement", locked.error)
+          : locked;
+      }
     }
 
     if (uniquenessOk) {
@@ -862,7 +913,9 @@ export async function reportPaymentWithScreenshot(
       amountDue: unresolved.amountInr,
     };
   } catch {
-    return { ok: false, error: "The payment proof could not be saved. The payment was not marked as verified." };
+    return uniquenessOk
+      ? heldFailure("transient", "The payment proof could not be saved. The payment was not marked as verified.")
+      : { ok: false, error: "The payment proof could not be saved. The payment was not marked as verified." };
   }
 }
 

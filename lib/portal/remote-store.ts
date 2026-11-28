@@ -274,6 +274,25 @@ export async function remoteEntitlementRows(studentId: string): Promise<{ bookId
     .filter((row) => row.bookId);
 }
 
+/** Active (non-superseded) entitlement detail for one book — used for remote UTR idempotency checks. */
+export async function remoteEntitlementDetail(
+  studentId: string,
+  bookId: string,
+): Promise<{ status: string; transactionReference: string | null } | null> {
+  const result = await supabaseRest(
+    `/rest/v1/tejas_learn_entitlements?student_id=eq.${encodeURIComponent(studentId)}&book_id=eq.${encodeURIComponent(bookId)}&status=neq.superseded&select=status,transaction_reference&limit=1`,
+    { method: "GET" },
+  );
+  if (result.status !== 200) throw new PortalUnavailable();
+  const row = rows(result.json)[0];
+  if (!row) return null;
+  return {
+    status: typeof row.status === "string" ? row.status : "",
+    transactionReference:
+      typeof row.transaction_reference === "string" ? row.transaction_reference : null,
+  };
+}
+
 /** Create unpaid entitlement rows for additional streams (service-role). No-op when a non-superseded row already exists. */
 export async function remoteEnsureUnpaidEntitlements(
   studentId: string,

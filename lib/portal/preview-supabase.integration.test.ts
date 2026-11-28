@@ -225,19 +225,7 @@ test("Preview Supabase e-book payment integration", async () => {
 
     for (const payment of payments) {
       const reported = await reportPayment(student!.id, payment.utr, [payment.stream]);
-      // Remote RPC currently requires students.stream_id = books.stream_id for report_payment.
-      // Primary stream should succeed; secondary streams may be blocked by existing RPC — capture evidence.
-      if (!reported.ok && payment.stream !== student!.streamId) {
-        writeStatus({
-          status: "BLOCKED",
-          reason: "tejas_learn_report_payment requires books.stream_id = students.stream_id; secondary-stream payments need Owner-approved RPC/schema change.",
-          primaryStream: student!.streamId,
-          failedStream: payment.stream,
-          error: reported.error,
-          at: new Date().toISOString(),
-        });
-        assert.fail(`BLOCKED: secondary-stream payment refused by existing RPC (${payment.stream}): ${reported.error}`);
-      }
+      // Option A: secondary streams are eligible without primary-stream equality on the RPC.
       assert.equal(reported.ok, true, reported.ok ? "" : reported.error);
     }
 

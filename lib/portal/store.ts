@@ -658,13 +658,26 @@ export async function reportPayment(
   const unresolved = await unresolvedSingleStreamPurchase(student, streamIdsInput);
   if (!unresolved.ok) return unresolved;
   if (mode === "remote") {
-    const { remoteReportPayment, remoteEnsureUnpaidEntitlements } = await import("@/lib/portal/remote-store");
+    const { remoteReportPayment, remoteEnsureUnpaidEntitlements, remoteEntitlementDetail } = await import("@/lib/portal/remote-store");
     const ensured = await remoteEnsureUnpaidEntitlements(studentId, [{
       bookId: unresolved.bookId,
       amountInr: unresolved.amountInr,
       includedMockTests: unresolved.includedMockTests,
     }]);
     if (!ensured.ok) return ensured;
+    // Match file-store: reject different-UTR overwrite; allow same-UTR idempotent retry.
+    const existing = await remoteEntitlementDetail(studentId, unresolved.bookId);
+    if (existing) {
+      const retry = shouldAcceptIdempotentRetry({
+        existingStatus: existing.status,
+        existingReference: existing.transactionReference,
+        incomingReference: reference,
+      });
+      if (!retry.ok) return { ok: false, error: retry.error };
+      if (retry.action === "noop_verified" || retry.action === "noop_reported") {
+        return { ok: true };
+      }
+    }
     // Exact UTR only — never fabricate or suffix the reference.
     return remoteReportPayment(studentId, unresolved.bookId, reference, unresolved.amountInr);
   }

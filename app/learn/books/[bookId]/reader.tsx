@@ -37,7 +37,11 @@ export function BookReader({ bookId, title, streamName }: { bookId: string; titl
     setPage(Number.isInteger(saved) && saved > 0 ? saved : 1);
     (async () => {
       try {
-        const pdfjs = await import("pdfjs-dist");
+        // Load from /public (not the webpack-bundled package) so Next.js eval
+        // source maps cannot break pdfjs-dist ESM exports in development.
+        // Public path is resolved at runtime; ambient types live in types/pdfjs-public.d.ts.
+        // @ts-expect-error /pdfjs/pdf.min.mjs is copied to public/ by copy-pdfjs-assets.mjs
+        const pdfjs = (await import(/* webpackIgnore: true */ "/pdfjs/pdf.min.mjs")) as typeof import("pdfjs-dist");
         pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
         const response = await fetch(`/api/learn/books/${encodeURIComponent(bookId)}/file`, {
           cache: "no-store",

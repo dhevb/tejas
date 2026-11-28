@@ -1,87 +1,73 @@
 # TEJAS Phase 2.4.2 — Preview Migration Execution Report
 
-**Report update (UTC):** 2026-11-28T11:00Z  
+**Report update (UTC):** 2026-11-28T11:46Z  
 **Branch:** `fix/pr72-phase2-1-utr-recovery-preview-qa`  
-**Tip SHA (pre-decision commits):** `c1493b31429de83a0dd15d46543ac03e87978a9f`  
-**Safety-review tip (hashes):** `c2f6aa8f958c2db866edc3dea7ee92a52af0098c`  
-**Re-probe:** 2026-11-28T10:58Z — learn schema still `PGRST205`; consolidated Owner runbook: `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md`
+**Verification tip (pre-commit):** see latest commit after this update  
+**Target:** Preview `nbeslngnrsagarosuaab`  
+**Production:** `zapccpipwxduzlnvjdmy` — untouched
 
 ---
 
 ## Final verdict
 
-# BLOCKED — NO MIGRATION APPLIED
+# BOTH PREVIEW MIGRATIONS APPLIED AND VERIFIED
 
-Owner authorized Preview-only apply. File hashes and isolation preflight **PASS**. Agent cannot authenticate to Supabase Dashboard (sign-in wall) and has no Preview Postgres URL / access token locally. Exact Owner executable pack prepared. Production untouched.
+Owner applied schema outside the agent Dashboard session. Agent verified via Preview REST (service_role) on exact ref `nbeslngnrsagarosuaab`.
 
 ---
 
-## 1. Owner authorization and exact target ref
+## 1. Authorization and target
 
 | Item | Evidence |
 |------|----------|
-| Authorization | Master execution prompt — Preview migrations + subsequent Preview phases |
-| Preview ref | `nbeslngnrsagarosuaab` |
-| Production | `zapccpipwxduzlnvjdmy` — **not selected** |
-| `.env.preview` host | Preview ref only |
-| Dashboard attempt | `https://supabase.com/dashboard/project/nbeslngnrsagarosuaab/sql/new` → redirected to **Sign in** |
-| CLI link / DB URL / access token | **Absent** |
+| Preview ref | `nbeslngnrsagarosuaab` (`isExactPreview: true`) |
+| Production selected | **No** |
+| Agent Dashboard | Still sign-in wall; apply was Owner-side |
 
----
+## 2. Hashes (unchanged vs 2.4.1 review)
 
-## 2. Reviewed versus executed migration hashes
+| File | SHA-256 | Match |
+|------|---------|-------|
+| `20261118000100_tejas_learning_portal.sql` | `D9A6746E52C035DCBFC0B1F8B5A9D357C8C7F427008687536C377B80BEFB3290` | YES |
+| `20261118000200_tejas_learning_portal_durable.sql` | `67A15470352809FC26A0DFE79EBE3E9898C8F86083A6569F4785336215C963B3` | YES |
 
-| Migration | Reviewed SHA-256 | Current SHA-256 | Match |
-|-----------|------------------|-----------------|-------|
-| `20261118000100_tejas_learning_portal.sql` | `D9A6746E52C035DCBFC0B1F8B5A9D357C8C7F427008687536C377B80BEFB3290` | same | **YES** |
-| `20261118000200_tejas_learning_portal_durable.sql` | `67A15470352809FC26A0DFE79EBE3E9898C8F86083A6569F4785336215C963B3` | same | **YES** |
+## 3. History before / after
 
-Owner pack copies under `preview-sql/phase242-owner-apply/` match the same hashes.
+| When | State |
+|------|-------|
+| Before (prior probe) | All `tejas_learn_*` → `PGRST205` |
+| After (2026-11-28T11:38Z+) | All probed learn tables HTTP **200** |
 
-**Executed:** none.
+## 4. Execution results
 
----
+| Migration | Result |
+|-----------|--------|
+| 001 tables | **PASS** — students, audit, books, book_classes, tests, questions, options, entitlements, attempts present |
+| 002 durable | **PASS** — publication, staff, staff_sessions; FT seed present; RPCs callable (`register`, `report_payment`, `review_payment`, `set_publication`) |
 
-## 3. Migration history before / after
+## 5. Schema / RPC evidence
 
-**Before:** all `tejas_learn_*` → HTTP 404 `PGRST205`; `tejas_payment_utrs` + `tejas_staff_sessions` present.  
-**After:** unchanged (no DDL).
+- Books: **18** (english 8, mathematics 8, technology 2)  
+- Tests: **90**  
+- Book-class rows: **21**  
+- `tejas_payment_utrs`: HTTP 200 (intact)  
+- `tejas_staff_sessions`: HTTP 200 (intact)  
+- Primary-stream payment report: **204 success**  
+- Bad fee 48: **rejected**  
+- Secondary-stream report: still rejected → Option A **not** in live RPC (separate phase)
 
----
+## 6. Preservation
 
-## 4. Execution results 001 / 002
+UTR registry and staff sessions remain selectable; no Production changes.
 
-| Step | Result |
-|------|--------|
-| Apply 001 | **NOT RUN** |
-| Verify 001 | **NOT RUN** |
-| Apply 002 | **NOT RUN** |
-| Verify 002 | **NOT RUN** |
+## 7. Integration
 
-### Owner pack (manual Dashboard)
-
-Path: `preview-sql/phase242-owner-apply/`
-
-1. `00-OWNER-INSTRUCTIONS.md`  
-2. `01-tejas_learning_portal.sql`  
-3. `03-verify-after-001.sql`  
-4. `02-tejas_learning_portal_durable.sql`  
-5. `04-verify-after-002.sql`  
-
-Confirm URL ref `nbeslngnrsagarosuaab` before each run. Do not paste secrets into chat. Reply with success-only status so agent can resume verification.
-
----
-
-## 5–7. Schema / preservation / integration
-
-Not applicable post-apply — no apply. Preflight preservation: UTR + staff sessions still selectable.
-
----
+Preview integration progresses past enrolment after name-validation fix; blocked only on Option A secondary-stream predicate (expected until Step C).
 
 ## 8. Production / merge / publication
 
-Untouched. No merge, deploy, publication, Option A apply, or credential exposure.
+Production untouched. Temporary Preview QA publication handled under Phase 2.8 (Decision 2) — not a Production publish.
 
 ---
 
-**BLOCKED — NO MIGRATION APPLIED**
+**BOTH PREVIEW MIGRATIONS APPLIED AND VERIFIED**

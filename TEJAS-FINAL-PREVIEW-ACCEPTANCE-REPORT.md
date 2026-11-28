@@ -10,9 +10,9 @@
 
 ## Final verdict
 
-# PREVIEW PARTIALLY ACCEPTED — OWNER BLOCKERS REMAIN (SCHEMA / EXECUTOR)
+# PREVIEW PARTIALLY ACCEPTED — OWNER BLOCKERS REMAIN
 
-**Owner decisions 2026-11-28:** five blank pages **accepted intentional**; temporary Preview content-QA publication **approved** but **not opened** (schema missing). See `TEJAS-OWNER-DECISIONS-2026-11-28.md`.
+**Owner decisions 2026-11-28:** blanks **accepted intentional**; temporary Preview content-QA publication **approved and OPEN** on Preview (close pending). See `TEJAS-OWNER-DECISIONS-2026-11-28.md`.
 
 ---
 
@@ -20,14 +20,14 @@
 
 | Phase | Status | Evidence |
 |-------|--------|----------|
-| 2.4.2 Preview migrations 001→002 | **BLOCKED** | No Dashboard session / Preview DB URL; Owner pack ready |
-| 2.5 Option A RPC | **BLOCKED** (SQL prepared) | Migration hash-locked; not applied |
-| 2.6 Content inventory | **PARTIAL PASS** | Repo 18/90 verified; DB seed prepared, not applied |
-| 2.7 Blank PDF pages | **PASS — Owner accepted intentional** | Not a content blocker (`TEJAS-PHASE2-7-BLANK-PAGE-OWNER-ACCEPTANCE.md`) |
-| 2.8 Restricted Preview QA | **APPROVED / BLOCKED exec** | Publication SQL ready; schema prerequisite fails |
-| 2.9 PDF QA (18) | **PARTIAL PASS** | Local integrity PASS; remote delivery deferred |
-| 3.0 Payment/entitlement E2E Preview | **BLOCKED** | Schema missing |
-| 3.1 Security + regression | **PARTIAL PASS** | 170 unit tests PASS; tsc PASS; lint PASS |
+| 2.4.2 Preview migrations 001→002 | **PASS** | Both applied + REST verified |
+| 2.5 Option A RPC | **BLOCKED** | SQL prepared; secondary-stream still refused live |
+| 2.6 Content inventory | **PASS** | Preview DB 18 books / 90 mocks |
+| 2.7 Blank PDF pages | **PASS — Owner accepted intentional** | Not a content blocker |
+| 2.8 Restricted Preview QA | **PARTIAL PASS** | Publication OPEN; content-QA access PASS; close pending |
+| 2.9 PDF QA (18) | **PARTIAL PASS** | Local integrity PASS; authenticated reader probe PASS; browser visual deferred |
+| 3.0 Payment/entitlement E2E Preview | **PARTIAL** | Primary+FT companion PASS; multi-stream Option A blocked |
+| 3.1 Security + regression | **PARTIAL PASS** | Units PASS; integration blocked only on Option A |
 | 3.2 Final acceptance | this document | — |
 | 3.3 Production readiness package | prepared docs only | No Production execution |
 
@@ -43,10 +43,10 @@
 
 | Migration | Applied on Preview? |
 |-----------|---------------------|
-| `20261118000100_tejas_learning_portal.sql` | **No** |
-| `20261118000200_tejas_learning_portal_durable.sql` | **No** |
-| `20261128000100_tejas_learn_option_a_multistream_payment.sql` | **No** (prepared) |
-| `20261128000200_tejas_learn_eng_math_metadata_seed.sql` | **No** (prepared) |
+| `20261118000100_tejas_learning_portal.sql` | **Yes** (verified) |
+| `20261118000200_tejas_learning_portal_durable.sql` | **Yes** (verified) |
+| `20261128000100_tejas_learn_option_a_multistream_payment.sql` | **No** — **Owner Step C remaining** |
+| Eng/Math metadata | **Yes** (18/90 present; seed file prepared earlier) |
 
 ## Test evidence
 
@@ -75,11 +75,11 @@ See `TEJAS-PHASE2-9-PDF-DELIVERY-AND-VISUAL-QA.md` — 18/18 local integrity PAS
 6. Authenticated Preview browser/PDF signed-delivery suite not completed (blocked on schema).  
 7. Temporary QA publication approved but not opened/closed yet.
 
-## Outstanding Owner actions (decisions already granted where noted)
+## Outstanding Owner actions
 
-1. Run consolidated `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md` on Preview SQL Editor (confirm ref in URL) — Steps A–E.  
-2. After agent verifies QA, run Step F to close temporary publication.  
-3. Optional: place Preview-only `PREVIEW_SUPABASE_DB_URL` in ignored `.env.preview` (never in chat) for agent-side DDL.
+1. **Step C only:** apply Option A SQL from `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md` on Preview.  
+2. After agent re-verifies payment matrix, authorize/run **Step F** to close temporary QA publication.  
+3. Optional: Preview-only `PREVIEW_SUPABASE_DB_URL` in ignored `.env.preview` (never in chat).
 
 ## Production readiness recommendation
 

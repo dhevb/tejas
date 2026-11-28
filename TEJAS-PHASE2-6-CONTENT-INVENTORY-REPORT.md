@@ -8,7 +8,7 @@
 
 ## Verdict
 
-# PARTIAL PASS — REPO INVENTORY VERIFIED; PREVIEW DB SEED NOT APPLIED
+# PASS — REPO + PREVIEW DB INVENTORY VERIFIED (18 / 90)
 
 ## Repository inventory (PASS)
 
@@ -33,13 +33,15 @@
 | Companion does not unlock Book 1 mocks | PASS (same suite) |
 | Book 2 does not create second FT fee | PASS |
 
-## Preview database inventory
+## Preview database inventory (verified 2026-11-28 on `nbeslngnrsagarosuaab`)
 
 | Object | Status |
 |--------|--------|
-| `tejas_learn_books` / tests | **Missing** (`PGRST205`) — blocked on 2.4.2 |
-| FT seed from migration 002 | **Not applied** |
-| Eng/Math DB metadata | **Prepared, not applied** |
+| `tejas_learn_books` | **18** present (eng 8 / math 8 / FT 2) |
+| `tejas_learn_tests` | **90** present |
+| `tejas_learn_book_classes` | **21** rows |
+| FT seed from migration 002 | **Present** |
+| Eng/Math DB metadata | **Present** (matches prepared seed / catalog IDs) |
 
 ### Prepared Eng/Math metadata seed (from catalog only)
 

@@ -70,13 +70,13 @@ Companion execution report: `TEJAS-PHASE2-8-RESTRICTED-PREVIEW-CONTENT-QA-EXECUT
 Agent may proceed through authorized Preview phases without re-asking for these two decisions.  
 **Hard stop remains** if Preview SQL executor / Dashboard session is unavailable for DDL (current state as of probe below).
 
-### Migration status at decision time (UTC 2026-11-28T10:58Z)
+### Migration / QA status update (UTC 2026-11-28T11:46Z)
 
 | Check | Result |
 |-------|--------|
 | Target ref | `nbeslngnrsagarosuaab` |
-| `tejas_learn_*` | **Missing** (`PGRST205`) |
-| Migrations 001/002 applied | **No** |
-| Preview DB URL / Dashboard session for agent | **Unavailable** |
-
-Owner must run `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md` (or the phase packs it references) before Option A, Eng/Math seed, and temporary QA publication can execute.
+| Migrations 001/002 | **Applied and verified** |
+| Eng/Math inventory | **18 / 90 present** |
+| Temporary QA publication | **OPEN** (close pending) |
+| Option A RPC | **Not applied** — Owner Step C remaining |
+| Preview DB URL / Dashboard session for agent | Still unavailable for DDL (Option A needs Owner SQL Editor) |

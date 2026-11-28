@@ -1,72 +1,74 @@
 # TEJAS Phase 2.8 — Restricted Preview Content-QA Execution Report
 
-**Objective:** Temporary Preview-only publication for authenticated content-QA, then close after verification.  
-**Target:** Preview `nbeslngnrsagarosuaab` only.  
 **Authority:** Owner Decision 2 — `TEJAS-OWNER-DECISIONS-2026-11-28.md`  
-**Branch tip at report:** `c1493b31429de83a0dd15d46543ac03e87978a9f` (+ subsequent decision commits)
+**Target:** Preview `nbeslngnrsagarosuaab` only  
+**Branch:** `fix/pr72-phase2-1-utr-recovery-preview-qa`
 
 ---
 
 ## Verdict
 
-# BLOCKED — PREVIEW LEARN SCHEMA NOT APPLIED (PUBLICATION NOT OPENED)
+# PARTIAL PASS — QA PUBLICATION OPEN; ACCESS VERIFIED; CLOSE PENDING FULL MATRIX
 
-Owner publication approval is recorded and open/close SQL packs are prepared. Execution stopped because migrations 001/002 are still unapplied (`PGRST205` on all `tejas_learn_*`). Opening publication without schema would fail and is not attempted.
-
----
-
-## 1. Target identity
+## Target identity
 
 | Check | Result |
 |-------|--------|
 | Preview ref | `nbeslngnrsagarosuaab` |
-| Production | not selected |
-| REST probe (2026-11-28T10:58Z) | Preview OK; learn tables missing |
-| Dashboard SQL for agent | Sign-in wall |
+| Production used | **No** |
 
-## 2. Publication scope (prepared, not executed)
+## Publication scope (executed)
 
-| Item | Value |
-|------|-------|
-| Open SQL | `preview-sql/phase28-restricted-qa/01-open-preview-qa-publication.sql` |
-| Open SHA-256 | `BF277923E03AD6F5F3297A919DE0F1DE3BFD6E4387C002FBEA01F05E2E1FBCB1` |
-| Close SQL | `preview-sql/phase28-restricted-qa/02-close-preview-qa-publication.sql` |
-| Close SHA-256 | `EB4F6599178585FD115F1FAA61F80AFEE880F155A1C9D93D77CCBE567D893542` |
-| Books / tests | 18 / 90 from `content/portal/catalog.json` |
-| Storage | **unchanged / private** — scripts do not create buckets or public URLs |
-| Auth model | Existing app session + `TEJAS_CONTENT_QA_*` allowlist; entitlements preserved for ordinary students |
+| Action | Result |
+|--------|--------|
+| Open via `tejas_learn_set_publication` RPC (service_role) | **108/108 OK** (18 books + 90 tests) |
+| `tejas_learn_publication` counts | `book:published` 18, `test:published` 90 |
+| Sync `tejas_learn_books` / `tejas_learn_tests` columns | **108/108 OK** |
+| Storage buckets / public URLs | **Not created** |
+| Auth / RLS / grants | **Unchanged** |
 
-## 3. How temporary QA access will be closed
+Open reason actor: `owner-preview-qa` (TEMP Preview restricted content-QA).
 
-After Preview QA finishes, Owner/agent runs **Step F** in `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md`:
+Close SQL remains: `preview-sql/phase28-restricted-qa/02-close-preview-qa-publication.sql`  
+Close helper: `node .local-qa/phase28-open-qa-publication.mjs close`
 
-1. Confirm Preview ref.  
-2. Execute `02-close-preview-qa-publication.sql`.  
-3. Verify books/tests / publication rows are `awaiting_approval`.  
-4. Record close evidence in this report (append).
+**Close status:** **NOT YET RUN** — deferred until Option A SQL + remaining browser/PDF matrix complete (temporary access still required for testing).
 
-## 4. Test evidence (this turn)
+## Access evidence
 
-| Area | Status |
-|------|--------|
-| Schema prerequisite | **FAIL / BLOCKED** |
-| Option A / Eng-Math seed | Not reached |
-| Open QA publication | **Not executed** |
-| PDF / student / mobile / security QA on Preview | **Not executed** |
-| Close QA publication | **Not executed** (nothing opened) |
-| Local unit gates (prior) | 170/170 PASS at earlier tip |
+Evidence file: `.local-qa/phase28-content-qa-access.json`
 
-## 5. Safeguards compliance (design)
+| Check | Result |
+|-------|--------|
+| Content-QA dashboard books | 18 |
+| Published readable | 18 |
+| eng-class-07 book + mock | PASS |
+| mat-class-07 book + mock | PASS |
+| ft-book-1 book + mock | PASS |
+| ft-book-2 book | PASS |
 
-- No Production publication/deploy/merge.  
-- No public Storage.  
-- No RLS/grant weakening in prepared SQL.  
-- QA audit actor `owner-preview-qa` with explicit TEMP / Closed reasons.  
+Ordinary FT companion (non-QA): `.local-qa/phase-ft-companion-remote.json` — Book 2 pay unlocks Book 1 reading; Book 1 mocks stay locked; Book 2 mocks open — **PASS**.
 
-## 6. Resume path
+## How temporary QA access will be closed
 
-Owner completes `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md` Steps A→E (or A→D then notify agent to open E via REST if preferred). Agent will verify publication rows and continue PDF/student/security QA, then run close (Step F) or instruct Owner to run close SQL.
+1. Confirm URL/ref `nbeslngnrsagarosuaab`.  
+2. Run close script/SQL (Step F in resume runbook) **or** `node .local-qa/phase28-open-qa-publication.mjs close` with Preview env.  
+3. Verify publication counts return to `awaiting_approval`.  
+4. Append close evidence to this report.
+
+## Remaining blockers for full Phase 2.8/3.0 closeout
+
+1. **Option A RPC** not applied (secondary-stream payments still refused). Owner: run `preview-sql/phase25-option-a/01-option-a-multistream-payment.sql` on Preview only.  
+2. Browser mobile/desktop visual PDF pass not completed this session.  
+3. Close temporary publication after those complete.
+
+## Not performed
+
+- Production publication  
+- Public Storage  
+- Security weakening  
+- PR merge / Production deploy  
 
 ---
 
-**Production untouched. Publication not opened.**
+**Production untouched. Preview QA publication currently OPEN (temporary).**

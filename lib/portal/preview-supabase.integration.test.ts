@@ -200,11 +200,11 @@ test("Preview Supabase e-book payment integration", async () => {
     assert.equal(portalPersistence(), "remote");
 
     const reg = await registerStudent({
-      fullName: "Phase21 Test Student",
-      parentName: "Phase21 Parent",
+      fullName: "Preview Integration Student",
+      parentName: "Preview Integration Parent",
       mobile: "9876500001",
       email,
-      schoolName: "Phase21 Test School",
+      schoolName: "Preview Integration School",
       password: "phase21-pass-8",
       streamIds: ["english", "mathematics", "technology"],
       classLevel: 7,
@@ -247,11 +247,11 @@ test("Preview Supabase e-book payment integration", async () => {
 
     const otherEmail = `tejas.phase21.other.${marker}@example.test`;
     const other = await registerStudent({
-      fullName: "Phase21 Other Student",
-      parentName: "Phase21 Other Parent",
+      fullName: "Preview Integration Other",
+      parentName: "Preview Integration Parent",
       mobile: "9876500002",
       email: otherEmail,
-      schoolName: "Phase21 Test School",
+      schoolName: "Preview Integration School",
       password: "phase21-pass-8",
       streamId: "english",
       classLevel: 7,

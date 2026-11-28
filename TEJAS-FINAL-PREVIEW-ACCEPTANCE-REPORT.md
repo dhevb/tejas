@@ -1,90 +1,94 @@
 # TEJAS Final Preview Acceptance Report
 
 **Branch:** `fix/pr72-phase2-1-utr-recovery-preview-qa`  
-**Tip SHA at acceptance drafting:** `36972a382c67727401c02de8b772fee8bdf75eb7` (phase docs pack; prior schema tip `a49d9771e0e8f88c3fece126fa18f6e6dccd9fa5`)  
+**Tip SHA:** `627bf3a7cf8885721f8a28d74c4f4cebf02cff73`  
+**Prior tip (pre-PDF.js commit):** `efeadface3fdc7a481fe8405102233bdb28fede4`  
 **Preview Supabase:** `nbeslngnrsagarosuaab`  
 **Production Supabase:** `zapccpipwxduzlnvjdmy` — **untouched**  
-**Production site:** `https://tejas.dhe.org.in` — **untouched**
+**Production site:** `https://tejas.dhe.org.in` — **untouched**  
+**Independent audit:** `TEJAS-FINAL-INDEPENDENT-RELEASE-AUDIT.md` (2026-11-28T14:40Z)
 
 ---
 
 ## Final verdict
 
-# PREVIEW PARTIALLY ACCEPTED — OWNER BLOCKERS REMAIN
+# READY WITH DOCUMENTED LIMITATIONS
 
-**Owner decisions 2026-11-28:** blanks **accepted intentional**; temporary Preview content-QA publication **approved and OPEN** on Preview (close pending). See `TEJAS-OWNER-DECISIONS-2026-11-28.md`.
+Preview browser QA and restricted publication closeout remain **PASS**. Closure cycle **re-verified** live Preview inventory (18/90), fees ₹49, publication closed (`awaiting_approval`), private Storage, unauthenticated PDF **401**, PR stack OPEN/MERGEABLE, unit tests **170/170**, and PDF.js fix commit **`627bf3a`** with reader/browser/build evidence. Limitations: Option A certified by behavioral 12/12 evidence (not fresh `pg_get_functiondef`); publication RPC close quirk; Production still requires separate Owner authorization.
 
 ---
 
 ## Phase status
 
-| Phase | Status | Evidence |
-|-------|--------|----------|
-| 2.4.2 Preview migrations 001→002 | **PASS** | Both applied + REST verified |
-| 2.5 Option A RPC | **BLOCKED** | SQL prepared; secondary-stream still refused live |
-| 2.6 Content inventory | **PASS** | Preview DB 18 books / 90 mocks |
-| 2.7 Blank PDF pages | **PASS — Owner accepted intentional** | Not a content blocker |
-| 2.8 Restricted Preview QA | **PARTIAL PASS** | Publication OPEN; content-QA access PASS; close pending |
-| 2.9 PDF QA (18) | **PARTIAL PASS** | Local integrity PASS; authenticated reader probe PASS; browser visual deferred |
-| 3.0 Payment/entitlement E2E Preview | **PARTIAL** | Primary+FT companion PASS; multi-stream Option A blocked |
-| 3.1 Security + regression | **PARTIAL PASS** | Units PASS; integration blocked only on Option A |
-| 3.2 Final acceptance | this document | — |
-| 3.3 Production readiness package | prepared docs only | No Production execution |
+| Phase | Status | Evidence class |
+|-------|--------|----------------|
+| 2.4.2 Migrations 001→002 | **PASS** | VERIFIED live REST + hashes |
+| 2.5 / 2.5.1 Option A | **PASS** | EVIDENCE-FILE 12/12 + SQL hash VERIFIED |
+| 2.6 Content inventory | **PASS** | VERIFIED 18/90 live |
+| 2.7 Blank pages | **PASS** | Owner-accepted intentional |
+| 2.8–2.9 Browser PDF/mock QA | **PASS** | EVIDENCE-FILE + prior browser session |
+| 2.10 Restricted QA closeout | **PASS** | VERIFIED closed live |
+| Phase A PDF.js fix | **PASS** | COMMITTED `627bf3a` + test evidence |
+| Independent release audit | **PASS with limitations** | This cycle |
+| Production | **NOT AUTHORIZED** | — |
 
 ---
 
 ## Database project identity
 
-- Active REST probe target: **Preview** `nbeslngnrsagarosuaab`  
-- Learn schema: **absent** (`PGRST205`)  
-- Preserved: `tejas_payment_utrs`, `tejas_staff_sessions`
+- Preview `nbeslngnrsagarosuaab`: learn tables live; publication **closed** (18/90 `awaiting_approval`)  
+- Production `zapccpipwxduzlnvjdmy`: not modified  
 
-## Migration history
+## Recorded facts (closure)
 
-| Migration | Applied on Preview? |
-|-----------|---------------------|
-| `20261118000100_tejas_learning_portal.sql` | **Yes** (verified) |
-| `20261118000200_tejas_learning_portal_durable.sql` | **Yes** (verified) |
-| `20261128000100_tejas_learn_option_a_multistream_payment.sql` | **No** — **Owner Step C remaining** |
-| Eng/Math metadata | **Yes** (18/90 present; seed file prepared earlier) |
+| Fact | Evidence |
+|------|----------|
+| Live 18 books / 90 mock tests | Post-close REST verify `bookCount.awaiting_approval: 18`, `testCount.awaiting_approval: 90` |
+| ₹49 per stream | Live metadata + Option A fee gate case 6 |
+| Preview publication closed | All learn books/tests `awaiting_approval` |
+| Private Storage | `publicBuckets: []` |
+| Unauthenticated PDF HTTP 401 | Post-close + PDF.js reader check |
+| Unit tests 170/170 | `npm test` PASS |
+| Option A integration 12/12 | `.local-qa/phase251-option-a-integration.json` retained |
+| No fresh `pg_get_functiondef` | Explicit limitation |
+| PR #71 / #72 / #73 | OPEN + MERGEABLE (`gh`) |
+| PDF.js fix commit | `627bf3a` — Load pdf.js from public assets… |
 
-## Test evidence
+## PDF.js Phase A evidence
 
-- Unit: **170 pass / 0 fail** (`npm test`)  
-- TypeScript: **PASS**  
-- Lint: **PASS** (2 pre-existing img warnings)  
-- Preview integration: designed to **fail closed** while schema missing  
-
-## PDF QA matrix
-
-See `TEJAS-PHASE2-9-PDF-DELIVERY-AND-VISUAL-QA.md` — 18/18 local integrity PASS; eng-07 pages 6/74/76 and eng-10 pages 6/80 documented as genuine blanks.
+| Check | Result |
+|-------|--------|
+| Asset hashes vs `pdfjs-dist@5.4.296` | MATCH |
+| `/public/pdfjs` gitignored + copy script | YES |
+| Reader check (`next start :3001`) | PASS (assets 200, unauth 401, authed unpublished 403) |
+| Browser `getDocument` | PASS (`pages: 1`) |
+| `next build` | PASS (`BUILD_EXIT=0`) |
 
 ## Security findings
 
-- No new public Storage / download/print bypass introduced.  
-- Preview isolation allowlists reject Production ref.  
-- Live Preview RLS/RPC grant verification pending schema apply.
+- No public Storage buckets (re-verified)  
+- Unauth PDF **401** (re-verified on production build server)  
+- Service-role fee gate + anon reject recorded in Option A evidence  
+- School CSV/XLSX exports present on disk — **not staged / not committed**
 
 ## Known limitations
 
-1. Preview learn schema not applied.  
-2. Option A not live.  
-3. Eng/Math DB metadata not seeded.  
-4. Question rows not SQL-seeded (catalog remains source of truth for content packs).  
-5. ~~Five blank English pages~~ → **Owner-accepted intentional (2026-11-28).**  
-6. Authenticated Preview browser/PDF signed-delivery suite not completed (blocked on schema).  
-7. Temporary QA publication approved but not opened/closed yet.
+1. Option A live function bodies not re-read via Postgres in this cycle.  
+2. `set_publication` RPC did not mutate columns during close; REST PATCH closed Preview.  
+3. PR merge stack #71→#72→#73 not executed; tip `627bf3a` is **ahead 1** (unpushed) until Owner push.  
+4. No Production deploy.
 
 ## Outstanding Owner actions
 
-1. **Step C only:** apply Option A SQL from `preview-sql/OWNER-PREVIEW-RESUME-RUNBOOK.md` on Preview.  
-2. After agent re-verifies payment matrix, authorize/run **Step F** to close temporary QA publication.  
-3. Optional: Preview-only `PREVIEW_SUPABASE_DB_URL` in ignored `.env.preview` (never in chat).
+1. Authorize push of `627bf3a` (+ optional approved docs) to refresh PR #73.  
+2. Review and merge PR stack in order when ready.  
+3. Separate Production window authorization (backup, hashes, target confirm).  
+4. PII review before any school export commit.
 
 ## Production readiness recommendation
 
-**Do not promote to Production** until blockers 1–3 are cleared, Option A matrix PASSes on Preview, and blank-page decision is recorded. See `TEJAS-PRODUCTION-READINESS-PACKAGE.md` for the frozen checklist (docs only).
+See `TEJAS-PRODUCTION-READINESS-PACKAGE.md` and independent audit. **Do not** treat this as Production go-live authorization.
 
 ---
 
-**PREVIEW PARTIALLY ACCEPTED — OWNER BLOCKERS REMAIN**
+**READY WITH DOCUMENTED LIMITATIONS**
